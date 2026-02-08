@@ -157,26 +157,36 @@ print(f"Baseline: {baseline_score}")
 
 ### Quick guide: which optimizer?
 
+| Training examples | Recommended optimizer | Expected improvement | Typical cost |
+|------------------|-----------------------|---------------------|-------------|
+| <20 | GEPA (instruction tuning) | 5-15% | ~$0.50 |
+| 20-50 | BootstrapFewShot | 5-20% | ~$0.50-2 |
+| 50-200 | BootstrapFewShot, then MIPROv2 | 15-35% | ~$2-10 |
+| 200-500 | MIPROv2 (auto="medium") | 20-40% | ~$5-15 |
+| 500+ | MIPROv2 (auto="heavy") or BootstrapFinetune | 25-50% | ~$15-50+ |
+
 ```
 Start here
 |
-+- Just getting started? -> BootstrapFewShot
++- Just getting started (<50 examples)? -> BootstrapFewShot
 |   Quick, cheap, usually gives a solid boost.
 |
-+- Want better prompts? -> MIPROv2
++- Want better prompts (50+ examples)? -> MIPROv2
 |   Optimizes both instructions and examples.
 |   Best general-purpose prompt optimizer.
 |
-+- Want to tune instructions only? -> GEPA
-|   Good when you have few examples (<50).
++- Want to tune instructions only (<50 examples)? -> GEPA
+|   Good when you have few examples.
 |
-+- Need maximum quality? -> BootstrapFinetune
-|   Fine-tunes the model weights. Requires 500+ examples.
++- Need maximum quality (500+ examples)? -> BootstrapFinetune
+|   Fine-tunes the model weights.
 |   Best for production with smaller/cheaper models.
 |
 +- Want to combine approaches? -> BetterTogether
     Jointly optimizes prompts and weights.
 ```
+
+**Stacking tip:** Run BootstrapFewShot first, then MIPROv2 on the result. This often beats either alone — bootstrap finds good examples, then MIPRO refines the instructions.
 
 Optimized prompts are model-specific. If you change models, re-run your optimizer. See `/ai-switching-models`.
 
@@ -233,6 +243,18 @@ optimized = optimizer.compile(my_program, trainset=trainset)
 
 For the full fine-tuning workflow (decision framework, prerequisites, model distillation, BetterTogether), see `/ai-fine-tuning`.
 
+### When optimization plateaus
+
+If your score stops improving, check these common causes:
+
+| Symptom | Likely cause | Fix |
+|---------|-------------|-----|
+| Score stuck at 60-70% despite optimization | Task too complex for single step | `/ai-decomposing-tasks` — break into subtasks |
+| Optimizer overfits (train score high, dev score flat) | Too little training data | `/ai-generating-data` — generate more examples |
+| Score varies wildly between runs | Non-deterministic metric or small devset | Increase devset to 100+, set temperature=0 |
+| Diminishing returns from more demos | Prompt is maxed out; model is the limit | `/ai-switching-models` — try a more capable model |
+| Score high but real users complain | Metric doesn't match real quality | Rewrite metric based on actual failure patterns |
+
 ## Step 4: Verify improvement
 
 ```python
@@ -266,5 +288,6 @@ my_program.load("optimized_program.json")
 - For optimizer comparison table and metric patterns, see [reference.md](reference.md)
 - Once quality is good, use `/ai-cutting-costs` to reduce your AI bill
 - Use `/ai-monitoring` to track quality in production after deployment
+- Use `/ai-tracking-experiments` to log, compare, and manage multiple optimization runs
 - Accuracy plateaued despite optimization? Try `/ai-decomposing-tasks` to restructure your task
 - If things are broken, use `/ai-fixing-errors` to diagnose

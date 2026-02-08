@@ -210,4 +210,5 @@ dspy.inspect_history(n=1)
 
 - For complete error index, see [reference.md](reference.md)
 - To measure and improve accuracy, use `/ai-improving-accuracy`
+- Use `/ai-tracing-requests` to trace a specific request end-to-end (every LM call, retrieval, latency)
 - For DSPy API details, see `docs/dspy-reference.md`

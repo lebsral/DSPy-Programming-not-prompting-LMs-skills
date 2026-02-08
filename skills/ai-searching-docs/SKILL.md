@@ -7,6 +7,75 @@ description: Build AI that searches your documents and answers questions. Use wh
 
 Guide the user through building an AI that searches documents and answers questions accurately. Uses DSPy's RAG (retrieval-augmented generation) pattern — retrieve relevant passages, then generate an answer grounded in them.
 
+## Step 0: Load your data
+
+If you have documents in files, databases, or SaaS tools, use LangChain's document loaders to get them into a standard format before building your search pipeline.
+
+### LangChain document loaders
+
+```python
+from langchain_community.document_loaders import (
+    PyPDFLoader,
+    TextLoader,
+    CSVLoader,
+    WebBaseLoader,
+    DirectoryLoader,
+    NotionDBLoader,
+    JSONLoader,
+)
+
+# PDF files
+docs = PyPDFLoader("report.pdf").load()
+
+# All text files in a directory
+docs = DirectoryLoader("./docs/", glob="**/*.txt", loader_cls=TextLoader).load()
+
+# Web pages
+docs = WebBaseLoader("https://example.com/help").load()
+
+# CSV
+docs = CSVLoader("data.csv", source_column="url").load()
+
+# JSON
+docs = JSONLoader("data.json", jq_schema=".records[]", content_key="text").load()
+```
+
+### Text splitting
+
+Split loaded documents into chunks sized for embedding and retrieval:
+
+```python
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+chunks = splitter.split_documents(docs)
+# Each chunk has .page_content (text) and .metadata (source info)
+```
+
+| Splitter | Best for |
+|----------|----------|
+| `RecursiveCharacterTextSplitter` | General-purpose (recommended default) |
+| `MarkdownHeaderTextSplitter` | Markdown docs — splits by heading |
+| `TokenTextSplitter` | When you need strict token budgets |
+
+### Vector store setup with LangChain
+
+```python
+from langchain_chroma import Chroma
+from langchain_openai import OpenAIEmbeddings
+
+embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+vectorstore = Chroma.from_documents(chunks, embeddings, persist_directory="./chroma_db")
+
+# Use as a retriever
+retriever = vectorstore.as_retriever(search_kwargs={"k": 5})
+results = retriever.invoke("How do refunds work?")
+```
+
+Other stores follow the same pattern: `Pinecone.from_documents(...)`, `FAISS.from_documents(...)`.
+
+Once your data is loaded and chunked, wire it into a DSPy retriever (Step 3 below) or use ChromaDB directly. For the full LangChain/LangGraph API reference, see [`docs/langchain-langgraph-reference.md`](../../docs/langchain-langgraph-reference.md).
+
 ## Step 1: Understand the setup
 
 Ask the user:
@@ -139,6 +208,113 @@ retriever = ChromaRetriever(collection)
 dspy.configure(lm=lm, rm=retriever)
 ```
 
+## Step 3b: Connect an existing vector store
+
+If you already have a vector store, wire it up as a DSPy retriever. Each follows the same pattern — subclass `dspy.Retrieve` and implement `forward()`:
+
+### Provider comparison
+
+| Store | Type | Best for | Setup |
+|-------|------|----------|-------|
+| ChromaDB | Embedded | Prototyping, small datasets | `pip install chromadb` |
+| Pinecone | Cloud | Managed, serverless, scales to billions | `pip install pinecone` |
+| Qdrant | Self-hosted or cloud | Open-source, filtering, hybrid search | `pip install qdrant-client` |
+| Weaviate | Self-hosted or cloud | Multi-modal, GraphQL, hybrid search | `pip install weaviate-client` |
+| pgvector | Postgres extension | Teams already using Postgres | `pip install pgvector sqlalchemy` |
+
+### Pinecone retriever
+
+```python
+from pinecone import Pinecone
+
+class PineconeRetriever(dspy.Retrieve):
+    def __init__(self, index_name, api_key, embed_fn, k=3):
+        super().__init__(k=k)
+        pc = Pinecone(api_key=api_key)
+        self.index = pc.Index(index_name)
+        self.embed_fn = embed_fn  # function: str -> list[float]
+
+    def forward(self, query, k=None):
+        k = k or self.k
+        vector = self.embed_fn(query)
+        results = self.index.query(vector=vector, top_k=k, include_metadata=True)
+        passages = [m["metadata"]["text"] for m in results["matches"]]
+        return dspy.Prediction(passages=passages)
+```
+
+### Qdrant retriever
+
+```python
+from qdrant_client import QdrantClient
+
+class QdrantRetriever(dspy.Retrieve):
+    def __init__(self, collection_name, url, embed_fn, k=3):
+        super().__init__(k=k)
+        self.client = QdrantClient(url=url)
+        self.collection = collection_name
+        self.embed_fn = embed_fn
+
+    def forward(self, query, k=None):
+        k = k or self.k
+        vector = self.embed_fn(query)
+        results = self.client.query_points(
+            collection_name=self.collection, query=vector, limit=k,
+        )
+        passages = [p.payload["text"] for p in results.points]
+        return dspy.Prediction(passages=passages)
+```
+
+### Weaviate retriever
+
+```python
+import weaviate
+
+class WeaviateRetriever(dspy.Retrieve):
+    def __init__(self, collection_name, url, k=3):
+        super().__init__(k=k)
+        self.client = weaviate.connect_to_local(url=url)  # or connect_to_weaviate_cloud
+        self.collection = self.client.collections.get(collection_name)
+
+    def forward(self, query, k=None):
+        k = k or self.k
+        results = self.collection.query.near_text(query=query, limit=k)
+        passages = [o.properties["text"] for o in results.objects]
+        return dspy.Prediction(passages=passages)
+```
+
+### pgvector retriever (PostgreSQL)
+
+```python
+from sqlalchemy import create_engine, text
+
+class PgvectorRetriever(dspy.Retrieve):
+    def __init__(self, engine, table, embed_fn, k=3):
+        super().__init__(k=k)
+        self.engine = engine
+        self.table = table
+        self.embed_fn = embed_fn
+
+    def forward(self, query, k=None):
+        k = k or self.k
+        vector = self.embed_fn(query)
+        sql = text(f"""
+            SELECT content FROM {self.table}
+            ORDER BY embedding <=> :vec LIMIT :k
+        """)
+        with self.engine.connect() as conn:
+            rows = conn.execute(sql, {"vec": str(vector), "k": k}).fetchall()
+        passages = [row[0] for row in rows]
+        return dspy.Prediction(passages=passages)
+```
+
+All of these work as drop-in replacements for `dspy.Retrieve`:
+
+```python
+retriever = PineconeRetriever("my-index", api_key="...", embed_fn=embed)
+dspy.configure(lm=lm, rm=retriever)
+# Or pass directly to your module
+```
+
 ## Step 4: Multi-document search (for complex questions)
 
 When questions need info from multiple places:
@@ -221,4 +397,5 @@ optimized = optimizer.compile(DocSearch(), trainset=trainset)
 - For worked examples, see [examples.md](examples.md)
 - Need to summarize docs instead of answering questions? Use `/ai-summarizing`
 - Use `/ai-serving-apis` to put your document search behind a REST API
+- Building a chatbot on top of doc search? Use `/ai-building-chatbots`
 - Next: `/ai-improving-accuracy` to measure and improve your AI

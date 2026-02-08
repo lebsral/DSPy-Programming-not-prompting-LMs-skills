@@ -9,6 +9,7 @@ Build reliable AI features. Powered by [DSPy](https://dspy.ai/) — a framework 
 | "I'm starting a new AI feature" | [`/ai-kickoff`](skills/ai-kickoff/SKILL.md) | Scaffold a complete AI project with the right structure |
 | "I need to auto-sort/tag/categorize content" | [`/ai-sorting`](skills/ai-sorting/SKILL.md) | Build AI that sorts tickets, tags emails, detects sentiment |
 | "I need to search docs and answer questions" | [`/ai-searching-docs`](skills/ai-searching-docs/SKILL.md) | Build AI-powered knowledge base, help center, or doc Q&A |
+| "I need AI to answer questions about our database" | [`/ai-querying-databases`](skills/ai-querying-databases/SKILL.md) | Text-to-SQL: plain English questions over Postgres, MySQL, Snowflake |
 | "I need to condense long content into summaries" | [`/ai-summarizing`](skills/ai-summarizing/SKILL.md) | Summarize meetings, articles, threads — with length control |
 | "I need to pull structured data from messy text" | [`/ai-parsing-data`](skills/ai-parsing-data/SKILL.md) | Parse invoices, extract entities, convert text to JSON |
 | "I need AI to take actions and call APIs" | [`/ai-taking-actions`](skills/ai-taking-actions/SKILL.md) | Build AI that calls APIs, uses tools, and completes tasks |
@@ -28,8 +29,12 @@ Build reliable AI features. Powered by [DSPy](https://dspy.ai/) — a framework 
 | "Is our AI safe to launch?" | [`/ai-testing-safety`](skills/ai-testing-safety/SKILL.md) | Automatically find vulnerabilities with adversarial testing |
 | "We need to moderate user content" | [`/ai-moderating-content`](skills/ai-moderating-content/SKILL.md) | Build AI content moderation with severity levels and routing |
 | "Is our AI still working in production?" | [`/ai-monitoring`](skills/ai-monitoring/SKILL.md) | Monitor quality, safety, and cost — catch degradation early |
+| "Why did my AI give that wrong answer?" | [`/ai-tracing-requests`](skills/ai-tracing-requests/SKILL.md) | Trace individual requests — see every LM call, retrieval, and step |
+| "Which of our optimization experiments was best?" | [`/ai-tracking-experiments`](skills/ai-tracking-experiments/SKILL.md) | Log, compare, and promote optimization runs |
 | "I need AI to score, grade, or evaluate things" | [`/ai-scoring`](skills/ai-scoring/SKILL.md) | Score essays, audit support quality, rate code reviews against rubrics |
 | "My AI works on simple inputs but fails on complex ones" | [`/ai-decomposing-tasks`](skills/ai-decomposing-tasks/SKILL.md) | Break unreliable single-step tasks into reliable subtasks |
+| "I need a conversational AI assistant" | [`/ai-building-chatbots`](skills/ai-building-chatbots/SKILL.md) | Build chatbots with memory, state, and doc-grounded responses |
+| "I need multiple AI agents working together" | [`/ai-coordinating-agents`](skills/ai-coordinating-agents/SKILL.md) | Supervisor agents, specialist handoff, parallel research teams |
 | "My AI is broken/erroring" | [`/ai-fixing-errors`](skills/ai-fixing-errors/SKILL.md) | Diagnose and fix crashes, wrong outputs, and weird behavior |
 
 ## Quick Start
@@ -71,6 +76,7 @@ Skills follow the [Claude Code skills format](https://code.claude.com/docs/en/sk
 ## Reference Docs
 
 - [`docs/dspy-reference.md`](docs/dspy-reference.md) — DSPy API quick reference (modules, optimizers, patterns)
+- [`docs/langchain-langgraph-reference.md`](docs/langchain-langgraph-reference.md) — LangChain & LangGraph API quick reference (loaders, tools, StateGraph)
 - [`docs/skills-spec.md`](docs/skills-spec.md) — Claude Code skills specification (for contributors)
 
 ## Contributing
