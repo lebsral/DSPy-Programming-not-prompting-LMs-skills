@@ -18,6 +18,7 @@ Build reliable AI features. Powered by [DSPy](https://dspy.ai/) — a framework 
 | "My AI gives wrong answers" | [`/ai-improving-accuracy`](skills/ai-improving-accuracy/SKILL.md) | Measure quality, then systematically improve it |
 | "My AI gives different answers every time" | [`/ai-making-consistent`](skills/ai-making-consistent/SKILL.md) | Lock down outputs so they're predictable and reliable |
 | "My AI is too expensive" | [`/ai-cutting-costs`](skills/ai-cutting-costs/SKILL.md) | Reduce API costs with smart routing, caching, fine-tuning |
+| "Let's fine-tune on our data" | [`/ai-fine-tuning`](skills/ai-fine-tuning/SKILL.md) | Train models on your data for max quality or cost savings |
 | "My AI is broken/erroring" | [`/ai-fixing-errors`](skills/ai-fixing-errors/SKILL.md) | Diagnose and fix crashes, wrong outputs, and weird behavior |
 
 ## Quick Start

@@ -194,32 +194,18 @@ class Concise(dspy.Signature):
 
 ## Step 6: Fine-tune a cheap model (advanced)
 
-The biggest cost saver: train a small cheap model to do what the expensive model does. Use `BootstrapFinetune` to distill from an expensive teacher to a cheap student:
+The biggest cost saver: train a small cheap model to do what the expensive model does. Distill from an expensive teacher to a cheap student:
 
 ```python
-# Step 1: Build and optimize with the expensive model
-expensive_lm = dspy.LM("openai/gpt-4o")
-dspy.configure(lm=expensive_lm)
-
-# ... build and optimize your program ...
-
-# Step 2: Fine-tune a cheap model on the expensive model's outputs
-optimizer = dspy.BootstrapFinetune(
-    metric=metric,
-    num_threads=24,
-)
-finetuned = optimizer.compile(my_program, trainset=trainset)
-
-# Step 3: The finetuned program now uses the cheap fine-tuned model
-# Verify quality is maintained
-from dspy.evaluate import Evaluate
-evaluator = Evaluate(devset=devset, metric=metric, num_threads=4, display_progress=True)
-print(f"Expensive model: {evaluator(my_program)}")
-print(f"Fine-tuned cheap model: {evaluator(finetuned)}")
+# Build and optimize with the expensive model, then fine-tune a cheap one
+optimizer = dspy.BootstrapFinetune(metric=metric, num_threads=24)
+finetuned = optimizer.compile(my_program, trainset=trainset, teacher=teacher_optimized)
 ```
 
 **Requirements:** 500+ training examples, a fine-tunable model.
 **Typical savings:** 10-50x cost reduction with 85-95% quality retention.
+
+For the complete model distillation workflow (decision framework, prerequisites, BetterTogether, troubleshooting), see `/ai-fine-tuning`.
 
 ## Step 7: Use `Predict` instead of `ChainOfThought` where possible
 

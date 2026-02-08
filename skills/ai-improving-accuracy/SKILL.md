@@ -220,14 +220,14 @@ optimized = optimizer.compile(my_program, trainset=trainset, metric=metric)
 
 ### BootstrapFinetune (maximum quality)
 
-Fine-tunes model weights. Requires more data and supported models:
+Fine-tunes model weights for the biggest accuracy gains. Requires 500+ examples and a fine-tunable model:
 
 ```python
 optimizer = dspy.BootstrapFinetune(metric=metric, num_threads=24)
 optimized = optimizer.compile(my_program, trainset=trainset)
 ```
 
-**Requirements:** 500+ examples, a fine-tunable model.
+For the full fine-tuning workflow (decision framework, prerequisites, model distillation, BetterTogether), see `/ai-fine-tuning`.
 
 ## Step 4: Verify improvement
 
