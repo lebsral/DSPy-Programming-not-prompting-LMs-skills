@@ -299,4 +299,6 @@ When combined with optimization (`/ai-improving-accuracy`), the model learns to 
 - Use `/ai-following-rules` for defining and enforcing content policies, format rules, and business constraints
 - Use `/ai-building-pipelines` to wire checks into multi-step systems
 - Use `/ai-making-consistent` for output consistency (not correctness)
+- Use `/ai-testing-safety` to stress-test your guardrails with adversarial attacks
+- Need to evaluate human work against criteria? Use `/ai-scoring`
 - Next: `/ai-improving-accuracy` to measure and improve quality

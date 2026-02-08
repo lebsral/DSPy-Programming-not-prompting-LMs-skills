@@ -265,4 +265,6 @@ my_program.load("optimized_program.json")
 
 - For optimizer comparison table and metric patterns, see [reference.md](reference.md)
 - Once quality is good, use `/ai-cutting-costs` to reduce your AI bill
+- Use `/ai-monitoring` to track quality in production after deployment
+- Accuracy plateaued despite optimization? Try `/ai-decomposing-tasks` to restructure your task
 - If things are broken, use `/ai-fixing-errors` to diagnose

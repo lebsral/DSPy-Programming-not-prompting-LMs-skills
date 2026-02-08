@@ -113,4 +113,5 @@ print(f"Reasoning: {result.reasoning}")
 ## Additional resources
 
 - For worked examples (sentiment, intent, topics), see [examples.md](examples.md)
+- Need scores instead of categories? Use `/ai-scoring`
 - Next: `/ai-improving-accuracy` to measure and improve your AI

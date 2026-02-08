@@ -28,6 +28,8 @@ Build reliable AI features. Powered by [DSPy](https://dspy.ai/) — a framework 
 | "Is our AI safe to launch?" | [`/ai-testing-safety`](skills/ai-testing-safety/SKILL.md) | Automatically find vulnerabilities with adversarial testing |
 | "We need to moderate user content" | [`/ai-moderating-content`](skills/ai-moderating-content/SKILL.md) | Build AI content moderation with severity levels and routing |
 | "Is our AI still working in production?" | [`/ai-monitoring`](skills/ai-monitoring/SKILL.md) | Monitor quality, safety, and cost — catch degradation early |
+| "I need AI to score, grade, or evaluate things" | [`/ai-scoring`](skills/ai-scoring/SKILL.md) | Score essays, audit support quality, rate code reviews against rubrics |
+| "My AI works on simple inputs but fails on complex ones" | [`/ai-decomposing-tasks`](skills/ai-decomposing-tasks/SKILL.md) | Break unreliable single-step tasks into reliable subtasks |
 | "My AI is broken/erroring" | [`/ai-fixing-errors`](skills/ai-fixing-errors/SKILL.md) | Diagnose and fix crashes, wrong outputs, and weird behavior |
 
 ## Quick Start
