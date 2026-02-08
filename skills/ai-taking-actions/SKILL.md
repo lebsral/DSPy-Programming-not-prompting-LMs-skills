@@ -130,6 +130,43 @@ optimizer = dspy.MIPROv2(metric=action_metric, auto="medium")
 optimized = optimizer.compile(agent, trainset=trainset)
 ```
 
+## Using LangChain tools
+
+LangChain has 100+ pre-built tools (search engines, Wikipedia, SQL databases, web scrapers, etc.). Convert any of them to DSPy tools with one line:
+
+```python
+import dspy
+from langchain_community.tools import DuckDuckGoSearchRun, WikipediaQueryRun
+from langchain_community.utilities import WikipediaAPIWrapper
+
+# Convert LangChain tools to DSPy tools
+search = dspy.Tool.from_langchain(DuckDuckGoSearchRun())
+wikipedia = dspy.Tool.from_langchain(WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper()))
+
+# Use in any DSPy agent
+agent = dspy.ReAct(
+    "question -> answer",
+    tools=[search, wikipedia],
+    max_iters=5,
+)
+```
+
+**When to use LangChain tools vs writing your own:**
+
+| Use LangChain tools when... | Write your own when... |
+|------------------------------|------------------------|
+| There's an existing tool for it (search, Wikipedia, SQL) | You need custom business logic |
+| You want quick prototyping | You need tight error handling |
+| The tool wraps a standard API | You're wrapping an internal API |
+
+Install the tools you need:
+
+```bash
+pip install langchain-community  # DuckDuckGo, Wikipedia, requests, etc.
+```
+
+For the full LangChain/LangGraph API reference, see [`docs/langchain-langgraph-reference.md`](../../docs/langchain-langgraph-reference.md).
+
 ## Key patterns
 
 - **Start with ReAct** — it's the most general-purpose action module
@@ -142,4 +179,5 @@ optimized = optimizer.compile(agent, trainset=trainset)
 ## Additional resources
 
 - For worked examples (calculator, search, APIs), see [examples.md](examples.md)
+- Need multiple agents working together (not just one)? Use `/ai-coordinating-agents`
 - Next: `/ai-improving-accuracy` to measure and improve your AI

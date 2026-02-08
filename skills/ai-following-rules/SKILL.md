@@ -268,4 +268,5 @@ optimized = optimizer.compile(
 - Use `/ai-checking-outputs` for general output verification (safety, quality gates)
 - Use `/ai-stopping-hallucinations` for grounding AI in facts and sources
 - Use `/ai-improving-accuracy` to measure and improve quality after adding rules
+- Use `/ai-testing-safety` to verify your rules hold up against adversarial users
 - See `examples.md` for complete worked examples

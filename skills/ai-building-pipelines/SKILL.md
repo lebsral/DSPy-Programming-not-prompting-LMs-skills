@@ -245,6 +245,56 @@ optimized = optimizer.compile(pipeline, trainset=trainset)
 - **Debug stage by stage** — use `dspy.inspect_history()` to see what each step did
 - **Assign models per stage** — cheap models for simple tasks, expensive for complex ones
 
+## When to use LangGraph instead
+
+DSPy pipelines are great for stateless, linear-ish flows. But some problems need more:
+
+| If your pipeline... | Use |
+|---------------------|-----|
+| Steps run in a fixed order | DSPy pipeline (this skill) |
+| Steps branch based on results | DSPy pipeline with `if/else` in `forward()` |
+| Needs cycles (retry loops, agent loops) | **LangGraph** `StateGraph` with DSPy modules as nodes |
+| Needs persistent state across calls | **LangGraph** with checkpointing |
+| Needs human approval mid-pipeline | **LangGraph** `interrupt_before` |
+| Coordinates multiple independent agents | **LangGraph** supervisor pattern |
+
+### Quick example: DSPy module as a LangGraph node
+
+```python
+import dspy
+from langgraph.graph import StateGraph, START, END
+from typing import TypedDict
+
+class PipelineState(TypedDict):
+    input_text: str
+    category: str
+    output: str
+
+# DSPy modules
+classifier = dspy.ChainOfThought("text -> category")
+generator = dspy.ChainOfThought("text, category -> output")
+
+# Wrap as LangGraph nodes
+def classify_node(state: PipelineState) -> dict:
+    result = classifier(text=state["input_text"])
+    return {"category": result.category}
+
+def generate_node(state: PipelineState) -> dict:
+    result = generator(text=state["input_text"], category=state["category"])
+    return {"output": result.output}
+
+# Build graph
+graph = StateGraph(PipelineState)
+graph.add_node("classify", classify_node)
+graph.add_node("generate", generate_node)
+graph.add_edge(START, "classify")
+graph.add_edge("classify", "generate")
+graph.add_edge("generate", END)
+app = graph.compile()
+```
+
+This gives you LangGraph's state management and routing with DSPy's optimizable prompts. For more, see `/ai-building-chatbots` (stateful conversations) and `/ai-coordinating-agents` (multi-agent systems). For the full LangGraph API reference, see [`docs/langchain-langgraph-reference.md`](../../docs/langchain-langgraph-reference.md).
+
 ## Additional resources
 
 - Use `/ai-checking-outputs` to add verification and guardrails between stages

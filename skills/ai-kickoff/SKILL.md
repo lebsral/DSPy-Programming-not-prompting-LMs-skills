@@ -181,6 +181,83 @@ result = program(input_field="test input")
 print(result)
 ```
 
+## Step 2b: Add API serving (if the user wants a web API)
+
+If the user wants to serve their AI as a web API, add these files to the project structure:
+
+```
+$ARGUMENTS/
+├── main.py          # Entry point — run your AI feature
+├── program.py       # AI logic (DSPy module)
+├── server.py        # FastAPI app — routes and startup
+├── models.py        # Pydantic request/response schemas
+├── config.py        # Environment configuration
+├── metrics.py       # How to measure if the AI is working
+├── optimize.py      # Make the AI better automatically
+├── evaluate.py      # Test the AI's quality
+├── data.py          # Training/test data loading
+├── requirements.txt # Dependencies
+├── Dockerfile
+└── .env.example
+```
+
+### `server.py`
+
+```python
+from contextlib import asynccontextmanager
+import dspy
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
+
+from program import MyProgram
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    lm = dspy.LM("openai/gpt-4o-mini")
+    dspy.configure(lm=lm)
+    app.state.program = MyProgram()
+    try:
+        app.state.program.load("optimized.json")
+    except FileNotFoundError:
+        pass
+    yield
+
+app = FastAPI(title="My AI API", lifespan=lifespan)
+
+class QueryRequest(BaseModel):
+    input_field: str = Field(..., min_length=1)
+
+class QueryResponse(BaseModel):
+    output_field: str
+
+@app.post("/query", response_model=QueryResponse)
+async def query(request: QueryRequest):
+    result = app.state.program(input_field=request.input_field)
+    return QueryResponse(output_field=result.output_field)
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+```
+
+Adapt `QueryRequest`/`QueryResponse` fields to match the user's inputs/outputs.
+
+### Updated `requirements.txt`
+
+```
+dspy>=2.5
+fastapi>=0.100
+uvicorn[standard]
+pydantic-settings>=2.0
+```
+
+### `.env.example`
+
+```
+AI_MODEL_NAME=openai/gpt-4o-mini
+AI_API_KEY=your-api-key-here
+```
+
 ## Step 3: Explain next steps
 
 After generating the project, tell the user:
@@ -189,5 +266,7 @@ After generating the project, tell the user:
 2. **Run `evaluate.py`** to see how well the AI works now
 3. **Run `optimize.py`** to automatically improve quality
 4. **Run `main.py`** to use the AI
+
+5. **Serve as API?** Use `/ai-serving-apis` to put your AI behind FastAPI endpoints
 
 Next: `/ai-improving-accuracy` to measure and improve your AI's quality.
