@@ -41,7 +41,7 @@ lm = dspy.LM("openai/gpt-4o-mini")  # ~$0.15/M input tokens — 33x cheaper
 lm = dspy.LM("together_ai/meta-llama/Llama-3-70b-chat-hf")
 ```
 
-Always measure quality before and after with `/ai-improving-accuracy`.
+Always measure quality before and after with `/ai-improving-accuracy`. When you switch models, re-optimize your prompts — they don't transfer. See `/ai-switching-models` for the full workflow.
 
 ### Enable caching
 
