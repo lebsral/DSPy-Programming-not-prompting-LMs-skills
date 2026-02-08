@@ -256,6 +256,20 @@ class RankAnswers(dspy.Signature):
     best_answer: str = dspy.OutputField()
 ```
 
+## How backtracking works
+
+When `dspy.Assert` fails, DSPy doesn't just retry blindly:
+
+1. The assertion failure is caught
+2. The error message is fed back to the LM as additional context
+3. The LM retries with this feedback (e.g., "your answer was 350 words, must be under 280")
+4. This repeats up to `max_backtrack_attempts` times (default: 2)
+5. If all retries fail, the assertion raises an error
+
+This is why **specific error messages matter** — they're the model's self-correction instructions. "Response is 350 words, must be under 280" is much more useful than "too long."
+
+When combined with optimization (`/ai-improving-accuracy`), the model learns to satisfy constraints on the first try, reducing retries in production.
+
 ## Key patterns
 
 - **Assert for hard requirements** — format, length, safety. DSPy retries automatically.
@@ -281,6 +295,8 @@ class RankAnswers(dspy.Signature):
 
 ## Additional resources
 
+- Use `/ai-stopping-hallucinations` for citation enforcement, faithfulness verification, and grounding AI in facts
+- Use `/ai-following-rules` for defining and enforcing content policies, format rules, and business constraints
 - Use `/ai-building-pipelines` to wire checks into multi-step systems
 - Use `/ai-making-consistent` for output consistency (not correctness)
 - Next: `/ai-improving-accuracy` to measure and improve quality
