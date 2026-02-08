@@ -249,4 +249,5 @@ optimized = optimizer.compile(pipeline, trainset=trainset)
 
 - Use `/ai-checking-outputs` to add verification and guardrails between stages
 - Use `/ai-cutting-costs` to assign different models per stage
+- For content generation pipelines, see `/ai-writing-content`. For complex reasoning, see `/ai-reasoning`
 - Next: `/ai-improving-accuracy` to measure and improve your pipeline

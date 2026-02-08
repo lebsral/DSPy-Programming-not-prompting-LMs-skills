@@ -56,7 +56,90 @@ class MySearchBackend(dspy.Retrieve):
         return dspy.Prediction(passages=[r["text"] for r in results])
 ```
 
-## Step 3: Multi-document search (for complex questions)
+## Step 3: Set up a vector store
+
+If you don't have a search backend yet, set one up. ChromaDB is the simplest option for getting started:
+
+### ChromaDB setup
+
+```python
+import chromadb
+
+client = chromadb.PersistentClient(path="./chroma_db")
+collection = client.get_or_create_collection("my_docs")
+```
+
+### Load and chunk documents
+
+Split documents into passages before adding them to the vector store. Sentence-based chunking works well for most use cases:
+
+```python
+import re
+
+def chunk_text(text, max_sentences=5):
+    """Split text into chunks of N sentences."""
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    chunks = []
+    for i in range(0, len(sentences), max_sentences):
+        chunk = " ".join(sentences[i:i + max_sentences])
+        if chunk:
+            chunks.append(chunk)
+    return chunks
+
+# Load and chunk your documents
+for doc in documents:
+    chunks = chunk_text(doc["text"])
+    collection.add(
+        documents=chunks,
+        ids=[f"{doc['id']}_chunk_{i}" for i in range(len(chunks))],
+        metadatas=[{"source": doc["source"]}] * len(chunks),
+    )
+```
+
+### Custom embeddings
+
+ChromaDB uses its default embedding function, but you can swap in others:
+
+```python
+# SentenceTransformers (local, free)
+from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
+ef = SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
+
+# OpenAI embeddings (API, paid)
+from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
+ef = OpenAIEmbeddingFunction(api_key="...", model_name="text-embedding-3-small")
+
+collection = client.get_or_create_collection("my_docs", embedding_function=ef)
+```
+
+### Chunking strategies
+
+| Strategy | How it works | Best for |
+|----------|-------------|----------|
+| Sentence-based | Split on sentence boundaries | Articles, docs, help pages |
+| Fixed-size | Split every N characters with overlap | Long unstructured text |
+| Paragraph | Split on double newlines | Well-structured documents |
+| Overlap | Fixed-size with N-character overlap between chunks | When context at chunk boundaries matters |
+
+### Wire it up as a DSPy retriever
+
+```python
+class ChromaRetriever(dspy.Retrieve):
+    def __init__(self, collection, k=3):
+        super().__init__(k=k)
+        self.collection = collection
+
+    def forward(self, query, k=None):
+        k = k or self.k
+        results = self.collection.query(query_texts=[query], n_results=k)
+        return dspy.Prediction(passages=results["documents"][0])
+
+# Use it
+retriever = ChromaRetriever(collection)
+dspy.configure(lm=lm, rm=retriever)
+```
+
+## Step 4: Multi-document search (for complex questions)
 
 When questions need info from multiple places:
 
@@ -93,7 +176,7 @@ def deduplicate(passages):
     return result
 ```
 
-## Step 4: Test the quality
+## Step 5: Test the quality
 
 ```python
 def search_metric(example, prediction, trace=None):
@@ -118,7 +201,7 @@ def judge_metric(example, prediction, trace=None):
     return result.is_correct
 ```
 
-## Step 5: Improve accuracy
+## Step 6: Improve accuracy
 
 ```python
 optimizer = dspy.BootstrapFewShot(metric=search_metric, max_bootstrapped_demos=4)
@@ -136,4 +219,6 @@ optimized = optimizer.compile(DocSearch(), trainset=trainset)
 ## Additional resources
 
 - For worked examples, see [examples.md](examples.md)
+- Need to summarize docs instead of answering questions? Use `/ai-summarizing`
+- Use `/ai-serving-apis` to put your document search behind a REST API
 - Next: `/ai-improving-accuracy` to measure and improve your AI

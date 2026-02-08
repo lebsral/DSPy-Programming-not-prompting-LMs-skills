@@ -136,4 +136,5 @@ optimized = optimizer.compile(parser, trainset=trainset)
 ## Additional resources
 
 - For worked examples (invoices, resumes, entities), see [examples.md](examples.md)
+- Need summaries instead of structured data? Use `/ai-summarizing`
 - Next: `/ai-improving-accuracy` to measure and improve your parser

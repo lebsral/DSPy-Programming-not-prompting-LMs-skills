@@ -9,8 +9,11 @@ Build reliable AI features. Powered by [DSPy](https://dspy.ai/) — a framework 
 | "I'm starting a new AI feature" | [`/ai-kickoff`](skills/ai-kickoff/SKILL.md) | Scaffold a complete AI project with the right structure |
 | "I need to auto-sort/tag/categorize content" | [`/ai-sorting`](skills/ai-sorting/SKILL.md) | Build AI that sorts tickets, tags emails, detects sentiment |
 | "I need to search docs and answer questions" | [`/ai-searching-docs`](skills/ai-searching-docs/SKILL.md) | Build AI-powered knowledge base, help center, or doc Q&A |
+| "I need to condense long content into summaries" | [`/ai-summarizing`](skills/ai-summarizing/SKILL.md) | Summarize meetings, articles, threads — with length control |
 | "I need to pull structured data from messy text" | [`/ai-parsing-data`](skills/ai-parsing-data/SKILL.md) | Parse invoices, extract entities, convert text to JSON |
 | "I need AI to take actions and call APIs" | [`/ai-taking-actions`](skills/ai-taking-actions/SKILL.md) | Build AI that calls APIs, uses tools, and completes tasks |
+| "I need AI to write articles, reports, or copy" | [`/ai-writing-content`](skills/ai-writing-content/SKILL.md) | Generate blog posts, product descriptions, newsletters |
+| "My AI fails on hard problems that need planning" | [`/ai-reasoning`](skills/ai-reasoning/SKILL.md) | Add multi-step reasoning, Self-Discovery, chain-of-thought |
 | "My task needs multiple AI steps" | [`/ai-building-pipelines`](skills/ai-building-pipelines/SKILL.md) | Chain classify, retrieve, generate, verify into one pipeline |
 | "I need to verify AI output before users see it" | [`/ai-checking-outputs`](skills/ai-checking-outputs/SKILL.md) | Add guardrails, fact-checking, safety filters, and quality gates |
 | "My AI makes stuff up / hallucinates" | [`/ai-stopping-hallucinations`](skills/ai-stopping-hallucinations/SKILL.md) | Ground AI in facts with citations, verification, and source checking |
@@ -21,6 +24,10 @@ Build reliable AI features. Powered by [DSPy](https://dspy.ai/) — a framework 
 | "Let's fine-tune on our data" | [`/ai-fine-tuning`](skills/ai-fine-tuning/SKILL.md) | Train models on your data for max quality or cost savings |
 | "Can we switch to a different model?" | [`/ai-switching-models`](skills/ai-switching-models/SKILL.md) | Switch providers, compare models, re-optimize automatically |
 | "We don't have enough training data" | [`/ai-generating-data`](skills/ai-generating-data/SKILL.md) | Generate synthetic examples, fill data gaps, bootstrap from scratch |
+| "How do I put my AI behind an API?" | [`/ai-serving-apis`](skills/ai-serving-apis/SKILL.md) | Wrap your AI in FastAPI endpoints for production serving |
+| "Is our AI safe to launch?" | [`/ai-testing-safety`](skills/ai-testing-safety/SKILL.md) | Automatically find vulnerabilities with adversarial testing |
+| "We need to moderate user content" | [`/ai-moderating-content`](skills/ai-moderating-content/SKILL.md) | Build AI content moderation with severity levels and routing |
+| "Is our AI still working in production?" | [`/ai-monitoring`](skills/ai-monitoring/SKILL.md) | Monitor quality, safety, and cost — catch degradation early |
 | "My AI is broken/erroring" | [`/ai-fixing-errors`](skills/ai-fixing-errors/SKILL.md) | Diagnose and fix crashes, wrong outputs, and weird behavior |
 
 ## Quick Start
