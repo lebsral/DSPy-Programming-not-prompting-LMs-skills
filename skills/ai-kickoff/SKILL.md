@@ -185,7 +185,7 @@ print(result)
 
 After generating the project, tell the user:
 
-1. **Fill in `data.py`** with real training data (20+ examples)
+1. **Fill in `data.py`** with real training data (20+ examples). Don't have real data yet? Use `/ai-generating-data` to generate synthetic training examples.
 2. **Run `evaluate.py`** to see how well the AI works now
 3. **Run `optimize.py`** to automatically improve quality
 4. **Run `main.py`** to use the AI

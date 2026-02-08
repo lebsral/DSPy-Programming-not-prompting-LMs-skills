@@ -19,6 +19,8 @@ Build reliable AI features. Powered by [DSPy](https://dspy.ai/) — a framework 
 | "My AI gives different answers every time" | [`/ai-making-consistent`](skills/ai-making-consistent/SKILL.md) | Lock down outputs so they're predictable and reliable |
 | "My AI is too expensive" | [`/ai-cutting-costs`](skills/ai-cutting-costs/SKILL.md) | Reduce API costs with smart routing, caching, fine-tuning |
 | "Let's fine-tune on our data" | [`/ai-fine-tuning`](skills/ai-fine-tuning/SKILL.md) | Train models on your data for max quality or cost savings |
+| "Can we switch to a different model?" | [`/ai-switching-models`](skills/ai-switching-models/SKILL.md) | Switch providers, compare models, re-optimize automatically |
+| "We don't have enough training data" | [`/ai-generating-data`](skills/ai-generating-data/SKILL.md) | Generate synthetic examples, fill data gaps, bootstrap from scratch |
 | "My AI is broken/erroring" | [`/ai-fixing-errors`](skills/ai-fixing-errors/SKILL.md) | Diagnose and fix crashes, wrong outputs, and weird behavior |
 
 ## Quick Start

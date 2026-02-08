@@ -110,6 +110,8 @@ def metric(example, prediction, trace=None):
 
 ### Prepare test data
 
+If you don't have enough examples, use `/ai-generating-data` to generate synthetic training data.
+
 ```python
 import dspy
 
@@ -175,6 +177,8 @@ Start here
 +- Want to combine approaches? -> BetterTogether
     Jointly optimizes prompts and weights.
 ```
+
+Optimized prompts are model-specific. If you change models, re-run your optimizer. See `/ai-switching-models`.
 
 ### BootstrapFewShot (start here)
 

@@ -30,7 +30,7 @@ Before writing any code, walk through these questions with the user:
 ### When NOT to fine-tune
 
 - You haven't tried prompt optimization yet — start with `/ai-improving-accuracy`
-- You have fewer than 500 examples — use BootstrapFewShot or MIPROv2 instead
+- You have fewer than 500 examples — need more data? Use `/ai-generating-data` to bootstrap synthetic examples, or use BootstrapFewShot or MIPROv2 instead
 - Your baseline is below 50% — your data or task definition needs work
 - You're still iterating on what the task is — fine-tuning locks you in
 - You don't have a clear metric — you can't evaluate fine-tuning without one
