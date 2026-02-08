@@ -37,16 +37,57 @@ Build reliable AI features. Powered by [DSPy](https://dspy.ai/) — a framework 
 | "I need multiple AI agents working together" | [`/ai-coordinating-agents`](skills/ai-coordinating-agents/SKILL.md) | Supervisor agents, specialist handoff, parallel research teams |
 | "My AI is broken/erroring" | [`/ai-fixing-errors`](skills/ai-fixing-errors/SKILL.md) | Diagnose and fix crashes, wrong outputs, and weird behavior |
 
-## Quick Start
+## Install
 
-### Install skills (available across all your projects)
+### Option 1: `npx skills` (recommended — works with any AI coding agent)
+
+Install all 30 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
 
 ```bash
-# Clone the repo
-git clone https://github.com/YOUR_USERNAME/DSPy-Programming-not-prompting-LMs-skills.git
+npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills
+```
 
-# Copy skills to your Claude Code personal skills directory
+The CLI will prompt you to pick which skills and which agents to install. Or install everything non-interactively:
+
+```bash
+npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --all -y
+```
+
+To install globally (available in all your projects):
+
+```bash
+npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills -g
+```
+
+### Option 2: Claude Code plugin marketplace
+
+```bash
+# In Claude Code, run:
+/plugin marketplace add lebsral/DSPy-Programming-not-prompting-LMs-skills
+```
+
+Then install a skill group:
+
+```bash
+/plugin install dspy-build-skills@dspy-skills     # Building AI features (15 skills)
+/plugin install dspy-quality-skills@dspy-skills    # Quality and reliability (8 skills)
+/plugin install dspy-ops-skills@dspy-skills        # Production operations (7 skills)
+```
+
+### Option 3: Manual (git clone)
+
+```bash
+git clone https://github.com/lebsral/DSPy-Programming-not-prompting-LMs-skills.git
+```
+
+Copy skills to your agent's skill directory:
+
+```bash
+# Claude Code
 cp -r DSPy-Programming-not-prompting-LMs-skills/skills/* ~/.claude/skills/
+
+# Cursor
+cp -r DSPy-Programming-not-prompting-LMs-skills/skills/* ~/.cursor/skills/
 ```
 
 Or symlink to stay in sync with updates:
@@ -55,11 +96,21 @@ Or symlink to stay in sync with updates:
 ln -s "$(pwd)/DSPy-Programming-not-prompting-LMs-skills/skills/"* ~/.claude/skills/
 ```
 
-### Use a skill
+### Managing skills
 
-In Claude Code, either:
+```bash
+npx skills list          # See what you have installed
+npx skills check         # Check for updates
+npx skills update        # Update all installed skills
+npx skills remove        # Uninstall skills
+```
+
+## Use a skill
+
+In Claude Code (or any agent that supports the [Agent Skills](https://agentskills.io) standard):
+
 - **Invoke directly:** `/ai-sorting` or `/ai-kickoff my-project`
-- **Ask naturally:** "Help me sort support tickets into categories" — Claude picks the right skill
+- **Ask naturally:** "Help me sort support tickets into categories" — the agent picks the right skill
 
 ## How It Works
 

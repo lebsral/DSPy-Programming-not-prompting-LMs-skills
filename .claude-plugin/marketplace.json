@@ -1,0 +1,66 @@
+{
+  "name": "dspy-skills",
+  "owner": {
+    "name": "lebsral"
+  },
+  "metadata": {
+    "description": "Build reliable AI features with DSPy — programming not prompting",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "dspy-build-skills",
+      "description": "Skills for building AI features: classification, search, database Q&A, summarization, parsing, tool use, content generation, chatbots, agents, scoring, moderation, and API serving",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/ai-kickoff",
+        "./skills/ai-sorting",
+        "./skills/ai-searching-docs",
+        "./skills/ai-querying-databases",
+        "./skills/ai-summarizing",
+        "./skills/ai-parsing-data",
+        "./skills/ai-taking-actions",
+        "./skills/ai-writing-content",
+        "./skills/ai-reasoning",
+        "./skills/ai-building-pipelines",
+        "./skills/ai-building-chatbots",
+        "./skills/ai-coordinating-agents",
+        "./skills/ai-scoring",
+        "./skills/ai-moderating-content",
+        "./skills/ai-serving-apis"
+      ]
+    },
+    {
+      "name": "dspy-quality-skills",
+      "description": "Skills for improving AI quality and reliability: output validation, hallucination prevention, rule enforcement, accuracy optimization, consistency, task decomposition, data generation, and fine-tuning",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/ai-checking-outputs",
+        "./skills/ai-stopping-hallucinations",
+        "./skills/ai-following-rules",
+        "./skills/ai-improving-accuracy",
+        "./skills/ai-making-consistent",
+        "./skills/ai-decomposing-tasks",
+        "./skills/ai-generating-data",
+        "./skills/ai-fine-tuning"
+      ]
+    },
+    {
+      "name": "dspy-ops-skills",
+      "description": "Skills for AI production operations: cost optimization, model switching, monitoring, request tracing, experiment tracking, safety testing, and error debugging",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/ai-cutting-costs",
+        "./skills/ai-switching-models",
+        "./skills/ai-monitoring",
+        "./skills/ai-tracing-requests",
+        "./skills/ai-tracking-experiments",
+        "./skills/ai-testing-safety",
+        "./skills/ai-fixing-errors"
+      ]
+    }
+  ]
+}
