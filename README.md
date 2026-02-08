@@ -1,5 +1,9 @@
 # AI Skills for Claude Code
 
+```bash
+npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills -g --all -y
+```
+
 Build reliable AI features. Powered by [DSPy](https://dspy.ai/) — a framework that lets you program language models with composable modules instead of hand-writing prompts.
 
 ## What problem are you solving?
