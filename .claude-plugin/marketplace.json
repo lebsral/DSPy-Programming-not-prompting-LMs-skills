@@ -10,10 +10,11 @@
   "plugins": [
     {
       "name": "dspy-build-skills",
-      "description": "Skills for building AI features: classification, search, database Q&A, summarization, parsing, tool use, content generation, chatbots, agents, scoring, moderation, and API serving",
+      "description": "Skills for building AI features: routing, classification, search, database Q&A, summarization, parsing, tool use, content generation, chatbots, agents, scoring, moderation, API serving, and skill discovery",
       "source": "./",
       "strict": false,
       "skills": [
+        "./skills/ai-do",
         "./skills/ai-kickoff",
         "./skills/ai-sorting",
         "./skills/ai-searching-docs",
@@ -28,7 +29,8 @@
         "./skills/ai-coordinating-agents",
         "./skills/ai-scoring",
         "./skills/ai-moderating-content",
-        "./skills/ai-serving-apis"
+        "./skills/ai-serving-apis",
+        "./skills/ai-request-skill"
       ]
     },
     {

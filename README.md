@@ -47,7 +47,7 @@ Build reliable AI features. Powered by [DSPy](https://dspy.ai/) — a framework 
 
 ### Option 1: `npx skills` (recommended — works with any AI coding agent)
 
-Install all 31 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
+Install all 32 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
 
 ```bash
 npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills
@@ -75,7 +75,7 @@ npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills -g
 Then install a skill group:
 
 ```bash
-/plugin install dspy-build-skills@dspy-skills     # Building AI features (15 skills)
+/plugin install dspy-build-skills@dspy-skills     # Building AI features (17 skills)
 /plugin install dspy-quality-skills@dspy-skills    # Quality and reliability (8 skills)
 /plugin install dspy-ops-skills@dspy-skills        # Production operations (7 skills)
 ```
