@@ -10,6 +10,7 @@ Build reliable AI features. Powered by [DSPy](https://dspy.ai/) — a framework 
 
 | Your problem | Skill | What it does |
 |-------------|-------|--------------|
+| "I want to build something with AI but not sure where to start" | [`/ai-do`](skills/ai-do/SKILL.md) | Describe your problem, get routed to the right skill with a ready-to-use prompt |
 | "I'm starting a new AI feature" | [`/ai-kickoff`](skills/ai-kickoff/SKILL.md) | Scaffold a complete AI project with the right structure |
 | "I need to auto-sort/tag/categorize content" | [`/ai-sorting`](skills/ai-sorting/SKILL.md) | Build AI that sorts tickets, tags emails, detects sentiment |
 | "I need to search docs and answer questions" | [`/ai-searching-docs`](skills/ai-searching-docs/SKILL.md) | Build AI-powered knowledge base, help center, or doc Q&A |
