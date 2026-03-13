@@ -99,4 +99,12 @@ Generate the prompt for step 1 only. Mention that you can generate the step 2 pr
 
 ### If nothing fits
 
-If the user's problem doesn't match any skill, suggest `/ai-kickoff` as the general starting point and explain what would need to be built manually.
+First, determine whether the problem is within DSPy's scope:
+
+- **Not a DSPy thing** (e.g., "build a React frontend", "set up a Kubernetes cluster"): Say so directly. Suggest appropriate tools or frameworks instead. Do not route to a fallback skill.
+
+- **DSPy can do this, but no skill exists** (e.g., "integrate Arize Phoenix", "use DSPy assertions", "set up LiteLLM proxy"): Route to `/ai-request-skill` so the user can contribute the missing skill or request it. Pass context about what they need:
+
+```
+/ai-request-skill <what the user needs and which DSPy features are involved>
+```

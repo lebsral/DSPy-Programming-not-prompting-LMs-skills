@@ -41,12 +41,13 @@ Build reliable AI features. Powered by [DSPy](https://dspy.ai/) — a framework 
 | "I need a conversational AI assistant" | [`/ai-building-chatbots`](skills/ai-building-chatbots/SKILL.md) | Build chatbots with memory, state, and doc-grounded responses |
 | "I need multiple AI agents working together" | [`/ai-coordinating-agents`](skills/ai-coordinating-agents/SKILL.md) | Supervisor agents, specialist handoff, parallel research teams |
 | "My AI is broken/erroring" | [`/ai-fixing-errors`](skills/ai-fixing-errors/SKILL.md) | Diagnose and fix crashes, wrong outputs, and weird behavior |
+| "DSPy can do X but there's no skill for it" | [`/ai-request-skill`](skills/ai-request-skill/SKILL.md) | Build a missing skill and submit a PR, or file a GitHub issue requesting it |
 
 ## Install
 
 ### Option 1: `npx skills` (recommended — works with any AI coding agent)
 
-Install all 30 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
+Install all 31 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
 
 ```bash
 npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills
