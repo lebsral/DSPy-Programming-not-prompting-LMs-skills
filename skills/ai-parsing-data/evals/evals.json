@@ -1,0 +1,45 @@
+{
+  "skill_name": "ai-parsing-data",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I have a folder of LiveKit call transcript JSON files and I need to extract from each one: the caller's name (if mentioned), a one-sentence summary of their issue, whether the issue was resolved, and any follow-up action items. Some calls might not mention the caller's name so that should be optional. Output as JSON.",
+      "expected_output": "A Python script that loads LiveKit JSON transcripts, defines a Pydantic model with Optional caller_name, extracts structured fields, handles missing data gracefully, and writes results to JSON.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_pydantic_model", "description": "Defines a Pydantic BaseModel for the output structure"},
+        {"name": "has_optional_fields", "description": "Uses Optional for caller_name since it may not be present"},
+        {"name": "loads_livekit_transcripts", "description": "Reads JSON files and extracts text from segments array"},
+        {"name": "outputs_json", "description": "Writes extracted data to a JSON file"},
+        {"name": "handles_batch", "description": "Processes multiple transcript files, not just one"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "I get vendor invoices as plain text emails and I need to extract: vendor name, invoice number, date, line items (each with description, quantity, unit price, total), subtotal, tax, and grand total. Some invoices have 2 line items, some have 20. I have about 30 already manually extracted that I can use as training data.",
+      "expected_output": "A Python script that defines a nested Pydantic model (Invoice with list of LineItems), loads training data, evaluates baseline, optimizes with BootstrapFewShot, and saves the optimized parser.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_nested_pydantic", "description": "Defines Invoice model with nested list[LineItem] for variable-length line items"},
+        {"name": "uses_dspy_signature", "description": "Defines a dspy.Signature class for the extraction task"},
+        {"name": "loads_training_data", "description": "Shows how to load the 30 labeled examples"},
+        {"name": "includes_evaluation", "description": "Evaluates extraction quality with a metric"},
+        {"name": "includes_optimization", "description": "Uses a DSPy optimizer to improve accuracy"},
+        {"name": "saves_model", "description": "Persists the optimized parser with .save()"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I have a CSV with a 'notes' column containing free-text doctor visit notes. I need to extract: patient complaints (list), diagnosis, prescribed medications (list with name and dosage), and follow-up date. Some notes are really messy and abbreviated. I want to validate that medications have both a name and dosage.",
+      "expected_output": "A Python script that reads CSV, defines Pydantic models with validation, uses dspy.Suggest or Assert to validate medication fields, processes batch, handles messy input gracefully.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_pydantic_model", "description": "Defines structured output model for medical note fields"},
+        {"name": "has_list_fields", "description": "Uses list types for complaints and medications"},
+        {"name": "includes_validation", "description": "Uses dspy.Suggest or dspy.Assert to validate medication has name and dosage"},
+        {"name": "loads_csv", "description": "Reads from the CSV file with pandas or csv module"},
+        {"name": "handles_batch", "description": "Processes all rows, not just a single example"}
+      ]
+    }
+  ]
+}

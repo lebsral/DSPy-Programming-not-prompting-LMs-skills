@@ -1,0 +1,41 @@
+{
+  "skill_name": "ai-do",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I'm getting a bunch of customer calls through our LiveKit agent and I want to automatically figure out which ones are sales vs support vs billing so we can route them to the right team",
+      "expected_output": "Routes to /ai-sorting with a crafted prompt mentioning LiveKit transcripts, the three categories, and call classification",
+      "files": [],
+      "assertions": [
+        {"name": "routes_to_sorting", "description": "Recommends /ai-sorting as the primary skill"},
+        {"name": "mentions_transcripts", "description": "The crafted prompt mentions transcripts or call data as the input format"},
+        {"name": "includes_categories", "description": "The crafted prompt includes the user's categories (sales, support, billing)"},
+        {"name": "generates_runnable_prompt", "description": "Provides a /ai-sorting <prompt> that could be copy-pasted and run"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "my AI keeps giving different answers every time I ask the same question and sometimes it just makes stuff up",
+      "expected_output": "Routes to /ai-making-consistent as primary (the inconsistency is the stated problem), may mention /ai-stopping-hallucinations as a follow-up for the fabrication issue",
+      "files": [],
+      "assertions": [
+        {"name": "routes_to_consistency_or_hallucinations", "description": "Recommends /ai-making-consistent or /ai-stopping-hallucinations as primary skill"},
+        {"name": "addresses_both_problems", "description": "Acknowledges both issues (inconsistency AND hallucination) rather than ignoring one"},
+        {"name": "suggests_sequence_if_two_skills", "description": "If recommending two skills, presents them in a logical order"},
+        {"name": "generates_runnable_prompt", "description": "Provides a runnable /ai-<skill> <prompt> that could be copy-pasted"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I want to build a customer support system that can answer questions from our help docs, but also route complex issues to a human",
+      "expected_output": "Recommends a sequence: /ai-searching-docs for the Q&A-over-docs part, then possibly /ai-sorting or /ai-building-chatbots for the routing/escalation part",
+      "files": [],
+      "assertions": [
+        {"name": "routes_to_searching_docs", "description": "Recommends /ai-searching-docs as one of the skills (the core Q&A-over-docs need)"},
+        {"name": "addresses_escalation", "description": "Addresses the human escalation/routing requirement, not just the Q&A part"},
+        {"name": "recommends_sequence", "description": "Recognizes this spans multiple skills and recommends a sequence rather than a single skill"},
+        {"name": "generates_runnable_prompt", "description": "Provides a runnable /ai-<skill> <prompt> for the first step"}
+      ]
+    }
+  ]
+}

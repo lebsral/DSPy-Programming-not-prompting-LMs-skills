@@ -1,6 +1,6 @@
 ---
 name: ai-stopping-hallucinations
-description: Stop your AI from making things up. Use when your AI hallucinates, fabricates facts, isn't grounded in real data, doesn't cite sources, makes unsupported claims, or you need to verify AI responses against source material. Covers citation enforcement, faithfulness verification, grounding via retrieval, and confidence thresholds.
+description: Stop your AI from making things up. Use when your AI hallucinates, fabricates facts, isn't grounded in real data, doesn't cite sources, makes unsupported claims, or you need to verify AI responses against source material. Covers citation enforcement, faithfulness verification, grounding via retrieval, confidence thresholds, and evaluation of anti-hallucination quality.
 ---
 
 # Stop Your AI From Making Things Up
@@ -166,36 +166,7 @@ class CompareAnswers(dspy.Signature):
 
 Best for high-stakes outputs where the cost of hallucination is high. Doubles your LM calls but catches inconsistencies.
 
-## Step 6: Grounding via retrieval
-
-The single most effective anti-hallucination measure: give the AI source material and constrain it to that material. Connect to `/ai-searching-docs` for the full RAG setup.
-
-```python
-class GroundedQA(dspy.Module):
-    def __init__(self):
-        self.retrieve = dspy.Retrieve(k=5)
-        self.answer = dspy.ChainOfThought(CitedAnswer)
-        self.verify = dspy.Predict(CheckFaithfulness)
-
-    def forward(self, question):
-        # Ground in retrieved sources
-        context = self.retrieve(question).passages
-
-        # Generate with citation requirement
-        result = self.answer(context=context, question=question)
-
-        # Verify faithfulness
-        check = self.verify(context=context, answer=result.answer)
-        dspy.Assert(
-            check.is_faithful,
-            f"Unsupported claims: {check.unsupported_claims}. "
-            "Only use information from the provided sources."
-        )
-
-        return result
-```
-
-## Step 7: Confidence thresholds
+## Step 6: Confidence thresholds
 
 Flag low-confidence outputs for human review instead of showing them to users.
 
@@ -231,6 +202,208 @@ class GatedResponder(dspy.Module):
         )
 ```
 
+## Step 7: Loading source data for verification
+
+Anti-hallucination patterns need source documents. Here's how to load common formats:
+
+### From transcript files
+
+```python
+import json, re
+
+def load_vtt(path):
+    """Extract text from a VTT transcript, stripping timestamps and cues."""
+    text = open(path).read()
+    lines = [line.strip() for line in text.split("\n")
+             if line.strip() and not line.startswith("WEBVTT")
+             and not re.match(r"\d{2}:\d{2}", line)
+             and not line.strip().isdigit()]
+    return " ".join(lines)
+
+def load_livekit_transcript(path):
+    """Extract text from a LiveKit transcript JSON export."""
+    data = json.load(open(path))
+    segments = data.get("segments", data.get("results", []))
+    return " ".join(seg.get("text", "") for seg in segments)
+
+def load_recall_transcript(transcript_data):
+    """Extract text from a Recall.ai transcript response."""
+    return " ".join(
+        entry["words"] for entry in transcript_data if entry.get("words")
+    )
+```
+
+### From Langfuse traces
+
+```python
+from langfuse import Langfuse
+
+def load_langfuse_generations(trace_id):
+    """Load LM generations from a Langfuse trace for verification."""
+    langfuse = Langfuse()
+    trace = langfuse.get_trace(trace_id)
+    generations = []
+    for obs in trace.observations:
+        if obs.type == "GENERATION" and obs.output:
+            generations.append({
+                "input": obs.input,
+                "output": obs.output,
+                "model": obs.model,
+            })
+    return generations
+```
+
+### Breaking source documents into numbered passages
+
+Most patterns here expect `context: list[str]` — numbered source passages. Split long documents into chunks so citations are meaningful:
+
+```python
+def chunk_document(text, max_chars=500):
+    """Split a document into numbered passages for citation."""
+    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+    chunks = []
+    current = ""
+    for para in paragraphs:
+        if len(current) + len(para) > max_chars and current:
+            chunks.append(current.strip())
+            current = para
+        else:
+            current = current + "\n\n" + para if current else para
+    if current:
+        chunks.append(current.strip())
+    return [f"[{i+1}] {chunk}" for i, chunk in enumerate(chunks)]
+
+# Use with any source
+transcript_text = load_vtt("meeting.vtt")
+context = chunk_document(transcript_text)
+result = citation_enforcer(context=context, question="What was decided about the timeline?")
+```
+
+## Step 8: Evaluating anti-hallucination quality
+
+You need metrics to know if your verification actually works. The key question: does the system catch hallucinations and produce faithful answers?
+
+### Faithfulness metric
+
+```python
+def faithfulness_metric(example, prediction, trace=None):
+    """Score: does the answer stick to the sources?"""
+    verifier = dspy.Predict(CheckFaithfulness)
+    check = verifier(context=example.context, answer=prediction.answer)
+
+    # Binary: is it faithful?
+    if not check.is_faithful:
+        return 0.0
+
+    # Bonus: does it actually answer the question?
+    relevance = dspy.Predict("question, answer -> is_relevant: bool")
+    rel = relevance(question=example.question, answer=prediction.answer)
+    return 1.0 if rel.is_relevant else 0.5
+
+evaluator = dspy.Evaluate(devset=devset, metric=faithfulness_metric, num_threads=4)
+score = evaluator(my_grounded_qa)
+```
+
+### Citation coverage metric
+
+```python
+def citation_metric(example, prediction, trace=None):
+    """Score citation quality: coverage + validity."""
+    answer = prediction.answer
+    sentences = [s.strip() for s in answer.split(".") if s.strip()]
+    cited = [bool(re.search(r"\[\d+\]", s)) for s in sentences]
+    coverage = sum(cited) / max(len(sentences), 1)
+
+    # Check all cited sources exist
+    cited_nums = set(int(n) for n in re.findall(r"\[(\d+)\]", answer))
+    valid_nums = set(range(1, len(example.context) + 1))
+    all_valid = cited_nums.issubset(valid_nums)
+
+    if not all_valid:
+        return 0.0
+    return coverage  # 0.0 to 1.0
+```
+
+### Optimizing the verification pipeline
+
+```python
+# Create training data: questions with source context and gold answers
+trainset = [
+    dspy.Example(
+        context=["[1] The meeting is on March 5.", "[2] Budget is $50k."],
+        question="When is the meeting?",
+        answer="The meeting is on March 5 [1]."
+    ).with_inputs("context", "question"),
+    # ... more examples
+]
+
+# Optimize the citation enforcer
+optimizer = dspy.BootstrapFewShot(metric=faithfulness_metric, max_bootstrapped_demos=4)
+optimized = optimizer.compile(CitationEnforcer(), trainset=trainset)
+optimized.save("optimized_citation_enforcer.json")
+
+# Load later
+enforcer = CitationEnforcer()
+enforcer.load("optimized_citation_enforcer.json")
+```
+
+### Using a cheap LM for verification
+
+The verification step doesn't need an expensive model — a smaller model checking claims against sources works well and cuts costs:
+
+```python
+class CostEfficientVerifier(dspy.Module):
+    def __init__(self):
+        self.answer = dspy.ChainOfThought(CitedAnswer)
+        self.verify = dspy.Predict(CheckFaithfulness)
+
+        # Use a cheaper model for the verification step
+        cheap_lm = dspy.LM("openai/gpt-4o-mini")
+        self.verify.set_lm(cheap_lm)
+
+    def forward(self, context, question):
+        result = self.answer(context=context, question=question)
+        check = self.verify(context=context, answer=result.answer)
+        dspy.Assert(
+            check.is_faithful,
+            f"Unsupported claims: {check.unsupported_claims}. "
+            "Only use information from the provided sources."
+        )
+        return result
+```
+
+## Step 9: Batch verification
+
+When you need to verify many responses at once (e.g., auditing a transcript Q&A system):
+
+```python
+import json
+
+def verify_batch(qa_pairs, context, output_path="verification_results.json"):
+    """Verify a batch of question-answer pairs against source context."""
+    verifier = dspy.Predict(CheckFaithfulness)
+    results = []
+
+    for qa in qa_pairs:
+        check = verifier(context=context, answer=qa["answer"])
+        results.append({
+            "question": qa["question"],
+            "answer": qa["answer"],
+            "is_faithful": check.is_faithful,
+            "unsupported_claims": check.unsupported_claims,
+        })
+
+    # Summary
+    faithful_count = sum(1 for r in results if r["is_faithful"])
+    print(f"Faithful: {faithful_count}/{len(results)} "
+          f"({faithful_count/len(results):.0%})")
+
+    with open(output_path, "w") as f:
+        json.dump(results, f, indent=2)
+
+    return results
+```
+
 ## How backtracking works
 
 When `dspy.Assert` fails:
@@ -251,7 +424,7 @@ This is why good error messages matter — they're literally the feedback the mo
 | Self-check | 2 LM calls | Medium | General fact-checking |
 | Cross-check | 3 LM calls | High | High-stakes, critical outputs |
 | Confidence gating | 1 LM call | Low | Human-in-the-loop systems |
-| Retrieval grounding | 1 retrieval + 1-2 LM | Medium | When you have a knowledge base |
+| Cheap verifier | 1 expensive + 1 cheap | Low-Medium | Cost-sensitive production |
 
 ## Key principles
 
@@ -260,6 +433,7 @@ This is why good error messages matter — they're literally the feedback the mo
 - **Suggest for nice-to-haves.** Use `dspy.Suggest` when you want to flag but not block.
 - **Layer your defenses.** Combine retrieval + citation + verification for the strongest protection.
 - **Good error messages help.** The Assert message becomes the model's self-correction prompt.
+- **Measure faithfulness.** Use the evaluation patterns above to quantify how well your verification works — don't guess.
 
 ## Additional resources
 

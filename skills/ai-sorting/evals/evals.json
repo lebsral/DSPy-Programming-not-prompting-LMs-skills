@@ -1,0 +1,47 @@
+{
+  "skill_name": "ai-sorting",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I have a CSV file at data/reviews.csv with columns 'review_text' and 'star_rating'. I want to automatically tag each review as positive, negative, or neutral sentiment. I have about 200 rows, 50 of which I've already manually labeled in a 'sentiment' column. Can you build me a classifier that uses those labeled ones to learn and then tags the rest?",
+      "expected_output": "A Python script that loads the CSV, splits labeled data into train/dev, defines a DSPy signature with Literal sentiment categories, evaluates baseline, optimizes with BootstrapFewShot, and batch-processes the unlabeled rows. Should save the optimized model.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_dspy_signature", "description": "Defines a dspy.Signature class for the classification task"},
+        {"name": "uses_literal_types", "description": "Uses Literal type to constrain sentiment to valid categories"},
+        {"name": "loads_csv_data", "description": "Reads from CSV and creates dspy.Example objects"},
+        {"name": "splits_labeled_unlabeled", "description": "Separates labeled rows for training from unlabeled ones for inference"},
+        {"name": "includes_evaluation", "description": "Measures baseline accuracy with dspy.evaluate before optimizing"},
+        {"name": "includes_optimization", "description": "Uses a DSPy optimizer (BootstrapFewShot or MIPROv2) to improve accuracy"},
+        {"name": "batch_processes_unlabeled", "description": "Applies the optimized model to classify the unlabeled rows"},
+        {"name": "saves_model", "description": "Persists the optimized classifier with .save()"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "We get about 500 support tickets a day and need to route them to the right team — billing, technical, account, or security. The tricky part is some tickets are ambiguous and we don't want to misroute those. Can you build something that sorts them but flags the ones it's not sure about so a human can review those instead?",
+      "expected_output": "A Python script with a DSPy signature that classifies tickets AND outputs a confidence score. Should include a threshold check that flags low-confidence items for human review rather than auto-routing them. Should use ChainOfThought for reasoning.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_dspy_signature", "description": "Defines a dspy.Signature class for ticket routing"},
+        {"name": "has_four_categories", "description": "Includes billing, technical, account, and security as routing categories"},
+        {"name": "includes_confidence", "description": "Outputs a confidence score alongside the category"},
+        {"name": "has_threshold_logic", "description": "Implements a threshold check that flags low-confidence items for human review"},
+        {"name": "uses_chain_of_thought", "description": "Uses ChainOfThought module for reasoning before classification"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I'm building a voice AI agent with LiveKit and I have a bunch of call transcript JSON files in a transcripts/ folder. Each file has a 'segments' array with 'text' fields. I want to classify each call by topic — sales_inquiry, support_issue, billing_question, partnership, or other. No labeled data yet, I just want to get something working and iterate from there.",
+      "expected_output": "A Python script that loads LiveKit transcript JSONs, extracts text from segments, defines a DSPy classifier with the specified categories including 'other' as a catch-all, and demonstrates how to run it on the transcripts. Since there's no labeled data, should either suggest labeling a small set or use ai-generating-data. Should show how to save results.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_dspy_signature", "description": "Defines a dspy.Signature class for transcript classification"},
+        {"name": "loads_json_transcripts", "description": "Reads JSON files and extracts text from the segments array"},
+        {"name": "has_other_category", "description": "Includes 'other' as a catch-all category"},
+        {"name": "handles_no_labeled_data", "description": "Addresses the cold-start problem — suggests labeling, synthetic data, or a zero-shot approach"},
+        {"name": "classifies_whole_calls", "description": "Classifies at the call level, not individual transcript segments"}
+      ]
+    }
+  ]
+}

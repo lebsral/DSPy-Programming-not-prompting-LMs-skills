@@ -1,8 +1,8 @@
-# Stopping Hallucinations — Examples
+# Anti-Hallucination Examples
 
-## Citation-Enforced Customer Support Bot
+## Example 1: Customer support grounded in help docs
 
-A support bot that answers questions from your help docs and must cite every claim.
+A support chatbot that only answers from your help center — refuses to speculate.
 
 ```python
 import dspy
@@ -11,241 +11,239 @@ import re
 lm = dspy.LM("openai/gpt-4o-mini")
 dspy.configure(lm=lm)
 
-class SupportAnswer(dspy.Signature):
-    """Answer the customer question using only the provided help articles.
-    Cite every claim with [1], [2], etc. matching the article number."""
-    articles: list[str] = dspy.InputField(desc="Numbered help articles")
-    question: str = dspy.InputField(desc="Customer question")
-    answer: str = dspy.OutputField(desc="Answer with inline citations")
+class CitedSupportAnswer(dspy.Signature):
+    """Answer a customer question using only the help docs. Cite every claim with [1], [2], etc.
+    If the docs don't cover the question, say so — don't guess."""
+    help_docs: list[str] = dspy.InputField(desc="Numbered help center passages")
+    question: str = dspy.InputField(desc="Customer's question")
+    answer: str = dspy.OutputField(desc="Answer citing help docs, or 'I don't have info on that'")
 
-class CitedSupportBot(dspy.Module):
-    def __init__(self):
-        self.answer = dspy.ChainOfThought(SupportAnswer)
-
-    def forward(self, articles, question):
-        result = self.answer(articles=articles, question=question)
-
-        # Require citations
-        citations = re.findall(r"\[(\d+)\]", result.answer)
-        dspy.Assert(
-            len(citations) >= 1,
-            "You must cite at least one help article using [1], [2], etc."
-        )
-
-        # Verify cited articles exist
-        valid = set(range(1, len(articles) + 1))
-        invalid = set(int(c) for c in citations) - valid
-        dspy.Assert(
-            len(invalid) == 0,
-            f"Invalid citations: {invalid}. Only articles [1] through [{len(articles)}] exist."
-        )
-
-        return result
-
-# Usage
-bot = CitedSupportBot()
-articles = [
-    "Refunds are available within 30 days of purchase. Contact support@example.com.",
-    "To cancel your subscription, go to Settings > Billing > Cancel Plan.",
-    "Enterprise plans include priority support with 4-hour response time.",
-]
-result = bot(articles=articles, question="How do I get a refund?")
-print(result.answer)
-# "You can get a refund within 30 days of purchase [1]. Contact support@example.com to start the process [1]."
-```
-
-## Faithfulness-Checked Medical FAQ
-
-A medical FAQ that verifies every answer is grounded in approved content. Uses a second LM call as a faithfulness judge.
-
-```python
-class MedicalAnswer(dspy.Signature):
-    """Answer the health question using only the approved medical content."""
-    approved_content: list[str] = dspy.InputField(desc="Approved medical information")
-    question: str = dspy.InputField(desc="Patient question")
-    answer: str = dspy.OutputField(desc="Answer grounded in approved content")
-
-class VerifyMedical(dspy.Signature):
-    """Check if the answer is fully supported by the approved medical content.
-    Be strict: flag anything not explicitly stated in the content."""
-    approved_content: list[str] = dspy.InputField()
+class CheckSupported(dspy.Signature):
+    """Verify every claim in the answer appears in the help docs."""
+    help_docs: list[str] = dspy.InputField()
     answer: str = dspy.InputField()
-    is_supported: bool = dspy.OutputField(desc="Is every claim in the answer supported?")
-    unsupported_claims: list[str] = dspy.OutputField(desc="Claims not in the approved content")
+    is_supported: bool = dspy.OutputField()
+    unsupported_claims: list[str] = dspy.OutputField(desc="Claims not in the docs")
 
-class SafeMedicalFAQ(dspy.Module):
+class GroundedSupportBot(dspy.Module):
     def __init__(self):
-        self.answer = dspy.ChainOfThought(MedicalAnswer)
-        self.verify = dspy.Predict(VerifyMedical)
+        self.answer = dspy.ChainOfThought(CitedSupportAnswer)
+        self.verify = dspy.Predict(CheckSupported)
 
-    def forward(self, approved_content, question):
-        result = self.answer(approved_content=approved_content, question=question)
+    def forward(self, help_docs, question):
+        result = self.answer(help_docs=help_docs, question=question)
 
-        # Strict faithfulness check
-        check = self.verify(approved_content=approved_content, answer=result.answer)
+        # Enforce citations exist
+        sentences = [s.strip() for s in result.answer.split(".") if s.strip()]
+        cited = [bool(re.search(r"\[\d+\]", s)) for s in sentences]
+        coverage = sum(cited) / max(len(sentences), 1)
+        dspy.Assert(
+            coverage >= 0.5 or "don't have info" in result.answer.lower(),
+            f"Only {coverage:.0%} of sentences cite sources. "
+            "Cite with [1], [2], or say you don't have info."
+        )
+
+        # Verify faithfulness
+        check = self.verify(help_docs=help_docs, answer=result.answer)
         dspy.Assert(
             check.is_supported,
-            f"Answer contains claims not in approved content: {check.unsupported_claims}. "
-            "Rewrite using ONLY information from the approved medical content."
+            f"Unsupported claims: {check.unsupported_claims}. "
+            "Only state what the help docs say."
         )
 
         return result
 
 # Usage
-faq = SafeMedicalFAQ()
-approved = [
-    "Ibuprofen is an over-the-counter NSAID. Standard adult dose is 200-400mg every 4-6 hours.",
-    "Do not exceed 1200mg per day without medical supervision.",
-    "Common side effects include stomach upset and dizziness.",
+docs = [
+    "[1] Free plan includes 1,000 API calls per month.",
+    "[2] Pro plan is $29/month with 50,000 API calls.",
+    "[3] Refunds are available within 14 days of purchase.",
+    "[4] To cancel, go to Settings > Billing > Cancel Plan.",
 ]
-result = faq(approved_content=approved, question="What's the right dose of ibuprofen?")
+
+bot = GroundedSupportBot()
+result = bot(help_docs=docs, question="How do I cancel and get a refund?")
+print(result.answer)
+# "To cancel your plan, go to Settings > Billing > Cancel Plan [4].
+#  Refunds are available within 14 days of purchase [3]."
 ```
 
-## Grounded Q&A with Retrieval
+## Example 2: Meeting transcript fact-checker
 
-End-to-end example: retrieve docs, generate answer, verify faithfulness. Combines `/ai-searching-docs` with hallucination prevention.
+Verify claims made in a meeting summary against the actual transcript.
 
 ```python
-class GroundedAnswer(dspy.Signature):
-    """Answer the question using only the retrieved documents. Cite sources."""
-    documents: list[str] = dspy.InputField(desc="Retrieved source documents")
-    question: str = dspy.InputField()
-    answer: str = dspy.OutputField(desc="Grounded answer with [1], [2] citations")
+import dspy
+import re
 
-class CheckGrounding(dspy.Signature):
-    """Verify the answer only contains information from the documents."""
-    documents: list[str] = dspy.InputField()
-    answer: str = dspy.InputField()
-    is_grounded: bool = dspy.OutputField()
-    fabricated_info: list[str] = dspy.OutputField(desc="Information not in the documents")
+lm = dspy.LM("openai/gpt-4o-mini")
+dspy.configure(lm=lm)
 
-class GroundedQA(dspy.Module):
+# --- Load transcript ---
+
+def load_vtt(path):
+    text = open(path).read()
+    lines = [line.strip() for line in text.split("\n")
+             if line.strip() and not line.startswith("WEBVTT")
+             and not re.match(r"\d{2}:\d{2}", line)
+             and not line.strip().isdigit()]
+    return " ".join(lines)
+
+def chunk_transcript(text, max_chars=400):
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    chunks, current = [], ""
+    for s in sentences:
+        if len(current) + len(s) > max_chars and current:
+            chunks.append(current.strip())
+            current = s
+        else:
+            current = (current + " " + s).strip()
+    if current:
+        chunks.append(current.strip())
+    return [f"[{i+1}] {c}" for i, c in enumerate(chunks)]
+
+# --- Signatures ---
+
+class VerifyClaim(dspy.Signature):
+    """Check if a specific claim is supported by the transcript."""
+    transcript_passages: list[str] = dspy.InputField()
+    claim: str = dspy.InputField()
+    is_supported: bool = dspy.OutputField()
+    supporting_passage: str = dspy.OutputField(desc="Which passage supports it, or 'none'")
+
+class ExtractClaims(dspy.Signature):
+    """Extract individual factual claims from a meeting summary."""
+    summary: str = dspy.InputField()
+    claims: list[str] = dspy.OutputField(desc="List of individual factual claims")
+
+# --- Module ---
+
+class TranscriptFactChecker(dspy.Module):
     def __init__(self):
-        self.retrieve = dspy.Retrieve(k=5)
-        self.answer = dspy.ChainOfThought(GroundedAnswer)
-        self.check = dspy.Predict(CheckGrounding)
+        self.extract = dspy.Predict(ExtractClaims)
+        self.verify = dspy.ChainOfThought(VerifyClaim)
 
-    def forward(self, question):
-        # Retrieve relevant docs
-        docs = self.retrieve(question).passages
+    def forward(self, transcript_passages, summary):
+        extracted = self.extract(summary=summary)
 
-        # Generate grounded answer
-        result = self.answer(documents=docs, question=question)
-
-        # Verify grounding
-        check = self.check(documents=docs, answer=result.answer)
-        dspy.Assert(
-            check.is_grounded,
-            f"Answer includes fabricated information: {check.fabricated_info}. "
-            "Rewrite using only facts from the retrieved documents."
-        )
-
-        return dspy.Prediction(
-            answer=result.answer,
-            sources=docs,
-        )
-
-# Requires a retriever to be configured:
-# import dspy
-# from dspy.retrieve.chromadb_rm import ChromadbRM
-# retriever = ChromadbRM(collection_name="my_docs", persist_directory="./chroma")
-# dspy.configure(lm=lm, rm=retriever)
-#
-# qa = GroundedQA()
-# result = qa(question="What is our refund policy?")
-```
-
-## Cross-Checked Financial Report
-
-For high-stakes outputs, generate the answer twice and compare. If two independent generations disagree, flag it.
-
-```python
-class FinancialSummary(dspy.Signature):
-    """Summarize the financial data accurately."""
-    data: str = dspy.InputField(desc="Raw financial data")
-    question: str = dspy.InputField(desc="What to summarize")
-    summary: str = dspy.OutputField(desc="Accurate financial summary")
-
-class CheckAgreement(dspy.Signature):
-    """Do these two financial summaries agree on all numbers and claims?"""
-    summary_a: str = dspy.InputField()
-    summary_b: str = dspy.InputField()
-    agree: bool = dspy.OutputField(desc="Do they agree on all facts and figures?")
-    discrepancies: list[str] = dspy.OutputField(desc="Specific disagreements")
-
-class CrossCheckedFinance(dspy.Module):
-    def __init__(self):
-        self.gen_a = dspy.ChainOfThought(FinancialSummary)
-        self.gen_b = dspy.ChainOfThought(FinancialSummary)
-        self.compare = dspy.Predict(CheckAgreement)
-
-    def forward(self, data, question):
-        a = self.gen_a(data=data, question=question)
-        b = self.gen_b(data=data, question=question)
-
-        check = self.compare(summary_a=a.summary, summary_b=b.summary)
-        dspy.Assert(
-            check.agree,
-            f"Two independent summaries disagree: {check.discrepancies}. "
-            "Regenerate with careful attention to the source data."
-        )
-
-        return a
-
-# Usage
-reporter = CrossCheckedFinance()
-result = reporter(
-    data="Q1 Revenue: $2.3M, Q2 Revenue: $2.8M, Q1 Expenses: $1.9M, Q2 Expenses: $2.1M",
-    question="Summarize revenue growth and profitability trend",
-)
-```
-
-## Confidence-Gated Legal Q&A
-
-Route low-confidence answers to human lawyers instead of showing them to users.
-
-```python
-class LegalAnswer(dspy.Signature):
-    """Answer the legal question based on the provided statutes and precedents."""
-    sources: list[str] = dspy.InputField(desc="Legal sources")
-    question: str = dspy.InputField()
-    answer: str = dspy.OutputField()
-    confidence: float = dspy.OutputField(desc="0.0 to 1.0")
-    confidence_reason: str = dspy.OutputField(desc="Why this confidence level")
-
-class GatedLegalQA(dspy.Module):
-    def __init__(self, threshold=0.8):
-        self.respond = dspy.ChainOfThought(LegalAnswer)
-        self.threshold = threshold
-
-    def forward(self, sources, question):
-        result = self.respond(sources=sources, question=question)
-
-        if result.confidence < self.threshold:
-            return dspy.Prediction(
-                answer=None,
-                needs_lawyer=True,
-                confidence=result.confidence,
-                reason=result.confidence_reason,
-                draft=result.answer,  # lawyer can review the draft
+        results = []
+        for claim in extracted.claims:
+            check = self.verify(
+                transcript_passages=transcript_passages,
+                claim=claim,
             )
+            results.append({
+                "claim": claim,
+                "supported": check.is_supported,
+                "source": check.supporting_passage,
+            })
+
+        supported = sum(1 for r in results if r["supported"])
+        total = len(results)
 
         return dspy.Prediction(
-            answer=result.answer,
-            needs_lawyer=False,
-            confidence=result.confidence,
+            claims=results,
+            supported_count=supported,
+            total_claims=total,
+            accuracy=supported / max(total, 1),
         )
 
 # Usage
-qa = GatedLegalQA(threshold=0.8)
-result = qa(
-    sources=["Section 230 provides immunity for platforms..."],
-    question="Are we liable for user-generated content?",
+transcript_text = load_vtt("standup.vtt")
+passages = chunk_transcript(transcript_text)
+
+checker = TranscriptFactChecker()
+result = checker(
+    transcript_passages=passages,
+    summary="The team decided to postpone the launch to April. "
+            "Sarah will handle the migration. Budget was approved at $75k."
 )
-if result.needs_lawyer:
-    print(f"Routing to human lawyer (confidence: {result.confidence})")
-    print(f"Reason: {result.reason}")
-    print(f"Draft for review: {result.draft}")
-else:
-    print(result.answer)
+
+for claim in result.claims:
+    status = "supported" if claim["supported"] else "NOT SUPPORTED"
+    print(f"  [{status}] {claim['claim']}")
+print(f"\nAccuracy: {result.accuracy:.0%}")
+```
+
+## Example 3: Medical Q&A with layered verification
+
+High-stakes domain: combine citation enforcement + faithfulness verification + confidence gating.
+
+```python
+import dspy
+import re
+
+lm = dspy.LM("openai/gpt-4o")
+dspy.configure(lm=lm)
+
+class MedicalAnswer(dspy.Signature):
+    """Answer a medical question using only the provided clinical guidelines.
+    Cite every claim. If unsure, say so explicitly."""
+    guidelines: list[str] = dspy.InputField(desc="Numbered clinical guideline passages")
+    question: str = dspy.InputField()
+    answer: str = dspy.OutputField(desc="Cited answer from guidelines only")
+    confidence: float = dspy.OutputField(desc="0.0-1.0 confidence based on guideline coverage")
+
+class VerifyMedicalClaim(dspy.Signature):
+    """Strictly verify: is every medical claim in the answer directly stated in the guidelines?"""
+    guidelines: list[str] = dspy.InputField()
+    answer: str = dspy.InputField()
+    is_faithful: bool = dspy.OutputField()
+    unsupported_claims: list[str] = dspy.OutputField()
+    risk_level: str = dspy.OutputField(desc="low/medium/high — risk if claim is wrong")
+
+class SafeMedicalQA(dspy.Module):
+    def __init__(self, confidence_threshold=0.8):
+        self.answer = dspy.ChainOfThought(MedicalAnswer)
+        self.verify = dspy.Predict(VerifyMedicalClaim)
+        self.threshold = confidence_threshold
+
+        # Use cheaper model for verification
+        self.verify.set_lm(dspy.LM("openai/gpt-4o-mini"))
+
+    def forward(self, guidelines, question):
+        result = self.answer(guidelines=guidelines, question=question)
+
+        # Layer 1: Citation enforcement
+        cited_nums = set(int(n) for n in re.findall(r"\[(\d+)\]", result.answer))
+        valid_nums = set(range(1, len(guidelines) + 1))
+        dspy.Assert(
+            cited_nums.issubset(valid_nums),
+            f"Invalid citations: {cited_nums - valid_nums}. "
+            f"Only use [1] to [{len(guidelines)}]."
+        )
+
+        # Layer 2: Faithfulness verification
+        check = self.verify(guidelines=guidelines, answer=result.answer)
+        dspy.Assert(
+            check.is_faithful,
+            f"MEDICAL SAFETY: Unsupported claims detected: {check.unsupported_claims}. "
+            "In medical contexts, only state what the guidelines explicitly say."
+        )
+
+        # Layer 3: Confidence gating
+        needs_review = (
+            result.confidence < self.threshold
+            or check.risk_level == "high"
+        )
+
+        return dspy.Prediction(
+            answer=result.answer,
+            confidence=result.confidence,
+            needs_review=needs_review,
+            risk_level=check.risk_level,
+        )
+
+# Usage
+qa = SafeMedicalQA(confidence_threshold=0.8)
+guidelines = [
+    "[1] Standard adult ibuprofen dose: 200-400mg every 4-6 hours.",
+    "[2] Maximum daily dose without supervision: 1200mg.",
+    "[3] Common side effects: stomach upset, dizziness, headache.",
+    "[4] Contraindicated with blood thinners and in renal impairment.",
+]
+result = qa(guidelines=guidelines, question="Can I take ibuprofen with aspirin?")
+if result.needs_review:
+    print(f"NEEDS PHYSICIAN REVIEW (confidence: {result.confidence}, risk: {result.risk_level})")
+print(result.answer)
 ```

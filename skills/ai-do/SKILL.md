@@ -1,6 +1,6 @@
 ---
 name: ai-do
-description: "Describe your AI problem and get routed to the right skill with a ready-to-use prompt. Use when you're not sure which ai- skill to use, want help picking the right approach, or just want to describe what you need in plain language."
+description: "Describe your AI problem and get routed to the right skill with a ready-to-use prompt. Use when you're not sure which ai- skill to use, want help picking the right approach, or just want to describe what you need in plain language. Also use this when someone says 'I want to build an AI that...', 'how do I make my AI...', or describes any AI/LLM task without naming a specific skill."
 argument-hint: "[describe what you want to build or fix]"
 ---
 
@@ -24,48 +24,59 @@ Use this catalog to find the best match. Pick **one** primary skill. If the prob
 
 ### Building AI features
 
-| Skill | Use when the user says... |
-|-------|--------------------------|
-| `/ai-kickoff` | Starting from scratch, scaffolding a new AI project, "set up a new AI feature" |
-| `/ai-sorting` | Auto-sort, tag, categorize, label, classify, detect sentiment, route messages |
-| `/ai-searching-docs` | Search docs, answer questions from a knowledge base, help center Q&A, RAG |
-| `/ai-querying-databases` | Text-to-SQL, natural language database queries, "ask questions about our data" |
-| `/ai-summarizing` | Condense, summarize, create TL;DRs, meeting notes, digests, action items |
-| `/ai-parsing-data` | Extract structured data from text, parse invoices, pull fields from emails, text-to-JSON |
-| `/ai-taking-actions` | AI that calls APIs, uses tools, performs calculations, acts autonomously |
-| `/ai-writing-content` | Generate articles, blog posts, product descriptions, reports, marketing copy |
-| `/ai-reasoning` | Multi-step logic, planning, math, complex problems that need chain-of-thought |
-| `/ai-building-pipelines` | Chain multiple AI steps, multi-stage processing, classify-then-generate |
-| `/ai-building-chatbots` | Conversational AI, chatbots with memory, support bots, onboarding assistants |
-| `/ai-coordinating-agents` | Multiple agents working together, supervisor/specialist, agent handoff |
-| `/ai-scoring` | Score, grade, evaluate against a rubric — essays, code reviews, support quality |
-| `/ai-decomposing-tasks` | AI works on simple inputs but fails on complex ones, break into subtasks |
-| `/ai-moderating-content` | Content moderation, flag harmful content, detect spam, filter hate speech |
+| Skill | Route here when... |
+|-------|-------------------|
+| `/ai-kickoff` | Starting from scratch. "set up a new DSPy project", "scaffold an AI feature", "I'm new to DSPy, where do I start?" |
+| `/ai-sorting` | Categorizing, labeling, classifying, tagging, routing. "sort tickets into teams", "detect sentiment", "auto-tag content", "is this spam or not", "route messages", "triage incoming requests", "classify call transcripts by topic" |
+| `/ai-searching-docs` | Answering questions from a body of documents. "search our help center", "Q&A over our docs", "RAG", "chat with our knowledge base", "find answers in our documentation" |
+| `/ai-querying-databases` | Asking questions about structured data. "text-to-SQL", "let non-technical users query our database", "natural language analytics", "ask questions about our data in plain English" |
+| `/ai-summarizing` | Making long content shorter. "summarize meeting notes", "create TL;DRs", "digest these articles", "extract action items", "condense this report", "give me the highlights" |
+| `/ai-parsing-data` | Pulling structured fields from unstructured text. "extract names and dates from emails", "parse invoices", "turn this text into JSON", "scrape entities from articles", "extract contact info" |
+| `/ai-taking-actions` | AI that does things in the world. "call APIs", "use tools", "perform calculations", "search the web and act on results", "interact with databases", "autonomous agent" |
+| `/ai-writing-content` | Generating text. "write blog posts", "product descriptions", "marketing copy", "generate reports", "draft newsletters", "create email templates" |
+| `/ai-reasoning` | Problems that need thinking before answering. "multi-step math", "logic puzzles", "planning", "complex analysis", "needs to break down the problem first" |
+| `/ai-building-pipelines` | Multiple AI steps chained together. "classify then generate", "extract then validate then store", "multi-stage processing", "one step feeds into the next" |
+| `/ai-building-chatbots` | Conversational AI. "chatbot", "support bot", "onboarding assistant", "multi-turn conversation", "bot with memory", "customer service agent" |
+| `/ai-coordinating-agents` | Multiple agents collaborating. "supervisor delegates to specialists", "agent handoff", "parallel research agents", "escalation from L1 to L2" |
+| `/ai-scoring` | Grading or rating against criteria. "score essays", "rate code quality", "evaluate support responses", "grade against a rubric", "quality audit" |
+| `/ai-decomposing-tasks` | AI works on simple inputs but fails on complex ones. "breaks on long documents", "accuracy drops with harder inputs", "works sometimes but not on tricky cases" |
+| `/ai-moderating-content` | Filtering user-generated content. "flag harmful comments", "detect spam", "content moderation", "NSFW filter", "block hate speech" |
 
 ### Quality and reliability
 
-| Skill | Use when the user says... |
-|-------|--------------------------|
-| `/ai-improving-accuracy` | Wrong answers, bad quality, need to measure/improve accuracy, evaluate AI |
-| `/ai-making-consistent` | Different answers every time, unpredictable outputs, need determinism |
-| `/ai-checking-outputs` | Verify AI output, add guardrails, safety filters, fact-checking, quality gates |
-| `/ai-stopping-hallucinations` | AI makes stuff up, fabricates facts, need citations, grounding, source checking |
-| `/ai-following-rules` | AI ignores rules, breaks format, violates policies, invalid JSON, length limits |
-| `/ai-generating-data` | Not enough training data, need synthetic examples, bootstrapping from scratch |
-| `/ai-fine-tuning` | Fine-tune on your data, prompt optimization hit a ceiling, domain specialization |
-| `/ai-testing-safety` | Red-teaming, jailbreak testing, adversarial testing, safety audit before launch |
+| Skill | Route here when... |
+|-------|-------------------|
+| `/ai-improving-accuracy` | Measuring or improving quality. "wrong answers", "how good is my AI", "evaluate performance", "need metrics", "accuracy is bad", "benchmark my AI" |
+| `/ai-making-consistent` | Outputs vary randomly. "different answer every time", "unpredictable", "need deterministic results", "inconsistent outputs" |
+| `/ai-checking-outputs` | Verifying AI outputs before they reach users. "add guardrails", "validate output format", "safety filter", "fact-check before showing", "quality gate" |
+| `/ai-stopping-hallucinations` | AI invents information. "makes stuff up", "fabricates facts", "not grounded in real data", "need citations", "doesn't cite sources" |
+| `/ai-following-rules` | AI ignores constraints. "breaks format rules", "violates policies", "invalid JSON", "exceeds length limits", "ignores my instructions" |
+| `/ai-generating-data` | Not enough training examples. "no labeled data", "need synthetic examples", "bootstrapping from zero", "generate training data" |
+| `/ai-fine-tuning` | Prompt optimization isn't enough. "hit a ceiling", "need domain specialization", "want cheaper model to match expensive one", "fine-tune on my data" |
+| `/ai-testing-safety` | Pre-launch safety testing. "red-team my AI", "test for jailbreaks", "adversarial testing", "safety audit", "find vulnerabilities" |
 
 ### Production and operations
 
-| Skill | Use when the user says... |
-|-------|--------------------------|
-| `/ai-serving-apis` | Put AI behind an API, deploy as web endpoint, wrap in FastAPI |
-| `/ai-cutting-costs` | AI is too expensive, reduce API costs, optimize token usage, cheaper models |
-| `/ai-switching-models` | Switch providers, compare models, stop vendor lock-in, try a cheaper model |
-| `/ai-monitoring` | Monitor production AI, track quality over time, detect degradation, set up alerts |
-| `/ai-tracing-requests` | Debug a specific request, trace AI pipeline, see every LM call, profile slow requests |
-| `/ai-tracking-experiments` | Compare optimization experiments, reproduce past results, pick the best config |
-| `/ai-fixing-errors` | AI is broken, throwing errors, crashing, returning garbage, weird behavior |
+| Skill | Route here when... |
+|-------|-------------------|
+| `/ai-serving-apis` | Deploying AI as a service. "put behind an API", "deploy as endpoint", "wrap in FastAPI", "serve to frontend" |
+| `/ai-cutting-costs` | AI costs too much. "API bill too high", "reduce token usage", "cheaper models", "optimize costs", "spending too much on LLM calls" |
+| `/ai-switching-models` | Changing AI providers. "switch from OpenAI to Anthropic", "compare models", "vendor lock-in", "try a different model" |
+| `/ai-monitoring` | Watching AI in production. "track quality over time", "detect degradation", "alerting", "drift detection", "production monitoring" |
+| `/ai-tracing-requests` | Debugging a specific AI request. "trace a request", "see every LM call", "why did it give that answer", "profile slow pipeline" |
+| `/ai-tracking-experiments` | Managing optimization runs. "compare experiments", "which config was best", "reproduce past results" |
+| `/ai-fixing-errors` | AI is broken. "throwing errors", "crashing", "returning garbage", "weird behavior", "doesn't work" |
+
+### Disambiguation guide
+
+Many requests could match multiple skills. Use these rules to break ties:
+
+- **"Bad answers"** → Start with `/ai-improving-accuracy` (measure first, then improve). Only route to `/ai-stopping-hallucinations` if the user specifically mentions fabrication or made-up facts.
+- **"Sort/classify" vs "parse/extract"** → Sorting picks from a fixed set of categories. Parsing pulls variable-length structured data from text. "Is this spam?" = sorting. "Pull the sender name and amount from this invoice" = parsing.
+- **"Chatbot" vs "agent"** → Chatbots are conversational (back-and-forth with a user). Agents take autonomous actions (call APIs, write files). If it talks to users → chatbot. If it does things → agent.
+- **"Pipeline" vs "decomposing"** → Pipelines are architectures (chain steps together). Decomposing is a technique (break hard problems into easier sub-problems). If building from scratch → pipeline. If an existing AI fails on complex inputs → decomposing.
+- **"Guardrails" vs "rules"** → Guardrails check outputs after generation (`/ai-checking-outputs`). Rules constrain generation itself (`/ai-following-rules`). "Validate the JSON before returning" = guardrails. "Always output valid JSON" = rules.
+- **Building something new** vs **fixing something broken** → New feature = find the matching "building" skill. Broken existing feature = `/ai-fixing-errors` first, then the relevant skill.
 
 ## Step 3: Recommend and generate prompt
 
@@ -87,6 +98,20 @@ The crafted prompt should:
 - Include the user's domain, data format, and constraints so the target skill can skip its own discovery questions
 - Be specific enough to be immediately actionable
 - Be a single line (the skill's `$ARGUMENTS`)
+
+**Examples of good crafted prompts:**
+
+```
+/ai-sorting I have support tickets in a Postgres database (columns: id, message, created_at) and need to auto-route them to billing, technical, account, or security teams. About 200 already labeled. Using GPT-4o-mini.
+```
+
+```
+/ai-parsing-data I get VTT transcript files from our LiveKit voice agent and need to extract: caller_name, issue_summary, resolution, and follow_up_needed (bool) from each call. Output as JSON.
+```
+
+```
+/ai-improving-accuracy My ticket classifier is getting about 70% accuracy and I need it above 90%. Already using BootstrapFewShot with 50 examples. Categories are billing, technical, account, security.
+```
 
 ### If recommending a sequence
 
