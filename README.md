@@ -111,6 +111,17 @@ npx skills update        # Update all installed skills
 npx skills remove        # Uninstall skills
 ```
 
+### Keeping skills up to date
+
+These skills are actively improved. To get the latest versions:
+
+```bash
+npx skills check          # See what's changed
+npx skills update         # Pull latest versions
+```
+
+For manual/symlink installs, run `git pull` in your cloned repo.
+
 ## Use a skill
 
 In Claude Code (or any agent that supports the [Agent Skills](https://agentskills.io) standard):
@@ -146,6 +157,7 @@ Skills follow the [Claude Code skills format](https://code.claude.com/docs/en/sk
 4. Add `examples.md` and/or `reference.md` for supporting content
 5. Update the problem catalog table in this README
 6. Test with `/ai-<problem>` in Claude Code
+7. Bump the patch version in `.claude-plugin/marketplace.json`
 
 See [`docs/skills-spec.md`](docs/skills-spec.md) for the full skill format specification.
 
