@@ -54,12 +54,22 @@ If you already know DSPy and think in its vocabulary, use these API-first skills
 | `dspy.Module`, `forward()` | [`/dspy-modules`](skills/dspy-modules/SKILL.md) | Custom modules, composing sub-modules, save/load state |
 | `dspy.Example`, `Prediction` | [`/dspy-data`](skills/dspy-data/SKILL.md) | `with_inputs()`, train/dev splits, loading from CSV/JSON/HuggingFace |
 | `dspy.Evaluate`, metrics | [`/dspy-evaluate`](skills/dspy-evaluate/SKILL.md) | SemanticF1, exact match, LM-as-judge, composite metrics |
+| `dspy.Predict` | [`/dspy-predict`](skills/dspy-predict/SKILL.md) | Direct LM calls, simplest inference module |
+| `dspy.ChainOfThought` | [`/dspy-chain-of-thought`](skills/dspy-chain-of-thought/SKILL.md) | Step-by-step reasoning, `reasoning` field |
+| `dspy.ProgramOfThought` | [`/dspy-program-of-thought`](skills/dspy-program-of-thought/SKILL.md) | Code generation + execution for math/computation |
+| `dspy.ReAct` | [`/dspy-react`](skills/dspy-react/SKILL.md) | Tool-using agents, Reasoning-Action-Observation loop |
+| `dspy.CodeAct` | [`/dspy-codeact`](skills/dspy-codeact/SKILL.md) | Agents that write and execute code to act |
+| `dspy.MultiChainComparison` | [`/dspy-multi-chain-comparison`](skills/dspy-multi-chain-comparison/SKILL.md) | Multiple reasoning chains, pick the best |
+| `dspy.BestOfN` | [`/dspy-best-of-n`](skills/dspy-best-of-n/SKILL.md) | Rejection sampling with a reward function |
+| `dspy.Parallel` | [`/dspy-parallel`](skills/dspy-parallel/SKILL.md) | Concurrent LM calls, batch processing |
+| `dspy.Refine` | [`/dspy-refine`](skills/dspy-refine/SKILL.md) | Iterative self-improvement with feedback |
+| `dspy.RLM` | [`/dspy-rlm`](skills/dspy-rlm/SKILL.md) | Reinforcement-learning-style refinement |
 
 ## Install
 
 ### Option 1: `npx skills` (recommended — works with any AI coding agent)
 
-Install all 37 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
+Install all 47 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
 
 ```bash
 npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills
