@@ -64,12 +64,24 @@ If you already know DSPy and think in its vocabulary, use these API-first skills
 | `dspy.Parallel` | [`/dspy-parallel`](skills/dspy-parallel/SKILL.md) | Concurrent LM calls, batch processing |
 | `dspy.Refine` | [`/dspy-refine`](skills/dspy-refine/SKILL.md) | Iterative self-improvement with feedback |
 | `dspy.RLM` | [`/dspy-rlm`](skills/dspy-rlm/SKILL.md) | Reinforcement-learning-style refinement |
+| `dspy.BootstrapFewShot` | [`/dspy-bootstrap-few-shot`](skills/dspy-bootstrap-few-shot/SKILL.md) | Auto-generate few-shot demos, first optimizer to try |
+| `dspy.BootstrapFewShotWithRandomSearch` | [`/dspy-bootstrap-rs`](skills/dspy-bootstrap-rs/SKILL.md) | Random search over candidate demo sets |
+| `dspy.MIPROv2` | [`/dspy-miprov2`](skills/dspy-miprov2/SKILL.md) | Best prompt optimizer, instructions + demos jointly |
+| `dspy.GEPA` | [`/dspy-gepa`](skills/dspy-gepa/SKILL.md) | Instruction generation and selection |
+| `dspy.BetterTogether` | [`/dspy-better-together`](skills/dspy-better-together/SKILL.md) | Combined prompt + weight tuning |
+| `dspy.BootstrapFinetune` | [`/dspy-bootstrap-finetune`](skills/dspy-bootstrap-finetune/SKILL.md) | Fine-tune weights from bootstrapped data |
+| `dspy.COPRO` | [`/dspy-copro`](skills/dspy-copro/SKILL.md) | Instruction candidates with breadth search |
+| `dspy.Ensemble` | [`/dspy-ensemble`](skills/dspy-ensemble/SKILL.md) | Combine multiple optimized programs |
+| `dspy.InferRules` | [`/dspy-infer-rules`](skills/dspy-infer-rules/SKILL.md) | Extract decision logic from examples |
+| `dspy.KNN`, `dspy.KNNFewShot` | [`/dspy-knn-few-shot`](skills/dspy-knn-few-shot/SKILL.md) | Embedding-based demo retrieval |
+| `dspy.LabeledFewShot` | [`/dspy-labeled-few-shot`](skills/dspy-labeled-few-shot/SKILL.md) | Hand-picked demonstrations |
+| `dspy.SIMBA` | [`/dspy-simba`](skills/dspy-simba/SKILL.md) | Small-step incremental optimization |
 
 ## Install
 
 ### Option 1: `npx skills` (recommended — works with any AI coding agent)
 
-Install all 47 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
+Install all 59 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
 
 ```bash
 npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills
