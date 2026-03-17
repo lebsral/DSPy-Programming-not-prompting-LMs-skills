@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Build reliable AI features with DSPy — programming not prompting",
-    "version": "1.2.0"
+    "version": "1.5.0"
   },
   "plugins": [
     {
@@ -74,7 +74,32 @@
         "./skills/dspy-lm",
         "./skills/dspy-modules",
         "./skills/dspy-data",
-        "./skills/dspy-evaluate"
+        "./skills/dspy-evaluate",
+        "./skills/dspy-predict",
+        "./skills/dspy-chain-of-thought",
+        "./skills/dspy-program-of-thought",
+        "./skills/dspy-react",
+        "./skills/dspy-codeact",
+        "./skills/dspy-multi-chain-comparison",
+        "./skills/dspy-best-of-n",
+        "./skills/dspy-parallel",
+        "./skills/dspy-refine",
+        "./skills/dspy-rlm",
+        "./skills/dspy-bootstrap-few-shot",
+        "./skills/dspy-bootstrap-rs",
+        "./skills/dspy-miprov2",
+        "./skills/dspy-gepa",
+        "./skills/dspy-better-together",
+        "./skills/dspy-bootstrap-finetune",
+        "./skills/dspy-copro",
+        "./skills/dspy-ensemble",
+        "./skills/dspy-infer-rules",
+        "./skills/dspy-knn-few-shot",
+        "./skills/dspy-labeled-few-shot",
+        "./skills/dspy-simba",
+        "./skills/dspy-adapters",
+        "./skills/dspy-tools",
+        "./skills/dspy-retrieval"
       ]
     }
   ]
