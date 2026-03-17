@@ -1,14 +1,26 @@
 # AI Skills for Claude Code
 
-```bash
-# Just get started — ai-do routes you to the right skill
-npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skills ai-do -y
+Build reliable AI features. Powered by [DSPy](https://dspy.ai/) — a framework that lets you program language models with composable modules instead of hand-writing prompts.
 
-# Or install everything
-npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills -g --all -y
+## Quick start
+
+The only skill you need is `/ai-do`. Describe what you want to build and it tells you which skill to use next.
+
+```bash
+npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skills ai-do
 ```
 
-Build reliable AI features. Powered by [DSPy](https://dspy.ai/) — a framework that lets you program language models with composable modules instead of hand-writing prompts.
+Then in Claude Code:
+
+```
+/ai-do I want to build a support ticket classifier
+```
+
+It picks the right skill, generates a ready-to-run prompt, and tells you what to install. Or install everything at once:
+
+```bash
+npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --all
+```
 
 ## What problem are you solving?
 
@@ -88,19 +100,9 @@ If you already know DSPy and think in its vocabulary, use these API-first skills
 
 ## Install
 
-### Quick start: just install `/ai-do`
-
-The only skill you need to get started is `/ai-do`. Describe what you want to build and it routes you to the right skill — then you can install just the ones you need.
-
-```bash
-npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skills ai-do -y
-```
-
-Then in Claude Code: `/ai-do I want to build a support ticket classifier` — it'll tell you exactly which skill to use next.
-
 ### Option 1: `npx skills` (recommended — works with any AI coding agent)
 
-Or install all 64 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
+Install all 64 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
 
 ```bash
 npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills
