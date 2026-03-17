@@ -43,11 +43,48 @@ Build reliable AI features. Powered by [DSPy](https://dspy.ai/) — a framework 
 | "My AI is broken/erroring" | [`/ai-fixing-errors`](skills/ai-fixing-errors/SKILL.md) | Diagnose and fix crashes, wrong outputs, and weird behavior |
 | "DSPy can do X but there's no skill for it" | [`/ai-request-skill`](skills/ai-request-skill/SKILL.md) | Build a missing skill and submit a PR, or file a GitHub issue requesting it |
 
+## Know which DSPy concept you need?
+
+If you already know DSPy and think in its vocabulary, use these API-first skills instead:
+
+| DSPy concept | Skill | What it covers |
+|-------------|-------|----------------|
+| `Signature`, `InputField`, `OutputField` | [`/dspy-signatures`](skills/dspy-signatures/SKILL.md) | Inline and class-based signatures, typed fields, Pydantic models |
+| `dspy.LM`, `dspy.configure` | [`/dspy-lm`](skills/dspy-lm/SKILL.md) | Provider strings, temperature/max_tokens, per-module LM assignment |
+| `dspy.Module`, `forward()` | [`/dspy-modules`](skills/dspy-modules/SKILL.md) | Custom modules, composing sub-modules, save/load state |
+| `dspy.Example`, `Prediction` | [`/dspy-data`](skills/dspy-data/SKILL.md) | `with_inputs()`, train/dev splits, loading from CSV/JSON/HuggingFace |
+| `dspy.Evaluate`, metrics | [`/dspy-evaluate`](skills/dspy-evaluate/SKILL.md) | SemanticF1, exact match, LM-as-judge, composite metrics |
+| `dspy.Predict` | [`/dspy-predict`](skills/dspy-predict/SKILL.md) | Direct LM calls, simplest inference module |
+| `dspy.ChainOfThought` | [`/dspy-chain-of-thought`](skills/dspy-chain-of-thought/SKILL.md) | Step-by-step reasoning, `reasoning` field |
+| `dspy.ProgramOfThought` | [`/dspy-program-of-thought`](skills/dspy-program-of-thought/SKILL.md) | Code generation + execution for math/computation |
+| `dspy.ReAct` | [`/dspy-react`](skills/dspy-react/SKILL.md) | Tool-using agents, Reasoning-Action-Observation loop |
+| `dspy.CodeAct` | [`/dspy-codeact`](skills/dspy-codeact/SKILL.md) | Agents that write and execute code to act |
+| `dspy.MultiChainComparison` | [`/dspy-multi-chain-comparison`](skills/dspy-multi-chain-comparison/SKILL.md) | Multiple reasoning chains, pick the best |
+| `dspy.BestOfN` | [`/dspy-best-of-n`](skills/dspy-best-of-n/SKILL.md) | Rejection sampling with a reward function |
+| `dspy.Parallel` | [`/dspy-parallel`](skills/dspy-parallel/SKILL.md) | Concurrent LM calls, batch processing |
+| `dspy.Refine` | [`/dspy-refine`](skills/dspy-refine/SKILL.md) | Iterative self-improvement with feedback |
+| `dspy.RLM` | [`/dspy-rlm`](skills/dspy-rlm/SKILL.md) | Reinforcement-learning-style refinement |
+| `dspy.BootstrapFewShot` | [`/dspy-bootstrap-few-shot`](skills/dspy-bootstrap-few-shot/SKILL.md) | Auto-generate few-shot demos, first optimizer to try |
+| `dspy.BootstrapFewShotWithRandomSearch` | [`/dspy-bootstrap-rs`](skills/dspy-bootstrap-rs/SKILL.md) | Random search over candidate demo sets |
+| `dspy.MIPROv2` | [`/dspy-miprov2`](skills/dspy-miprov2/SKILL.md) | Best prompt optimizer, instructions + demos jointly |
+| `dspy.GEPA` | [`/dspy-gepa`](skills/dspy-gepa/SKILL.md) | Instruction generation and selection |
+| `dspy.BetterTogether` | [`/dspy-better-together`](skills/dspy-better-together/SKILL.md) | Combined prompt + weight tuning |
+| `dspy.BootstrapFinetune` | [`/dspy-bootstrap-finetune`](skills/dspy-bootstrap-finetune/SKILL.md) | Fine-tune weights from bootstrapped data |
+| `dspy.COPRO` | [`/dspy-copro`](skills/dspy-copro/SKILL.md) | Instruction candidates with breadth search |
+| `dspy.Ensemble` | [`/dspy-ensemble`](skills/dspy-ensemble/SKILL.md) | Combine multiple optimized programs |
+| `dspy.InferRules` | [`/dspy-infer-rules`](skills/dspy-infer-rules/SKILL.md) | Extract decision logic from examples |
+| `dspy.KNN`, `dspy.KNNFewShot` | [`/dspy-knn-few-shot`](skills/dspy-knn-few-shot/SKILL.md) | Embedding-based demo retrieval |
+| `dspy.LabeledFewShot` | [`/dspy-labeled-few-shot`](skills/dspy-labeled-few-shot/SKILL.md) | Hand-picked demonstrations |
+| `dspy.SIMBA` | [`/dspy-simba`](skills/dspy-simba/SKILL.md) | Small-step incremental optimization |
+| `ChatAdapter`, `JSONAdapter`, `TwoStepAdapter` | [`/dspy-adapters`](skills/dspy-adapters/SKILL.md) | Prompt formatting, structured output, reasoning models |
+| `dspy.Tool`, `PythonInterpreter` | [`/dspy-tools`](skills/dspy-tools/SKILL.md) | Wrapping functions as tools, code execution |
+| `dspy.Retrieve`, `ColBERTv2`, `Embedder` | [`/dspy-retrieval`](skills/dspy-retrieval/SKILL.md) | Search, RAG pipelines, embeddings |
+
 ## Install
 
 ### Option 1: `npx skills` (recommended — works with any AI coding agent)
 
-Install all 32 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
+Install all 62 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
 
 ```bash
 npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills

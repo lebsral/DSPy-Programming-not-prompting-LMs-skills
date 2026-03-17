@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Build reliable AI features with DSPy — programming not prompting",
-    "version": "1.1.0"
+    "version": "1.5.0"
   },
   "plugins": [
     {
@@ -62,6 +62,44 @@
         "./skills/ai-tracking-experiments",
         "./skills/ai-testing-safety",
         "./skills/ai-fixing-errors"
+      ]
+    },
+    {
+      "name": "dspy-api-skills",
+      "description": "API-first skills for users who already know DSPy: signatures, LM config, modules, data handling, evaluation, inference modules, optimizers, adapters, tools, retrieval, and utilities",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/dspy-signatures",
+        "./skills/dspy-lm",
+        "./skills/dspy-modules",
+        "./skills/dspy-data",
+        "./skills/dspy-evaluate",
+        "./skills/dspy-predict",
+        "./skills/dspy-chain-of-thought",
+        "./skills/dspy-program-of-thought",
+        "./skills/dspy-react",
+        "./skills/dspy-codeact",
+        "./skills/dspy-multi-chain-comparison",
+        "./skills/dspy-best-of-n",
+        "./skills/dspy-parallel",
+        "./skills/dspy-refine",
+        "./skills/dspy-rlm",
+        "./skills/dspy-bootstrap-few-shot",
+        "./skills/dspy-bootstrap-rs",
+        "./skills/dspy-miprov2",
+        "./skills/dspy-gepa",
+        "./skills/dspy-better-together",
+        "./skills/dspy-bootstrap-finetune",
+        "./skills/dspy-copro",
+        "./skills/dspy-ensemble",
+        "./skills/dspy-infer-rules",
+        "./skills/dspy-knn-few-shot",
+        "./skills/dspy-labeled-few-shot",
+        "./skills/dspy-simba",
+        "./skills/dspy-adapters",
+        "./skills/dspy-tools",
+        "./skills/dspy-retrieval"
       ]
     }
   ]
