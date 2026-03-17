@@ -294,8 +294,8 @@ print(agent)
 
 ## Cross-references
 
-- **Defining tools** in detail -- see `/dspy-tools` (coming soon)
-- **CodeAct** for code-based agents -- see `/dspy-codeact` (coming soon)
+- **Defining tools** in detail -- see `/dspy-tools`
+- **CodeAct** for code-based agents -- see `/dspy-codeact`
 - **Building custom modules** to wrap ReAct -- see `/dspy-modules`
 - **Action-taking AI** from a problem-first perspective -- see `/ai-taking-actions`
 - **Multi-agent coordination** -- see `/ai-coordinating-agents`

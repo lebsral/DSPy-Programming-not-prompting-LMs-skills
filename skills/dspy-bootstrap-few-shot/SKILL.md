@@ -1,0 +1,233 @@
+---
+name: dspy-bootstrap-few-shot
+description: "Use DSPy's BootstrapFewShot optimizer to automatically generate few-shot demonstrations. Use when you want to use dspy.BootstrapFewShot, bootstrap examples from a training set, add few-shot demos to your prompts, or do your first optimization pass."
+---
+
+# Bootstrap Few-Shot Demonstrations
+
+Guide the user through using `dspy.BootstrapFewShot` to automatically generate and select high-quality few-shot demonstrations for their DSPy program. This is the simplest optimizer and the recommended first step before trying heavier optimizers.
+
+## What is BootstrapFewShot
+
+`dspy.BootstrapFewShot` takes your program, a training set, and a metric, then:
+
+1. Runs your program on each training example
+2. Keeps the traces (input/output pairs) where the metric passes
+3. Attaches the best traces as few-shot demonstrations to your program's predictors
+
+The result is a copy of your program with working examples baked into the prompt — so the LM sees "here's how I solved similar problems" every time it runs.
+
+```python
+optimizer = dspy.BootstrapFewShot(metric=metric, max_bootstrapped_demos=4)
+optimized = optimizer.compile(my_program, trainset=trainset)
+```
+
+## When to use it
+
+- **First optimizer to try** — it is fast, simple, and often gives a meaningful lift
+- You have **~50+ labeled examples** (fewer can work but results vary)
+- You want to **add few-shot demonstrations** without hand-writing them
+- You want a **quick baseline** before trying heavier optimizers
+
+## Basic usage
+
+```python
+import dspy
+from dspy.evaluate import Evaluate
+
+lm = dspy.LM("openai/gpt-4o-mini")
+dspy.configure(lm=lm)
+
+# 1. Define your program
+qa = dspy.ChainOfThought("question -> answer")
+
+# 2. Prepare your data (mark inputs with .with_inputs())
+trainset = [
+    dspy.Example(question="What is the capital of France?", answer="Paris").with_inputs("question"),
+    dspy.Example(question="What is 2+2?", answer="4").with_inputs("question"),
+    # ... ~50+ examples
+]
+
+devset = [
+    dspy.Example(question="Who wrote Hamlet?", answer="Shakespeare").with_inputs("question"),
+    # ... held-out examples for evaluation
+]
+
+# 3. Define a metric
+def metric(example, prediction, trace=None):
+    return prediction.answer.strip().lower() == example.answer.strip().lower()
+
+# 4. Evaluate baseline
+evaluator = Evaluate(devset=devset, metric=metric, num_threads=4)
+baseline = evaluator(qa)
+print(f"Baseline: {baseline:.1f}%")
+
+# 5. Optimize
+optimizer = dspy.BootstrapFewShot(metric=metric, max_bootstrapped_demos=4)
+optimized_qa = optimizer.compile(qa, trainset=trainset)
+
+# 6. Evaluate optimized program
+improved = evaluator(optimized_qa)
+print(f"Optimized: {improved:.1f}%")
+```
+
+## Key parameters
+
+```python
+optimizer = dspy.BootstrapFewShot(
+    metric=metric,                # Required. Scoring function(example, prediction, trace) -> bool/float
+    max_bootstrapped_demos=4,     # Max bootstrapped (generated) demos per predictor. Default: 4
+    max_labeled_demos=16,         # Max labeled (from trainset) demos per predictor. Default: 16
+    max_rounds=1,                 # Number of bootstrap rounds. Default: 1
+    max_errors=5,                 # Max errors before stopping. Default: 5
+)
+```
+
+### What the parameters control
+
+- **`max_bootstrapped_demos`** — How many auto-generated demonstrations to include in the prompt. These come from running the program on training examples and keeping traces that pass the metric. Start with 4, increase to 8 if you have a complex task.
+
+- **`max_labeled_demos`** — How many examples from your trainset to include directly as demonstrations (without running through the program first). These are simpler input/output pairs. Set to 0 if you only want bootstrapped demos.
+
+- **`max_rounds`** — Number of bootstrapping iterations. In each round, the optimizer runs the program (with any demos from previous rounds) and collects new passing traces. More rounds can find better demos but take longer. Usually 1 is sufficient.
+
+- **`max_errors`** — How many failed examples to tolerate before the optimizer stops. Increase if your task is noisy or the metric is strict.
+
+## How bootstrapping works
+
+Understanding the process helps you debug when results are unexpected.
+
+**Round 1:**
+1. The optimizer picks examples from `trainset`
+2. For each example, it runs your program to get a prediction
+3. It scores the prediction with your `metric(example, prediction, trace)`
+4. If the metric passes, the full trace (inputs + outputs, including intermediate reasoning) is saved as a candidate demo
+5. The best `max_bootstrapped_demos` traces are attached to each predictor
+
+**Round 2+ (if `max_rounds > 1`):**
+1. The program now has demos from round 1
+2. The optimizer runs the program again on more training examples
+3. New passing traces are collected — these are often better because the program already has some demos
+4. The demo set is updated with the best traces so far
+
+**The result:** Your program's predictors now have few-shot demonstrations in their prompts. When the program runs, the LM sees these worked examples before processing the new input.
+
+## Trace-aware metrics
+
+The `trace` parameter in your metric is `None` during evaluation but set during optimization. Use this to apply stricter filtering during bootstrapping:
+
+```python
+def metric(example, prediction, trace=None):
+    correct = prediction.answer.strip().lower() == example.answer.strip().lower()
+    if trace is not None:
+        # During optimization: require good reasoning too
+        has_reasoning = len(getattr(prediction, "reasoning", "")) > 50
+        return correct and has_reasoning
+    # During evaluation: only check correctness
+    return correct
+```
+
+This ensures bootstrapped demos have both correct answers and clear reasoning, producing higher-quality demonstrations.
+
+## Saving and loading optimized programs
+
+After optimization, save the program so you don't have to re-optimize every time:
+
+```python
+# Save
+optimized_qa.save("optimized_qa.json")
+
+# Load later
+loaded_qa = dspy.ChainOfThought("question -> answer")
+loaded_qa.load("optimized_qa.json")
+
+# Use it
+result = loaded_qa(question="What is the capital of Japan?")
+```
+
+For custom modules:
+
+```python
+class MyPipeline(dspy.Module):
+    def __init__(self):
+        self.step1 = dspy.ChainOfThought("question -> search_query")
+        self.step2 = dspy.ChainOfThought("question, search_query -> answer")
+
+    def forward(self, question):
+        query = self.step1(question=question)
+        return self.step2(question=question, search_query=query.search_query)
+
+# Save after optimization
+optimized_pipeline.save("pipeline.json")
+
+# Load
+loaded = MyPipeline()
+loaded.load("pipeline.json")
+```
+
+The saved file contains the few-shot demonstrations for each predictor. The program structure itself is defined in code — `save` and `load` only handle the learned demos and parameters.
+
+## Using with multi-step programs
+
+BootstrapFewShot works on every predictor in your program. For a multi-step pipeline, each step gets its own demonstrations:
+
+```python
+class RAG(dspy.Module):
+    def __init__(self):
+        self.generate_query = dspy.ChainOfThought("question -> search_query")
+        self.generate_answer = dspy.ChainOfThought("context, question -> answer")
+
+    def forward(self, question):
+        query = self.generate_query(question=question)
+        # Assume some retrieval step here
+        context = retrieve(query.search_query)
+        return self.generate_answer(context=context, question=question)
+
+optimizer = dspy.BootstrapFewShot(metric=metric, max_bootstrapped_demos=4)
+optimized_rag = optimizer.compile(RAG(), trainset=trainset)
+# Both generate_query and generate_answer now have bootstrapped demos
+```
+
+## When to upgrade to a heavier optimizer
+
+BootstrapFewShot is a great starting point, but you may want to upgrade if:
+
+| Signal | Next step |
+|--------|-----------|
+| Accuracy plateaus after bootstrapping | Try `dspy.BootstrapFewShotWithRandomSearch` — it runs multiple bootstrap trials and picks the best set of demos |
+| You have 200+ examples and want the best prompts | Try `dspy.MIPROv2` — it optimizes both instructions and few-shot demos |
+| You want maximum quality and can fine-tune | Try `dspy.BootstrapFinetune` — it uses bootstrapped traces to fine-tune the LM weights |
+
+A typical progression:
+
+1. **BootstrapFewShot** — fast, first pass (~50 examples)
+2. **BootstrapFewShotWithRandomSearch** — better demo selection (~200 examples)
+3. **MIPROv2** — full prompt optimization (~200 examples)
+4. **BootstrapFinetune** — weight tuning (~500+ examples)
+
+## Troubleshooting
+
+**No demos were bootstrapped:**
+- Your metric may be too strict — check that at least some training examples pass
+- Run a quick evaluation on your trainset to see the pass rate
+- Lower the bar in your metric or fix data quality issues
+
+**Accuracy didn't improve (or got worse):**
+- Try increasing `max_bootstrapped_demos` (e.g., 8)
+- Try setting `max_labeled_demos=0` to only use bootstrapped demos
+- Check that your trainset is representative of the task
+- Ensure your devset is held out (not overlapping with trainset)
+
+**Optimization is slow:**
+- Reduce trainset size (50-100 examples is often enough)
+- Use a faster/cheaper LM for bootstrapping, then evaluate with the target LM
+- Reduce `max_rounds` to 1
+
+## Cross-references
+
+- Need to prepare training data? Use `/dspy-data`
+- Need to write a metric or run evaluation? Use `/dspy-evaluate`
+- Want to try random search over demo sets? Use `/dspy-bootstrap-rs`
+- Want the best prompt optimization? Use `/dspy-miprov2`
+- For the full measure-improve-verify loop, see `/ai-improving-accuracy`
+- For worked examples, see [examples.md](examples.md)

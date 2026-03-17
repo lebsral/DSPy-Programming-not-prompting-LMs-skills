@@ -1,0 +1,265 @@
+---
+name: dspy-gepa
+description: "Use DSPy's GEPA optimizer for instruction generation and selection. Use when you want to use dspy.GEPA, optimize instructions without few-shot examples, or need a lightweight instruction-tuning optimizer."
+---
+
+# Instruction Optimization with dspy.GEPA
+
+Guide the user through using `dspy.GEPA` to automatically discover better instructions for their DSPy programs through reflective evolution.
+
+## What is dspy.GEPA
+
+`dspy.GEPA` is a DSPy optimizer that evolves the **instruction text** in your program's predictors. Rather than adding few-shot examples (like BootstrapFewShot) or tuning model weights (like BootstrapFinetune), GEPA iteratively proposes, evaluates, and refines the natural-language instructions that guide each LM call.
+
+Key properties:
+
+- **Tunes instructions only** -- no few-shot demos are injected into prompts, keeping them compact
+- **Uses textual feedback** -- a reflection LM reads execution traces and failure feedback to propose better instructions, not just scalar scores
+- **Maintains a Pareto frontier** -- tracks multiple candidate programs that excel on different subsets, then merges the best traits
+- **Works with ~50 examples** -- needs less data than MIPROv2 or BootstrapFewShotWithRandomSearch
+- **Supports per-predictor feedback** -- metrics can return targeted feedback for individual predictors in multi-step pipelines
+
+## When to use GEPA
+
+Use `dspy.GEPA` when:
+
+- You have ~50+ labeled examples (fewer than what MIPROv2 needs to shine)
+- You want to optimize **instructions** without adding few-shot examples to the prompt
+- Your task has interpretable failure modes you can describe in natural language
+- You have a multi-step pipeline and want per-predictor instruction tuning
+- You want compact prompts (no demo bloat) while still improving quality
+
+Do **not** use GEPA when:
+
+- You have no way to provide textual feedback on failures -- use `dspy.BootstrapFewShot` instead
+- You need the best possible prompt optimization and have 200+ examples -- use `dspy.MIPROv2`
+- You want to tune model weights -- use `dspy.BootstrapFinetune`
+- Your task is trivially solved without instruction tuning -- use `dspy.Predict` or `dspy.ChainOfThought` directly
+
+## Basic usage
+
+Three things are needed: a DSPy program, a feedback metric, and a training set.
+
+```python
+import dspy
+
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+
+# 1. Define your program
+classify = dspy.ChainOfThought("text -> label")
+
+# 2. Define a feedback metric
+# GEPA metrics can return a float OR a dict with score + feedback text
+def metric(gold, pred, trace=None, pred_name=None, pred_trace=None):
+    score = float(pred.label == gold.label)
+    feedback = "" if score == 1.0 else f"Expected '{gold.label}', got '{pred.label}'."
+    return {"score": score, "feedback": feedback}
+
+# 3. Prepare training data
+trainset = [
+    dspy.Example(text="Great product!", label="positive").with_inputs("text"),
+    dspy.Example(text="Terrible service.", label="negative").with_inputs("text"),
+    # ... ~50 examples
+]
+
+# 4. Optimize
+gepa = dspy.GEPA(
+    metric=metric,
+    reflection_lm=dspy.LM("openai/gpt-4o", temperature=1.0, max_tokens=4096),
+    auto="light",
+)
+optimized = gepa.compile(classify, trainset=trainset)
+
+# 5. Use the optimized program
+result = optimized(text="This exceeded my expectations!")
+print(result.label)
+
+# 6. Save for later
+optimized.save("optimized_classifier.json")
+```
+
+## Constructor parameters
+
+```python
+dspy.GEPA(
+    metric,                              # GEPAFeedbackMetric (required)
+    *,
+    auto=None,                           # "light", "medium", or "heavy"
+    max_full_evals=None,                 # int -- full validation passes allowed
+    max_metric_calls=None,               # int -- total metric invocations allowed
+    reflection_lm=None,                  # LM for proposing new instructions
+    reflection_minibatch_size=3,         # examples per reflection step
+    candidate_selection_strategy="pareto",  # "pareto" or "current_best"
+    skip_perfect_score=True,             # skip examples already scoring perfectly
+    add_format_failure_as_feedback=False, # include format errors in feedback
+    instruction_proposer=None,           # custom proposal function
+    component_selector="round_robin",    # which predictor to improve next
+    use_merge=True,                      # merge successful variants
+    max_merge_invocations=5,             # merge attempt limit
+    num_threads=None,                    # parallel evaluation threads
+    failure_score=0.0,                   # score for failed examples
+    perfect_score=1.0,                   # score that counts as perfect
+    log_dir=None,                        # directory for optimization logs
+    track_stats=False,                   # return detailed metadata
+    track_best_outputs=False,            # retain best outputs per task
+    seed=0,                              # reproducibility seed
+)
+```
+
+### Key parameters explained
+
+| Parameter | Default | Purpose |
+|-----------|---------|---------|
+| `metric` | required | Feedback function -- returns float or `{"score": float, "feedback": str}` |
+| `auto` | None | Budget preset: `"light"` (fast), `"medium"` (balanced), `"heavy"` (thorough) |
+| `reflection_lm` | None | LM that proposes new instructions. Use a strong model (e.g., GPT-4o, Claude Sonnet). Required unless you provide a custom `instruction_proposer` |
+| `reflection_minibatch_size` | 3 | How many examples the reflection LM sees per iteration. Larger = better proposals but more cost |
+| `candidate_selection_strategy` | `"pareto"` | `"pareto"` maintains diverse candidates; `"current_best"` always mutates the top scorer |
+| `use_merge` | True | After evolving candidates, merge the best modules from different lineages |
+| `max_merge_invocations` | 5 | Cap on merge attempts to control cost |
+| `skip_perfect_score` | True | Do not waste budget on examples already scoring `perfect_score` |
+| `track_stats` | False | When True, attach optimization metadata to `optimized.detailed_results` |
+
+### Budget control
+
+Exactly **one** of these three must be set:
+
+- **`auto`** -- preset budget (`"light"`, `"medium"`, `"heavy"`)
+- **`max_full_evals`** -- number of full passes over the validation set
+- **`max_metric_calls`** -- total number of metric invocations
+
+Start with `auto="light"` for quick experiments, then move to `"medium"` or `"heavy"` for production.
+
+## Writing feedback metrics
+
+GEPA metrics are more expressive than standard DSPy metrics. They accept additional keyword arguments for trace-level feedback:
+
+```python
+def metric(gold, pred, trace=None, pred_name=None, pred_trace=None):
+    """
+    Args:
+        gold: The expected Example (ground truth)
+        pred: The model's Prediction
+        trace: Full program execution trace (optional)
+        pred_name: Name of the predictor being optimized (optional)
+        pred_trace: Sub-trace for just this predictor (optional)
+
+    Returns:
+        float -- simple score
+        OR dict -- {"score": float, "feedback": str}
+    """
+```
+
+### Returning textual feedback
+
+The key advantage of GEPA over other optimizers is that metrics can explain **why** an output failed. The reflection LM reads this feedback to propose better instructions.
+
+```python
+def metric(gold, pred, trace=None, pred_name=None, pred_trace=None):
+    if pred.answer == gold.answer:
+        return {"score": 1.0, "feedback": ""}
+
+    feedback_parts = []
+    if len(pred.answer) > 200:
+        feedback_parts.append("Answer is too verbose. Keep it under 200 characters.")
+    if gold.answer.lower() not in pred.answer.lower():
+        feedback_parts.append(f"Answer should contain '{gold.answer}'.")
+
+    return {
+        "score": 0.0,
+        "feedback": " ".join(feedback_parts),
+    }
+```
+
+Write feedback that is **actionable** -- describe what the instruction should encourage or discourage. Vague feedback like "wrong answer" does not help the reflection LM.
+
+## How GEPA works internally
+
+Understanding the algorithm helps you write better metrics and choose parameters:
+
+1. **Initialize** -- seeds the candidate pool with the unoptimized program
+2. **Select candidate** -- picks a program from the Pareto frontier (diverse strengths)
+3. **Sample minibatch** -- draws `reflection_minibatch_size` examples from trainset
+4. **Collect traces and feedback** -- runs the candidate, captures execution traces and metric feedback
+5. **Select component** -- picks which predictor to improve (round-robin by default)
+6. **Reflect and mutate** -- the `reflection_lm` reads traces + feedback and proposes a revised instruction
+7. **Evaluate** -- scores the new candidate on the minibatch; if promising, validates on the full set
+8. **Update frontier** -- adds the candidate to the Pareto frontier if it is non-dominated
+9. **Merge** -- combines the best predictors from different candidate lineages into one program
+10. **Terminate** -- returns the best aggregate performer when the budget is exhausted
+
+The Pareto frontier is the key innovation: rather than keeping only the single best candidate, GEPA maintains candidates that excel on different subsets. This prevents the optimizer from overfitting to one failure pattern while ignoring others.
+
+## GEPA vs MIPROv2 -- when to use which
+
+| Aspect | `dspy.GEPA` | `dspy.MIPROv2` |
+|--------|-------------|----------------|
+| **What it tunes** | Instructions only | Instructions + few-shot demos |
+| **Data needed** | ~50 examples | ~200 examples |
+| **Prompt size** | Compact (no demos) | Larger (includes demos) |
+| **Feedback** | Uses textual feedback from metrics | Uses scalar scores only |
+| **Multi-step** | Per-predictor feedback and optimization | Optimizes all predictors jointly |
+| **Best for** | Instruction tuning, compact prompts, rich feedback | Maximum prompt quality, larger budgets |
+| **Cost** | Lower (fewer metric calls) | Higher (explores more candidates) |
+
+**Rule of thumb:** Start with GEPA if you have fewer than 200 examples or want compact prompts. Move to MIPROv2 if you have more data and are willing to trade prompt size for quality.
+
+## Providing a validation set
+
+If you have a separate validation set, pass it to `compile`:
+
+```python
+optimized = gepa.compile(
+    classify,
+    trainset=trainset,
+    valset=valset,
+)
+```
+
+Without a `valset`, GEPA uses the trainset for both training and validation. This can lead to overfitting but is useful for test-time search (optimizing for a specific batch of inputs).
+
+## Inference-time search
+
+GEPA can be used at inference time to find the best instructions for a specific batch of tasks:
+
+```python
+gepa = dspy.GEPA(
+    metric=metric,
+    reflection_lm=dspy.LM("openai/gpt-4o", temperature=1.0, max_tokens=4096),
+    auto="light",
+    track_stats=True,
+    track_best_outputs=True,
+)
+
+# Pass the same data as both trainset and valset
+result = gepa.compile(program, trainset=tasks, valset=tasks)
+
+# Access the best output for each task
+best_per_task = result.detailed_results.best_outputs_valset
+```
+
+## Tips
+
+- **Use a strong reflection LM** -- the quality of proposed instructions depends on the reflection model. Use GPT-4o, Claude Sonnet, or similar
+- **Write actionable feedback** -- "Expected positive sentiment but got negative; the review contains sarcasm" is better than "Wrong label"
+- **Start with `auto="light"`** -- iterate on your metric before spending budget on heavy optimization
+- **Use `track_stats=True`** during development to inspect which instructions were tried and how they scored
+- **Combine with Evaluate** -- run `dspy.Evaluate` before and after GEPA to measure the improvement
+
+```python
+from dspy.evaluate import Evaluate
+
+evaluator = Evaluate(devset=devset, metric=metric, num_threads=4)
+baseline = evaluator(program)
+optimized_score = evaluator(optimized)
+print(f"Improvement: {baseline} -> {optimized_score}")
+```
+
+## Cross-references
+
+- **Improving accuracy** with other optimizers -- see `/ai-improving-accuracy`
+- **MIPROv2** for instruction + few-shot optimization -- see the optimizer table in `docs/dspy-reference.md`
+- **Chain of thought reasoning** as the inner module -- see `/dspy-chain-of-thought`
+- **Evaluating programs** before and after optimization -- see `/dspy-evaluate`
+- **Iterative self-improvement** at inference time -- see `/dspy-refine`
+- For worked examples, see [examples.md](examples.md)
