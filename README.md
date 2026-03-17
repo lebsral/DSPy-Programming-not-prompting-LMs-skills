@@ -117,6 +117,7 @@ Then install a skill group:
 /plugin install dspy-build-skills@dspy-skills     # Building AI features (17 skills)
 /plugin install dspy-quality-skills@dspy-skills    # Quality and reliability (8 skills)
 /plugin install dspy-ops-skills@dspy-skills        # Production operations (7 skills)
+/plugin install dspy-api-skills@dspy-skills        # DSPy API-first skills (32 skills)
 ```
 
 ### Option 3: Manual (git clone)
@@ -160,6 +161,20 @@ npx skills update         # Pull latest versions
 ```
 
 For manual/symlink installs, run `git pull` in your cloned repo.
+
+### Adding new skills after initial install
+
+`npx skills update` only updates skills you already have. When new skills are added to this repo (like the `dspy-` API-first skills), re-run the add command to pick them up:
+
+```bash
+# Interactive — choose which new skills to add
+npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills
+
+# Non-interactive — add all new skills automatically
+npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --all -y
+```
+
+This won't duplicate skills you already have — it only adds the ones that are missing.
 
 ## Use a skill
 

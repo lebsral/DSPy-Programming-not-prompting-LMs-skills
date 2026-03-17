@@ -122,13 +122,52 @@ When the problem spans multiple skills, show the order:
 
 Generate the prompt for step 1 only. Mention that you can generate the step 2 prompt after step 1 is done.
 
+### If the user asks about a specific DSPy concept
+
+If the user already knows DSPy and asks about a specific API concept, route to the matching `dspy-` skill instead:
+
+| DSPy concept | Skill |
+|-------------|-------|
+| Signatures, InputField, OutputField | `/dspy-signatures` |
+| dspy.LM, dspy.configure, providers | `/dspy-lm` |
+| dspy.Module, forward() | `/dspy-modules` |
+| dspy.Example, Prediction, datasets | `/dspy-data` |
+| dspy.Evaluate, metrics | `/dspy-evaluate` |
+| dspy.Predict | `/dspy-predict` |
+| dspy.ChainOfThought | `/dspy-chain-of-thought` |
+| dspy.ProgramOfThought | `/dspy-program-of-thought` |
+| dspy.ReAct, agents with tools | `/dspy-react` |
+| dspy.CodeAct | `/dspy-codeact` |
+| dspy.MultiChainComparison | `/dspy-multi-chain-comparison` |
+| dspy.BestOfN | `/dspy-best-of-n` |
+| dspy.Parallel | `/dspy-parallel` |
+| dspy.Refine | `/dspy-refine` |
+| dspy.RLM | `/dspy-rlm` |
+| dspy.BootstrapFewShot | `/dspy-bootstrap-few-shot` |
+| BootstrapFewShotWithRandomSearch | `/dspy-bootstrap-rs` |
+| dspy.MIPROv2 | `/dspy-miprov2` |
+| dspy.GEPA | `/dspy-gepa` |
+| dspy.BetterTogether | `/dspy-better-together` |
+| dspy.BootstrapFinetune | `/dspy-bootstrap-finetune` |
+| dspy.COPRO | `/dspy-copro` |
+| dspy.Ensemble | `/dspy-ensemble` |
+| dspy.InferRules | `/dspy-infer-rules` |
+| dspy.KNN, dspy.KNNFewShot | `/dspy-knn-few-shot` |
+| dspy.LabeledFewShot | `/dspy-labeled-few-shot` |
+| dspy.SIMBA | `/dspy-simba` |
+| ChatAdapter, JSONAdapter, TwoStepAdapter | `/dspy-adapters` |
+| dspy.Tool, PythonInterpreter | `/dspy-tools` |
+| dspy.Retrieve, ColBERTv2, Embedder | `/dspy-retrieval` |
+| dspy.Image, Audio, Code, History | `/dspy-primitives` |
+| StreamListener, inspect_history, save/load | `/dspy-utils` |
+
 ### If nothing fits
 
 First, determine whether the problem is within DSPy's scope:
 
 - **Not a DSPy thing** (e.g., "build a React frontend", "set up a Kubernetes cluster"): Say so directly. Suggest appropriate tools or frameworks instead. Do not route to a fallback skill.
 
-- **DSPy can do this, but no skill exists** (e.g., "integrate Arize Phoenix", "use DSPy assertions", "set up LiteLLM proxy"): Route to `/ai-request-skill` so the user can contribute the missing skill or request it. Pass context about what they need:
+- **DSPy can do this, but no skill exists** (e.g., "integrate Arize Phoenix", "set up LiteLLM proxy"): Route to `/ai-request-skill` so the user can contribute the missing skill or request it. Pass context about what they need:
 
 ```
 /ai-request-skill <what the user needs and which DSPy features are involved>
