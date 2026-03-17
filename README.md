@@ -1,6 +1,10 @@
 # AI Skills for Claude Code
 
 ```bash
+# Just get started — ai-do routes you to the right skill
+npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skills ai-do -y
+
+# Or install everything
 npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills -g --all -y
 ```
 
@@ -84,9 +88,19 @@ If you already know DSPy and think in its vocabulary, use these API-first skills
 
 ## Install
 
+### Quick start: just install `/ai-do`
+
+The only skill you need to get started is `/ai-do`. Describe what you want to build and it routes you to the right skill — then you can install just the ones you need.
+
+```bash
+npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skills ai-do -y
+```
+
+Then in Claude Code: `/ai-do I want to build a support ticket classifier` — it'll tell you exactly which skill to use next.
+
 ### Option 1: `npx skills` (recommended — works with any AI coding agent)
 
-Install all 64 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
+Or install all 64 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
 
 ```bash
 npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills
