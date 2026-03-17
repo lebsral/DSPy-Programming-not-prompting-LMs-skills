@@ -43,11 +43,23 @@ Build reliable AI features. Powered by [DSPy](https://dspy.ai/) — a framework 
 | "My AI is broken/erroring" | [`/ai-fixing-errors`](skills/ai-fixing-errors/SKILL.md) | Diagnose and fix crashes, wrong outputs, and weird behavior |
 | "DSPy can do X but there's no skill for it" | [`/ai-request-skill`](skills/ai-request-skill/SKILL.md) | Build a missing skill and submit a PR, or file a GitHub issue requesting it |
 
+## Know which DSPy concept you need?
+
+If you already know DSPy and think in its vocabulary, use these API-first skills instead:
+
+| DSPy concept | Skill | What it covers |
+|-------------|-------|----------------|
+| `Signature`, `InputField`, `OutputField` | [`/dspy-signatures`](skills/dspy-signatures/SKILL.md) | Inline and class-based signatures, typed fields, Pydantic models |
+| `dspy.LM`, `dspy.configure` | [`/dspy-lm`](skills/dspy-lm/SKILL.md) | Provider strings, temperature/max_tokens, per-module LM assignment |
+| `dspy.Module`, `forward()` | [`/dspy-modules`](skills/dspy-modules/SKILL.md) | Custom modules, composing sub-modules, save/load state |
+| `dspy.Example`, `Prediction` | [`/dspy-data`](skills/dspy-data/SKILL.md) | `with_inputs()`, train/dev splits, loading from CSV/JSON/HuggingFace |
+| `dspy.Evaluate`, metrics | [`/dspy-evaluate`](skills/dspy-evaluate/SKILL.md) | SemanticF1, exact match, LM-as-judge, composite metrics |
+
 ## Install
 
 ### Option 1: `npx skills` (recommended — works with any AI coding agent)
 
-Install all 32 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
+Install all 37 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
 
 ```bash
 npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills

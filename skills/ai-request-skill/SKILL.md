@@ -44,7 +44,7 @@ Check whether the `/skill-creator` skill is available (it's from the [anthropics
 When delegating to `/skill-creator`, provide this DSPy-specific context:
 
 > **Repo conventions for this skill:**
-> - Problem-first naming: `ai-<problem>` prefix (e.g., `ai-observability` not `dspy-phoenix`)
+> - Dual naming: `ai-<problem>` prefix for problem-first skills (e.g., `ai-observability`), `dspy-<concept>` prefix for API-first skills (e.g., `dspy-signatures`)
 > - Web developer language in descriptions — use phrases developers actually say ("monitor AI quality", "search docs"), not ML jargon
 > - Provider-agnostic: don't hardcode specific LM providers, use `dspy.LM("openai/gpt-4o-mini")` as default examples
 > - SKILL.md under 500 lines; overflow goes to `examples.md` or `reference.md`

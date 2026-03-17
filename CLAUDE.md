@@ -4,8 +4,10 @@ This is a collection of Claude Code skills for building AI features with DSPy.
 
 ## Conventions
 
-- **Problem-first naming**: Skills are named after the problem the user is solving, using the `ai-` prefix (e.g., `ai-sorting` not `dspy-classify`). The user thinks "I need to sort tickets", not "I need to use ChainOfThought".
-- **Web developer language**: Descriptions use phrases web/SaaS developers actually say ("sort tickets", "search docs", "parse data"), not ML jargon.
+- **Dual naming convention**: Skills use two naming schemes:
+  - `ai-` prefix (problem-first): named after the problem — `ai-sorting`, `ai-parsing-data`. For users who think "I need to sort tickets."
+  - `dspy-` prefix (API-first): named after the DSPy concept — `dspy-signatures`, `dspy-chain-of-thought`. For users who already know DSPy and think "I want to use ChainOfThought."
+- **Web developer language**: `ai-` skill descriptions use phrases web/SaaS developers actually say ("sort tickets", "search docs", "parse data"), not ML jargon. `dspy-` skill descriptions explicitly reference DSPy API names.
 - **Skill format**: Each skill follows the Claude Code `SKILL.md` format with YAML frontmatter. See `docs/skills-spec.md` for the full spec.
 - **Keep SKILL.md files under 500 lines**. Move detailed reference material to supporting files like `reference.md` or `examples.md`.
 - **DSPy API reference**: See `docs/dspy-reference.md` for DSPy modules, optimizers, and patterns. Reference this when building or modifying skills.
@@ -21,7 +23,7 @@ examples/         # Full working example projects
 
 ## Adding or Updating a Skill
 
-1. Create a directory under `skills/` named `ai-<problem>`
+1. Create a directory under `skills/` named `ai-<problem>` or `dspy-<concept>`
 2. Write `SKILL.md` with frontmatter (`name`, `description`) and instructions
 3. Add `examples.md` or `reference.md` for supporting content
 4. Update the problem catalog table in `README.md`

@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Build reliable AI features with DSPy — programming not prompting",
-    "version": "1.1.0"
+    "version": "1.2.0"
   },
   "plugins": [
     {
@@ -62,6 +62,19 @@
         "./skills/ai-tracking-experiments",
         "./skills/ai-testing-safety",
         "./skills/ai-fixing-errors"
+      ]
+    },
+    {
+      "name": "dspy-api-skills",
+      "description": "API-first skills for users who already know DSPy: signatures, LM config, modules, data handling, evaluation, inference modules, optimizers, adapters, tools, retrieval, and utilities",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/dspy-signatures",
+        "./skills/dspy-lm",
+        "./skills/dspy-modules",
+        "./skills/dspy-data",
+        "./skills/dspy-evaluate"
       ]
     }
   ]
