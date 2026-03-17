@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Build reliable AI features with DSPy — programming not prompting",
-    "version": "1.5.0"
+    "version": "1.6.0"
   },
   "plugins": [
     {
@@ -99,7 +99,9 @@
         "./skills/dspy-simba",
         "./skills/dspy-adapters",
         "./skills/dspy-tools",
-        "./skills/dspy-retrieval"
+        "./skills/dspy-retrieval",
+        "./skills/dspy-primitives",
+        "./skills/dspy-utils"
       ]
     }
   ]
