@@ -79,12 +79,14 @@ If you already know DSPy and think in its vocabulary, use these API-first skills
 | `ChatAdapter`, `JSONAdapter`, `TwoStepAdapter` | [`/dspy-adapters`](skills/dspy-adapters/SKILL.md) | Prompt formatting, structured output, reasoning models |
 | `dspy.Tool`, `PythonInterpreter` | [`/dspy-tools`](skills/dspy-tools/SKILL.md) | Wrapping functions as tools, code execution |
 | `dspy.Retrieve`, `ColBERTv2`, `Embedder` | [`/dspy-retrieval`](skills/dspy-retrieval/SKILL.md) | Search, RAG pipelines, embeddings |
+| `dspy.Image`, `dspy.Audio`, `dspy.Code`, `dspy.History` | [`/dspy-primitives`](skills/dspy-primitives/SKILL.md) | Multimodal inputs, conversation history |
+| `StreamListener`, `inspect_history`, `save`/`load` | [`/dspy-utils`](skills/dspy-utils/SKILL.md) | Streaming, caching, debugging, persistence, async |
 
 ## Install
 
 ### Option 1: `npx skills` (recommended — works with any AI coding agent)
 
-Install all 62 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
+Install all 64 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
 
 ```bash
 npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills
