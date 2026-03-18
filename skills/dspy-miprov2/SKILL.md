@@ -1,6 +1,6 @@
 ---
 name: dspy-miprov2
-description: "Use DSPy's MIPROv2 optimizer for the best prompt optimization. Use when you want to use dspy.MIPROv2, optimize both instructions and few-shot demos jointly, use the auto parameter (light/medium/heavy), or get the highest quality prompt optimization DSPy offers."
+description: "Use when you want the highest-quality prompt optimization DSPy offers — jointly optimizes instructions and few-shot demos, with auto='light'/'medium'/'heavy' presets."
 ---
 
 # Optimize Prompts with MIPROv2

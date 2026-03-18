@@ -1,6 +1,6 @@
 ---
 name: dspy-primitives
-description: "Use DSPy's primitive types for multimodal and structured inputs. Use when you want to use dspy.Image, dspy.Audio, dspy.Code, or dspy.History to work with images, audio, code snippets, or conversation history in DSPy signatures."
+description: "Use when working with non-text inputs like images, audio, or code — DSPy's typed wrappers for multimodal data in signatures."
 ---
 
 # DSPy Primitives

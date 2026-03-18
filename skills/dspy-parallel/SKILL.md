@@ -1,6 +1,6 @@
 ---
 name: dspy-parallel
-description: "Use DSPy's Parallel module to run multiple LM calls concurrently. Use when you want to use dspy.Parallel, process batches of inputs in parallel, speed up independent LM calls, or run multiple modules concurrently and aggregate results."
+description: "Use when you have independent LM calls that can run concurrently — batch processing, fan-out patterns, or speeding up pipelines with no data dependencies between steps."
 ---
 
 # Run LM Calls in Parallel with dspy.Parallel

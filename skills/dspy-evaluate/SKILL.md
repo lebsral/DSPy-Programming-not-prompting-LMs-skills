@@ -1,6 +1,6 @@
 ---
 name: dspy-evaluate
-description: "Use DSPy's Evaluate class and built-in metrics to measure AI quality. Use when you want to run dspy.Evaluate, write custom metrics, use SemanticF1 or answer_exact_match, build an LM-as-judge, score predictions against a devset, or measure accuracy before and after optimization."
+description: "Use when you need to measure how well your DSPy program performs — writing metrics, scoring against a dev set, or comparing before/after optimization."
 ---
 
 # Evaluate Your DSPy Program
@@ -9,82 +9,11 @@ Guide the user through measuring AI quality with DSPy's `Evaluate` class. The pa
 
 ## What is dspy.Evaluate
 
-`dspy.Evaluate` runs your program on every example in a devset, scores each prediction with a metric function, and reports the aggregate score. It handles threading, progress display, and result tables so you don't have to write evaluation loops by hand.
-
-The evaluator returns a percentage score (0-100) representing how many examples your program got right (or the average metric score if your metric returns floats).
-
-```python
-from dspy.evaluate import Evaluate
-
-evaluator = Evaluate(devset=devset, metric=metric, num_threads=4)
-score = evaluator(my_program)
-print(f"Score: {score}%")
-```
-
-## Basic usage
-
-```python
-import dspy
-from dspy.evaluate import Evaluate
-
-lm = dspy.LM("openai/gpt-4o-mini")
-dspy.configure(lm=lm)
-
-# 1. Your program
-qa = dspy.ChainOfThought("question -> answer")
-
-# 2. Your devset (examples with expected outputs)
-devset = [
-    dspy.Example(question="What is the capital of France?", answer="Paris").with_inputs("question"),
-    dspy.Example(question="What is 2+2?", answer="4").with_inputs("question"),
-    # 20-100+ examples for reliable evaluation
-]
-
-# 3. Your metric
-def metric(example, prediction, trace=None):
-    return prediction.answer.strip().lower() == example.answer.strip().lower()
-
-# 4. Run evaluation
-evaluator = Evaluate(
-    devset=devset,
-    metric=metric,
-    num_threads=4,
-    display_progress=True,
-    display_table=5,
-)
-score = evaluator(qa)
-print(f"Score: {score}%")
-```
+`dspy.Evaluate` runs your program on every devset example, scores each with a metric, and reports the aggregate score. It handles threading and progress display. Returns a percentage (0-100).
 
 ## Built-in metrics
 
-DSPy provides several metrics so you don't have to write common ones from scratch.
-
-### answer_exact_match
-
-Returns `True` if the predicted answer exactly matches the expected answer (after normalization):
-
-```python
-from dspy.evaluate import answer_exact_match
-
-evaluator = Evaluate(devset=devset, metric=answer_exact_match, num_threads=4)
-score = evaluator(my_program)
-```
-
-`answer_exact_match` expects the example and prediction to have an `answer` field. It normalizes whitespace and capitalization before comparing.
-
-### answer_passage_match
-
-Returns `True` if the expected answer appears anywhere in the predicted answer:
-
-```python
-from dspy.evaluate import answer_passage_match
-
-evaluator = Evaluate(devset=devset, metric=answer_passage_match, num_threads=4)
-score = evaluator(my_program)
-```
-
-Useful when your program returns a full sentence but the gold answer is a short phrase (e.g., "Paris" should match "The capital of France is Paris.").
+DSPy provides `answer_exact_match` (normalized string equality) and `answer_passage_match` (substring check). Both expect an `answer` field on example and prediction.
 
 ### SemanticF1
 
@@ -118,37 +47,7 @@ This is an LM-based metric — it uses the configured LM to judge completeness a
 
 ## Custom metrics
 
-A metric is a function with this signature:
-
-```python
-def metric(example, prediction, trace=None):
-    # example: the dspy.Example from your devset (has both inputs and expected outputs)
-    # prediction: the dspy.Prediction from your program (has only outputs)
-    # trace: None during evaluation, not None during optimization
-    # Return: bool, int, or float
-    return prediction.answer == example.answer
-```
-
-Return values:
-- **bool** — `True`/`False` for pass/fail (evaluator reports % that pass)
-- **int** — 0 or 1 (same as bool)
-- **float** — 0.0 to 1.0 for partial credit (evaluator reports average)
-
-### Normalized match
-
-```python
-def metric(example, prediction, trace=None):
-    pred = prediction.answer.strip().lower()
-    gold = example.answer.strip().lower()
-    return pred == gold
-```
-
-### Substring match
-
-```python
-def metric(example, prediction, trace=None):
-    return example.answer.lower() in prediction.answer.lower()
-```
+A metric is `def metric(example, prediction, trace=None)` returning `bool`, `int`, or `float`. The `trace` parameter is `None` during evaluation but set during optimization (use this to apply stricter requirements during training).
 
 ### Multi-field scoring
 
@@ -262,109 +161,11 @@ def hybrid_metric(example, prediction, trace=None):
     return 0.5 if result.is_correct else 0.0
 ```
 
-## Evaluate options
+## Debugging with per-example scores
 
-```python
-evaluator = Evaluate(
-    devset=devset,           # list of dspy.Example — required
-    metric=metric,           # metric function — required
-    num_threads=4,           # parallel threads for faster evaluation
-    display_progress=True,   # show progress bar
-    display_table=5,         # show a table of the first N results
-    return_all_scores=True,  # return per-example scores (not just aggregate)
-)
-
-score = evaluator(my_program)
-```
-
-### Getting per-example scores
-
-When `return_all_scores=True`, the evaluator returns a tuple:
-
-```python
-evaluator = Evaluate(
-    devset=devset,
-    metric=metric,
-    num_threads=4,
-    return_all_scores=True,
-)
-
-aggregate_score, all_scores = evaluator(my_program)
-print(f"Aggregate: {aggregate_score}%")
-
-# Find failing examples
-for i, (example, score) in enumerate(zip(devset, all_scores)):
-    if score < 0.5:
-        print(f"FAIL [{i}]: {example.question} (score={score})")
-```
-
-This is useful for debugging — look at the examples your program gets wrong to understand failure patterns.
-
-## Using with optimizers
-
-The same metric function you use for evaluation is passed to optimizers. This keeps your definition of "good" consistent across measurement and improvement:
-
-```python
-from dspy.evaluate import Evaluate
-
-# Define metric once
-def metric(example, prediction, trace=None):
-    return prediction.answer.strip().lower() == example.answer.strip().lower()
-
-# Use for evaluation
-evaluator = Evaluate(devset=devset, metric=metric, num_threads=4)
-baseline = evaluator(my_program)
-
-# Use the same metric for optimization
-optimizer = dspy.BootstrapFewShot(metric=metric, max_bootstrapped_demos=4)
-optimized = optimizer.compile(my_program, trainset=trainset)
-
-# Re-evaluate to measure improvement
-improved = evaluator(optimized)
-print(f"Baseline: {baseline:.1f}% -> Optimized: {improved:.1f}%")
-```
-
-Never evaluate on your training set — always use a held-out devset. A typical split is 80% train, 20% dev.
+Pass `return_all_scores=True` to get a tuple of `(aggregate_score, all_scores)`. Use this to find failing examples and understand failure patterns.
 
 ## Common patterns
-
-### Partial credit scoring
-
-Give partial credit instead of all-or-nothing:
-
-```python
-def partial_credit(example, prediction, trace=None):
-    gold_tokens = set(example.answer.lower().split())
-    pred_tokens = set(prediction.answer.lower().split())
-    if not gold_tokens:
-        return float(not pred_tokens)
-    overlap = gold_tokens & pred_tokens
-    precision = len(overlap) / len(pred_tokens) if pred_tokens else 0.0
-    recall = len(overlap) / len(gold_tokens)
-    if precision + recall == 0:
-        return 0.0
-    return 2 * precision * recall / (precision + recall)
-```
-
-### Penalizing bad behavior
-
-Deduct points for undesirable outputs:
-
-```python
-def metric_with_penalties(example, prediction, trace=None):
-    score = float(prediction.answer.strip().lower() == example.answer.strip().lower())
-
-    # Penalize overly long answers
-    if len(prediction.answer.split()) > 100:
-        score -= 0.2
-
-    # Penalize hedging language
-    hedges = ["I think", "maybe", "probably", "I'm not sure"]
-    if any(h.lower() in prediction.answer.lower() for h in hedges):
-        score -= 0.1
-
-    return max(0.0, score)
-```
 
 ### Trace-aware metrics for optimization
 
@@ -405,6 +206,13 @@ print(f"Baseline:  {baseline_score:.1f}%")
 print(f"Optimized: {optimized_score:.1f}%")
 print(f"Delta:     {optimized_score - baseline_score:+.1f}%")
 ```
+
+## Gotchas
+
+1. **Metrics must return a `float` or `bool`, not a string** -- returning a string silently breaks scoring.
+2. **Use the `trace` parameter to differentiate optimization-time vs evaluation-time behavior** -- during optimization, `trace` is not `None`, so you can require stricter criteria (e.g., good reasoning + correct answer) for selecting few-shot demos.
+3. **Small dev sets (<30 examples) give unreliable scores** -- results can swing 10-20% between runs. Aim for 50+ examples for stable evaluation.
+4. **`SemanticF1` and `CompleteAndGrounded` call the LM** -- they're slower and cost money, but much better than exact match for open-ended tasks. Budget for the extra API calls.
 
 ## Cross-references
 

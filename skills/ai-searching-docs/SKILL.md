@@ -399,3 +399,11 @@ optimized = optimizer.compile(DocSearch(), trainset=trainset)
 - Use `/ai-serving-apis` to put your document search behind a REST API
 - Building a chatbot on top of doc search? Use `/ai-building-chatbots`
 - Next: `/ai-improving-accuracy` to measure and improve your AI
+
+## Gotchas
+
+- **Chunk size matters more than retriever choice** — most RAG failures trace to bad chunking, not bad embeddings. Start with 512 tokens with 50-token overlap and tune from there.
+- **Don't skip the reranking step** — embedding similarity retrieves candidates; a reranker (or LM-based reranker) filters them. Without reranking, irrelevant passages dilute the context.
+- **k=3 is not always right** — the default `k` (number of retrieved passages) is a critical hyperparameter. Too few and you miss relevant context; too many and you overwhelm the LM. Tune it against your dev set.
+- **Test with questions that require combining information** — single-hop retrieval fails when the answer spans multiple chunks. Use `dspy.ChainOfThought` with multi-step retrieval for these cases.
+- **Embedding models and chunk sizes must match at index and query time** — if you re-chunk or switch embedding models, you must rebuild the vector index. Stale indexes silently return bad results.

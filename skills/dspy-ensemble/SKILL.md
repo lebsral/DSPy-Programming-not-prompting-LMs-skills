@@ -1,6 +1,6 @@
 ---
 name: dspy-ensemble
-description: "Use DSPy's Ensemble optimizer to combine multiple optimized programs. Use when you want to use dspy.Ensemble, combine outputs from several optimization runs, implement voting or averaging strategies, or build an ensemble of DSPy programs."
+description: "Use when you have multiple optimized versions of a program and want to combine them — voting, averaging, or routing across program variants for more robust outputs."
 ---
 
 # Combine Programs with dspy.Ensemble

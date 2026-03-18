@@ -1,6 +1,6 @@
 ---
 name: dspy-data
-description: "Use DSPy's Example and Prediction classes to manage training data. Use when you want to create dspy.Example objects, use with_inputs(), build train/dev splits, load datasets from CSV/JSON/HuggingFace, or prepare data for DSPy optimizers."
+description: "Use when you need to prepare training/dev data for DSPy optimizers — loading from CSV/JSON/HuggingFace, creating Examples, setting input keys, or building train/dev splits."
 ---
 
 # Work with DSPy Data: Examples, Predictions, and Datasets

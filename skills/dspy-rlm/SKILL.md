@@ -1,6 +1,6 @@
 ---
 name: dspy-rlm
-description: "Use DSPy's RLM module for reinforcement-learning-style self-refinement. Use when you want to use dspy.RLM, add reward-based feedback to improve outputs, or need the model to iteratively refine its answer using a reward signal."
+description: "Use when you want reinforcement-learning-style self-refinement — the model iteratively improves its output using a reward signal, useful for tasks with clear quality metrics."
 ---
 
 # Iterative Self-Refinement with dspy.RLM

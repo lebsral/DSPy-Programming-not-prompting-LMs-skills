@@ -1,6 +1,6 @@
 ---
 name: dspy-react
-description: "Use DSPy's ReAct module to build agents that reason and use tools. Use when you want to use dspy.ReAct, build an agent that calls functions, create a multi-step tool-using agent, or need the Reasoning-Action-Observation loop pattern."
+description: "Use when the task requires calling external tools or APIs to gather information — multi-step tool use with reasoning, like searching databases, calling APIs, or combining multiple data sources."
 ---
 
 # Build Tool-Using Agents with dspy.ReAct
@@ -9,21 +9,7 @@ Guide the user through building agents that reason step-by-step and call tools t
 
 ## What is ReAct
 
-ReAct (Reasoning + Acting) is an agent pattern where the LM alternates between:
-
-1. **Thought** -- reason about the current state and what to do next
-2. **Action** -- call a tool with specific arguments
-3. **Observation** -- receive the tool's result and incorporate it
-
-This loop repeats until the agent has enough information to produce a final answer. DSPy's `dspy.ReAct` implements this loop as an optimizable module.
-
-```
-Thought: I need to find the population of France.
-Action: search(query="population of France 2024")
-Observation: "The population of France is approximately 68.4 million."
-Thought: Now I can answer the question.
-Answer: The population of France is approximately 68.4 million.
-```
+`dspy.ReAct` implements the Reasoning-Action-Observation loop as an optimizable module. The agent reasons about what to do, calls a tool, observes the result, and repeats until it has enough information to answer. DSPy handles the loop mechanics and prompt construction.
 
 ## When to use ReAct
 
@@ -291,6 +277,13 @@ print(agent)
 ```
 
 `inspect_history` shows you the full Thought-Action-Observation trace, which is invaluable for understanding why the agent called certain tools or gave a wrong answer.
+
+## Gotchas
+
+1. **`max_iters` defaults to 5** -- increase for tasks requiring many tool calls, but watch for infinite loops where the agent retries the same failing action.
+2. **Tool errors are passed back as observations** -- make your error messages informative so the agent can recover (e.g., "No user found with that email" not just "Error").
+3. **ReAct is slow by design** -- each iteration is a separate LM call. Use `CodeAct` for computation-heavy tasks where the agent can do work in code between tool calls.
+4. **Tool function docstrings become part of the prompt** -- write clear, concise docstrings. Verbose docstrings waste tokens every iteration.
 
 ## Cross-references
 

@@ -1,6 +1,6 @@
 ---
 name: dspy-lm
-description: "Use DSPy's LM class to configure language model providers. Use when you want to set up dspy.LM, call dspy.configure, switch between providers like OpenAI/Anthropic/local models, set temperature or max_tokens, assign different LMs to different modules, or manage API keys and model settings."
+description: "Use when you need to configure which language model DSPy uses — setting up providers, API keys, model parameters, or assigning different models to different pipeline stages."
 ---
 
 # Configure Language Models with dspy.LM

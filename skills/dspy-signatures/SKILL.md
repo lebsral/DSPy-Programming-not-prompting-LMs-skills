@@ -1,6 +1,6 @@
 ---
 name: dspy-signatures
-description: "Use DSPy's Signature, InputField, and OutputField to declare typed input/output specs for LM calls. Use when you want to define a dspy.Signature, create typed fields, use inline signatures, build class-based signatures, add Pydantic models as output types, or constrain LM outputs with type annotations."
+description: "Use when you need to define the input/output contract for an LM call — choosing between inline and class-based signatures, adding type constraints, or using Pydantic models for structured outputs."
 ---
 
 # DSPy Signatures
@@ -9,9 +9,7 @@ Guide the user through defining DSPy Signatures — typed declarations of what g
 
 ## What is a Signature
 
-A Signature is DSPy's way of declaring the input/output contract for a language model call. Instead of writing a prompt, you describe the shape of the data: what fields go in, what fields come out, and what types they should be. DSPy compiles this into an optimized prompt automatically.
-
-Signatures separate *what* you want the LM to do from *how* it does it. You define the I/O spec; DSPy handles the prompting.
+A Signature declares the input/output contract for an LM call -- field names, types, and descriptions. DSPy compiles it into an optimized prompt automatically. You define the I/O spec; DSPy handles the prompting.
 
 ## When to use each style
 
@@ -24,67 +22,11 @@ Signatures separate *what* you want the LM to do from *how* it does it. You defi
 
 ## Inline signatures
 
-Inline signatures are strings with `->` separating inputs from outputs. Field names become the parameter names.
-
-```python
-import dspy
-
-# Configure any LM provider
-lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
-dspy.configure(lm=lm)
-
-# Basic: string in, string out
-qa = dspy.Predict("question -> answer")
-result = qa(question="What is the capital of France?")
-print(result.answer)  # Paris
-
-# With type annotation
-scorer = dspy.Predict("question, answer -> score: float")
-result = scorer(question="What is 2+2?", answer="4")
-print(result.score)  # 1.0
-
-# List output
-tagger = dspy.Predict("text -> labels: list[str]")
-result = tagger(text="Python is great for data science and web development")
-print(result.labels)  # ['python', 'data science', 'web development']
-
-# Boolean output
-checker = dspy.Predict("claim, evidence -> is_supported: bool")
-result = checker(claim="The sky is blue", evidence="The sky appears blue due to Rayleigh scattering")
-print(result.is_supported)  # True
-```
-
-Inline signatures support these type suffixes: `str` (default), `int`, `float`, `bool`, `list[str]`.
+Inline signatures are strings with `->` separating inputs from outputs: `"question -> answer"`, `"text -> label: bool"`. Supported type suffixes: `str` (default), `int`, `float`, `bool`, `list[str]`.
 
 ## Class-based signatures
 
-Class-based signatures give you full control over field types, descriptions, and documentation.
-
-```python
-import dspy
-from typing import Literal
-
-lm = dspy.LM("openai/gpt-4o-mini")  # or any LiteLLM-supported provider
-dspy.configure(lm=lm)
-
-class AssessTone(dspy.Signature):
-    """Assess the tone of the given message for a customer support context."""
-    message: str = dspy.InputField(desc="Customer message to analyze")
-    tone: Literal["friendly", "neutral", "frustrated", "angry"] = dspy.OutputField(desc="Detected tone")
-    confidence: float = dspy.OutputField(desc="Confidence score between 0 and 1")
-
-assessor = dspy.ChainOfThought(AssessTone)
-result = assessor(message="I've been waiting 3 days and nobody has responded!")
-print(result.tone)        # frustrated
-print(result.confidence)  # 0.9
-```
-
-Key elements of a class-based signature:
-
-- **Docstring** — acts as the task instruction. DSPy uses it to guide the LM. Write it as a clear directive.
-- **InputField** — declares an input parameter. The LM receives these values.
-- **OutputField** — declares an output parameter. The LM generates these values.
-- **Type annotation** — constrains what the LM can return. DSPy enforces these at parse time.
+Class-based signatures give you type constraints, field descriptions, and a docstring that acts as the task instruction. Use them when you need more than a one-liner.
 
 ## Field options
 
@@ -109,38 +51,6 @@ class Example(dspy.Signature):
 - **`desc`** — a natural language description. Helps the LM understand what the field means. Use this when the field name alone is ambiguous.
 - **`prefix`** — overrides the label shown in the prompt. Defaults to the field name followed by a colon.
 - **`type_`** — alternative way to set type constraint directly on OutputField (instead of using Python type annotation).
-
-## Typed outputs
-
-Use Python type annotations to constrain what the LM returns:
-
-```python
-from typing import Literal
-
-class TypeDemo(dspy.Signature):
-    """Demonstrate typed output fields."""
-    text: str = dspy.InputField()
-
-    # String (default)
-    summary: str = dspy.OutputField()
-
-    # Integer
-    word_count: int = dspy.OutputField(desc="Number of words in the text")
-
-    # Float
-    readability_score: float = dspy.OutputField(desc="Score from 0.0 to 1.0")
-
-    # Boolean
-    is_english: bool = dspy.OutputField(desc="Whether the text is in English")
-
-    # Constrained string (one of the listed values)
-    difficulty: Literal["easy", "medium", "hard"] = dspy.OutputField()
-
-    # List
-    keywords: list[str] = dspy.OutputField(desc="Key topics mentioned")
-```
-
-`Literal` is especially useful for classification tasks — it constrains the LM to return only one of the listed values.
 
 ## Pydantic models as output types
 
@@ -184,27 +94,6 @@ print(result.invoice.total)        # 45.0
 - The output maps to a database model or API response
 - You need `Optional` fields for data that may not be present
 
-## Multiple outputs
-
-Signatures can have any number of output fields. Each becomes an attribute on the result.
-
-```python
-class AnalyzeReview(dspy.Signature):
-    """Analyze a product review across multiple dimensions."""
-    review: str = dspy.InputField(desc="Product review text")
-    sentiment: Literal["positive", "negative", "neutral", "mixed"] = dspy.OutputField()
-    topics: list[str] = dspy.OutputField(desc="Product aspects mentioned")
-    summary: str = dspy.OutputField(desc="One-sentence summary")
-    would_recommend: bool = dspy.OutputField(desc="Whether the reviewer would recommend the product")
-
-analyzer = dspy.ChainOfThought(AnalyzeReview)
-result = analyzer(review="The camera is fantastic but battery dies in 2 hours. Not worth the price.")
-print(result.sentiment)        # mixed
-print(result.topics)           # ['camera', 'battery', 'price']
-print(result.summary)          # "Great camera quality undermined by poor battery life and high price."
-print(result.would_recommend)  # False
-```
-
 ## Common patterns
 
 ### Docstrings as task instructions
@@ -226,27 +115,12 @@ class Good(dspy.Signature):
     department: Literal["billing", "technical", "account", "general"] = dspy.OutputField()
 ```
 
-### Descriptions to disambiguate fields
+## Gotchas
 
-```python
-class ExtractDate(dspy.Signature):
-    """Extract the most relevant date from the text."""
-    text: str = dspy.InputField()
-    # Without desc, the LM might return any date format
-    date: str = dspy.OutputField(desc="Date in ISO 8601 format (YYYY-MM-DD)")
-```
-
-### Multiple inputs
-
-```python
-class CompareProducts(dspy.Signature):
-    """Compare two products and recommend which one to buy."""
-    product_a: str = dspy.InputField(desc="Description of first product")
-    product_b: str = dspy.InputField(desc="Description of second product")
-    budget: float = dspy.InputField(desc="Maximum budget in dollars")
-    recommendation: str = dspy.OutputField(desc="Which product to buy and why")
-    within_budget: bool = dspy.OutputField()
-```
+1. **Field names ARE the prompt** -- `text -> summary` works better than `input -> output` because DSPy uses field names directly in the generated prompt. Choose descriptive names.
+2. **Literal types need `tuple()` wrapping for dynamic values** -- use `Literal[tuple(["a", "b"])]` not `Literal[["a", "b"]]` when constructing from a list at runtime.
+3. **Keep signatures small** -- more than 4-5 output fields degrades quality. Split into multiple calls instead.
+4. **The docstring on a Signature class becomes the task instruction** -- write it carefully, as a clear directive. A vague docstring like "Classify the text" performs much worse than "Classify the customer support message into a department for routing."
 
 ## Cross-references
 

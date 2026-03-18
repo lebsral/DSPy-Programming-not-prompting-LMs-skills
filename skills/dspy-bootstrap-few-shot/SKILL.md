@@ -1,6 +1,6 @@
 ---
 name: dspy-bootstrap-few-shot
-description: "Use DSPy's BootstrapFewShot optimizer to automatically generate few-shot demonstrations. Use when you want to use dspy.BootstrapFewShot, bootstrap examples from a training set, add few-shot demos to your prompts, or do your first optimization pass."
+description: "Use when you have 50+ labeled examples and want a quick accuracy boost as your first optimization step — the simplest and fastest DSPy optimizer."
 ---
 
 # Bootstrap Few-Shot Demonstrations

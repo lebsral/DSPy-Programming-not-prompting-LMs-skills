@@ -1,6 +1,6 @@
 ---
 name: dspy-labeled-few-shot
-description: "Use DSPy's LabeledFewShot optimizer to use hand-picked demonstrations. Use when you want to use dspy.LabeledFewShot, manually select the best few-shot examples, or use curated demonstrations without bootstrapping."
+description: "Use when you have hand-picked high-quality examples and want to use them directly as few-shot demonstrations — no bootstrapping, just your curated demos."
 ---
 
 # Hand-Picked Demonstrations with dspy.LabeledFewShot

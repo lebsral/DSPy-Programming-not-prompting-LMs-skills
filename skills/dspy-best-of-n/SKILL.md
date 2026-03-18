@@ -1,6 +1,6 @@
 ---
 name: dspy-best-of-n
-description: "Use DSPy's BestOfN to run a module multiple times and select the best result. Use when you want to use dspy.BestOfN, improve output quality by sampling multiple completions, or need a simple rejection-sampling strategy with a metric to pick the winner."
+description: "Use when output quality varies across runs and you want to sample multiple completions and pick the best — trading latency for reliability on high-stakes outputs."
 ---
 
 # Pick the Best Output with dspy.BestOfN

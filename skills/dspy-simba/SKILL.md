@@ -1,6 +1,6 @@
 ---
 name: dspy-simba
-description: "Use DSPy's SIMBA optimizer for small-step optimization. Use when you want to use dspy.SIMBA, optimize programs incrementally with small improvements, or need a conservative optimization strategy that makes targeted changes."
+description: "Use when you want conservative, incremental optimization — making small targeted improvements rather than large changes, useful for already-working programs that need fine-tuning."
 ---
 
 # Small-Step Optimization with dspy.SIMBA

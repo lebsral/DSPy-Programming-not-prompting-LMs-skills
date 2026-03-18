@@ -1,6 +1,6 @@
 ---
 name: dspy-better-together
-description: "Use DSPy's BetterTogether optimizer to combine prompt optimization with weight tuning. Use when you want to use dspy.BetterTogether, jointly optimize prompts and fine-tune model weights, or get the best results by combining both optimization strategies."
+description: "Use when you've already tried prompt-only optimization and want the next level — jointly tuning prompts and model weights for maximum quality."
 ---
 
 # BetterTogether: Joint Prompt + Weight Optimization

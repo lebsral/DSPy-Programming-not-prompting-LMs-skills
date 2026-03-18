@@ -1,6 +1,6 @@
 ---
 name: dspy-refine
-description: "Use DSPy's Refine module for iterative self-improvement of outputs. Use when you want to use dspy.Refine, iteratively improve LM outputs based on feedback, build self-correcting pipelines, or implement critique-and-revise patterns."
+description: "Use when you want outputs to improve iteratively through self-critique — generating a draft, evaluating it against criteria, and revising until quality thresholds are met."
 ---
 
 # Iterative Self-Improvement with dspy.Refine

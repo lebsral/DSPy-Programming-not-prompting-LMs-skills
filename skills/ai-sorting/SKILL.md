@@ -360,3 +360,11 @@ sorter.load("ticket_sorter.json")
 - Need scores instead of categories? Use `/ai-scoring`
 - Want to measure and improve further? Use `/ai-improving-accuracy`
 - Need to generate training data? Use `/ai-generating-data`
+
+## Gotchas
+
+- **Don't use `Literal[list]`** — must be `Literal[tuple(list)]` for DSPy signatures. `Literal[["a", "b"]]` raises a TypeError; use `Literal[tuple(["a", "b"])]` instead.
+- **Categories > 15 degrade accuracy** — if you have more than ~15 categories, use hierarchical classification (coarse category first, then sub-category) instead of a flat list.
+- **Always include an "other" category** — without one, the model is forced to misclassify edge cases into the closest wrong bucket. An "other" or "unknown" category catches these gracefully.
+- **Category names matter more than descriptions** — short, unambiguous category names (e.g., "billing_issue" not "Issues related to billing") give the LM a clearer signal. Add a `desc` field on the signature only if the name alone is ambiguous.
+- **Test with adversarial inputs early** — inputs that span two categories or contain no relevant content expose classification weaknesses. Add these to your dev set before optimizing.

@@ -1,6 +1,6 @@
 ---
 name: dspy-codeact
-description: "Use DSPy's CodeAct module to build agents that write and execute code to complete tasks. Use when you want to use dspy.CodeAct, need an agent that solves problems by writing Python, or prefer code execution over tool-calling for complex data manipulation."
+description: "Use when the agent's task is best solved by writing and executing Python code — data manipulation, computation, file processing, or tasks where code is more reliable than natural language reasoning."
 ---
 
 # Build Agents That Write and Execute Code with dspy.CodeAct

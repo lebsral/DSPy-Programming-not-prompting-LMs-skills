@@ -1,6 +1,6 @@
 ---
 name: dspy-chain-of-thought
-description: "Use DSPy's ChainOfThought module for step-by-step reasoning. Use when you want to use dspy.ChainOfThought, add intermediate reasoning to predictions, improve accuracy on complex tasks, or access the reasoning field to understand how the LM arrived at its answer."
+description: "Use when the task benefits from intermediate reasoning before producing an answer — multi-step logic, analysis, math, or complex classification where direct prediction fails."
 ---
 
 # Step-by-Step Reasoning with dspy.ChainOfThought
@@ -9,29 +9,7 @@ Guide the user through using DSPy's `ChainOfThought` module -- the go-to module 
 
 ## What is ChainOfThought
 
-`dspy.ChainOfThought` is a drop-in replacement for `dspy.Predict` that automatically adds a `reasoning` field to the output. Before generating any output fields, the LM first produces a step-by-step reasoning trace. You don't modify your signature -- DSPy injects the reasoning field for you.
-
-```python
-import dspy
-
-lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
-dspy.configure(lm=lm)
-
-# Same signature, different module
-predict = dspy.Predict("question -> answer")
-cot = dspy.ChainOfThought("question -> answer")
-
-# Predict: goes straight to the answer
-result = predict(question="Is 17 a prime number?")
-print(result.answer)  # "Yes"
-
-# ChainOfThought: reasons first, then answers
-result = cot(question="Is 17 a prime number?")
-print(result.reasoning)  # "To check if 17 is prime, I need to test divisibility..."
-print(result.answer)     # "Yes"
-```
-
-The `reasoning` field is always available on the result, even though your signature only declared `answer`. DSPy adds it automatically.
+`dspy.ChainOfThought` is a drop-in replacement for `dspy.Predict` that automatically injects a `reasoning` field before your output fields. Same signature, one-word swap -- the LM reasons step-by-step before answering. The `reasoning` field is always available on the result even though your signature doesn't declare it.
 
 ## When CoT helps
 
@@ -56,82 +34,7 @@ ChainOfThought adds latency and token cost because the LM generates extra reason
 
 When in doubt, start with `ChainOfThought` and switch to `Predict` later if profiling shows the reasoning is unnecessary.
 
-## Basic usage
-
-### With inline signatures
-
-```python
-import dspy
-
-lm = dspy.LM("openai/gpt-4o-mini")
-dspy.configure(lm=lm)
-
-# Single input, single output
-solver = dspy.ChainOfThought("question -> answer")
-result = solver(question="What is 23 * 47?")
-print(result.reasoning)  # step-by-step multiplication
-print(result.answer)     # "1081"
-
-# Multiple inputs
-grader = dspy.ChainOfThought("essay, rubric -> score: int")
-result = grader(essay="...", rubric="...")
-print(result.reasoning)  # how the essay was evaluated
-print(result.score)      # 85
-
-# Multiple outputs
-analyzer = dspy.ChainOfThought("code -> has_bug: bool, explanation: str")
-result = analyzer(code="def add(a, b): return a - b")
-print(result.reasoning)    # traces through the logic
-print(result.has_bug)      # True
-print(result.explanation)  # "The function subtracts instead of adding"
-```
-
-### With class-based signatures
-
-```python
-import dspy
-from typing import Literal
-
-lm = dspy.LM("openai/gpt-4o-mini")
-dspy.configure(lm=lm)
-
-class TriageBug(dspy.Signature):
-    """Triage a bug report by severity and assign to the right team."""
-    title: str = dspy.InputField(desc="Bug report title")
-    description: str = dspy.InputField(desc="Bug report body")
-    severity: Literal["critical", "high", "medium", "low"] = dspy.OutputField()
-    team: str = dspy.OutputField(desc="Team name to assign the bug to")
-
-triager = dspy.ChainOfThought(TriageBug)
-result = triager(
-    title="Login page crashes on Safari",
-    description="Users on Safari 17 see a white screen when clicking Sign In. Affects ~20% of users.",
-)
-print(result.reasoning)  # "Safari 17 affecting 20% of users is significant..."
-print(result.severity)   # "critical"
-print(result.team)       # "frontend"
-```
-
-The docstring in your signature class acts as the task instruction. ChainOfThought uses it to guide the reasoning.
-
-## Accessing the reasoning field
-
-The `reasoning` field is a string containing the LM's step-by-step thought process. You can use it for:
-
-### Logging and debugging
-
-```python
-result = cot(question="Should we retry this failed API call?")
-print(result.reasoning)  # see the LM's thought process
-print(result.answer)
-
-# Log the reasoning for auditing
-import logging
-logger = logging.getLogger(__name__)
-logger.info(f"Decision: {result.answer}, Reasoning: {result.reasoning}")
-```
-
-### Passing reasoning downstream
+## Passing reasoning downstream
 
 ```python
 class ReviewDecision(dspy.Module):
@@ -154,45 +57,7 @@ class ReviewDecision(dspy.Module):
         )
 ```
 
-### Surfacing reasoning to end users
-
-```python
-result = cot(question="Why did my deployment fail?")
-
-# Show reasoning in a UI
-response = {
-    "answer": result.answer,
-    "show_work": result.reasoning,  # display in an expandable section
-}
-```
-
-## Predict vs ChainOfThought -- side by side
-
-```python
-import dspy
-
-lm = dspy.LM("openai/gpt-4o-mini")
-dspy.configure(lm=lm)
-
-# Same signature, same inputs
-signature = "code_snippet -> has_bug: bool, fix: str"
-
-predict = dspy.Predict(signature)
-cot = dspy.ChainOfThought(signature)
-
-code = "def factorial(n): return n * factorial(n)"
-
-# Predict: fast, no reasoning
-r1 = predict(code_snippet=code)
-print(r1.has_bug)  # True
-print(r1.fix)      # might miss the subtle issue
-
-# ChainOfThought: slower, reasons through the code
-r2 = cot(code_snippet=code)
-print(r2.reasoning)  # "The function calls factorial(n) without decrementing..."
-print(r2.has_bug)    # True
-print(r2.fix)        # "Change factorial(n) to factorial(n - 1) and add base case"
-```
+## Predict vs ChainOfThought
 
 | | `dspy.Predict` | `dspy.ChainOfThought` |
 |---|---|---|
@@ -325,6 +190,13 @@ class CodeReviewer(dspy.Module):
 ```
 
 Both sub-modules use CoT because code review and fix suggestion both benefit from step-by-step thinking. When optimized, DSPy tunes each sub-module's reasoning independently.
+
+## Gotchas
+
+1. **Don't add `reasoning` to your signature** -- DSPy injects it automatically. Declaring it yourself creates a duplicate field that confuses the prompt.
+2. **CoT adds ~100-300 tokens of overhead per call** -- measure whether the accuracy gain justifies the extra latency and cost for your task.
+3. **Reasoning quality degrades with very short `max_tokens`** -- leave room for the reasoning trace before the actual output fields.
+4. **Not all tasks benefit** -- classification with fewer than 5 clear categories often does better with plain `Predict`. CoT shines on tasks requiring multi-step deduction.
 
 ## Cross-references
 

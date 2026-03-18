@@ -1,6 +1,6 @@
 ---
 name: dspy-tools
-description: "Use DSPy's Tool, ToolCalls, and PythonInterpreter to give agents tool-calling abilities. Use when you want to use dspy.Tool, wrap Python functions as tools, build tool-calling agents, or use dspy.PythonInterpreter for code execution."
+description: "Use when you need to give DSPy agents tool-calling abilities — wrapping Python functions as tools, building tool-using pipelines, or setting up code execution environments."
 ---
 
 # Give Agents Tool-Calling Abilities with dspy.Tool

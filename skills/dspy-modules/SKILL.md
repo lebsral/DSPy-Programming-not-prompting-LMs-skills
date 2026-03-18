@@ -1,6 +1,6 @@
 ---
 name: dspy-modules
-description: "Use DSPy's Module base class to build composable AI programs. Use when you want to create a dspy.Module, implement forward(), compose sub-modules, build multi-step pipelines, or structure your DSPy program as reusable components."
+description: "Use when you need to compose multiple DSPy calls into a pipeline — structuring multi-step programs as reusable, optimizable components with forward() logic."
 ---
 
 # Build Composable AI Programs with dspy.Module
@@ -9,61 +9,7 @@ Guide the user through structuring DSPy programs as reusable, composable modules
 
 ## What is dspy.Module
 
-Every DSPy program is a module. Modules:
-
-- **Contain sub-modules** -- `dspy.Predict`, `dspy.ChainOfThought`, `dspy.Retrieve`, or other custom modules
-- **Define control flow** in `forward()` -- Python logic that wires sub-modules together
-- **Are optimizable** -- DSPy optimizers discover and tune all `Predict`-based sub-modules automatically
-- **Are composable** -- modules nest inside other modules, just like functions call functions
-- **Track state** -- learned prompts, few-shot demos, and instructions can be saved/loaded
-
-If you're building anything beyond a single `dspy.Predict` call, wrap it in a module.
-
-## Basic module structure
-
-Every module has two methods:
-
-```python
-import dspy
-
-class MyProgram(dspy.Module):
-    def __init__(self):
-        # 1. Declare sub-modules here
-        self.step1 = dspy.ChainOfThought("input -> intermediate")
-        self.step2 = dspy.Predict("intermediate -> output")
-
-    def forward(self, input):
-        # 2. Wire them together with Python logic
-        mid = self.step1(input=input)
-        return self.step2(intermediate=mid.intermediate)
-```
-
-Rules:
-- **`__init__`** declares sub-modules as `self.` attributes so DSPy's optimizers can find them
-- **`forward()`** defines the execution logic -- call sub-modules, use conditionals, loops, whatever Python you need
-- Call the module like a function: `result = MyProgram()(input="hello")`
-
-## Simple module example -- RAG
-
-A retrieval-augmented generation module that fetches context before answering:
-
-```python
-import dspy
-
-class RAG(dspy.Module):
-    def __init__(self, k=3):
-        self.retrieve = dspy.Retrieve(k=k)
-        self.generate = dspy.ChainOfThought("context, question -> answer")
-
-    def forward(self, question):
-        context = self.retrieve(question).passages
-        return self.generate(context=context, question=question)
-
-# Usage
-rag = RAG(k=5)
-result = rag(question="What is retrieval-augmented generation?")
-print(result.answer)
-```
+`dspy.Module` is the building block for multi-step DSPy programs. Declare sub-modules in `__init__` as `self.` attributes, wire them together with Python logic in `forward()`. DSPy optimizers automatically discover and tune all sub-modules in the tree.
 
 ## Composing modules -- nesting modules within modules
 
@@ -291,6 +237,12 @@ pipeline = MyProgram()
 pipeline.classify.set_lm(cheap_lm)
 pipeline.generate.set_lm(expensive_lm)
 ```
+
+## Gotchas
+
+1. **Sub-modules must be assigned as `self.` attributes in `__init__`** -- otherwise optimizers can't discover them. A `Predict` stored in a local variable or a plain list won't be optimized.
+2. **Don't put `dspy.configure()` inside `forward()`** -- configure once at startup. Calling it per-forward adds overhead and can cause unexpected behavior during optimization.
+3. **`forward()` args must match your top-level signature inputs** -- if an optimizer traces your module, it passes the inputs from your training examples to `forward()`. Mismatched argument names cause silent failures.
 
 ## Cross-references
 

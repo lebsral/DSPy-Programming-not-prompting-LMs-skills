@@ -302,3 +302,11 @@ This gives you LangGraph's state management and routing with DSPy's optimizable 
 - Not sure what stages your pipeline needs? Use `/ai-decomposing-tasks` to identify where to split
 - For content generation pipelines, see `/ai-writing-content`. For complex reasoning, see `/ai-reasoning`
 - Next: `/ai-improving-accuracy` to measure and improve your pipeline
+
+## Gotchas
+
+- **Optimize the full pipeline, not individual modules** — optimizing modules in isolation then composing them gives worse results than optimizing the whole pipeline end-to-end with `dspy.BootstrapFewShot` or `dspy.MIPROv2`.
+- **Error propagation is silent** — if an early module returns garbage, later modules process it without complaint. Add `dspy.Assert` or `dspy.Suggest` between stages to catch bad intermediate outputs.
+- **Don't overuse ChainOfThought** — not every module in a pipeline needs reasoning. Use `dspy.Predict` for simple steps (extraction, formatting) and reserve `ChainOfThought` for steps that actually benefit from reasoning. Unnecessary reasoning adds latency and cost.
+- **Pipeline order affects optimization** — DSPy optimizers trace through your `forward()` method. If module A's output feeds module B, the optimizer sees this dependency. Reordering modules or adding conditional logic changes what the optimizer can learn.
+- **Test intermediate outputs, not just final output** — add metrics that check each stage's output independently. A pipeline can produce correct final output for wrong reasons, which breaks when inputs change.

@@ -1,6 +1,6 @@
 ---
 name: dspy-bootstrap-rs
-description: "Use DSPy's BootstrapFewShotWithRandomSearch to find optimal few-shot demonstrations through random search. Use when you want to use dspy.BootstrapFewShotWithRandomSearch or BootstrapRS, need better results than basic BootstrapFewShot, or want to search over multiple candidate demo sets."
+description: "Use when basic BootstrapFewShot isn't enough and you want to search over multiple candidate demo sets — better results at the cost of more LM calls."
 ---
 
 # Optimize Few-Shot Demos with dspy.BootstrapFewShotWithRandomSearch

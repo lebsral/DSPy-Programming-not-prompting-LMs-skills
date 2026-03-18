@@ -1,6 +1,6 @@
 ---
 name: dspy-program-of-thought
-description: "Use DSPy's ProgramOfThought module to solve problems by generating and executing code. Use when you want to use dspy.ProgramOfThought, need accurate math or computation, want the LM to write Python code that runs in a sandbox, or need data manipulation and counting tasks."
+description: "Use when the task requires precise computation, math, or data manipulation — the LM writes Python code that executes in a sandbox instead of reasoning in natural language."
 ---
 
 # Solve Problems by Generating and Executing Code with dspy.ProgramOfThought

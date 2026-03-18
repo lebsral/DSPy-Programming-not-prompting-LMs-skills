@@ -1,6 +1,6 @@
 ---
 name: dspy-multi-chain-comparison
-description: "Use DSPy's MultiChainComparison to generate multiple reasoning chains and pick the best answer. Use when you want to use dspy.MultiChainComparison, need higher quality by comparing multiple approaches, or want to trade speed for accuracy by running several chains in parallel."
+description: "Use when you want higher accuracy by generating multiple reasoning chains and selecting the best answer — trading speed for quality on critical outputs."
 ---
 
 # Get Better Answers by Comparing Multiple Reasoning Chains

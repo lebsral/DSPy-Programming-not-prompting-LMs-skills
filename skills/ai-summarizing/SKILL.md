@@ -363,3 +363,11 @@ optimized = optimizer.compile(summarizer, trainset=trainset)
 - Need to extract structured fields instead of summaries? Use `/ai-parsing-data`
 - Need to answer questions about docs? Use `/ai-searching-docs`
 - Next: `/ai-improving-accuracy` to measure and improve your summarizer
+
+## Gotchas
+
+- **Word/sentence limits are suggestions, not guarantees** — LMs routinely overshoot length constraints. Use `dspy.Assert` with a length-checking function to enforce hard limits, or post-process by truncating.
+- **Faithfulness is the #1 failure mode** — summaries confidently include facts not in the source. Always evaluate with a faithfulness metric (e.g., check every claim in the summary against the source).
+- **Map-reduce loses cross-chunk context** — when summarizing long documents in chunks, information that spans chunk boundaries gets lost. Use overlapping chunks or a hierarchical approach.
+- **"Summarize this" is too vague** — always specify the audience and purpose in the signature docstring (e.g., "Summarize for a technical PM who needs to decide whether to escalate"). Vague instructions produce generic summaries.
+- **Bullet points ≠ summaries** — if you want narrative summaries, say so explicitly. LMs default to bullet points when the instruction is ambiguous.

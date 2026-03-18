@@ -1,6 +1,6 @@
 ---
 name: dspy-adapters
-description: "Use DSPy's adapter classes to control how prompts are formatted. Use when you want to use ChatAdapter, JSONAdapter, or TwoStepAdapter, customize prompt formatting, handle structured outputs, or control how DSPy communicates with LMs."
+description: "Use when you need to customize how DSPy formats prompts for a specific provider — switching from chat to completion format, forcing JSON output, or debugging prompt rendering issues."
 ---
 
 # Control Prompt Formatting with DSPy Adapters

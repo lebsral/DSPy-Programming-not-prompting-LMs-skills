@@ -1,6 +1,6 @@
 ---
 name: dspy-retrieval
-description: "Use DSPy's retrieval modules for search and RAG. Use when you want to use dspy.Retrieve, dspy.ColBERTv2, dspy.Embedder, or dspy.Embeddings to build retrieval-augmented generation pipelines, search over documents, or compute embeddings."
+description: "Use when you need to search over documents or build RAG pipelines — setting up retrievers, computing embeddings, or integrating vector databases with DSPy modules."
 ---
 
 # Retrieval Modules in DSPy

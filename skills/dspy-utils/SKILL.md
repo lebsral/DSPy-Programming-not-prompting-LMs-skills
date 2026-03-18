@@ -1,6 +1,6 @@
 ---
 name: dspy-utils
-description: "Use DSPy's utility functions for streaming, caching, debugging, and persistence. Use when you want to use StreamListener, streamify, configure_cache, inspect_history, save/load programs, asyncify, or integrate DSPy with MCP servers."
+description: "Use when you need DSPy infrastructure: streaming responses, caching control, debugging with inspect_history, saving/loading programs, async execution, or MCP integration."
 ---
 
 # DSPy Utilities: Streaming, Caching, Debugging, and More

@@ -1,6 +1,6 @@
 ---
 name: dspy-knn-few-shot
-description: "Use DSPy's KNN and KNNFewShot for embedding-based demo retrieval. Use when you want to use dspy.KNN or dspy.KNNFewShot, select the most relevant few-shot examples per input using embeddings, or dynamically pick demonstrations based on input similarity."
+description: "Use when you want few-shot demos that are dynamically selected per input based on similarity — better than fixed demos when inputs vary widely."
 ---
 
 # Dynamic Few-Shot with dspy.KNN and dspy.KNNFewShot

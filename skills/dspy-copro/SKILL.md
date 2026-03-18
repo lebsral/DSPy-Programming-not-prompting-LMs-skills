@@ -1,6 +1,6 @@
 ---
 name: dspy-copro
-description: "Use DSPy's COPRO optimizer to generate and select optimal instructions. Use when you want to use dspy.COPRO, generate many instruction candidates and pick the best, or tune the breadth of instruction search."
+description: "Use when you want to optimize instructions by generating many candidates and picking the best — useful when few-shot demos alone aren't enough and you want to tune the task description itself."
 ---
 
 # Instruction Optimization with dspy.COPRO

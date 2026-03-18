@@ -1,6 +1,6 @@
 ---
 name: dspy-infer-rules
-description: "Use DSPy's InferRules optimizer to extract decision logic from examples. Use when you want to use dspy.InferRules, discover patterns in your training data, generate explicit rules from examples, or create interpretable decision logic."
+description: "Use when you want to extract interpretable decision logic from labeled examples — generating explicit rules that explain patterns in your data."
 ---
 
 # Extracting Decision Rules with dspy.InferRules

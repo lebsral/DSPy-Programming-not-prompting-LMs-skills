@@ -1,6 +1,6 @@
 ---
 name: dspy-gepa
-description: "Use DSPy's GEPA optimizer for instruction generation and selection. Use when you want to use dspy.GEPA, optimize instructions without few-shot examples, or need a lightweight instruction-tuning optimizer."
+description: "Use when you want to optimize instructions without few-shot examples — a lightweight alternative to COPRO when you don't have or don't want to use demonstrations."
 ---
 
 # Instruction Optimization with dspy.GEPA

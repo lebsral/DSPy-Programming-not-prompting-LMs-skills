@@ -1,6 +1,6 @@
 ---
 name: dspy-bootstrap-finetune
-description: "Use DSPy's BootstrapFinetune optimizer to fine-tune LM weights on bootstrapped training data. Use when you want to use dspy.BootstrapFinetune, generate training data from a teacher model and fine-tune a student model, or need maximum quality from a smaller/cheaper model."
+description: "Use when you need maximum quality from a smaller/cheaper model — generates training data from a teacher model and fine-tunes a student model's weights."
 ---
 
 # Fine-Tune LM Weights with dspy.BootstrapFinetune
