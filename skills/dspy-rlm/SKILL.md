@@ -1,6 +1,6 @@
 ---
 name: dspy-rlm
-description: "Use when you want reinforcement-learning-style self-refinement — the model iteratively improves its output using a reward signal, useful for tasks with clear quality metrics."
+description: "Use when you want recursive self-refinement — the model iteratively explores data in a sandboxed REPL, writing code and querying sub-LMs until it produces a final answer."
 ---
 
 # Iterative Self-Refinement with dspy.RLM
