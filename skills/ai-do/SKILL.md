@@ -75,6 +75,7 @@ If the user already knows DSPy and asks about a specific API concept, route to t
 |-------------|-------|
 | Signatures, InputField, OutputField | `/dspy-signatures` |
 | dspy.LM, dspy.configure, providers | `/dspy-lm` |
+| dspy.Assert, dspy.Suggest | `/dspy-assertions` |
 | dspy.Module, forward() | `/dspy-modules` |
 | dspy.Example, Prediction, datasets | `/dspy-data` |
 | dspy.Evaluate, metrics | `/dspy-evaluate` |

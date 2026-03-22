@@ -315,18 +315,57 @@ Install LangChain tools with `pip install langchain-community`.
 
 ## Converting MCP tools
 
-`dspy.Tool.from_mcp_tool()` converts Model Context Protocol tools using a `ClientSession`:
+`dspy.Tool.from_mcp_tool()` converts Model Context Protocol tools into DSPy tools. It preserves the tool's name, description, and input schema, and creates an async callable that invokes the tool through the MCP session.
+
+Install the MCP extra:
+
+```bash
+pip install -U "dspy[mcp]"
+```
+
+### Remote server (Streamable HTTP)
 
 ```python
 import dspy
 from mcp import ClientSession
+from mcp.client.streamable_http import streamablehttp_client
 
-# After establishing an MCP session:
-mcp_tools = await session.list_tools()
-dspy_tools = [dspy.Tool.from_mcp_tool(session, t) for t in mcp_tools.tools]
+async with streamablehttp_client("https://mcp.example.com/sse") as (read, write, _):
+    async with ClientSession(read, write) as session:
+        await session.initialize()
+        mcp_tools = await session.list_tools()
+        tools = [dspy.Tool.from_mcp_tool(session, t) for t in mcp_tools.tools]
 
-agent = dspy.ReAct("question -> answer", tools=dspy_tools)
+        agent = dspy.ReAct("question -> answer", tools=tools)
+        result = await agent.aforward(question="What files are in the repo?")
 ```
+
+### Local server (stdio)
+
+```python
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+
+server_params = StdioServerParameters(
+    command="npx",
+    args=["-y", "@modelcontextprotocol/server-filesystem", "./data"],
+)
+
+async with stdio_client(server_params) as (read, write):
+    async with ClientSession(read, write) as session:
+        await session.initialize()
+        mcp_tools = await session.list_tools()
+        tools = [dspy.Tool.from_mcp_tool(session, t) for t in mcp_tools.tools]
+
+        agent = dspy.ReAct("question -> answer", tools=tools)
+        result = await agent.aforward(question="List the files")
+```
+
+### Key details
+
+- **DSPy doesn't manage the server connection** — you set up and tear down the `ClientSession` yourself using the `mcp` library.
+- **Tools are async** — `from_mcp_tool` creates an async callable, so use `await agent.aforward()` or run inside an async context.
+- **Schema is preserved** — the tool's name, description, and JSON schema for arguments are carried over from the MCP server.
 
 ## Tool type hints and docstrings checklist
 

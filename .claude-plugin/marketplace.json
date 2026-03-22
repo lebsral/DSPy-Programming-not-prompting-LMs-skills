@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Build reliable AI features with DSPy — programming not prompting",
-    "version": "1.8.0"
+    "version": "1.8.1"
   },
   "plugins": [
     {
@@ -97,6 +97,7 @@
         "./skills/dspy-knn-few-shot",
         "./skills/dspy-labeled-few-shot",
         "./skills/dspy-simba",
+        "./skills/dspy-assertions",
         "./skills/dspy-adapters",
         "./skills/dspy-tools",
         "./skills/dspy-retrieval",

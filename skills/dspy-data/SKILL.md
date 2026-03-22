@@ -276,6 +276,33 @@ trainset = [
 ]
 ```
 
+## Built-in datasets
+
+DSPy ships with a few standard datasets for prototyping and benchmarking. These return pre-built `dspy.Example` objects — no HuggingFace dependency needed.
+
+```python
+from dspy.datasets import HotPotQA
+
+# Multi-hop question answering
+dataset = HotPotQA(train_seed=1, train_size=200, dev_size=50, test_size=0)
+trainset = dataset.train
+devset = dataset.dev
+```
+
+| Dataset | Import | Task |
+|---------|--------|------|
+| `HotPotQA` | `from dspy.datasets import HotPotQA` | Multi-hop QA over Wikipedia |
+| `GSM8k` | `from dspy.datasets import GSM8k` | Grade-school math word problems |
+| `Colors` | `from dspy.datasets import Colors` | Simple color identification |
+
+Constructor parameters (all optional): `train_seed`, `train_size`, `dev_size`, `test_size`.
+
+**Note:** You still need `.with_inputs()` if you're passing these to an optimizer:
+
+```python
+trainset = [ex.with_inputs("question") for ex in dataset.train]
+```
+
 ## Train/dev splits
 
 Optimizers train on `trainset` and you evaluate on `devset`. Keep them separate to measure real performance.

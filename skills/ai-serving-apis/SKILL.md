@@ -279,6 +279,71 @@ services:
 - **Separate DSPy from API code.** Keep `program.py` independent — the same module runs in scripts, tests, and the API.
 - **Map errors to HTTP codes.** Assertion failures → 422, rate limits → 429, timeouts → 504.
 
+## DSPy-specific production patterns
+
+### Saving and loading optimized programs
+
+After optimization, save the program artifact and load it at deploy time:
+
+```python
+# After optimization
+optimized_program.save("./artifacts/v1.json")
+
+# At server startup
+program = MyProgram()
+program.load("./artifacts/v1.json")
+```
+
+This is the same `save()`/`load()` API used throughout DSPy — it serializes the optimized prompts, demos, and weights so you don't need the training data or optimizer at deploy time.
+
+### Observability with MLflow
+
+DSPy integrates with MLflow Tracing via OpenTelemetry. Enable it to get per-request traces of every LM call, retrieval, and module step:
+
+```python
+import mlflow
+
+mlflow.dspy.autolog()  # auto-traces all DSPy calls
+
+# Optionally set an experiment for grouping
+mlflow.set_experiment("production-qa-api")
+```
+
+This gives you latency breakdowns, token counts, and full prompt/response logs in the MLflow UI — useful for debugging production issues.
+
+### Reproducibility
+
+Log the configuration alongside your program so you can reproduce results:
+
+```python
+import json
+
+config = {
+    "model": settings.model_name,
+    "program_path": settings.program_path,
+    "dspy_version": dspy.__version__,
+    "temperature": 0.0,
+}
+# Write to a file or log to MLflow
+with open("./artifacts/config.json", "w") as f:
+    json.dump(config, f)
+```
+
+### Thread safety and async
+
+`dspy.configure()` sets global state. For concurrent request handling, use `dspy.context()` to isolate per-request overrides without affecting other threads:
+
+```python
+@app.post("/query")
+async def query(request: QueryRequest):
+    if request.model:
+        with dspy.context(lm=dspy.LM(request.model)):
+            result = program(query=request.query)
+    else:
+        result = program(query=request.query)
+    return QueryResponse(answer=result.answer)
+```
+
 ## Additional resources
 
 - For worked examples (RAG API, classification API, streaming), see [examples.md](examples.md)

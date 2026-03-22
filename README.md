@@ -67,6 +67,7 @@ If you already know DSPy and think in its vocabulary, use these API-first skills
 |-------------|-------|----------------|
 | `Signature`, `InputField`, `OutputField` | [`/dspy-signatures`](skills/dspy-signatures/SKILL.md) | Inline and class-based signatures, typed fields, Pydantic models |
 | `dspy.LM`, `dspy.configure` | [`/dspy-lm`](skills/dspy-lm/SKILL.md) | Provider strings, temperature/max_tokens, per-module LM assignment |
+| `dspy.Assert`, `dspy.Suggest` | [`/dspy-assertions`](skills/dspy-assertions/SKILL.md) | Hard/soft constraints, backtracking, retry behavior, optimizer integration |
 | `dspy.Module`, `forward()` | [`/dspy-modules`](skills/dspy-modules/SKILL.md) | Custom modules, composing sub-modules, save/load state |
 | `dspy.Example`, `Prediction` | [`/dspy-data`](skills/dspy-data/SKILL.md) | `with_inputs()`, train/dev splits, loading from CSV/JSON/HuggingFace |
 | `dspy.Evaluate`, metrics | [`/dspy-evaluate`](skills/dspy-evaluate/SKILL.md) | SemanticF1, exact match, LM-as-judge, composite metrics |

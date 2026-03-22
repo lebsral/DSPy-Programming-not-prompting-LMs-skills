@@ -330,6 +330,25 @@ search = dspy.retrievers.Embeddings(embedder=embedder, corpus=docs, k=3)
 - More passages means more context for the LM, but also more noise and higher cost
 - Use evaluation to find the optimal `k` for your specific task
 
+## Grounded generation with Citations
+
+`dspy.experimental.Citations` is a module that makes the LM cite specific source passages in its output. Use it in RAG pipelines where you need verifiable references back to source documents.
+
+```python
+from dspy.experimental import Citations
+
+# Citations wraps a generation step to produce cited output
+cite = Citations(generate_query_or_answer="context, question -> answer")
+result = cite(context=retrieved_passages, question=question)
+# result.answer contains inline citations referencing specific passages
+```
+
+**When to use:** Any RAG pipeline where claims need to trace back to source documents — the module instructs the LM to ground its output in the provided passages and cite them.
+
+**Note:** This is in `dspy.experimental` — the API may change in future releases. Check the [DSPy docs](https://dspy.ai/) for the latest usage.
+
+For broader anti-hallucination patterns beyond citations, see `/ai-stopping-hallucinations`.
+
 ## Cross-references
 
 - **Building custom modules** to wrap retrieval logic -- see `/dspy-modules`
