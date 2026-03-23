@@ -1,6 +1,6 @@
 ---
 name: ai-stopping-hallucinations
-description: Stop your AI from making things up. Use when your AI hallucinates, fabricates facts, isn't grounded in real data, doesn't cite sources, makes unsupported claims, or you need to verify AI responses against source material. Covers citation enforcement, faithfulness verification, grounding via retrieval, confidence thresholds, and evaluation of anti-hallucination quality.
+description: Stop your AI from making things up. Use when your AI hallucinates, fabricates facts, isn't grounded in real data, doesn't cite sources, makes unsupported claims, or you need to verify AI responses against source material. Also use when your LLM makes up facts, responses are disconnected from the input, or outputs aren't grounded in source documents. Covers citation enforcement, faithfulness verification, grounding via retrieval, confidence thresholds, and evaluation of anti-hallucination quality.
 ---
 
 # Stop Your AI From Making Things Up

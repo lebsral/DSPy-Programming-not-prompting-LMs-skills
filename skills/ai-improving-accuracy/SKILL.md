@@ -1,6 +1,6 @@
 ---
 name: ai-improving-accuracy
-description: Measure and improve how well your AI works. Use when AI gives wrong answers, accuracy is bad, responses are unreliable, you need to test AI quality, evaluate your AI, write metrics, benchmark performance, optimize prompts, improve results, or systematically make your AI better. Covers DSPy evaluation, metrics, and optimization.
+description: Measure and improve how well your AI works. Use when AI gives wrong answers, accuracy is bad, responses are unreliable, you need to test AI quality, evaluate your AI, write metrics, benchmark performance, optimize prompts, improve results, or systematically make your AI better. Also use when you spent hours tweaking prompts, trial and error prompt engineering isn't working, quality plateaued early, or you have stale prompts everywhere in your codebase. Covers DSPy evaluation, metrics, and optimization.
 ---
 
 # Measure and Improve Your AI

@@ -28,35 +28,35 @@ npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --all
 |-------------|-------|--------------|
 | "I want to build something with AI but not sure where to start" | [`/ai-do`](skills/ai-do/SKILL.md) | Describe your problem, get routed to the right skill with a ready-to-use prompt |
 | "I'm starting a new AI feature" | [`/ai-kickoff`](skills/ai-kickoff/SKILL.md) | Scaffold a complete AI project with the right structure |
-| "I need to auto-sort/tag/categorize content" | [`/ai-sorting`](skills/ai-sorting/SKILL.md) | Build AI that sorts tickets, tags emails, detects sentiment |
-| "I need to search docs and answer questions" | [`/ai-searching-docs`](skills/ai-searching-docs/SKILL.md) | Build AI-powered knowledge base, help center, or doc Q&A |
+| "I need to auto-sort/tag/categorize content" / "classification results are inconsistent" | [`/ai-sorting`](skills/ai-sorting/SKILL.md) | Build AI that sorts tickets, tags emails, detects sentiment |
+| "I need to search docs and answer questions" / "retrieval returns irrelevant results" | [`/ai-searching-docs`](skills/ai-searching-docs/SKILL.md) | Build AI-powered knowledge base, help center, or doc Q&A |
 | "I need AI to answer questions about our database" | [`/ai-querying-databases`](skills/ai-querying-databases/SKILL.md) | Text-to-SQL: plain English questions over Postgres, MySQL, Snowflake |
 | "I need to condense long content into summaries" | [`/ai-summarizing`](skills/ai-summarizing/SKILL.md) | Summarize meetings, articles, threads — with length control |
-| "I need to pull structured data from messy text" | [`/ai-parsing-data`](skills/ai-parsing-data/SKILL.md) | Parse invoices, extract entities, convert text to JSON |
+| "I need to pull structured data from messy text" / "the emails are messy and lack structure" | [`/ai-parsing-data`](skills/ai-parsing-data/SKILL.md) | Parse invoices, extract entities, convert text to JSON |
 | "I need AI to take actions and call APIs" | [`/ai-taking-actions`](skills/ai-taking-actions/SKILL.md) | Build AI that calls APIs, uses tools, and completes tasks |
 | "I need AI to write articles, reports, or copy" | [`/ai-writing-content`](skills/ai-writing-content/SKILL.md) | Generate blog posts, product descriptions, newsletters |
 | "My AI fails on hard problems that need planning" | [`/ai-reasoning`](skills/ai-reasoning/SKILL.md) | Add multi-step reasoning, Self-Discovery, chain-of-thought |
 | "My task needs multiple AI steps" | [`/ai-building-pipelines`](skills/ai-building-pipelines/SKILL.md) | Chain classify, retrieve, generate, verify into one pipeline |
-| "I need to verify AI output before users see it" | [`/ai-checking-outputs`](skills/ai-checking-outputs/SKILL.md) | Add guardrails, fact-checking, safety filters, and quality gates |
-| "My AI makes stuff up / hallucinates" | [`/ai-stopping-hallucinations`](skills/ai-stopping-hallucinations/SKILL.md) | Ground AI in facts with citations, verification, and source checking |
-| "My AI doesn't follow our rules" | [`/ai-following-rules`](skills/ai-following-rules/SKILL.md) | Enforce content policies, format rules, and business constraints |
-| "My AI gives wrong answers" | [`/ai-improving-accuracy`](skills/ai-improving-accuracy/SKILL.md) | Measure quality, then systematically improve it |
-| "My AI gives different answers every time" | [`/ai-making-consistent`](skills/ai-making-consistent/SKILL.md) | Lock down outputs so they're predictable and reliable |
-| "My AI is too expensive" | [`/ai-cutting-costs`](skills/ai-cutting-costs/SKILL.md) | Reduce API costs with smart routing, caching, fine-tuning |
-| "Let's fine-tune on our data" | [`/ai-fine-tuning`](skills/ai-fine-tuning/SKILL.md) | Train models on your data for max quality or cost savings |
-| "Can we switch to a different model?" | [`/ai-switching-models`](skills/ai-switching-models/SKILL.md) | Switch providers, compare models, re-optimize automatically |
+| "I need to verify AI output before users see it" / "LLMs invent data points" | [`/ai-checking-outputs`](skills/ai-checking-outputs/SKILL.md) | Add guardrails, fact-checking, safety filters, and quality gates |
+| "My AI makes stuff up / hallucinates" / "LLM makes up facts" | [`/ai-stopping-hallucinations`](skills/ai-stopping-hallucinations/SKILL.md) | Ground AI in facts with citations, verification, and source checking |
+| "My AI doesn't follow our rules" / "LLM JSON output is unreliable" | [`/ai-following-rules`](skills/ai-following-rules/SKILL.md) | Enforce content policies, format rules, and business constraints |
+| "My AI gives wrong answers" / "I spent hours tweaking prompts" | [`/ai-improving-accuracy`](skills/ai-improving-accuracy/SKILL.md) | Measure quality, then systematically improve it |
+| "My AI gives different answers every time" / "same prompt, different results every run" | [`/ai-making-consistent`](skills/ai-making-consistent/SKILL.md) | Lock down outputs so they're predictable and reliable |
+| "My AI is too expensive" / "LLM API costs too high" | [`/ai-cutting-costs`](skills/ai-cutting-costs/SKILL.md) | Reduce API costs with smart routing, caching, fine-tuning |
+| "Let's fine-tune on our data" / "prompt optimization hit a ceiling" | [`/ai-fine-tuning`](skills/ai-fine-tuning/SKILL.md) | Train models on your data for max quality or cost savings |
+| "Can we switch to a different model?" / "prompt broke after model update" | [`/ai-switching-models`](skills/ai-switching-models/SKILL.md) | Switch providers, compare models, re-optimize automatically |
 | "We don't have enough training data" | [`/ai-generating-data`](skills/ai-generating-data/SKILL.md) | Generate synthetic examples, fill data gaps, bootstrap from scratch |
 | "How do I put my AI behind an API?" | [`/ai-serving-apis`](skills/ai-serving-apis/SKILL.md) | Wrap your AI in FastAPI endpoints for production serving |
 | "Is our AI safe to launch?" | [`/ai-testing-safety`](skills/ai-testing-safety/SKILL.md) | Automatically find vulnerabilities with adversarial testing |
 | "We need to moderate user content" | [`/ai-moderating-content`](skills/ai-moderating-content/SKILL.md) | Build AI content moderation with severity levels and routing |
-| "Is our AI still working in production?" | [`/ai-monitoring`](skills/ai-monitoring/SKILL.md) | Monitor quality, safety, and cost — catch degradation early |
+| "Is our AI still working in production?" / "silent quality drops, prompt drift" | [`/ai-monitoring`](skills/ai-monitoring/SKILL.md) | Monitor quality, safety, and cost — catch degradation early |
 | "Why did my AI give that wrong answer?" | [`/ai-tracing-requests`](skills/ai-tracing-requests/SKILL.md) | Trace individual requests — see every LM call, retrieval, and step |
 | "Which of our optimization experiments was best?" | [`/ai-tracking-experiments`](skills/ai-tracking-experiments/SKILL.md) | Log, compare, and promote optimization runs |
 | "I need AI to score, grade, or evaluate things" | [`/ai-scoring`](skills/ai-scoring/SKILL.md) | Score essays, audit support quality, rate code reviews against rubrics |
 | "My AI works on simple inputs but fails on complex ones" | [`/ai-decomposing-tasks`](skills/ai-decomposing-tasks/SKILL.md) | Break unreliable single-step tasks into reliable subtasks |
 | "I need a conversational AI assistant" | [`/ai-building-chatbots`](skills/ai-building-chatbots/SKILL.md) | Build chatbots with memory, state, and doc-grounded responses |
 | "I need multiple AI agents working together" | [`/ai-coordinating-agents`](skills/ai-coordinating-agents/SKILL.md) | Supervisor agents, specialist handoff, parallel research teams |
-| "My AI is broken/erroring" | [`/ai-fixing-errors`](skills/ai-fixing-errors/SKILL.md) | Diagnose and fix crashes, wrong outputs, and weird behavior |
+| "My AI is broken/erroring" / "Could not parse LLM output" | [`/ai-fixing-errors`](skills/ai-fixing-errors/SKILL.md) | Diagnose and fix crashes, wrong outputs, and weird behavior |
 | "DSPy can do X but there's no skill for it" | [`/ai-request-skill`](skills/ai-request-skill/SKILL.md) | Build a missing skill and submit a PR, or file a GitHub issue requesting it |
 
 ## Know which DSPy concept you need?

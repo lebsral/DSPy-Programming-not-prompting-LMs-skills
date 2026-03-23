@@ -1,6 +1,6 @@
 ---
 name: ai-cutting-costs
-description: Reduce your AI API bill. Use when AI costs are too high, API calls are too expensive, you want to use cheaper models, optimize token usage, reduce LLM spending, route easy questions to cheap models, or make your AI feature more cost-effective. Covers DSPy cost optimization — cheaper models, smart routing, per-module LMs, fine-tuning, caching, and prompt reduction.
+description: Reduce your AI API bill. Use when AI costs are too high, API calls are too expensive, you want to use cheaper models, optimize token usage, reduce LLM spending, route easy questions to cheap models, or make your AI feature more cost-effective. Also use when LLM API costs are too high, or most tokens are wasted on context serialization not useful output. Covers DSPy cost optimization — cheaper models, smart routing, per-module LMs, fine-tuning, caching, and prompt reduction.
 ---
 
 # Cut Your AI Costs

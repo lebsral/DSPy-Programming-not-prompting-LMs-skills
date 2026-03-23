@@ -1,6 +1,6 @@
 ---
 name: ai-searching-docs
-description: Build AI that searches your documents and answers questions. Use when building a knowledge base, help center Q&A, chatting with documents, answering questions from a database, search-and-answer over internal docs, customer support bot, or FAQ system. Powered by DSPy RAG (retrieval-augmented generation).
+description: Build AI that searches your documents and answers questions. Use when building a knowledge base, help center Q&A, chatting with documents, answering questions from a database, search-and-answer over internal docs, customer support bot, or FAQ system. Also use when embedding search loses critical context, retrieval returns irrelevant results, or the right document is buried deep in search results. Powered by DSPy RAG (retrieval-augmented generation).
 ---
 
 # Build AI-Powered Document Search

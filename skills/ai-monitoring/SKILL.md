@@ -1,6 +1,6 @@
 ---
 name: ai-monitoring
-description: Know when your AI breaks in production. Use when you need to monitor AI quality, track accuracy over time, detect model degradation, set up alerts for AI failures, log predictions, measure production quality, catch when a model provider changes behavior, build an AI monitoring dashboard, or prove your AI is still working for compliance. Covers DSPy evaluation for ongoing monitoring, prediction logging, drift detection, and alerting.
+description: Know when your AI breaks in production. Use when you need to monitor AI quality, track accuracy over time, detect model degradation, set up alerts for AI failures, log predictions, measure production quality, catch when a model provider changes behavior, build an AI monitoring dashboard, or prove your AI is still working for compliance. Also use when you're seeing silent quality drops in production, a model provider changed behavior without warning, or you're dealing with prompt drift. Covers DSPy evaluation for ongoing monitoring, prediction logging, drift detection, and alerting.
 ---
 
 # Know When Your AI Breaks in Production

@@ -1,6 +1,6 @@
 ---
 name: ai-fixing-errors
-description: Fix broken AI features. Use when your AI is throwing errors, producing wrong outputs, crashing, returning garbage, not responding, or behaving unexpectedly. Covers DSPy debugging, error diagnosis, and troubleshooting.
+description: Fix broken AI features. Use when your AI is throwing errors, producing wrong outputs, crashing, returning garbage, not responding, or behaving unexpectedly. Also use when you get "Could not parse LLM output" errors, or outputs appear coherent but contain factual drift. Covers DSPy debugging, error diagnosis, and troubleshooting.
 ---
 
 # Fix Your Broken AI

@@ -1,6 +1,6 @@
 ---
 name: ai-making-consistent
-description: Make your AI give the same answer every time. Use when AI gives different answers to the same question, outputs are unpredictable, responses vary between runs, you need deterministic AI behavior, or your AI is unreliable. Covers DSPy consistency techniques — temperature, typed outputs, assertions, and optimization.
+description: Make your AI give the same answer every time. Use when AI gives different answers to the same question, outputs are unpredictable, responses vary between runs, you need deterministic AI behavior, or your AI is unreliable. Also use when same prompt gives different results every run, prompt sensitivity causes output changes with minor wording tweaks, or reordering examples shifts accuracy dramatically. Covers DSPy consistency techniques — temperature, typed outputs, assertions, and optimization.
 ---
 
 # Make Your AI Consistent
