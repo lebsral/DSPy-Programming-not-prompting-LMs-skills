@@ -1,6 +1,6 @@
 ---
 name: ai-taking-actions
-description: Build AI that takes actions, calls APIs, and does things autonomously. Use when you need AI to call APIs, use tools, perform calculations, search the web and act on results, interact with databases, or do multi-step tasks. Powered by DSPy agents (ReAct, CodeAct).
+description: Build AI that takes actions, calls APIs, and does things autonomously. Use when you need AI to call APIs, use tools, perform calculations, search the web and act on results, interact with databases, or do multi-step tasks. Powered by DSPy agents (ReAct, CodeAct)., "AI that does things not just talks", "tool-using AI agent", "AI calls external APIs", "function calling with DSPy", "build AI that books appointments", "AI workflow automation", "agent that searches and acts on results", "AI that updates databases", "autonomous AI agent", "AI performs multi-step tasks", "give LLM access to tools", "agentic AI workflow", "AI agent for DevOps", "build AI assistant that takes actions", "MCP tool integration with AI", "AI that can browse and click", "LLM with tool access".
 ---
 
 # Build AI That Takes Actions

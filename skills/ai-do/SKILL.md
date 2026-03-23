@@ -1,6 +1,6 @@
 ---
 name: ai-do
-description: "Describe your AI problem and get routed to the right skill with a ready-to-use prompt. Use when you're not sure which ai- skill to use, want help picking the right approach, or just want to describe what you need in plain language. Also use this when someone says 'I want to build an AI that...', 'how do I make my AI...', or describes any AI/LLM task without naming a specific skill."
+description: "Describe your AI problem and get routed to the right skill with a ready-to-use prompt. Use when you're not sure which ai- skill to use, want help picking the right approach, or just want to describe what you need in plain language. Also use this when someone says 'I want to build an AI that...', 'how do I make my AI...', or describes any AI/LLM task without naming a specific skill., "I need AI but don't know where to start", "which AI pattern should I use", "what's the best way to add AI to my app", "recommend an AI approach", "AI feature discovery", "too many AI options", "overwhelmed by AI frameworks", "just tell me what to build", "new to DSPy", "beginner AI project help", "which LLM pattern fits my use case", "confused about AI architecture", "help me figure out my AI approach"."
 argument-hint: "[describe what you want to build or fix]"
 ---
 
@@ -26,19 +26,19 @@ Use this catalog to find the best match. Many real-world problems need **a seque
 
 | Skill | Route here when... |
 |-------|-------------------|
-| `/ai-kickoff` | Starting from scratch. "set up a new DSPy project", "scaffold an AI feature", "I'm new to DSPy, where do I start?" |
+| `/ai-kickoff` | Starting from scratch. "set up a new DSPy project", "scaffold an AI feature", "I'm new to DSPy, where do I start?", "DSPy quickstart", "DSPy hello world" |
 | `/ai-sorting` | Categorizing, labeling, classifying, tagging, routing. "sort tickets into teams", "detect sentiment", "auto-tag content", "is this spam or not", "route messages", "triage incoming requests", "classify call transcripts by topic", "my classification results are inconsistent", "some categories are semantically close and overlap" |
 | `/ai-searching-docs` | Answering questions from a body of documents. "search our help center", "Q&A over our docs", "RAG", "chat with our knowledge base", "find answers in our documentation", "embedding search loses critical context", "retrieval returns irrelevant results", "the right document is buried at position 15" |
-| `/ai-querying-databases` | Asking questions about structured data. "text-to-SQL", "let non-technical users query our database", "natural language analytics", "ask questions about our data in plain English" |
+| `/ai-querying-databases` | Asking questions about structured data. "text-to-SQL", "let non-technical users query our database", "natural language analytics", "ask questions about our data in plain English", "text-to-SQL that actually works", "chat with your Postgres" |
 | `/ai-summarizing` | Making long content shorter. "summarize meeting notes", "create TL;DRs", "digest these articles", "extract action items", "condense this report", "give me the highlights" |
 | `/ai-parsing-data` | Pulling structured fields from unstructured text. "extract names and dates from emails", "parse invoices", "turn this text into JSON", "scrape entities from articles", "extract contact info", "the emails are messy and lack structure", "extract structured data from unstructured content" |
 | `/ai-taking-actions` | AI that does things in the world. "call APIs", "use tools", "perform calculations", "search the web and act on results", "interact with databases", "autonomous agent" |
 | `/ai-writing-content` | Generating text. "write blog posts", "product descriptions", "marketing copy", "generate reports", "draft newsletters", "create email templates", "I need to generate consistent copy at scale", "output is too generic and doesn't match our voice" |
 | `/ai-reasoning` | Problems that need thinking before answering. "multi-step math", "logic puzzles", "planning", "complex analysis", "needs to break down the problem first", "errors in intermediate steps accumulate", "multi-hop reasoning rarely works with real data", "LLM has a 1% error per step and it compounds" |
-| `/ai-building-pipelines` | Multiple AI steps chained together. "classify then generate", "extract then validate then store", "multi-stage processing", "one step feeds into the next", "complex multihop pipelines involve string-based prompting tricks at each step", "getting the pipeline to work is even trickier" |
-| `/ai-building-chatbots` | Conversational AI. "chatbot", "support bot", "onboarding assistant", "multi-turn conversation", "bot with memory", "customer service agent" |
-| `/ai-coordinating-agents` | Multiple agents collaborating. "supervisor delegates to specialists", "agent handoff", "parallel research agents", "escalation from L1 to L2" |
-| `/ai-scoring` | Grading or rating against criteria. "score essays", "rate code quality", "evaluate support responses", "grade against a rubric", "quality audit" |
+| `/ai-building-pipelines` | Multiple AI steps chained together. "classify then generate", "extract then validate then store", "multi-stage processing", "one step feeds into the next", "complex multihop pipelines involve string-based prompting tricks at each step", "getting the pipeline to work is even trickier", "LangChain LCEL alternative" |
+| `/ai-building-chatbots` | Conversational AI. "chatbot", "support bot", "onboarding assistant", "multi-turn conversation", "bot with memory", "customer service agent", "Intercom bot alternative", "Zendesk AI alternative" |
+| `/ai-coordinating-agents` | Multiple agents collaborating. "supervisor delegates to specialists", "agent handoff", "parallel research agents", "escalation from L1 to L2", "CrewAI alternative", "AutoGen alternative" |
+| `/ai-scoring` | Grading or rating against criteria. "score essays", "rate code quality", "evaluate support responses", "grade against a rubric", "quality audit", "LLM as a judge" |
 | `/ai-decomposing-tasks` | AI works on simple inputs but fails on complex ones. "breaks on long documents", "accuracy drops with harder inputs", "works sometimes but not on tricky cases" |
 | `/ai-moderating-content` | Filtering user-generated content. "flag harmful comments", "detect spam", "content moderation", "NSFW filter", "block hate speech" |
 
@@ -59,8 +59,8 @@ Use this catalog to find the best match. Many real-world problems need **a seque
 
 | Skill | Route here when... |
 |-------|-------------------|
-| `/ai-serving-apis` | Deploying AI as a service. "put behind an API", "deploy as endpoint", "wrap in FastAPI", "serve to frontend", "need to deploy my optimized DSPy program as a service" |
-| `/ai-cutting-costs` | AI costs too much. "API bill too high", "reduce token usage", "cheaper models", "optimize costs", "spending too much on LLM calls", "how do I reduce API costs without degrading quality", "poor data serialization consumes 40-70% of available tokens" |
+| `/ai-serving-apis` | Deploying AI as a service. "put behind an API", "deploy as endpoint", "wrap in FastAPI", "serve to frontend", "need to deploy my optimized DSPy program as a service", "how to productionize my AI" |
+| `/ai-cutting-costs` | AI costs too much. "API bill too high", "reduce token usage", "cheaper models", "optimize costs", "spending too much on LLM calls", "how do I reduce API costs without degrading quality", "poor data serialization consumes 40-70% of available tokens", "GPT-4 costs too much for production" |
 | `/ai-switching-models` | Changing AI providers. "switch from OpenAI to Anthropic", "compare models", "vendor lock-in", "try a different model", "prompts that work for GPT-4 don't work for Llama", "model update broke my outputs", "any change in the underlying model breaks the prompts", "prompts optimized for one model don't transfer" |
 | `/ai-monitoring` | Watching AI in production. "track quality over time", "detect degradation", "alerting", "drift detection", "production monitoring", "small unrecorded prompt changes cause silent quality drops", "model providers change their models without you doing anything", "prompt drift in production" |
 | `/ai-tracing-requests` | Debugging a specific AI request. "trace a request", "see every LM call", "why did it give that answer", "profile slow pipeline" |

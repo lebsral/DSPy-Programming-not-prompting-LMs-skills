@@ -1,6 +1,6 @@
 ---
 name: ai-building-chatbots
-description: Build a conversational AI assistant with memory and state. Use when you need a customer support chatbot, helpdesk bot, onboarding assistant, sales qualification bot, FAQ assistant, or any multi-turn conversational AI. Powered by DSPy for response quality and LangGraph for conversation state management.
+description: Build a conversational AI assistant with memory and state. Use when you need a customer support chatbot, helpdesk bot, onboarding assistant, sales qualification bot, FAQ assistant, or any multi-turn conversational AI. Powered by DSPy for response quality and LangGraph for conversation state management., "how do I make my chatbot remember previous messages", "conversational AI keeps forgetting context", "build a helpdesk bot that actually works", "chatbot drops context after a few turns", "Intercom bot alternative", "Zendesk AI alternative", "Drift chatbot replacement", "build WhatsApp bot", "Slack bot with AI", "multi-turn conversation state management", "chatbot escalation to human agent", "how to build AI customer service", "LangChain chatbot but simpler", "chatbot for SaaS onboarding flow", "FAQ bot that doesn't suck".
 ---
 
 # Build a Conversational AI Chatbot

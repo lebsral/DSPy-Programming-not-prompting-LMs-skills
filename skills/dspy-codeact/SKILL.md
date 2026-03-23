@@ -1,6 +1,6 @@
 ---
 name: dspy-codeact
-description: "Use when the agent's task is best solved by writing and executing Python code — data manipulation, computation, file processing, or tasks where code is more reliable than natural language reasoning."
+description: "Use when the agent's task is best solved by writing and executing Python code — data manipulation, computation, file processing, or tasks where code is more reliable than natural language reasoning. Common scenarios: data analysis tasks where the agent writes pandas code, computation-heavy tasks where natural language reasoning fails, file processing automation, tasks requiring precise calculations, or building agents that manipulate data programmatically. Related: ai-taking-actions, dspy-react, dspy-program-of-thought. Also: "dspy.CodeAct", "agent writes and runs Python code", "code execution agent", "data analysis agent", "AI agent that writes code", "computation with LLM agent", "pandas automation with AI", "agent that processes files", "code-generating agent", "execute Python in sandbox", "when ReAct isn't precise enough use code", "programmatic problem solving agent"."
 ---
 
 # Build Agents That Write and Execute Code with dspy.CodeAct

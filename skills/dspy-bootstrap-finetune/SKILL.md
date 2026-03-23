@@ -1,6 +1,6 @@
 ---
 name: dspy-bootstrap-finetune
-description: "Use when you need maximum quality from a smaller/cheaper model — generates training data from a teacher model and fine-tunes a student model's weights."
+description: "Use when you need maximum quality from a smaller/cheaper model — generates training data from a teacher model and fine-tunes a student model's weights. Common scenarios: distilling GPT-4 quality into a cheaper model, generating training data from a strong teacher to fine-tune a weak student, reducing inference costs by replacing an expensive model with a fine-tuned small one, or building a production model that's fast and cheap. Related: ai-fine-tuning, ai-cutting-costs, dspy-better-together. Also: "dspy.BootstrapFinetune", "model distillation with DSPy", "teacher-student training", "fine-tune small model from GPT-4 outputs", "reduce API costs with fine-tuning", "generate training data then fine-tune", "cheap model same quality", "distill large model into small model", "fine-tune Llama from GPT-4", "production model training", "move from API to self-hosted model"."
 ---
 
 # Fine-Tune LM Weights with dspy.BootstrapFinetune

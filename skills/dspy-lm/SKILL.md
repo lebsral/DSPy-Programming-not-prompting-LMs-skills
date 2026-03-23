@@ -1,6 +1,6 @@
 ---
 name: dspy-lm
-description: "Use when you need to configure which language model DSPy uses — setting up providers, API keys, model parameters, or assigning different models to different pipeline stages."
+description: "Use when you need to configure which language model DSPy uses — setting up providers, API keys, model parameters, or assigning different models to different pipeline stages. Common scenarios: setting up OpenAI or Anthropic API keys, configuring model parameters like temperature and max_tokens, using different models for different pipeline stages, switching between providers, using local models with Ollama or vLLM, or setting up Azure OpenAI. Related: ai-switching-models, ai-cutting-costs, ai-kickoff. Also: "dspy.LM", "dspy.configure", "configure language model in DSPy", "OpenAI API key setup DSPy", "Anthropic Claude with DSPy", "use Ollama with DSPy", "local model DSPy", "Azure OpenAI DSPy setup", "model temperature and max_tokens", "different models per module", "multi-model DSPy pipeline", "vLLM with DSPy", "change provider without changing code", "model configuration DSPy"."
 ---
 
 # Configure Language Models with dspy.LM

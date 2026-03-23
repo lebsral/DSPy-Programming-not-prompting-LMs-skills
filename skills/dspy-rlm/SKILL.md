@@ -1,6 +1,6 @@
 ---
 name: dspy-rlm
-description: "Use when you want recursive self-refinement — the model iteratively explores data in a sandboxed REPL, writing code and querying sub-LMs until it produces a final answer."
+description: "Use when you want recursive self-refinement — the model iteratively explores data in a sandboxed REPL, writing code and querying sub-LMs until it produces a final answer. Common scenarios: complex tasks requiring the model to explore data iteratively, recursive self-refinement with code execution, tasks where the model needs to write queries and inspect results before answering, or research-style tasks requiring iterative investigation. Related: ai-reasoning, dspy-codeact, dspy-program-of-thought. Also: "dspy.RLM", "recursive language model", "iterative exploration with LLM", "model explores data in REPL", "self-refinement through code", "recursive problem solving", "agent that keeps digging until it finds the answer", "investigative AI agent", "REPL-based reasoning", "explore then answer pattern", "deep research agent", "LLM explores data iteratively", "when one pass isn't enough"."
 ---
 
 # Iterative Self-Refinement with dspy.RLM

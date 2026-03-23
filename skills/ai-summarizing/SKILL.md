@@ -1,6 +1,6 @@
 ---
 name: ai-summarizing
-description: Condense long content into short summaries using AI. Use when summarizing meeting notes, condensing articles, creating executive briefs, extracting action items, generating TL;DRs, creating digests from long threads, summarizing customer conversations, or turning lengthy documents into bullet points. Powered by DSPy summarization.
+description: Condense long content into short summaries using AI. Use when summarizing meeting notes, condensing articles, creating executive briefs, extracting action items, generating TL;DRs, creating digests from long threads, summarizing customer conversations, or turning lengthy documents into bullet points. Powered by DSPy summarization., "AI summary too generic", "summarize Slack threads", "condense customer feedback", "meeting transcript summary", "executive summary generator", "AI-powered digest", "summarize legal documents", "TLDR for long emails", "abstractive summarization", "extractive summary with AI", "bullet point summary from long text", "summarize research papers", "call transcript summary", "weekly digest generator", "summarize support tickets", "AI loses important details when summarizing", "key takeaways extraction".
 ---
 
 # Build an AI Summarizer

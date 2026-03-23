@@ -1,6 +1,6 @@
 ---
 name: dspy-primitives
-description: "Use when working with non-text inputs like images, audio, or code — DSPy's typed wrappers for multimodal data in signatures."
+description: "Use when working with non-text inputs like images, audio, or code — DSPy's typed wrappers for multimodal data in signatures. Common scenarios: processing images alongside text, handling audio transcription inputs, working with code files as typed inputs, building multimodal AI pipelines, or declaring non-string field types in signatures for structured data. Related: ai-parsing-data, dspy-signatures. Also: "dspy.Image", "dspy.History", "multimodal DSPy", "image input in DSPy signature", "process images with DSPy", "audio input in DSPy", "typed fields in signatures", "non-text data in DSPy", "vision model with DSPy", "GPT-4V with DSPy", "Claude vision with DSPy", "multimodal pipeline", "image classification with DSPy", "pass images to language model in DSPy", "conversation history type", "handle binary data in DSPy", "structured types beyond strings"."
 ---
 
 # DSPy Primitives

@@ -1,6 +1,6 @@
 ---
 name: ai-tracing-requests
-description: See exactly what your AI did on a specific request. Use when you need to debug a wrong answer, trace a specific AI request, profile slow AI pipelines, find which step failed, inspect LM calls, view token usage per request, build audit trails, or understand why a customer got a bad response. Covers DSPy inspection, per-step tracing, OpenTelemetry instrumentation, and trace viewer setup.
+description: See exactly what your AI did on a specific request. Use when you need to debug a wrong answer, trace a specific AI request, profile slow AI pipelines, find which step failed, inspect LM calls, view token usage per request, build audit trails, or understand why a customer got a bad response. Covers DSPy inspection, per-step tracing, OpenTelemetry instrumentation, and trace viewer setup., "debug slow AI response", "why is my AI pipeline slow", "trace LLM token usage", "OpenTelemetry for AI", "Langfuse tracing", "AI observability per request", "debug wrong AI answer for specific user", "which LLM call failed", "latency profiling for AI", "audit trail for AI decisions", "inspect what the AI actually saw", "per-request AI debugging", "production AI request logs", "DSPy inspect_history", "trace AI reasoning steps".
 ---
 
 # See What Your AI Did on a Specific Request

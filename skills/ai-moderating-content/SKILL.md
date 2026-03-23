@@ -1,6 +1,6 @@
 ---
 name: ai-moderating-content
-description: Auto-moderate what users post on your platform. Use when you need content moderation, flag harmful comments, detect spam, filter hate speech, catch NSFW content, block harassment, moderate user-generated content, review community posts, filter marketplace listings, or route bad content to human reviewers. Covers DSPy classification with severity scoring, confidence-based routing, and Assert-based policy enforcement.
+description: Auto-moderate what users post on your platform. Use when you need content moderation, flag harmful comments, detect spam, filter hate speech, catch NSFW content, block harassment, moderate user-generated content, review community posts, filter marketplace listings, or route bad content to human reviewers. Covers DSPy classification with severity scoring, confidence-based routing, and Assert-based policy enforcement., "build content moderation system", "UGC moderation at scale", "user-generated content filter", "trust and safety tooling", "hate speech detection model", "NSFW detection API", "OpenAI moderation alternative", "Perspective API alternative", "toxic comment classifier", "automated abuse detection", "report and flag system with AI", "content policy enforcement", "marketplace listing moderation".
 ---
 
 # Auto-Moderate What Users Post

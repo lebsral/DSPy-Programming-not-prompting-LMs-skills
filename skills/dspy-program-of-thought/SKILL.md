@@ -1,6 +1,6 @@
 ---
 name: dspy-program-of-thought
-description: "Use when the task requires precise computation, math, or data manipulation — the LM writes Python code that executes in a sandbox instead of reasoning in natural language."
+description: "Use when the task requires precise computation, math, or data manipulation — the LM writes Python code that executes in a sandbox instead of reasoning in natural language. Common scenarios: math word problems, data manipulation tasks, precise calculations the LLM gets wrong in natural language, statistical analysis, or any task where writing and executing code gives better results than reasoning in text. Related: ai-reasoning, dspy-chain-of-thought, dspy-codeact. Also: "dspy.ProgramOfThought", "LLM writes code to solve problem", "code generation for computation", "math with LLM via code", "execute Python to get answer", "when chain of thought gives wrong math", "computation via code not text", "precise calculations with LLM", "data analysis by generating code", "sandbox code execution", "code-based reasoning", "ProgramOfThought vs ChainOfThought", "solve with code not words"."
 ---
 
 # Solve Problems by Generating and Executing Code with dspy.ProgramOfThought

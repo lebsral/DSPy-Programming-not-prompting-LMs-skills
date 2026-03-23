@@ -1,6 +1,6 @@
 ---
 name: ai-parsing-data
-description: Pull structured data from messy text using AI. Use when parsing invoices, extracting fields from emails, scraping entities from articles, converting unstructured text to JSON, extracting contact info, parsing resumes, reading forms, pulling data from transcripts (VTT, LiveKit, Recall), extracting fields from Langfuse traces, or any task where messy text goes in and clean structured data comes out. Also use when emails are messy and lack structure, or structured data extraction from unstructured content is unreliable.
+description: Pull structured data from messy text using AI. Use when parsing invoices, extracting fields from emails, scraping entities from articles, converting unstructured text to JSON, extracting contact info, parsing resumes, reading forms, pulling data from transcripts (VTT, LiveKit, Recall), extracting fields from Langfuse traces, or any task where messy text goes in and clean structured data comes out. Also use when emails are messy and lack structure, or structured data extraction from unstructured content is unreliable., "extract entities from text", "parse PDF with AI", "structured extraction from unstructured text", "OCR plus AI extraction", "convert email to structured data", "pull fields from documents automatically", "AI data entry automation", "invoice parsing", "resume parsing with AI", "medical record extraction".
 ---
 
 # Build an AI Data Parser

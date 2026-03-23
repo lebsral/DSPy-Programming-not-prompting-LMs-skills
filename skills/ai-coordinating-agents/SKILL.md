@@ -1,6 +1,6 @@
 ---
 name: ai-coordinating-agents
-description: Build multiple AI agents that work together. Use when you need a supervisor agent that delegates to specialists, agent handoff, parallel research agents, support escalation (L1 to L2), content pipeline (writer + editor + fact-checker), or any multi-agent system. Powered by DSPy for optimizable agents and LangGraph for orchestration.
+description: Build multiple AI agents that work together. Use when you need a supervisor agent that delegates to specialists, agent handoff, parallel research agents, support escalation (L1 to L2), content pipeline (writer + editor + fact-checker), or any multi-agent system. Powered by DSPy for optimizable agents and LangGraph for orchestration., "CrewAI alternative", "AutoGen alternative", "LangGraph multi-agent", "how to build agents that talk to each other", "agent delegation pattern", "specialist agents with a supervisor", "agents keep stepping on each other", "multi-agent coordination is a nightmare", "build an AI team", "agent-to-agent communication", "route tasks to the right agent", "hierarchical agent architecture", "when one agent isn't enough", "parallel agents for research", "microservices but for AI agents".
 ---
 
 # Build Multi-Agent Systems

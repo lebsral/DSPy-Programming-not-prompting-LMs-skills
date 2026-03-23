@@ -1,6 +1,6 @@
 ---
 name: ai-checking-outputs
-description: Verify and validate AI output before it reaches users. Use when you need guardrails, output validation, safety checks, content filtering, fact-checking AI responses, catching hallucinations, preventing bad outputs, quality gates, or ensuring AI responses meet your standards before shipping them. Also use when LLMs invent data points, you get extraneous text with conversational fluff before the JSON, or you need to reduce malformed JSON responses. Covers DSPy assertions, verification patterns, and generate-then-filter pipelines.
+description: Verify and validate AI output before it reaches users. Use when you need guardrails, output validation, safety checks, content filtering, fact-checking AI responses, catching hallucinations, preventing bad outputs, quality gates, or ensuring AI responses meet your standards before shipping them. Also use when LLMs invent data points, you get extraneous text with conversational fluff before the JSON, or you need to reduce malformed JSON responses. Covers DSPy assertions, verification patterns, and generate-then-filter pipelines., "AI output looks right but is wrong", "how to validate JSON from LLM", "LLM returns invalid data", "catch bad AI outputs before users see them", "output quality gate", "AI guardrails for production", "verify LLM didn't hallucinate fields", "post-processing LLM responses".
 ---
 
 # Check AI Output Before It Ships

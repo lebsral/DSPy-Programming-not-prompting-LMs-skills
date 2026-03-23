@@ -1,6 +1,6 @@
 ---
 name: ai-following-rules
-description: Make your AI follow rules and policies. Use when your AI breaks format rules, violates content policies, ignores business constraints, outputs invalid JSON, exceeds length limits, includes forbidden content, or doesn't comply with your specifications. Also use when LLM JSON output is unreliable, you get inconsistent formatting with random spaces and line breaks, or there's extraneous text and conversational fluff around the JSON. Covers DSPy Assert/Suggest for hard and soft rules, content policies, format enforcement, retry mechanics, and composing multiple constraints.
+description: Make your AI follow rules and policies. Use when your AI breaks format rules, violates content policies, ignores business constraints, outputs invalid JSON, exceeds length limits, includes forbidden content, or doesn't comply with your specifications. Also use when LLM JSON output is unreliable, you get inconsistent formatting with random spaces and line breaks, or there's extraneous text and conversational fluff around the JSON. Covers DSPy Assert/Suggest for hard and soft rules, content policies, format enforcement, retry mechanics, and composing multiple constraints., "AI won't follow my system prompt", "LLM keeps breaking format", "enforce JSON schema on AI output", "AI generates prohibited content", "constraint violation from LLM", "make AI obey business rules", "AI ignores my constraints".
 ---
 
 # Make Your AI Follow the Rules

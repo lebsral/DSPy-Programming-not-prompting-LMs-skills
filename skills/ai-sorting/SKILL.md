@@ -1,6 +1,6 @@
 ---
 name: ai-sorting
-description: Auto-sort, categorize, or label content using AI. Use when sorting tickets into categories, auto-tagging content, labeling emails, detecting sentiment, routing messages to the right team, triaging support requests, building a spam filter, intent detection, topic classification, or any task where text goes in and a category comes out. Also use when classification accuracy varies between runs or semantically close categories get confused.
+description: Auto-sort, categorize, or label content using AI. Use when sorting tickets into categories, auto-tagging content, labeling emails, detecting sentiment, routing messages to the right team, triaging support requests, building a spam filter, intent detection, topic classification, or any task where text goes in and a category comes out. Also use when classification accuracy varies between runs or semantically close categories get confused., "auto-categorize support tickets", "AI labeling system", "text classification with LLM", "auto-tag content", "email routing with AI", "intent classification", "sentiment analysis with DSPy", "spam detection with AI", "topic modeling with LLM", "build a classifier without training data", "zero-shot classification", "AI triage system".
 ---
 
 # Build an AI Content Sorter

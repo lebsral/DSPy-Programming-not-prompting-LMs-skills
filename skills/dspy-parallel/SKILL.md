@@ -1,6 +1,6 @@
 ---
 name: dspy-parallel
-description: "Use when you have independent LM calls that can run concurrently — batch processing, fan-out patterns, or speeding up pipelines with no data dependencies between steps."
+description: "Use when you have independent LM calls that can run concurrently — batch processing, fan-out patterns, or speeding up pipelines with no data dependencies between steps. Common scenarios: processing a batch of inputs through a DSPy module concurrently, fan-out patterns where multiple independent LM calls run at once, speeding up evaluation by parallelizing predictions, or reducing wall-clock time for pipelines with no data dependencies. Related: ai-building-pipelines, ai-serving-apis. Also: "dspy.Parallel", "concurrent LM calls", "batch processing in DSPy", "parallel DSPy execution", "speed up DSPy pipeline", "fan-out LM calls", "concurrent predictions", "parallelize evaluation", "async DSPy calls", "reduce latency with parallel execution", "batch inference DSPy", "process multiple inputs at once", "throughput optimization", "run DSPy modules concurrently", "parallel map over inputs"."
 ---
 
 # Run LM Calls in Parallel with dspy.Parallel

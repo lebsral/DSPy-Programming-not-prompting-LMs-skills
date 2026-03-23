@@ -1,6 +1,6 @@
 ---
 name: ai-serving-apis
-description: Put your AI behind an API. Use when you need to serve AI features as web endpoints, add AI to an existing backend, deploy AI for other services to call, wrap a DSPy program in REST/HTTP, build an AI microservice, or put a language model behind FastAPI. Covers FastAPI integration, program loading, request/response models, per-request configuration, error handling, and Docker deployment.
+description: Put your AI behind an API. Use when you need to serve AI features as web endpoints, add AI to an existing backend, deploy AI for other services to call, wrap a DSPy program in REST/HTTP, build an AI microservice, or put a language model behind FastAPI. Covers FastAPI integration, program loading, request/response models, per-request configuration, error handling, and Docker deployment., "deploy AI model to production", "FastAPI with LLM", "AI REST API", "serve DSPy program over HTTP", "production AI deployment", "Docker AI service", "AI endpoint for mobile app", "how to productionize my AI", "LLM behind a web API", "AI microservice architecture", "deploy to AWS with AI", "AI backend for React app", "serverless AI deployment", "put my AI in production", "AI API for frontend to call", "wrap LLM in an API endpoint".
 ---
 
 # Put Your AI Behind an API
