@@ -163,6 +163,7 @@ print(f"Baseline: {baseline_score}")
 | 20-50 | BootstrapFewShot | 5-20% | ~$0.50-2 |
 | 50-200 | BootstrapFewShot, then MIPROv2 | 15-35% | ~$2-10 |
 | 200-500 | MIPROv2 (auto="medium") | 20-40% | ~$5-15 |
+| 50+ | VizPy ContraPrompt / PromptGrad | 5-18% | ~$0 (free tier) |
 | 500+ | MIPROv2 (auto="heavy") or BootstrapFinetune | 25-50% | ~$15-50+ |
 
 ```
@@ -231,6 +232,12 @@ Good with few examples or when you want to focus on instruction quality:
 optimizer = dspy.GEPA()
 optimized = optimizer.compile(my_program, trainset=trainset, metric=metric)
 ```
+
+### VizPy (third-party alternative)
+
+VizPy is a commercial prompt optimizer that offers ContraPromptOptimizer (classification) and PromptGradOptimizer (generation). Like GEPA, it optimizes instructions only — not few-shot demos or Pydantic field descriptions. Free tier includes 10 optimization runs/month.
+
+For setup, usage, and a comparison with GEPA/MIPROv2, see `/dspy-vizpy`.
 
 ### BootstrapFinetune (maximum quality)
 

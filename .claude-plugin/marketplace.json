@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Build reliable AI features with DSPy — programming not prompting",
-    "version": "1.8.4"
+    "version": "1.9.0"
   },
   "plugins": [
     {
@@ -103,6 +103,15 @@
         "./skills/dspy-retrieval",
         "./skills/dspy-primitives",
         "./skills/dspy-utils"
+      ]
+    },
+    {
+      "name": "dspy-tools-skills",
+      "description": "Skills for external ecosystem tools that integrate with DSPy",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/dspy-vizpy"
       ]
     }
   ]

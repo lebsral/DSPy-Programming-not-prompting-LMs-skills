@@ -121,6 +121,7 @@ class Good(dspy.Signature):
 2. **Literal types need `tuple()` wrapping for dynamic values** -- use `Literal[tuple(["a", "b"])]` not `Literal[["a", "b"]]` when constructing from a list at runtime.
 3. **Keep signatures small** -- more than 4-5 output fields degrades quality. Split into multiple calls instead.
 4. **The docstring on a Signature class becomes the task instruction** -- write it carefully, as a clear directive. A vague docstring like "Classify the text" performs much worse than "Classify the customer support message into a department for routing."
+5. **Field `desc` values are NOT optimized** -- DSPy optimizers (GEPA, MIPROv2, COPRO) tune the Signature docstring and/or few-shot demos, but `InputField(desc=...)`, `OutputField(desc=...)`, and Pydantic `Field(description=...)` values are fixed. If your structured output task relies heavily on field descriptions for guidance, see `/dspy-gepa` for a workaround that flattens field descriptions into the instruction for optimization.
 
 ## Cross-references
 

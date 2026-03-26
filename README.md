@@ -59,6 +59,12 @@ npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --all
 | "My AI is broken/erroring" / "Could not parse LLM output" | [`/ai-fixing-errors`](skills/ai-fixing-errors/SKILL.md) | Diagnose and fix crashes, wrong outputs, and weird behavior |
 | "DSPy can do X but there's no skill for it" | [`/ai-request-skill`](skills/ai-request-skill/SKILL.md) | Build a missing skill and submit a PR, or file a GitHub issue requesting it |
 
+## Using a specific tool with DSPy?
+
+| Tool | Skill | What it covers |
+|------|-------|----------------|
+| VizPy (prompt optimizer) | [`/dspy-vizpy`](skills/dspy-vizpy/SKILL.md) | Drop-in ContraPrompt/PromptGrad optimizers as alternative to GEPA/MIPROv2 |
+
 ## Know which DSPy concept you need?
 
 If you already know DSPy and think in its vocabulary, use these API-first skills instead:
@@ -98,6 +104,7 @@ If you already know DSPy and think in its vocabulary, use these API-first skills
 | `dspy.Retrieve`, `ColBERTv2`, `Embedder` | [`/dspy-retrieval`](skills/dspy-retrieval/SKILL.md) | Search, RAG pipelines, embeddings |
 | `dspy.Image`, `dspy.Audio`, `dspy.Code`, `dspy.History` | [`/dspy-primitives`](skills/dspy-primitives/SKILL.md) | Multimodal inputs, conversation history |
 | `StreamListener`, `inspect_history`, `save`/`load` | [`/dspy-utils`](skills/dspy-utils/SKILL.md) | Streaming, caching, debugging, persistence, async |
+| VizPy (`ContraPromptOptimizer`, `PromptGradOptimizer`) | [`/dspy-vizpy`](skills/dspy-vizpy/SKILL.md) | Commercial drop-in prompt optimizer, alternative to GEPA |
 
 ## Install
 

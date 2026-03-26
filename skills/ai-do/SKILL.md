@@ -107,6 +107,14 @@ If the user already knows DSPy and asks about a specific API concept, route to t
 | dspy.Image, Audio, Code, History | `/dspy-primitives` |
 | StreamListener, inspect_history, save/load | `/dspy-utils` |
 
+### Ecosystem tools
+
+If the user mentions a specific third-party tool by name, route to the matching `dspy-` skill:
+
+| Tool | Skill | Route here when... |
+|------|-------|--------------------|
+| VizPy | `/dspy-vizpy` | "vizpy", "vizops", "ContraPromptOptimizer", "PromptGradOptimizer", "commercial prompt optimizer", "alternative to GEPA" |
+
 ### Disambiguation guide
 
 Many requests could match multiple skills. Use these rules to break ties:
@@ -118,6 +126,7 @@ Many requests could match multiple skills. Use these rules to break ties:
 - **"Guardrails" vs "rules"** → Guardrails check outputs after generation (`/ai-checking-outputs`). Rules constrain generation itself (`/ai-following-rules`). "Validate the JSON before returning" = guardrails. "Always output valid JSON" = rules.
 - **Building something new** vs **fixing something broken** → New feature = find the matching "building" skill. Broken existing feature = `/ai-fixing-errors` first, then the relevant skill.
 - **"I want to use [DSPy class]"** → Route to the matching `dspy-` skill, not the `ai-` skill. The user already knows what they want.
+- **"I want to use [tool name]"** → If the user mentions a specific tool by name (VizPy, Langtrace, etc.), route to the matching `/dspy-*` skill.
 
 ## Step 3: Check which skills are installed
 

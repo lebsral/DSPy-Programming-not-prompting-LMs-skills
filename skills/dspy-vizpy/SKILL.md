@@ -1,0 +1,214 @@
+---
+name: dspy-vizpy
+description: "Use VizPy as a drop-in prompt optimizer for DSPy. Use when you want to try VizPy, vizops, ContraPromptOptimizer, PromptGradOptimizer, a commercial alternative to GEPA, a third-party prompt optimizer, or a different optimization backend. Also: 'vizpy optimizer', 'vizpy vs GEPA', 'vizpy vs MIPROv2', 'commercial prompt optimization', 'ContraPrompt for classification', 'PromptGrad for generation', 'vizpy API key', 'pip install vizpy', 'vizpy free tier'."
+---
+
+# VizPy — Commercial Prompt Optimizer for DSPy
+
+Guide the user through integrating VizPy as a drop-in prompt optimizer alongside or instead of DSPy's native optimizers (GEPA, MIPROv2).
+
+## What is VizPy
+
+VizPy is a commercial SaaS prompt optimization service ([vizpy.vizops.ai](https://vizpy.vizops.ai)) that provides two optimizers for DSPy programs:
+
+- **ContraPromptOptimizer** — for classification tasks (sentiment, routing, tagging)
+- **PromptGradOptimizer** — for generation tasks (summarization, content creation, Q&A)
+
+Both optimize the **instruction string only** — the same limitation as `dspy.GEPA`. They do NOT optimize few-shot demos, Pydantic field descriptions, or model weights.
+
+### Pricing
+
+| Tier | Optimization runs/month | Cost |
+|------|------------------------|------|
+| Free | 10 | $0 |
+| Pro | Unlimited | $20/mo |
+
+## When to use VizPy
+
+Use VizPy when:
+
+- You want to compare a commercial optimizer against DSPy's native ones
+- You've tried GEPA and want a different instruction-tuning approach
+- You want ContraPrompt's contrastive approach for classification tasks
+- You want PromptGrad's gradient-inspired approach for generation tasks
+
+Do NOT use VizPy when:
+
+- You need few-shot demo optimization — use `dspy.BootstrapFewShot` or `dspy.MIPROv2`
+- You need to optimize Pydantic field descriptions — VizPy only tunes instructions (same as GEPA). See the workaround in `/dspy-gepa`
+- You need to tune model weights — use `dspy.BootstrapFinetune`
+- You want a fully open-source solution — use `dspy.GEPA` or `dspy.MIPROv2`
+
+## Setup
+
+```bash
+pip install vizpy
+```
+
+Set your API key:
+
+```python
+import vizpy
+vizpy.api_key = "your-vizpy-api-key"  # from vizpy.vizops.ai/dashboard
+```
+
+Or via environment variable:
+
+```bash
+export VIZPY_API_KEY="your-vizpy-api-key"
+```
+
+## ContraPromptOptimizer (classification)
+
+Best for tasks with a fixed set of output categories.
+
+```python
+import dspy
+import vizpy
+
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+
+# 1. Define your classifier
+classify = dspy.ChainOfThought("text -> label")
+
+# 2. Prepare training data
+trainset = [
+    dspy.Example(text="Great product!", label="positive").with_inputs("text"),
+    dspy.Example(text="Terrible service.", label="negative").with_inputs("text"),
+    # ... 50+ examples recommended
+]
+
+# 3. Define a metric
+def metric(example, prediction, trace=None):
+    return prediction.label.lower() == example.label.lower()
+
+# 4. Optimize with VizPy
+optimizer = vizpy.ContraPromptOptimizer(metric=metric)
+optimized = optimizer.compile(classify, trainset=trainset)
+
+# 5. Use the optimized program
+result = optimized(text="This exceeded my expectations!")
+print(result.label)
+
+# 6. Save
+optimized.save("vizpy_optimized_classifier.json")
+```
+
+### How ContraPrompt works
+
+ContraPromptOptimizer uses contrastive examples — it identifies cases where the current instruction fails and generates instruction candidates that distinguish between confusing categories. This is particularly effective when categories are semantically close (e.g., "billing" vs "account" tickets).
+
+## PromptGradOptimizer (generation)
+
+Best for open-ended generation tasks where output quality is on a spectrum.
+
+```python
+import dspy
+import vizpy
+
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+
+# 1. Define your generator
+summarize = dspy.ChainOfThought("article -> summary")
+
+# 2. Prepare training data
+trainset = [
+    dspy.Example(
+        article="Long article text here...",
+        summary="Expected summary."
+    ).with_inputs("article"),
+    # ... 50+ examples
+]
+
+# 3. Define a metric (can be AI-as-judge)
+class AssessQuality(dspy.Signature):
+    """Assess if the summary captures key points accurately."""
+    article: str = dspy.InputField()
+    gold_summary: str = dspy.InputField()
+    predicted_summary: str = dspy.InputField()
+    score: float = dspy.OutputField(desc="0.0 to 1.0")
+
+def metric(example, prediction, trace=None):
+    judge = dspy.Predict(AssessQuality)
+    result = judge(
+        article=example.article,
+        gold_summary=example.summary,
+        predicted_summary=prediction.summary,
+    )
+    return result.score
+
+# 4. Optimize with VizPy
+optimizer = vizpy.PromptGradOptimizer(metric=metric)
+optimized = optimizer.compile(summarize, trainset=trainset)
+
+# 5. Use
+result = optimized(article="New article text...")
+print(result.summary)
+```
+
+### How PromptGrad works
+
+PromptGradOptimizer uses gradient-inspired optimization — it estimates how instruction changes affect output quality scores and iteratively adjusts the instruction in the direction that improves the metric. This works well for generation tasks where quality is continuous rather than binary.
+
+## VizPy vs DSPy native optimizers
+
+| Aspect | VizPy ContraPrompt | VizPy PromptGrad | dspy.GEPA | dspy.MIPROv2 |
+|--------|-------------------|-----------------|-----------|-------------|
+| **Best for** | Classification | Generation | Both | Both |
+| **What it tunes** | Instructions only | Instructions only | Instructions only | Instructions + demos |
+| **Data needed** | ~50 examples | ~50 examples | ~50 examples | ~200 examples |
+| **Expected improvement** | 5-18% | 5-18% | 5-15% | 15-35% |
+| **Cost** | Free tier (10 runs) | Free tier (10 runs) | ~$0.50 (LM calls) | ~$5-15 (LM calls) |
+| **Open source** | No (SaaS) | No (SaaS) | Yes | Yes |
+| **Feedback-driven** | Contrastive examples | Gradient-inspired | Textual feedback | Scalar scores |
+| **Pydantic field desc** | No | No | No | No |
+
+### Decision guide
+
+```
+Want instruction-only optimization?
+|
++- Classification task?
+|  +- Want open-source? -> dspy.GEPA
+|  +- Want to try commercial? -> vizpy.ContraPromptOptimizer
+|
++- Generation task?
+|  +- Want open-source? -> dspy.GEPA
+|  +- Want to try commercial? -> vizpy.PromptGradOptimizer
+|
++- Want instructions AND demos? -> dspy.MIPROv2
+```
+
+## Switching between VizPy and GEPA
+
+VizPy optimizers are drop-in replacements for GEPA — same `.compile()` interface:
+
+```python
+# With GEPA
+optimizer = dspy.GEPA(metric=metric, auto="light")
+optimized = optimizer.compile(program, trainset=trainset)
+
+# With VizPy ContraPrompt (swap one line)
+optimizer = vizpy.ContraPromptOptimizer(metric=metric)
+optimized = optimizer.compile(program, trainset=trainset)
+```
+
+The optimized program is a standard DSPy program either way — `save()`, `load()`, and `Evaluate` all work identically.
+
+## Important limitations
+
+1. **Instruction-only optimization** — VizPy does NOT optimize Pydantic `Field(description=...)`, `InputField(desc=...)`, or `OutputField(desc=...)`. Same limitation as GEPA. See `/dspy-gepa` for a workaround (flatten field descriptions into the instruction).
+
+2. **SaaS dependency** — your training data is sent to VizPy's servers for optimization. Check your data privacy requirements.
+
+3. **No offline mode** — requires internet access and a valid API key.
+
+4. **Free tier limits** — 10 optimization runs per month. Each `.compile()` call counts as one run.
+
+## Cross-references
+
+- **GEPA** (open-source instruction optimizer) — `/dspy-gepa`
+- **MIPROv2** (instructions + demos, best overall) — `/dspy-miprov2`
+- **Improving accuracy** (full optimizer comparison) — `/ai-improving-accuracy`
+- **Evaluating results** before and after — `/dspy-evaluate`
+- For worked examples comparing VizPy and GEPA side-by-side, see [examples.md](examples.md)

@@ -6,7 +6,7 @@ This is a collection of Claude Code skills for building AI features with DSPy.
 
 - **Dual naming convention**: Skills use two naming schemes:
   - `ai-` prefix (problem-first): named after the problem — `ai-sorting`, `ai-parsing-data`. For users who think "I need to sort tickets."
-  - `dspy-` prefix (API-first): named after the DSPy concept — `dspy-signatures`, `dspy-chain-of-thought`. For users who already know DSPy and think "I want to use ChainOfThought."
+  - `dspy-` prefix (API-first): named after the DSPy concept or ecosystem tool — `dspy-signatures`, `dspy-chain-of-thought`, `dspy-vizpy`. For users who already know DSPy and think "I want to use ChainOfThought." Also used for third-party tools that integrate with DSPy.
 - **Web developer language**: `ai-` skill descriptions use phrases web/SaaS developers actually say ("sort tickets", "search docs", "parse data"), not ML jargon. `dspy-` skill descriptions explicitly reference DSPy API names.
 - **Skill format**: Each skill follows the Claude Code `SKILL.md` format with YAML frontmatter. See `docs/skills-spec.md` for the full spec.
 - **Keep SKILL.md files under 500 lines**. Move detailed reference material to supporting files like `reference.md` or `examples.md`.

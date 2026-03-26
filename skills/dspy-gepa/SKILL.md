@@ -1,6 +1,6 @@
 ---
 name: dspy-gepa
-description: "Use when you want to optimize instructions without few-shot examples — a lightweight alternative to COPRO when you don't have or don't want to use demonstrations. Common scenarios: optimizing instructions when you don't have or don't want to use few-shot demonstrations, lightweight instruction search as a first step, tasks where examples in the prompt confuse the model, or when you want fast instruction optimization without the cost of COPRO. Related: ai-improving-accuracy, dspy-copro, dspy-miprov2. Also: "dspy.GEPA", "instruction optimization without demos", "lightweight prompt optimization", "optimize instructions only", "no few-shot examples needed", "GEPA vs COPRO", "quick instruction search", "when demonstrations hurt performance", "zero-shot optimization", "instruction-only optimizer", "simplest instruction tuner", "fast prompt optimization", "skip few-shot and just tune instructions"."
+description: "Use when you want to optimize instructions without few-shot examples — a lightweight alternative to COPRO when you don't have or don't want to use demonstrations. Common scenarios: optimizing instructions when you don't have or don't want to use few-shot demonstrations, lightweight instruction search as a first step, tasks where examples in the prompt confuse the model, or when you want fast instruction optimization without the cost of COPRO. Related: ai-improving-accuracy, dspy-copro, dspy-miprov2. Also: "dspy.GEPA", "instruction optimization without demos", "lightweight prompt optimization", "optimize instructions only", "no few-shot examples needed", "GEPA vs COPRO", "quick instruction search", "when demonstrations hurt performance", "zero-shot optimization", "instruction-only optimizer", "simplest instruction tuner", "fast prompt optimization", "skip few-shot and just tune instructions", "optimize Pydantic field descriptions", "GEPA structured output", "GEPA doesn't optimize field desc"."
 ---
 
 # Instruction Optimization with dspy.GEPA
@@ -238,6 +238,75 @@ result = gepa.compile(program, trainset=tasks, valset=tasks)
 best_per_task = result.detailed_results.best_outputs_valset
 ```
 
+## What GEPA does NOT optimize
+
+GEPA only tunes the **instruction string** (the Signature docstring). Everything else in your prompt is fixed during optimization:
+
+| Prompt element | Optimized by GEPA? | Where it lives |
+|----------------|-------------------|----------------|
+| Signature docstring | Yes | `"""Classify the text."""` |
+| `InputField(desc=...)` | No | `dspy.InputField(desc="...")` |
+| `OutputField(desc=...)` | No | `dspy.OutputField(desc="...")` |
+| Pydantic `Field(description=...)` | No | `pydantic.Field(description="...")` |
+| Field names | No | `label: str = dspy.OutputField()` |
+| Type constraints | No | `Literal["a", "b"]`, Pydantic models |
+| Few-shot demos | No (by design) | Added by other optimizers |
+
+This matters most for **structured output tasks** where Pydantic field descriptions carry significant guidance for the LM. If your output schema has `Field(description="Invoice date in YYYY-MM-DD format")`, GEPA will never touch that description -- even if it's the source of failures.
+
+### Workaround: flatten field descriptions into the instruction
+
+To bring field descriptions into GEPA's optimization surface, serialize them into the instruction before optimizing, then extract back out:
+
+```python
+import dspy
+import json
+from pydantic import BaseModel, Field
+
+# 1. Your original Pydantic model
+class Invoice(BaseModel):
+    vendor: str = Field(description="Company name of the vendor")
+    date: str = Field(description="Invoice date in YYYY-MM-DD format")
+    total: float = Field(description="Total amount due")
+
+# 2. Serialize field descriptions into the instruction
+field_guidance = "\n".join(
+    f"- {name}: {info.description}"
+    for name, info in Invoice.model_fields.items()
+    if info.description
+)
+
+class ParseInvoice(dspy.Signature):
+    # GEPA will optimize this entire docstring, including the field guidance
+    f"""Extract invoice data from raw text.
+
+    Output field guidelines:
+    {field_guidance}"""
+
+    text: str = dspy.InputField()
+    invoice: Invoice = dspy.OutputField()
+
+# 3. Optimize -- GEPA now sees and can rewrite the field guidance
+gepa = dspy.GEPA(metric=metric, reflection_lm=reflection_lm, auto="medium")
+optimized = gepa.compile(ParseInvoice, trainset=trainset)
+
+# 4. After optimization, inspect the optimized instruction
+# to see how GEPA refined the field guidance
+dspy.inspect_history(n=1)
+```
+
+**Limitations of this workaround:**
+
+- The optimized field guidance lives in the instruction string, not back in the Pydantic model. The Pydantic model still validates types, but its `description` fields remain unchanged.
+- You must manually inspect the optimized instruction to see what GEPA changed about the field descriptions.
+- For simple schemas (2-3 fields), this adds complexity with little benefit -- GEPA can usually compensate through the instruction alone.
+
+**When this is worth doing:**
+
+- Complex Pydantic models with 5+ fields where field descriptions carry important formatting or semantic guidance
+- Structured output tasks where the LM consistently misinterprets specific fields despite good top-level instructions
+- When field-level `desc` strings are doing heavy lifting (e.g., date formats, enum explanations, nested object guidance)
+
 ## Tips
 
 - **Use a strong reflection LM** -- the quality of proposed instructions depends on the reflection model. Use GPT-4o, Claude Sonnet, or similar
@@ -262,4 +331,6 @@ print(f"Improvement: {baseline} -> {optimized_score}")
 - **Chain of thought reasoning** as the inner module -- see `/dspy-chain-of-thought`
 - **Evaluating programs** before and after optimization -- see `/dspy-evaluate`
 - **Iterative self-improvement** at inference time -- see `/dspy-refine`
+- **Signatures and Pydantic outputs** -- see `/dspy-signatures` for field descriptions, typed outputs, and gotchas about what optimizers can/cannot tune
+- **VizPy** (commercial alternative for instruction optimization) -- see `/dspy-vizpy`
 - For worked examples, see [examples.md](examples.md)
