@@ -114,6 +114,10 @@ If the user mentions a specific third-party tool by name, route to the matching 
 | Tool | Skill | Route here when... |
 |------|-------|--------------------|
 | VizPy | `/dspy-vizpy` | "vizpy", "vizops", "ContraPromptOptimizer", "PromptGradOptimizer", "commercial prompt optimizer", "alternative to GEPA" |
+| Langtrace | `/dspy-langtrace` | "langtrace", "auto-instrument DSPy", "DSPy tracing", "langtrace-python-sdk" |
+| Arize Phoenix | `/dspy-phoenix` | "phoenix", "arize", "open-source trace viewer", "DSPyInstrumentor", "openinference" |
+| W&B Weave | `/dspy-weave` | "weave", "wandb", "W&B", "Weights & Biases", "weave.op" |
+| MLflow | `/dspy-mlflow` | "mlflow", "MLflow Tracing", "mlflow.dspy.autolog", "MLflow model registry" |
 
 ### Disambiguation guide
 

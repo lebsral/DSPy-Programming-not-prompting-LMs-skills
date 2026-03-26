@@ -309,7 +309,7 @@ mlflow.dspy.autolog()  # auto-traces all DSPy calls
 mlflow.set_experiment("production-qa-api")
 ```
 
-This gives you latency breakdowns, token counts, and full prompt/response logs in the MLflow UI — useful for debugging production issues.
+This gives you latency breakdowns, token counts, and full prompt/response logs in the MLflow UI — useful for debugging production issues. For the full MLflow guide (experiment tracking, model registry), see `/dspy-mlflow`.
 
 ### Reproducibility
 

@@ -340,6 +340,8 @@ def monitored_predict(question):
 | Team already uses W&B for ML experiments | W&B Weave |
 | Need per-request debugging (not aggregate) | See `/ai-tracing-requests` |
 
+For in-depth guides on each platform, see: `/dspy-langtrace`, `/dspy-phoenix`, `/dspy-weave`.
+
 ## When things go wrong
 
 Quick decision tree for common monitoring alerts:
@@ -371,4 +373,7 @@ Quick decision tree for common monitoring alerts:
 - Use `/ai-cutting-costs` when cost monitoring shows spending increasing
 - Use `/ai-switching-models` when you need to evaluate a model change
 - Use `/ai-tracing-requests` to debug individual requests end-to-end
+- Use `/dspy-langtrace` for in-depth Langtrace setup (auto-instrumentation, self-hosted)
+- Use `/dspy-phoenix` for in-depth Phoenix setup (local UI, evals)
+- Use `/dspy-weave` for in-depth W&B Weave setup (team dashboards)
 - See `examples.md` for complete worked examples

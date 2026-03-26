@@ -319,6 +319,8 @@ def run_optimization(optimizer_name, model, trainset, devset, metric):
 result = run_optimization("mipro-medium", "openai/gpt-4o-mini", trainset, devset, metric)
 ```
 
+For in-depth Weave setup, see `/dspy-weave`. For MLflow experiment tracking, see `/dspy-mlflow`.
+
 ## Step 7: Use LangWatch (for real-time optimizer progress)
 
 LangWatch shows optimizer progress as it runs — useful for long optimization runs:
@@ -354,3 +356,5 @@ optimized = optimizer.compile(program, trainset=trainset)
 - Use `/ai-switching-models` when comparing the same optimizer across different models
 - Use `/ai-cutting-costs` when experiment costs are a concern
 - Use `/ai-monitoring` to track how the promoted experiment performs in production
+- Use `/dspy-weave` for in-depth W&B Weave setup (team dashboards, run comparison)
+- Use `/dspy-mlflow` for in-depth MLflow setup (experiment tracking, model registry)

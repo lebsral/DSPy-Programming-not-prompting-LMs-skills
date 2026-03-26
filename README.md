@@ -64,6 +64,10 @@ npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --all
 | Tool | Skill | What it covers |
 |------|-------|----------------|
 | VizPy (prompt optimizer) | [`/dspy-vizpy`](skills/dspy-vizpy/SKILL.md) | Drop-in ContraPrompt/PromptGrad optimizers as alternative to GEPA/MIPROv2 |
+| Langtrace | [`/dspy-langtrace`](skills/dspy-langtrace/SKILL.md) | Auto-instrument DSPy with one line, cloud + self-hosted tracing |
+| Arize Phoenix | [`/dspy-phoenix`](skills/dspy-phoenix/SKILL.md) | Open-source trace viewer with built-in evals, local UI at localhost:6006 |
+| W&B Weave | [`/dspy-weave`](skills/dspy-weave/SKILL.md) | Cloud experiment tracking and team dashboards via `@weave.op()` decorator |
+| MLflow | [`/dspy-mlflow`](skills/dspy-mlflow/SKILL.md) | Auto-tracing, experiment tracking, and model registry for DSPy |
 
 ## Know which DSPy concept you need?
 
@@ -105,6 +109,10 @@ If you already know DSPy and think in its vocabulary, use these API-first skills
 | `dspy.Image`, `dspy.Audio`, `dspy.Code`, `dspy.History` | [`/dspy-primitives`](skills/dspy-primitives/SKILL.md) | Multimodal inputs, conversation history |
 | `StreamListener`, `inspect_history`, `save`/`load` | [`/dspy-utils`](skills/dspy-utils/SKILL.md) | Streaming, caching, debugging, persistence, async |
 | VizPy (`ContraPromptOptimizer`, `PromptGradOptimizer`) | [`/dspy-vizpy`](skills/dspy-vizpy/SKILL.md) | Commercial drop-in prompt optimizer, alternative to GEPA |
+| Langtrace (`langtrace.init`) | [`/dspy-langtrace`](skills/dspy-langtrace/SKILL.md) | Auto-instrument DSPy, cloud + self-hosted LLM observability |
+| Arize Phoenix (`DSPyInstrumentor`) | [`/dspy-phoenix`](skills/dspy-phoenix/SKILL.md) | Open-source trace viewer with evals, local UI |
+| W&B Weave (`@weave.op()`) | [`/dspy-weave`](skills/dspy-weave/SKILL.md) | Cloud experiment tracking and team dashboards |
+| MLflow (`mlflow.dspy.autolog()`) | [`/dspy-mlflow`](skills/dspy-mlflow/SKILL.md) | Auto-tracing, experiment tracking, model registry |
 
 ## Install
 

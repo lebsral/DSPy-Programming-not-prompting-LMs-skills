@@ -344,6 +344,8 @@ provider.add_span_processor(BatchSpanProcessor(exporter))
 | LM call details | Prompts, tokens, cost | Prompts, tokens | Custom attributes |
 | Best for | DSPy-first teams | Teams wanting open-source + UI | Teams already using Jaeger |
 
+For in-depth guides: `/dspy-langtrace`, `/dspy-phoenix`.
+
 ## Step 6: Search and filter traces
 
 ### Find traces by criteria
@@ -451,3 +453,5 @@ for t in wrong_traces:
 - Use `/ai-fixing-errors` for code-level debugging (crashes, config issues)
 - Use `/ai-building-pipelines` to structure pipelines that are easy to trace
 - Use `/ai-improving-accuracy` to optimize based on patterns found in traces
+- Use `/dspy-langtrace` for in-depth Langtrace setup (auto-instrumentation, self-hosted)
+- Use `/dspy-phoenix` for in-depth Phoenix setup (local UI, evals)
