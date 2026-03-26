@@ -68,6 +68,11 @@ npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --all
 | Arize Phoenix | [`/dspy-phoenix`](skills/dspy-phoenix/SKILL.md) | Open-source trace viewer with built-in evals, local UI at localhost:6006 |
 | W&B Weave | [`/dspy-weave`](skills/dspy-weave/SKILL.md) | Cloud experiment tracking and team dashboards via `@weave.op()` decorator |
 | MLflow | [`/dspy-mlflow`](skills/dspy-mlflow/SKILL.md) | Auto-tracing, experiment tracking, and model registry for DSPy |
+| LangWatch | [`/dspy-langwatch`](skills/dspy-langwatch/SKILL.md) | Auto-tracing + real-time optimizer progress dashboard |
+| Ragas | [`/dspy-ragas`](skills/dspy-ragas/SKILL.md) | Decomposed RAG evaluation: faithfulness, context precision/recall |
+| Qdrant | [`/dspy-qdrant`](skills/dspy-qdrant/SKILL.md) | Official vector DB integration + custom retriever pattern for any DB |
+| Ollama | [`/dspy-ollama`](skills/dspy-ollama/SKILL.md) | Run DSPy with local models, no API key needed |
+| vLLM | [`/dspy-vllm`](skills/dspy-vllm/SKILL.md) | High-throughput production serving for self-hosted models |
 
 ## Know which DSPy concept you need?
 
@@ -113,12 +118,17 @@ If you already know DSPy and think in its vocabulary, use these API-first skills
 | Arize Phoenix (`DSPyInstrumentor`) | [`/dspy-phoenix`](skills/dspy-phoenix/SKILL.md) | Open-source trace viewer with evals, local UI |
 | W&B Weave (`@weave.op()`) | [`/dspy-weave`](skills/dspy-weave/SKILL.md) | Cloud experiment tracking and team dashboards |
 | MLflow (`mlflow.dspy.autolog()`) | [`/dspy-mlflow`](skills/dspy-mlflow/SKILL.md) | Auto-tracing, experiment tracking, model registry |
+| LangWatch (`langwatch.dspy.init`) | [`/dspy-langwatch`](skills/dspy-langwatch/SKILL.md) | Auto-tracing and real-time optimizer progress |
+| Ragas (`ragas.evaluate`) | [`/dspy-ragas`](skills/dspy-ragas/SKILL.md) | Decomposed RAG evaluation with LLM-as-judge metrics |
+| Qdrant (`QdrantRM`) | [`/dspy-qdrant`](skills/dspy-qdrant/SKILL.md) | Vector DB retriever with hybrid search |
+| Ollama (`ollama_chat/`) | [`/dspy-ollama`](skills/dspy-ollama/SKILL.md) | Local model serving for development |
+| vLLM (`openai/` + local server) | [`/dspy-vllm`](skills/dspy-vllm/SKILL.md) | Production self-hosted model serving |
 
 ## Install
 
 ### Option 1: `npx skills` (recommended — works with any AI coding agent)
 
-Install all 64 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
+Install all 80 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
 
 ```bash
 npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills

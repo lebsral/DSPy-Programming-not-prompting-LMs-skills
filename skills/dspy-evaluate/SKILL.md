@@ -220,4 +220,5 @@ print(f"Delta:     {optimized_score - baseline_score:+.1f}%")
 - Ready to optimize with few-shot examples? Use `/dspy-bootstrap-few-shot`
 - Want the best prompt optimization? Use `/dspy-miprov2`
 - For the full measure-improve-verify loop, see `/ai-improving-accuracy`
+- For **decomposed RAG evaluation** (faithfulness, context precision/recall) see `/dspy-ragas`
 - For worked examples (exact match, LM judge, composite), see [examples.md](examples.md)

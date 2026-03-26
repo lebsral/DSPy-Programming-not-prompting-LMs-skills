@@ -352,6 +352,7 @@ For broader anti-hallucination patterns beyond citations, see `/ai-stopping-hall
 ## Cross-references
 
 - **Building custom modules** to wrap retrieval logic -- see `/dspy-modules`
+- **Vector database setup** (Qdrant, Pinecone, ChromaDB, Weaviate) -- see `/dspy-qdrant`
 - **End-to-end document search** with vector stores and chunking -- see `/ai-searching-docs`
 - **Keeping answers grounded** and avoiding hallucination -- see `/ai-stopping-hallucinations`
 - For worked examples, see [examples.md](examples.md)

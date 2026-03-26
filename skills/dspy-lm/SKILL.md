@@ -212,17 +212,21 @@ dspy.inspect_history(n=1)
 lm = dspy.LM(
     "ollama_chat/llama3.1",
     api_base="http://localhost:11434",
+    api_key="",
     temperature=0.7,
+    num_ctx=8192,  # set context window explicitly — Ollama defaults to 4096
 )
 dspy.configure(lm=lm)
 ```
 
+For full Ollama setup (model selection, GPU tuning, context window gotchas, optimization tips), see `/dspy-ollama`.
+
 ### vLLM or any OpenAI-compatible server
 
 ```python
-# Start vLLM: python -m vllm.entrypoints.openai.api_server --model meta-llama/Llama-3-8b-chat-hf
+# Start vLLM: vllm serve meta-llama/Llama-3.1-8B-Instruct
 lm = dspy.LM(
-    "openai/meta-llama/Llama-3-8b-chat-hf",
+    "openai/meta-llama/Llama-3.1-8B-Instruct",
     api_base="http://localhost:8000/v1",
     api_key="none",
 )
@@ -230,6 +234,8 @@ dspy.configure(lm=lm)
 ```
 
 For any server that exposes an OpenAI-compatible `/v1/chat/completions` endpoint, use the `"openai/model-name"` provider string with `api_base` pointing to your server.
+
+For full vLLM setup (tensor parallelism, GPU sizing, quantization, production deployment), see `/dspy-vllm`.
 
 ## Cross-references
 

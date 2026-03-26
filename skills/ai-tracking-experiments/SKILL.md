@@ -340,6 +340,8 @@ optimized = optimizer.compile(program, trainset=trainset)
 # Watch progress at app.langwatch.ai
 ```
 
+For the full LangWatch guide (auto-tracing, optimizer dashboard, self-hosted), see `/dspy-langwatch`.
+
 ## Key patterns
 
 - **Log from day one**: even if you only have 2 experiments now, you'll have 20 next month
@@ -358,3 +360,4 @@ optimized = optimizer.compile(program, trainset=trainset)
 - Use `/ai-monitoring` to track how the promoted experiment performs in production
 - Use `/dspy-weave` for in-depth W&B Weave setup (team dashboards, run comparison)
 - Use `/dspy-mlflow` for in-depth MLflow setup (experiment tracking, model registry)
+- Use `/dspy-langwatch` for in-depth LangWatch setup (real-time optimizer progress, auto-tracing)

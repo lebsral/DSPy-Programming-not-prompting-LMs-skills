@@ -106,6 +106,10 @@ If the user already knows DSPy and asks about a specific API concept, route to t
 | dspy.Retrieve, ColBERTv2, Embedder | `/dspy-retrieval` |
 | dspy.Image, Audio, Code, History | `/dspy-primitives` |
 | StreamListener, inspect_history, save/load | `/dspy-utils` |
+| Ragas (`ragas.evaluate`) | `/dspy-ragas` |
+| Qdrant (`QdrantRM`) | `/dspy-qdrant` |
+| Ollama (`ollama_chat/`) | `/dspy-ollama` |
+| vLLM (`openai/` + local server) | `/dspy-vllm` |
 
 ### Ecosystem tools
 
@@ -118,6 +122,11 @@ If the user mentions a specific third-party tool by name, route to the matching 
 | Arize Phoenix | `/dspy-phoenix` | "phoenix", "arize", "open-source trace viewer", "DSPyInstrumentor", "openinference" |
 | W&B Weave | `/dspy-weave` | "weave", "wandb", "W&B", "Weights & Biases", "weave.op" |
 | MLflow | `/dspy-mlflow` | "mlflow", "MLflow Tracing", "mlflow.dspy.autolog", "MLflow model registry" |
+| LangWatch | `/dspy-langwatch` | "langwatch", "optimizer progress", "real-time optimization", "langwatch.dspy.init" |
+| Ragas | `/dspy-ragas` | "ragas", "RAG evaluation", "faithfulness", "context precision", "decomposed RAG metrics" |
+| Qdrant | `/dspy-qdrant` | "qdrant", "dspy-qdrant", "QdrantRM", "vector database", "vector DB for DSPy" |
+| Ollama | `/dspy-ollama` | "ollama", "local model", "run LLM locally", "ollama_chat", "DSPy offline" |
+| vLLM | `/dspy-vllm` | "vllm", "production serving", "high throughput", "tensor parallelism", "GPU serving" |
 
 ### Disambiguation guide
 
