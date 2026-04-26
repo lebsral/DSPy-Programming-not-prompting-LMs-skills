@@ -55,7 +55,7 @@ Always compare fine-tuning against a prompt-optimized baseline:
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o")
+lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Define your program
@@ -136,7 +136,7 @@ Train a small, cheap model to mimic an expensive model. This is the biggest cost
 
 ```python
 # Step 1: Teacher — expensive model, high quality
-teacher_lm = dspy.LM("openai/gpt-4o")
+teacher_lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=teacher_lm)
 
 # Build and optimize the teacher
@@ -148,7 +148,7 @@ teacher_score = evaluator(teacher_optimized)
 print(f"Teacher (GPT-4o): {teacher_score:.1f}%")
 
 # Step 2: Student — fine-tune cheap model on teacher's outputs
-student_lm = dspy.LM("openai/gpt-4o-mini")
+student_lm = dspy.LM("openai/gpt-4o-mini")  # or another fine-tunable model
 dspy.configure(lm=student_lm)
 
 student = dspy.ChainOfThought(Classify)
@@ -262,7 +262,7 @@ If the base model fails on most training examples, there aren't enough successfu
 Works with `gpt-4o-mini` and `gpt-4o`. DSPy handles the fine-tuning API calls automatically:
 
 ```python
-lm = dspy.LM("openai/gpt-4o-mini")  # fine-tunable via API
+lm = dspy.LM("openai/gpt-4o-mini")  # or any fine-tunable model via API
 ```
 
 - Pros: No GPU needed, simple setup, fast
@@ -286,10 +286,24 @@ AWS SageMaker, Google Cloud, Lambda Labs, or Together AI for training:
 - Pros: Scalable, no hardware to manage
 - Cons: Costs vary, setup per platform
 
+## Gotchas
+
+- **Skipping prompt optimization and jumping straight to fine-tuning.** Claude defaults to recommending fine-tuning when users mention quality issues. Always confirm the user has run MIPROv2 or similar prompt optimization first — fine-tuning without a prompt-optimized baseline wastes compute and makes it impossible to measure whether fine-tuning actually helped.
+- **Using the dev set for final evaluation.** Claude often evaluates the fine-tuned model on the same dev set used during optimization. Always evaluate on a held-out test set that was never seen during training or prompt optimization. Report both dev and test scores so the user can spot overfitting.
+- **Passing `teacher=` without an optimized teacher program.** When using `BootstrapFinetune` for distillation, Claude sometimes passes the unoptimized base program as the teacher. The teacher must be the prompt-optimized version — otherwise the student learns from mediocre traces and fine-tuning underperforms.
+- **Forgetting that `BootstrapFinetune` needs a fine-tunable model.** Not all models support fine-tuning via API. Claude sometimes configures `dspy.LM("anthropic/claude-sonnet-4-5-20250929")` for `BootstrapFinetune`, but Anthropic does not offer a fine-tuning API. Use OpenAI models or local open-source models for weight optimization.
+- **Not checking how many traces were bootstrapped.** If bootstrapping only produces 50 successful traces from 1000 examples, the fine-tuning data is too small. Check the bootstrap log output and aim for 200+ successful traces. If too few succeed, use a stronger teacher model or relax the metric.
+
+## Cross-references
+
+- Build a strong baseline before fine-tuning — see `/ai-improving-accuracy`
+- BootstrapFinetune API details — see `/dspy-bootstrap-finetune`
+- BetterTogether optimizer — see `/dspy-better-together`
+- Cost reduction beyond distillation — see `/ai-cutting-costs`
+- Generate synthetic training data — see `/ai-generating-data`
+- Fix fine-tuning or evaluation errors — see `/ai-fixing-errors`
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+
 ## Additional resources
 
 - For worked examples (classification, distillation, BetterTogether), see [examples.md](examples.md)
-- Use `/ai-improving-accuracy` to build a strong baseline before fine-tuning
-- Use `/ai-cutting-costs` for other cost reduction strategies beyond distillation
-- Use `/ai-fixing-errors` if fine-tuning or evaluation errors occur
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

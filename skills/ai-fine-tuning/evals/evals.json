@@ -1,0 +1,43 @@
+{
+  "skill_name": "ai-fine-tuning",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "We have a support ticket classifier built with DSPy and MIPROv2. It's at 78% accuracy on our test set but we need 90%+ for production. We have about 2000 labeled tickets across 8 categories. The model is GPT-4o. We've tried different prompts and few-shot examples but can't push past 80%. Should we fine-tune, and if so how?",
+      "expected_output": "A script that loads the labeled data, establishes the MIPROv2 baseline, then uses BootstrapFinetune to fine-tune a cheaper model (like GPT-4o-mini) on the teacher's successful traces. Should compare baseline vs prompt-optimized vs fine-tuned scores on a held-out test set. Should suggest BetterTogether if BootstrapFinetune alone doesn't hit 90%.",
+      "files": [],
+      "assertions": [
+        {"name": "confirms_prerequisites", "description": "Verifies the user has enough data (2000 > 500 threshold) and an existing prompt-optimized baseline before proceeding"},
+        {"name": "uses_bootstrap_finetune", "description": "Uses dspy.BootstrapFinetune as the fine-tuning optimizer"},
+        {"name": "evaluates_on_test_set", "description": "Final evaluation uses a held-out test set, not the dev set used during optimization"},
+        {"name": "compares_approaches", "description": "Shows scores for baseline, prompt-optimized, and fine-tuned side by side"},
+        {"name": "suggests_better_together", "description": "Mentions BetterTogether as a next step if BootstrapFinetune alone is insufficient"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "We're spending $8k/month on GPT-4o API calls for our content moderation pipeline. It works great quality-wise (92% accuracy) but the cost is killing us. We have 6 months of logged inputs and outputs — about 50k examples. Can we train a smaller model to do the same job cheaper?",
+      "expected_output": "A distillation script using the teacher-student pattern: GPT-4o as teacher, GPT-4o-mini (or an open-source model) as student. Should use BootstrapFinetune with teacher parameter. Should estimate cost savings and show quality comparison. Should warn about potential quality drop and how to measure it.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_teacher_student", "description": "Implements the teacher-student distillation pattern with the expensive model as teacher"},
+        {"name": "teacher_is_optimized", "description": "The teacher program passed to BootstrapFinetune is the prompt-optimized version, not the base program"},
+        {"name": "includes_cost_comparison", "description": "Compares per-token or per-request costs between teacher and student models"},
+        {"name": "evaluates_quality_retention", "description": "Measures how much quality the student retains compared to the teacher on a test set"},
+        {"name": "provider_agnostic_lm", "description": "All dspy.LM() calls include alternative provider comments"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I just heard about fine-tuning and want to try it on my chatbot. I have maybe 100 conversation examples and no real metrics yet. The chatbot sometimes gives wrong answers about our product. Can you set up fine-tuning for me?",
+      "expected_output": "Should redirect the user away from fine-tuning. 100 examples is far too few (need 500+), there is no metric defined, and prompt optimization has not been tried. Should recommend starting with /ai-improving-accuracy for prompt optimization and /ai-generating-data to build up the dataset first.",
+      "files": [],
+      "assertions": [
+        {"name": "advises_against_finetuning", "description": "Clearly explains why fine-tuning is premature given insufficient data and no metric"},
+        {"name": "identifies_data_gap", "description": "Points out that 100 examples is below the 500 minimum threshold"},
+        {"name": "recommends_prompt_optimization_first", "description": "Suggests starting with prompt optimization via /ai-improving-accuracy"},
+        {"name": "suggests_data_collection", "description": "Recommends collecting more data or using /ai-generating-data for synthetic examples"}
+      ]
+    }
+  ]
+}
