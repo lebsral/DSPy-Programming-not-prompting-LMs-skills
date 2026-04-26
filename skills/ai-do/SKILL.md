@@ -279,3 +279,17 @@ First, determine whether the problem is within DSPy's scope:
 ```
 /ai-request-skill <what the user needs and which DSPy features are involved>
 ```
+
+## Gotchas
+
+- **Don't route on the first keyword match.** Claude tends to hear "classify" and immediately route to `/ai-sorting` without confirming the task. The user might mean "classify then extract details" which is really `/ai-decomposing-tasks` or `/ai-building-pipelines`. Ask at least one follow-up before routing.
+- **Don't ignore the multi-skill case.** Most real problems need 2-3 skills in sequence (build → measure → deploy). Claude defaults to recommending a single skill. If the user describes an end-to-end workflow, recommend a numbered sequence.
+- **Don't generate prompts from the routing table alone.** The routing table has enough info to *pick* a skill but not to *write its prompt*. Always read the target SKILL.md before crafting the `/skill-name ...` prompt — otherwise the prompt misses the skill's expected input shape and pre-answerable questions.
+- **Don't confuse "bad answers" with "hallucination."** Claude conflates these. "Bad answers" means low accuracy → `/ai-improving-accuracy`. "Makes stuff up" means fabrication → `/ai-stopping-hallucinations`. Ask which one the user means if ambiguous.
+- **Don't recommend skills that aren't installed without install instructions.** Claude forgets to check what skills the user has. Always run `ls skills/` early and include `npx skills add ...` commands for anything missing.
+
+## Cross-references
+
+- Need a specific skill? See [catalog.md](catalog.md) for the full flat list
+- Want to request a skill that doesn't exist? `/ai-request-skill`
+- Already know which DSPy API you want? Skip ai-do and go directly to the matching `/dspy-*` skill
