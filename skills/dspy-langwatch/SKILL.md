@@ -1,6 +1,6 @@
 ---
 name: dspy-langwatch
-description: "Use LangWatch for DSPy auto-tracing and real-time optimizer progress. Use when you want to set up LangWatch, langwatch.dspy.init, auto-tracing DSPy, real-time optimization dashboard, optimizer progress tracking, app.langwatch.ai, or DSPy optimizer dashboard. Also: 'langwatch setup', 'pip install langwatch', 'langwatch trace', 'optimizer progress', 'real-time optimization', 'watch optimizer run', 'LangWatch self-hosted', 'langwatch docker', 'langwatch vs langtrace', 'langwatch autotrack_dspy'."
+description: Use LangWatch for DSPy auto-tracing and real-time optimizer progress. Use when you want to set up LangWatch, langwatch.dspy.init, auto-tracing DSPy, real-time optimization dashboard, optimizer progress tracking, app.langwatch.ai, or DSPy optimizer dashboard. Also: 'langwatch setup', 'pip install langwatch', 'langwatch trace', 'optimizer progress', 'real-time optimization', 'watch optimizer run', 'LangWatch self-hosted', 'langwatch docker', 'langwatch vs langtrace', 'langwatch autotrack_dspy'.
 ---
 
 # LangWatch — Auto-Tracing + Real-Time Optimizer Progress for DSPy

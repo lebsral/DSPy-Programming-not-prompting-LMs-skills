@@ -1,6 +1,6 @@
 ---
 name: ai-request-skill
-description: "Request or contribute a new AI skill that doesn't exist yet. Use when DSPy supports something but there's no skill for it — helps you build the skill and submit a PR, or file an issue requesting it. Also use when the user says 'there should be a skill for this', 'can we make a skill', 'I want to contribute a skill', or 'none of the ai- skills cover my use case'."
+description: Request or contribute a new AI skill that doesn't exist yet. Use when DSPy supports something but there's no skill for it — helps you build the skill and submit a PR, or file an issue requesting it. Also use when the user says 'there should be a skill for this', 'can we make a skill', 'I want to contribute a skill', or 'none of the ai- skills cover my use case'.
 argument-hint: "[describe the missing capability]"
 ---
 

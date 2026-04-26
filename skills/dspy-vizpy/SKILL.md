@@ -1,6 +1,6 @@
 ---
 name: dspy-vizpy
-description: "Use VizPy as a drop-in prompt optimizer for DSPy. Use when you want to try VizPy, vizops, ContraPromptOptimizer, PromptGradOptimizer, a commercial alternative to GEPA, a third-party prompt optimizer, or a different optimization backend. Also: 'vizpy optimizer', 'vizpy vs GEPA', 'vizpy vs MIPROv2', 'commercial prompt optimization', 'ContraPrompt for classification', 'PromptGrad for generation', 'vizpy API key', 'pip install vizpy', 'vizpy free tier'."
+description: Use VizPy as a drop-in prompt optimizer for DSPy. Use when you want to try VizPy, vizops, ContraPromptOptimizer, PromptGradOptimizer, a commercial alternative to GEPA, a third-party prompt optimizer, or a different optimization backend. Also: 'vizpy optimizer', 'vizpy vs GEPA', 'vizpy vs MIPROv2', 'commercial prompt optimization', 'ContraPrompt for classification', 'PromptGrad for generation', 'vizpy API key', 'pip install vizpy', 'vizpy free tier'.
 ---
 
 # VizPy — Commercial Prompt Optimizer for DSPy

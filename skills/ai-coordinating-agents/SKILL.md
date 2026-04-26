@@ -1,6 +1,6 @@
 ---
 name: ai-coordinating-agents
-description: Build multiple AI agents that work together. Use when you need a supervisor agent that delegates to specialists, agent handoff, parallel research agents, support escalation (L1 to L2), content pipeline (writer + editor + fact-checker), or any multi-agent system. Powered by DSPy for optimizable agents and LangGraph for orchestration., "CrewAI alternative\", \"AutoGen alternative\", \"LangGraph multi-agent\", \"how to build agents that talk to each other\", \"agent delegation pattern\", \"specialist agents with a supervisor\", \"agents keep stepping on each other\", \"multi-agent coordination is a nightmare\", \"build an AI team\", \"agent-to-agent communication\", \"route tasks to the right agent\", \"hierarchical agent architecture\", \"when one agent isn't enough\", \"parallel agents for research\", \"microservices but for AI agents"
+description: Build multiple AI agents that work together. Use when you need a supervisor agent that delegates to specialists, agent handoff, parallel research agents, support escalation (L1 to L2), content pipeline (writer + editor + fact-checker), or any multi-agent system. Also: CrewAI alternative, AutoGen alternative, LangGraph multi-agent, agents that talk to each other, specialist agents with a supervisor, agents keep stepping on each other, build an AI team, route tasks to the right agent, when one agent isn't enough, parallel agents for research.
 ---
 
 # Build Multi-Agent Systems
@@ -414,6 +414,14 @@ optimized_team = optimizer.compile(TeamModule(), trainset=team_trainset)
 - **Shared state is your communication bus** — agents read from and write to the LangGraph state
 - **Optimize bottom-up** — tune individual agents first, then optimize the full team end-to-end
 - **Interrupt before side effects** — use `interrupt_before` so humans approve actions with real-world consequences
+
+## Gotchas
+
+- **Claude puts orchestration logic inside DSPy modules.** Routing decisions, agent selection, and state transitions belong in LangGraph (conditional edges, `route_to_agent`). DSPy modules should only handle the reasoning each agent does — classify, research, write, review. If `forward()` contains `if agent == "writer"` branching, move that logic to LangGraph edges.
+- **Claude creates one giant shared state with every field.** Each agent only needs a few fields from the state. A bloated `TypedDict` with 15+ fields makes the graph hard to debug and wastes context. Keep the shared state minimal — `task`, `messages`, `results`, `status` — and let agents pass specifics through the `results` dict.
+- **Claude forgets to cap supervisor iterations.** Without a limit, the supervisor can loop forever — routing researcher → writer → reviewer → researcher indefinitely. Add a `max_steps` counter to the state and a check in the supervisor that forces `is_complete = True` after N iterations (typically 5-10).
+- **Claude optimizes the full team before individual agents.** Multi-agent optimization is expensive and hard to debug. Always optimize each agent independently first (with per-agent metrics), then freeze the good ones and optimize the team end-to-end. This bottom-up approach is faster and produces better results.
+- **Claude uses `dspy.Parallel` when it should use LangGraph `Send()`.** `dspy.Parallel` is for independent LM calls within a single module. For parallel agents with different roles, tools, and state, use LangGraph's `Send()` pattern — it gives you proper state management, error handling, and the ability to interrupt individual agents.
 
 ## Additional resources
 

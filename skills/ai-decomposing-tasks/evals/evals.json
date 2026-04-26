@@ -1,0 +1,44 @@
+{
+  "skill_name": "ai-decomposing-tasks",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I have a PDF invoice parser that extracts line items. It works great on invoices with 1-3 items but on invoices with 10+ line items it consistently misses some — usually gets 7 out of 12 or so. The items are in a table format. I'm using a single dspy.ChainOfThought call. How do I fix this?",
+      "expected_output": "A decomposed DSPy module that first identifies all line items (names/descriptions), then extracts details for each item individually. Should include an identify step and a per-item extraction step, with comparison against the single-step baseline.",
+      "files": [],
+      "assertions": [
+        {"name": "has_identify_step", "description": "Defines a separate DSPy signature or module that identifies/lists all items before extracting details"},
+        {"name": "has_per_item_extraction", "description": "Loops over identified items and extracts details for each one individually"},
+        {"name": "uses_dspy_module", "description": "Implements a dspy.Module subclass with a forward method composing the steps"},
+        {"name": "includes_evaluation", "description": "Shows how to compare single-step vs decomposed accuracy using dspy.evaluate or Evaluate"},
+        {"name": "no_hardcoded_provider", "description": "Any dspy.LM() call includes an alternative provider comment"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "We're building a contract analysis tool. Each contract is 20-40 pages. We need to extract all obligation clauses, their deadlines, and which party is responsible. Right now our single-prompt extraction gets maybe 60% of the clauses on long contracts. Short contracts (under 5 pages) work fine. What's the best approach with DSPy?",
+      "expected_output": "A chunk-then-process pipeline that splits long contracts into overlapping sections, extracts obligation clauses from each chunk, then deduplicates results. Should address paragraph-aware splitting and overlap strategy.",
+      "files": [],
+      "assertions": [
+        {"name": "implements_chunking", "description": "Splits the document into chunks with overlap to avoid missing items at boundaries"},
+        {"name": "paragraph_aware_splitting", "description": "Mentions or implements splitting at natural boundaries (paragraphs, sections) rather than fixed character positions"},
+        {"name": "has_deduplication", "description": "Includes logic to deduplicate extracted items from overlapping chunks"},
+        {"name": "uses_pydantic_or_typed_output", "description": "Defines structured output types for the extracted obligations (Pydantic models or typed DSPy fields)"},
+        {"name": "includes_source_tracing", "description": "Includes a way to trace extracted items back to their source location in the document"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I'm extracting data from medical lab reports. The problem is the AI keeps mixing up values between different test panels — like putting the CBC white blood cell count under the metabolic panel results. Each report has 3-6 panels with 5-15 tests each. How should I restructure this with DSPy?",
+      "expected_output": "A sequential extraction pipeline that first identifies all test panels in the report, then extracts results for each panel separately so values don't get conflated across panels. Should use the Salomatic pattern of identify-then-extract-per-group.",
+      "files": [],
+      "assertions": [
+        {"name": "identifies_panels_first", "description": "Has a first step that identifies/lists all test panels before extracting any results"},
+        {"name": "extracts_per_panel", "description": "Extracts test results scoped to one specific panel at a time, not all at once"},
+        {"name": "uses_dspy_assert_or_suggest", "description": "Includes a dspy.Assert or dspy.Suggest to validate that panels were found"},
+        {"name": "structured_results", "description": "Returns results grouped by panel with typed fields (test name, value, unit, reference range)"},
+        {"name": "explains_why_sequential", "description": "Explains that sequential per-panel extraction prevents conflation of similar values across panels"}
+      ]
+    }
+  ]
+}

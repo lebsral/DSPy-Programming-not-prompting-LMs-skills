@@ -1,6 +1,6 @@
 ---
 name: dspy-ragas
-description: "Use Ragas to evaluate DSPy RAG pipelines with decomposed metrics. Use when you want to evaluate RAG quality, measure faithfulness, context precision, context recall, answer relevancy, or diagnose retriever vs generator issues. Also: 'ragas', 'pip install ragas', 'ragas evaluate', 'RAG evaluation', 'faithfulness metric', 'context precision', 'context recall', 'answer relevancy', 'answer correctness', 'decomposed RAG metrics', 'ragas dspy', 'DSPyOptimizer ragas', 'ragas[dspy]', 'EvaluationDataset', 'ragas vs dspy.Evaluate', 'which RAG metric', 'retriever vs generator quality'."
+description: Use Ragas to evaluate DSPy RAG pipelines with decomposed metrics. Use when you want to evaluate RAG quality, measure faithfulness, context precision, context recall, answer relevancy, or diagnose retriever vs generator issues. Also: 'ragas', 'pip install ragas', 'ragas evaluate', 'RAG evaluation', 'faithfulness metric', 'context precision', 'context recall', 'answer relevancy', 'answer correctness', 'decomposed RAG metrics', 'ragas dspy', 'DSPyOptimizer ragas', 'ragas[dspy]', 'EvaluationDataset', 'ragas vs dspy.Evaluate', 'which RAG metric', 'retriever vs generator quality'.
 ---
 
 # Ragas — Decomposed RAG Evaluation for DSPy

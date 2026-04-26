@@ -1,0 +1,44 @@
+{
+  "skill_name": "ai-cutting-costs",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "We're spending about $1,200/month on OpenAI for a support ticket classifier. It uses GPT-4o for everything — classifying tickets, generating responses, and summarizing conversations. We get about 10,000 tickets a day. How can I cut costs without losing too much accuracy?",
+      "expected_output": "A concrete plan that identifies per-module model assignment as the key lever (classification is simple enough for a cheap model, generation may need the expensive one). Should include code showing dspy.context or per-module LM assignment, a cost audit step, and a recommendation to measure quality before and after.",
+      "files": [],
+      "assertions": [
+        {"name": "assigns_per_module_lms", "description": "Shows how to assign different LMs to different pipeline steps using dspy.context or module.lm"},
+        {"name": "uses_cheap_model_for_classification", "description": "Recommends a cheaper model (gpt-4o-mini, Haiku, or open-source) for the classification step"},
+        {"name": "includes_cost_audit", "description": "Shows how to check current token usage with dspy.inspect_history or similar"},
+        {"name": "measures_quality", "description": "Includes a dspy.evaluate or metric check to verify quality holds after switching models"},
+        {"name": "provider_agnostic", "description": "LM examples include alternative provider comments, not just OpenAI"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "I built a RAG system for internal docs search. It retrieves 10 passages and feeds them to GPT-4o to answer questions. The prompts are huge because of all the context. My boss wants me to cut the API bill in half. I have no labeled data.",
+      "expected_output": "Focus on reducing prompt length: fewer retrieved passages (k=3-5 instead of 10), concise signatures, and switching to a cheaper model. Should mention cascading (try cheap model first) as an advanced option. Should NOT suggest fine-tuning since there's no labeled data.",
+      "files": [],
+      "assertions": [
+        {"name": "reduces_retrieval_k", "description": "Recommends reducing the number of retrieved passages"},
+        {"name": "suggests_cheaper_model", "description": "Recommends trying a cheaper model for the generation step"},
+        {"name": "addresses_prompt_length", "description": "Mentions simplifying signatures or reducing few-shot demos to cut token usage"},
+        {"name": "no_finetune_without_data", "description": "Does NOT recommend fine-tuning since the user has no labeled data"},
+        {"name": "suggests_cascading_or_routing", "description": "Mentions smart routing or cascading as an option for further savings"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I have a content moderation pipeline that checks user posts for 6 policy violations. Right now every post goes through GPT-4o with ChainOfThought. 80% of posts are totally fine and don't violate anything. We process 50,000 posts/day and it's costing us a fortune. I have 2,000 labeled examples.",
+      "expected_output": "Should identify the 80/20 pattern as ideal for smart routing — use a cheap model to screen obvious non-violations, only escalate flagged posts to the expensive model. Should suggest using Predict instead of ChainOfThought for the initial screen. May mention fine-tuning as an option given the 2,000 examples.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_routing_pattern", "description": "Implements a complexity/difficulty router that sends easy cases to a cheap model"},
+        {"name": "leverages_80_20_distribution", "description": "Explicitly addresses that 80% of traffic is simple and can be handled cheaply"},
+        {"name": "uses_predict_for_screening", "description": "Recommends Predict instead of ChainOfThought for the initial cheap screening step"},
+        {"name": "mentions_finetune_option", "description": "Mentions fine-tuning as a viable option given 2,000 labeled examples"},
+        {"name": "includes_dspy_code", "description": "Provides working DSPy code for the routing pattern, not just prose advice"}
+      ]
+    }
+  ]
+}

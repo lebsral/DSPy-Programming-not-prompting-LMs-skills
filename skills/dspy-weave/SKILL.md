@@ -1,6 +1,6 @@
 ---
 name: dspy-weave
-description: "Use W&B Weave for DSPy experiment tracking and observability. Use when you want to set up Weave, W&B, wandb, Weights & Biases, experiment dashboard, weave.op, or team collaboration for DSPy. Also: 'weave setup', 'pip install weave', 'weave.init', 'wandb project', 'W&B experiment tracking', 'weave decorator', 'weave.op decorator', 'wandb dashboard', 'compare optimization runs', 'team experiment tracking'."
+description: Use W&B Weave for DSPy experiment tracking and observability. Use when you want to set up Weave, W&B, wandb, Weights & Biases, experiment dashboard, weave.op, or team collaboration for DSPy. Also: 'weave setup', 'pip install weave', 'weave.init', 'wandb project', 'W&B experiment tracking', 'weave decorator', 'weave.op decorator', 'wandb dashboard', 'compare optimization runs', 'team experiment tracking'.
 ---
 
 # W&B Weave — Cloud Observability & Experiment Tracking for DSPy

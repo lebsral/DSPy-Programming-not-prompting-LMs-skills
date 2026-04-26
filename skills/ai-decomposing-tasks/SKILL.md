@@ -1,6 +1,6 @@
 ---
 name: ai-decomposing-tasks
-description: Break a failing complex AI task into reliable subtasks. Use when your AI works on simple inputs but fails on complex ones, extraction misses items in long documents, accuracy degrades as input grows, AI conflates multiple things at once, results are inconsistent across input types, you need to chunk long text for processing, or you want to split one unreliable AI step into multiple reliable ones., "one prompt trying to do too much\", \"AI accuracy drops on long inputs\", \"chunking strategy for LLM\", \"divide and conquer for AI\", \"AI can't handle complex documents\", \"break down AI task into steps\", \"extraction misses items in long text\", \"prompt does too many things at once\", \"map-reduce pattern for LLM\", \"how to split AI work into subtasks\", \"AI overwhelmed by long context\", \"multi-step extraction pipeline"
+description: Break a failing complex AI task into reliable subtasks. Use when your AI works on simple inputs but fails on complex ones, extraction misses items in long documents, accuracy degrades as input grows, AI conflates multiple things at once, results are inconsistent across input types, you need to chunk long text for processing, or you want to split one unreliable AI step into multiple reliable ones. Also: one prompt trying to do too much, AI accuracy drops on long inputs, chunking strategy for LLM, divide and conquer for AI, AI can't handle complex documents, break down AI task into steps, extraction misses items in long text, prompt does too many things at once, map-reduce pattern for LLM, how to split AI work into subtasks, AI overwhelmed by long context, multi-step extraction pipeline.
 ---
 
 # Decompose a Failing AI Task
@@ -299,8 +299,8 @@ print(f"Decomposed (optimized):   {optimized_score:.1f}%")
 The identify step (listing items) is simpler than the extract step (pulling details). Use a cheaper model for the easy step:
 
 ```python
-cheap_lm = dspy.LM("openai/gpt-4o-mini")
-quality_lm = dspy.LM("openai/gpt-4o")
+cheap_lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-haiku-4-5-20251001", etc.
+quality_lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 decomposed.identify.set_lm(cheap_lm)      # Cheap for listing
 decomposed.extract_item.set_lm(quality_lm) # Quality for extraction
@@ -318,6 +318,14 @@ See `/ai-cutting-costs` for more cost strategies.
 - **Stratify by complexity** — the payoff shows on complex inputs, not simple ones
 - **Optimize end-to-end** — MIPROv2 tunes all stages together for best results
 - **Cheap models for easy stages** — the identify step rarely needs an expensive model
+
+## Gotchas
+
+- **Don't decompose prematurely.** Claude tends to jump straight to multi-step pipelines. If the single-step version hasn't been measured yet, measure it first — decomposition adds latency and cost, and sometimes prompt optimization alone is enough.
+- **Don't pass the full document to every substep.** When doing identify-then-process, Claude often passes the entire original text to the per-item extraction step. Instead, pass only the relevant section or use the item description to scope the extraction — this reduces token cost and prevents the model from pulling data from the wrong section.
+- **Don't forget `with_inputs()` on DSPy Examples.** When building evaluation datasets for decomposed pipelines, Claude omits `with_inputs()`, which causes optimizers to treat all fields as labels. Always call `example.with_inputs("document")` (or whatever your input fields are).
+- **Don't use `dspy.Assert` inside optimized modules without a fallback.** Claude places `Assert` statements that throw hard errors during optimization, killing the optimizer run. Use `dspy.Suggest` for soft constraints during optimization, or wrap `Assert` in a try/except that returns a default prediction.
+- **Don't chunk by character count alone.** Claude defaults to splitting text at fixed character positions, which cuts words and sentences mid-stream. Always split at natural boundaries (paragraphs, sentences, or section headers) then check chunk size.
 
 ## Additional resources
 

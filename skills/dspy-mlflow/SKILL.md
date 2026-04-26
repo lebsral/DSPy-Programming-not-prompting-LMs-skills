@@ -1,6 +1,6 @@
 ---
 name: dspy-mlflow
-description: "Use MLflow for DSPy tracing, experiment tracking, and model registry. Use when you want to set up MLflow, mlflow.dspy.autolog, MLflow Tracing, MLflow experiment tracking, MLflow model registry, or full ML lifecycle management. Also: 'mlflow setup', 'pip install mlflow', 'mlflow.set_experiment', 'mlflow UI', 'mlflow model versioning', 'mlflow OpenTelemetry', 'mlflow vs wandb', 'mlflow tracing DSPy', 'register DSPy model'."
+description: Use MLflow for DSPy tracing, experiment tracking, and model registry. Use when you want to set up MLflow, mlflow.dspy.autolog, MLflow Tracing, MLflow experiment tracking, MLflow model registry, or full ML lifecycle management. Also: 'mlflow setup', 'pip install mlflow', 'mlflow.set_experiment', 'mlflow UI', 'mlflow model versioning', 'mlflow OpenTelemetry', 'mlflow vs wandb', 'mlflow tracing DSPy', 'register DSPy model'.
 ---
 
 # MLflow — Full ML Lifecycle for DSPy

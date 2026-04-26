@@ -1,6 +1,6 @@
 ---
 name: dspy-langtrace
-description: "Use Langtrace for DSPy observability and tracing. Use when you want to set up Langtrace, langtrace-python-sdk, auto-instrument DSPy, trace DSPy calls, LLM observability, app.langtrace.ai, or self-hosted tracing. Also: 'langtrace setup', 'langtrace API key', 'pip install langtrace-python-sdk', 'DSPy tracing', 'auto-instrument DSPy', 'langtrace self-hosted', 'langtrace docker', 'trace LM calls', 'langtrace vs phoenix', 'langtrace cloud'."
+description: Use Langtrace for DSPy observability and tracing. Use when you want to set up Langtrace, langtrace-python-sdk, auto-instrument DSPy, trace DSPy calls, LLM observability, app.langtrace.ai, or self-hosted tracing. Also: 'langtrace setup', 'langtrace API key', 'pip install langtrace-python-sdk', 'DSPy tracing', 'auto-instrument DSPy', 'langtrace self-hosted', 'langtrace docker', 'trace LM calls', 'langtrace vs phoenix', 'langtrace cloud'.
 ---
 
 # Langtrace — Open-Source LLM Observability for DSPy

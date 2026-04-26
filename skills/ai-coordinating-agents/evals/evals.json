@@ -1,0 +1,44 @@
+{
+  "skill_name": "ai-coordinating-agents",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I want to build an AI content pipeline where a researcher finds info on a topic, a writer creates a blog post from that research, and a reviewer checks it for accuracy. The supervisor should route between them. Using GPT-4o-mini for research/review and GPT-4o for writing.",
+      "expected_output": "A multi-agent system with DSPy modules for each agent (researcher, writer, reviewer), a LangGraph StateGraph with supervisor routing, and conditional edges. Should show how to use different models per agent.",
+      "files": [],
+      "assertions": [
+        {"name": "has_separate_agent_modules", "description": "Defines distinct DSPy modules or signatures for researcher, writer, and reviewer agents"},
+        {"name": "uses_langgraph_stategraph", "description": "Uses LangGraph StateGraph for orchestration with nodes and edges"},
+        {"name": "has_supervisor_routing", "description": "Includes a supervisor node with conditional edges that routes to the correct agent"},
+        {"name": "has_shared_state", "description": "Defines a TypedDict for shared state that agents read from and write to"},
+        {"name": "agents_report_back", "description": "Each agent node returns to the supervisor after completing its work"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "We need a customer support system where L1 handles simple questions, L2 handles complex technical issues, and L3 handles escalations that need database access. L1 should try first and escalate if it can't answer. L2 can escalate to L3. Need human approval before L3 takes any database actions.",
+      "expected_output": "A tiered support system with DSPy modules for each level, LangGraph orchestration with conditional handoff based on complexity, and interrupt_before for L3 database actions. Should include escalation logic.",
+      "files": [],
+      "assertions": [
+        {"name": "has_tiered_agents", "description": "Defines separate DSPy modules for L1, L2, and L3 support agents with different capabilities"},
+        {"name": "has_escalation_logic", "description": "Includes conditional routing that escalates from L1 to L2 to L3 based on complexity or confidence"},
+        {"name": "has_human_in_loop", "description": "Uses interrupt_before or checkpoint pattern for human approval before L3 database actions"},
+        {"name": "l3_has_tools", "description": "L3 agent uses dspy.ReAct or similar with database tools"},
+        {"name": "uses_langgraph", "description": "Uses LangGraph StateGraph for orchestration, not raw if/else in a DSPy module"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I'm building a research assistant that needs to search 4 different sources in parallel (web, internal docs, academic papers, competitor analysis), then merge the results into a single brief. Each source search is its own specialist agent. Speed matters — can't run them sequentially.",
+      "expected_output": "A parallel multi-agent system using LangGraph Send() to fan out to 4 specialist agents simultaneously, then merge results. Each agent is a DSPy module. Should use the fan-out/merge pattern, not sequential chaining.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_send_for_parallel", "description": "Uses LangGraph Send() pattern for parallel fan-out to worker agents, not sequential edges"},
+        {"name": "has_four_specialists", "description": "Defines separate agents or worker invocations for web, docs, papers, and competitor sources"},
+        {"name": "has_merge_step", "description": "Includes a merge/combine node that aggregates results from all parallel agents into a final output"},
+        {"name": "agents_are_dspy_modules", "description": "Each specialist agent uses DSPy (Predict, ChainOfThought, or ReAct) for its reasoning"},
+        {"name": "uses_annotated_list_for_results", "description": "Uses Annotated[list, operator.add] or similar pattern so parallel results accumulate in shared state"}
+      ]
+    }
+  ]
+}

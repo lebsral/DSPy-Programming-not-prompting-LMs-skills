@@ -1,6 +1,6 @@
 ---
 name: ai-cutting-costs
-description: Reduce your AI API bill. Use when AI costs are too high, API calls are too expensive, you want to use cheaper models, optimize token usage, reduce LLM spending, route easy questions to cheap models, or make your AI feature more cost-effective. Also use when LLM API costs are too high, or most tokens are wasted on context serialization not useful output. Covers DSPy cost optimization — cheaper models, smart routing, per-module LMs, fine-tuning, caching, and prompt reduction., "GPT-4 costs too much for production\", \"AI bill keeps growing\", \"how to reduce OpenAI costs\", \"optimize LLM token usage\", \"smart model routing saves money\", \"use small models where possible\", \"AI cost optimization strategies\", \"prompt is too long and expensive\", \"reduce context window usage\", \"cheaper than GPT-4 with same quality"
+description: Reduce your AI API bill. Use when AI costs are too high, API calls are too expensive, you want to use cheaper models, optimize token usage, reduce LLM spending, route easy questions to cheap models, or make your AI feature more cost-effective. Also: GPT-4 costs too much for production, AI bill keeps growing, how to reduce OpenAI costs, optimize LLM token usage, smart model routing saves money, prompt is too long and expensive, cheaper than GPT-4 with same quality.
 ---
 
 # Cut Your AI Costs
@@ -20,7 +20,7 @@ Ask the user:
 import dspy
 
 # Run your program and check token usage
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 result = my_program(question="test")
@@ -35,10 +35,10 @@ The simplest fix — switch to a cheaper model and see if quality holds:
 
 ```python
 # Instead of GPT-4o (~$5/M input tokens)
-lm = dspy.LM("openai/gpt-4o-mini")  # ~$0.15/M input tokens — 33x cheaper
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-haiku-4-5-20251001", etc. — ~$0.15/M input tokens
 
 # Or use an open-source model
-lm = dspy.LM("together_ai/meta-llama/Llama-3-70b-chat-hf")
+lm = dspy.LM("together_ai/meta-llama/Llama-3-70b-chat-hf")  # or any provider DSPy supports
 ```
 
 Always measure quality before and after with `/ai-improving-accuracy`. When you switch models, re-optimize your prompts — they don't transfer. See `/ai-switching-models` for the full workflow.
@@ -49,7 +49,7 @@ DSPy caches LM calls by default. Make sure you're not disabling it:
 
 ```python
 # Caching is ON by default — same inputs won't re-call the API
-lm = dspy.LM("openai/gpt-4o-mini")  # cached automatically
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-haiku-4-5-20251001", etc. — cached automatically
 
 # To verify caching is working, run the same input twice
 # and check that the second call is instant
@@ -60,8 +60,8 @@ lm = dspy.LM("openai/gpt-4o-mini")  # cached automatically
 Not every step in your pipeline needs the expensive model. Use `dspy.context` or `set_lm` to assign cheaper models to simpler steps:
 
 ```python
-expensive_lm = dspy.LM("openai/gpt-4o")
-cheap_lm = dspy.LM("openai/gpt-4o-mini")
+expensive_lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+cheap_lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-haiku-4-5-20251001", etc.
 
 dspy.configure(lm=expensive_lm)  # default
 
@@ -231,6 +231,14 @@ Test with `/ai-improving-accuracy` to make sure quality doesn't drop.
 6. Reduce retrieved passages
 7. Use `Predict` instead of `ChainOfThought` for simple tasks
 8. Fine-tune a cheap model for production (if 500+ examples available)
+
+## Gotchas
+
+- **Don't re-optimize prompts on the old model after switching.** Claude tends to keep the expensive model's optimized prompts when switching to a cheaper model. Prompts don't transfer between models — always re-run your optimizer after changing the LM. See `/ai-switching-models`.
+- **Don't use `ChainOfThought` for the complexity router itself.** The router in Step 4 should use `dspy.Predict`, not `dspy.ChainOfThought` — adding reasoning to the routing step defeats the purpose of saving tokens on easy inputs.
+- **Don't cut demos to zero and expect quality to hold.** Reducing `max_bootstrapped_demos` from 4 to 2 is fine; setting it to 0 removes all few-shot learning and quality collapses. Keep at least 1-2 demos.
+- **Don't forget to measure before and after every cost change.** Claude often applies multiple cost optimizations at once without baselining. Run `dspy.evaluate` before each change so you can attribute quality drops to the specific optimization that caused them.
+- **Don't cache non-deterministic calls and expect reproducibility.** If `temperature > 0`, cached results lock in one sample. Set `temperature=0` for deterministic caching, or disable caching for calls where you want diversity.
 
 ## Additional resources
 
