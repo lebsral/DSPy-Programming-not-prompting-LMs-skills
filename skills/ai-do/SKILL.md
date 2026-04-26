@@ -141,6 +141,32 @@ Many requests could match multiple skills. Use these rules to break ties:
 - **"I want to use [DSPy class]"** → Route to the matching `dspy-` skill, not the `ai-` skill. The user already knows what they want.
 - **"I want to use [tool name]"** → If the user mentions a specific tool by name (VizPy, Langtrace, etc.), route to the matching `/dspy-*` skill.
 
+## Step 2.5: Read the candidate skill
+
+Before generating any `/skill-name ...` prompt in Step 3, read the actual `SKILL.md` of each recommended skill. The routing table is enough to *find* a candidate — it is not enough to *write the prompt that invokes it*.
+
+Reading the skill grounds the prompt in:
+- The skill's real argument-hint and expected input shape
+- Its Step 1 questions (so you can pre-answer them in the crafted prompt)
+- Any "Do NOT use for..." negatives that might disqualify the match
+
+### When to read
+
+| Situation | Read? |
+|---|---|
+| Single confident match | **Yes** — read that `SKILL.md` |
+| 2 borderline contenders | **Yes** — read both, then decide |
+| Multi-skill sequence (3+) | **Yes** — read all before writing any prompt |
+| Routing to `/ai-request-skill` (no match) | **No** — nothing to read |
+
+### Re-routing
+
+After reading, check:
+- Does the skill's scope actually cover the user's problem?
+- Does the argument-hint fit what the user said?
+
+If the candidate is a poor fit, swap in a better skill from the catalog and re-read. Cap at 2 re-routes per slot — after that, ask the user to clarify.
+
 ## Step 3: Check which skills are installed
 
 Before recommending, check which skills the user actually has installed. Run:
@@ -152,6 +178,8 @@ ls skills/ 2>/dev/null || ls ~/.claude/skills/ 2>/dev/null || echo "Could not fi
 If the recommended skill is **not installed**, include install instructions in your recommendation (see Step 4). The user may only have `ai-do` installed — that's fine, just tell them how to get what they need.
 
 ## Step 4: Recommend and generate prompt
+
+Generate prompts using what you read in Step 2.5 — the SKILL.md content, not just the routing table.
 
 Present your recommendation like this:
 
