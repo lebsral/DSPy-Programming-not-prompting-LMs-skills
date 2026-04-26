@@ -259,3 +259,4 @@ Always check this flag in production workflows.
 - For prompt optimization alone, see `/ai-improving-accuracy`
 - For evaluation and metrics, see `/dspy-evaluate`
 - For data preparation, see `/dspy-data`
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

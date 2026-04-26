@@ -280,3 +280,4 @@ optimized_rag = optimizer.compile(rag, trainset=trainset)
 - Want random search over few-shot demos? Use `/dspy-bootstrap-rs`
 - For the full measure-improve-verify loop, see `/ai-improving-accuracy`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

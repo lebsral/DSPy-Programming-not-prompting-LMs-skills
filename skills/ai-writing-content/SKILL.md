@@ -325,3 +325,4 @@ optimized = optimizer.compile(QualityWriter(), trainset=trainset)
 - Need to summarize content instead of generating it? Use `/ai-summarizing`
 - Need multi-step pipelines beyond content? Use `/ai-building-pipelines`
 - Next: `/ai-improving-accuracy` to measure and improve your content writer
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

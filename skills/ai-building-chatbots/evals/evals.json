@@ -1,0 +1,43 @@
+{
+  "skill_name": "ai-building-chatbots",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I need a customer support chatbot for our SaaS product. It should answer questions from our help docs, remember the conversation across turns, and escalate to a human if the user is frustrated or the bot can't help after 3 tries. We use PostgreSQL already. Can you build this?",
+      "expected_output": "A Python implementation with DSPy modules for response generation (with doc grounding via retrieval), LangGraph for conversation state and flow control, PostgreSQL-backed checkpointing for session memory, intent classification to detect frustration/complaints, and an escalation path with turn-count threshold.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_dspy_signature", "description": "Defines at least one dspy.Signature for chat response generation"},
+        {"name": "uses_langgraph_state", "description": "Defines a TypedDict state class and builds a StateGraph"},
+        {"name": "has_retrieval", "description": "Retrieves docs or context each turn to ground responses"},
+        {"name": "has_escalation_logic", "description": "Includes a condition to escalate to a human agent based on intent or turn count"},
+        {"name": "has_persistent_checkpointer", "description": "Uses PostgresSaver or equivalent persistent checkpointer, not just MemorySaver"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "We have a Slack bot that answers employee questions about company policies. Right now it's stateless — every message is treated independently so it keeps asking people to repeat themselves. I want to add conversation memory so it tracks the thread. We have about 50 policy docs in a Notion workspace. No labeled conversation data yet.",
+      "expected_output": "A chatbot that maps Slack thread IDs to LangGraph thread_ids for conversation persistence, retrieves from the policy docs, and handles multi-turn Q&A. Should address the cold-start problem (no training data) by suggesting either zero-shot operation or collecting conversations for later optimization.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_thread_id_mapping", "description": "Maps Slack thread IDs to conversation session IDs for checkpointing"},
+        {"name": "has_doc_retrieval", "description": "Includes retrieval from policy documents to ground answers"},
+        {"name": "handles_cold_start", "description": "Addresses lack of labeled data — suggests zero-shot, manual labeling, or synthetic data"},
+        {"name": "uses_conversation_memory", "description": "Uses LangGraph checkpointing to maintain state across messages in a thread"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I'm building an onboarding chatbot that guides new users through setting up our developer tool. It has a specific flow: collect their programming language, then their framework, then generate a starter config, then ask if they want to deploy. If they go off-topic, it should answer briefly and steer them back. The conversations can get long — sometimes 30+ messages.",
+      "expected_output": "A chatbot with explicit conversation states (collect_language, collect_framework, generate_config, offer_deploy) managed by LangGraph, with DSPy modules for generating contextual responses at each stage. Should include conversation summarization for long chats and off-topic detection that steers back to the flow.",
+      "files": [],
+      "assertions": [
+        {"name": "has_explicit_states", "description": "Defines discrete conversation states (language selection, framework, config generation, deploy) in the graph"},
+        {"name": "has_off_topic_handling", "description": "Detects off-topic messages and steers the conversation back to the onboarding flow"},
+        {"name": "has_conversation_summarization", "description": "Summarizes older messages when conversation exceeds a threshold length"},
+        {"name": "uses_dspy_for_responses", "description": "Uses DSPy modules for generating responses, not raw LM calls"},
+        {"name": "has_state_transitions", "description": "LangGraph conditional edges route between onboarding states based on collected info"}
+      ]
+    }
+  ]
+}

@@ -173,3 +173,4 @@ RLM instances with custom interpreters are not thread-safe. For concurrent usage
 - **Improving accuracy** with optimizers and evaluation -- see `/ai-improving-accuracy`
 - **Building pipelines** with multi-step module composition -- see `/ai-building-pipelines`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

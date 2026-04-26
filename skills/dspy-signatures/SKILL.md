@@ -129,3 +129,4 @@ class Good(dspy.Signature):
 - **Parsing structured data from text** — see `/ai-parsing-data`
 - **Classification and sorting** — see `/ai-sorting`
 - **Full working examples** — see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

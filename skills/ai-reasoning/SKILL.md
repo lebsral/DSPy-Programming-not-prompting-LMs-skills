@@ -332,3 +332,4 @@ optimized = optimizer.compile(SelfDiscoveryReasoner(), trainset=trainset)
 - Need AI to call APIs and use tools? Use `/ai-taking-actions`
 - Need multi-step pipelines with predetermined stages? Use `/ai-building-pipelines`
 - Next: `/ai-improving-accuracy` to measure and improve your reasoning system
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

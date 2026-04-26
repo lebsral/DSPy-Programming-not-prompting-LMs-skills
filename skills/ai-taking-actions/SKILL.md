@@ -181,3 +181,4 @@ For the full LangChain/LangGraph API reference, see [`docs/langchain-langgraph-r
 - For worked examples (calculator, search, APIs), see [examples.md](examples.md)
 - Need multiple agents working together (not just one)? Use `/ai-coordinating-agents`
 - Next: `/ai-improving-accuracy` to measure and improve your AI
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

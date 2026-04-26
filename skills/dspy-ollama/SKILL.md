@@ -257,3 +257,4 @@ lm = dspy.LM("openai/meta-llama/Llama-3.1-8B-Instruct", api_base="http://gpu-ser
 - **Reducing costs** (model routing, caching) — `/ai-cutting-costs`
 - **Switching models** without breaking things — `/ai-switching-models`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

@@ -334,3 +334,4 @@ Need hybrid search (keyword + semantic)?
 - **Evaluating RAG quality** with decomposed metrics — `/dspy-ragas`
 - **Stopping hallucinations** in RAG — `/ai-stopping-hallucinations`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

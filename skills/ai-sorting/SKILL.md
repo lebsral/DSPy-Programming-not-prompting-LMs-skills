@@ -368,3 +368,4 @@ sorter.load("ticket_sorter.json")
 - **Always include an "other" category** — without one, the model is forced to misclassify edge cases into the closest wrong bucket. An "other" or "unknown" category catches these gracefully.
 - **Category names matter more than descriptions** — short, unambiguous category names (e.g., "billing_issue" not "Issues related to billing") give the LM a clearer signal. Add a `desc` field on the signature only if the name alone is ambiguous.
 - **Test with adversarial inputs early** — inputs that span two categories or contain no relevant content expose classification weaknesses. Add these to your dev set before optimizing.
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

@@ -266,3 +266,4 @@ If only a small fraction of training examples produce passing traces, the fine-t
 - **Fine-tuning workflow** for the full decision framework, prerequisites, and BetterTogether -- see `/ai-fine-tuning`
 - **Cost reduction** for distillation and other strategies to cut API spend -- see `/ai-cutting-costs`
 - For worked examples (distillation, production cost reduction), see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

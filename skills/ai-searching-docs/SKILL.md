@@ -407,3 +407,4 @@ optimized = optimizer.compile(DocSearch(), trainset=trainset)
 - **k=3 is not always right** — the default `k` (number of retrieved passages) is a critical hyperparameter. Too few and you miss relevant context; too many and you overwhelm the LM. Tune it against your dev set.
 - **Test with questions that require combining information** — single-hop retrieval fails when the answer spans multiple chunks. Use `dspy.ChainOfThought` with multi-step retrieval for these cases.
 - **Embedding models and chunk sizes must match at index and query time** — if you re-chunk or switch embedding models, you must rebuild the vector index. Stale indexes silently return bad results.
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

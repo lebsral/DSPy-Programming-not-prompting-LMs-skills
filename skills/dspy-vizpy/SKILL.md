@@ -212,3 +212,4 @@ The optimized program is a standard DSPy program either way — `save()`, `load(
 - **Improving accuracy** (full optimizer comparison) — `/ai-improving-accuracy`
 - **Evaluating results** before and after — `/dspy-evaluate`
 - For worked examples comparing VizPy and GEPA side-by-side, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

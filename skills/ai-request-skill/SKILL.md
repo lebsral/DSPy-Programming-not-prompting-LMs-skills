@@ -193,3 +193,4 @@ Before submitting a new skill (via PR or skill-creator), verify:
 - [ ] Points to related skills in "next steps" (e.g., `/ai-improving-accuracy`)
 - [ ] README.md catalog table updated with new row
 - [ ] ai-do https://github.com/lebsral/DSPy-Programming-not-prompting-LMs-skills/blob/main/skills/ai-do/SKILL.md updated with new row in PR or gh issue
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

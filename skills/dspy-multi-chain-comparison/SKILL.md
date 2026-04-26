@@ -242,3 +242,4 @@ MultiChainComparison is most valuable when the problem genuinely benefits from d
 - **Reasoning strategies** including when to pick MultiChainComparison vs other approaches -- see `/ai-reasoning`
 - **Improving accuracy** with evaluation and optimization -- see `/ai-improving-accuracy`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

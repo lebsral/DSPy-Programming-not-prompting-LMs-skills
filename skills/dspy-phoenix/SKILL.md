@@ -204,3 +204,4 @@ Want DSPy tracing?
 - **Aggregate monitoring** (not per-request) — `/ai-monitoring`
 - **Per-request debugging** (inspect_history, JSONL traces) — `/ai-tracing-requests`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

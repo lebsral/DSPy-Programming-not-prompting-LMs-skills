@@ -238,3 +238,4 @@ This is advanced — only needed if Ragas's default metrics don't align well wit
 - **Stopping hallucinations** (when Faithfulness is low) — `/ai-stopping-hallucinations`
 - **Optimizing RAG accuracy** — `/ai-improving-accuracy`, `/dspy-miprov2`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

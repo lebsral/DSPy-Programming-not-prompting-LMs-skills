@@ -206,3 +206,4 @@ optimized = optimizer.compile(program, trainset=trainset)
 - **Evaluating your program** to measure if LabeledFewShot is enough -- see `/dspy-evaluate`
 - **Building modules** with multiple predictors -- see `/dspy-modules`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

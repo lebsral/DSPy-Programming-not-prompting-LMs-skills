@@ -308,3 +308,4 @@ When a provider updates their model (e.g., GPT-4o version bump):
 - Use `/ai-cutting-costs` for per-module model assignment and cost optimization
 - Use `/ai-building-pipelines` for multi-step pipelines with mixed models
 - Use `/ai-fine-tuning` to distill from an expensive model to a cheap one
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

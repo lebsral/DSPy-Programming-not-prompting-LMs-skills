@@ -326,3 +326,4 @@ See `/ai-cutting-costs` for more cost strategies.
 - Need to improve accuracy within a single step? Use `/ai-improving-accuracy`
 - Need to extract structured data? Start with `/ai-parsing-data` — decompose only if it struggles on complex inputs
 - Next: `/ai-improving-accuracy` to measure and optimize your decomposed pipeline
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

@@ -1,6 +1,6 @@
 ---
 name: ai-checking-outputs
-description: Verify and validate AI output before it reaches users. Use when you need guardrails, output validation, safety checks, content filtering, fact-checking AI responses, catching hallucinations, preventing bad outputs, quality gates, or ensuring AI responses meet your standards before shipping them. Also use when LLMs invent data points, you get extraneous text with conversational fluff before the JSON, or you need to reduce malformed JSON responses. Covers DSPy assertions, verification patterns, and generate-then-filter pipelines., "AI output looks right but is wrong\", \"how to validate JSON from LLM\", \"LLM returns invalid data\", \"catch bad AI outputs before users see them\", \"output quality gate\", \"AI guardrails for production\", \"verify LLM didn't hallucinate fields\", \"post-processing LLM responses"
+description: "Verify and validate AI output before it reaches users. Use when you need guardrails, output validation, safety checks, content filtering, fact-checking AI responses, catching hallucinations, preventing bad outputs, or quality gates. Also: \"AI output looks right but is wrong\", \"how to validate JSON from LLM\", \"LLM returns invalid data\", \"catch bad AI outputs before users see them\", \"output quality gate\", \"AI guardrails for production\", \"verify LLM didn't hallucinate fields\", \"post-processing LLM responses\""
 ---
 
 # Check AI Output Before It Ships
@@ -293,6 +293,14 @@ When combined with optimization (`/ai-improving-accuracy`), the model learns to 
 | Consistent | Critical decisions | Cross-check with two generations |
 | High quality | High-stakes outputs | Ensemble + ranking |
 
+## Gotchas
+
+- **Claude writes vague assertion messages.** `dspy.Assert(check, "Bad output")` gives the LM nothing to work with on retry. The error message is the model's self-correction instruction — make it specific: `"Response is 350 words, must be under 280"` not `"too long"`.
+- **Claude puts assertions outside the module.** `dspy.Assert` and `dspy.Suggest` only trigger backtracking when called inside a `dspy.Module.forward()` method. Assertions in standalone scripts or outside `forward()` just raise exceptions with no retry.
+- **Claude uses `dspy.Assert` for style preferences.** Assert is a hard stop — if it fails after retries, the whole call errors. Use `dspy.Suggest` for soft preferences like tone, detail level, or avoiding filler words. Reserve Assert for things that must be true (valid format, no PII, non-empty output).
+- **Claude wraps every LM call in try/except to catch assertion failures.** DSPy's backtracking handles Assert failures internally — catching the exception yourself defeats the retry mechanism. Let assertions propagate; only catch at the top level if you need a fallback for the case where all retries are exhausted.
+- **Claude forgets that self-verification has a cost.** Adding a `VerifyFacts` check doubles your LM calls. For low-stakes outputs (summaries, suggestions), `dspy.Assert` with format checks is sufficient. Reserve AI-as-judge verification for high-stakes outputs where a wrong answer has real consequences.
+
 ## Additional resources
 
 - Use `/ai-stopping-hallucinations` for citation enforcement, faithfulness verification, and grounding AI in facts
@@ -302,3 +310,4 @@ When combined with optimization (`/ai-improving-accuracy`), the model learns to 
 - Use `/ai-testing-safety` to stress-test your guardrails with adversarial attacks
 - Need to evaluate human work against criteria? Use `/ai-scoring`
 - Next: `/ai-improving-accuracy` to measure and improve quality
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

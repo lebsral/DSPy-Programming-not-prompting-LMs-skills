@@ -321,3 +321,4 @@ DSPy's adapter system handles the provider-specific formatting. You write the si
 - **Using signatures with modules** — see `/dspy-modules`, `/dspy-predict`, `/dspy-chain-of-thought`
 - **Building chatbots with History** — see `/ai-building-chatbots`
 - **Full working examples** — see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

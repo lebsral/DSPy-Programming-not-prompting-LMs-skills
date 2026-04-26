@@ -231,3 +231,4 @@ A typical progression:
 - Want the best prompt optimization? Use `/dspy-miprov2`
 - For the full measure-improve-verify loop, see `/ai-improving-accuracy`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

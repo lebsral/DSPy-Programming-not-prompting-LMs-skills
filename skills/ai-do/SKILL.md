@@ -10,17 +10,35 @@ You are a routing assistant. Your job is to understand the user's AI problem, pi
 
 ## Step 1: Understand the problem
 
-If `$ARGUMENTS` is provided, analyze it and proceed to Step 2.
+Your goal is to build a complete picture so you route to the right skill with the right prompt. Ask as many questions as needed — multiple rounds are fine. Users who invoke `/ai-do` want the correct answer, not a fast guess.
 
-If no arguments or the request is too vague to route confidently, ask **1-2 short questions** (not a long interview):
-- "What should the AI do?" — the core task in one sentence
-- "Is this a new feature, or are you fixing/improving an existing one?"
+### What to learn
 
-Do NOT ask more than 2 questions. Use what you know to fill in gaps.
+1. **What should the AI do?** — the core task in one sentence
+2. **New feature or fixing/improving an existing one?**
+3. **What do they already have?** — existing code, data, labeled examples, models in use
+4. **What's their setup?** — which LM provider, framework, deployment target
+5. **Constraints** — latency, cost, accuracy requirements, compliance needs
+
+### How to ask
+
+- **Use multiple-choice when possible** — faster for the user and reduces ambiguity:
+  > What best describes your task?
+  > 1. Classify/sort/label content
+  > 2. Extract structured data from text
+  > 3. Generate text (articles, emails, reports)
+  > 4. Answer questions from documents
+  > 5. Something else — describe it
+
+- **Check what's installed** early — run `ls skills/ 2>/dev/null` and `ls ~/.claude/skills/ 2>/dev/null` so you know what they have before recommending
+- **Ask follow-ups** based on answers — don't frontload every question. If they say "classify tickets," follow up on categories, data volume, and labeled examples
+- **Stop when you can confidently route** — you don't need every detail, just enough to pick the right skill(s) and write a good prompt
 
 ## Step 2: Match to a skill
 
-Use this catalog to find the best match. Many real-world problems need **a sequence of skills** — don't force everything into one. If the problem clearly spans two or more, recommend a sequence (see Step 3).
+Use this catalog to find the best match. For a flat list of every skill with one-line descriptions, see [catalog.md](catalog.md).
+
+Many real-world problems need **a sequence of skills** — don't force everything into one. If the problem clearly spans two or more, recommend a sequence (see Step 3).
 
 ### Building AI features
 
@@ -169,7 +187,7 @@ If the candidate is a poor fit, swap in a better skill from the catalog and re-r
 
 ## Step 3: Check which skills are installed
 
-Before recommending, check which skills the user actually has installed. Run:
+If you didn't already check in Step 1, check now:
 
 ```bash
 ls skills/ 2>/dev/null || ls ~/.claude/skills/ 2>/dev/null || echo "Could not find skills directory"
@@ -236,8 +254,6 @@ Generate the prompt for step 1 only. Mention that you'll generate the next promp
 
 ## Example crafted prompts
 
-### Single skill examples
-
 ```
 /ai-sorting I have support tickets in a Postgres database (columns: id, message, created_at) and need to auto-route them to billing, technical, account, or security teams. About 200 already labeled. Using GPT-4o-mini.
 ```
@@ -250,84 +266,7 @@ Generate the prompt for step 1 only. Mention that you'll generate the next promp
 /ai-improving-accuracy My ticket classifier is getting about 70% accuracy and I need it above 90%. Already using BootstrapFewShot with 50 examples. Categories are billing, technical, account, security.
 ```
 
-```
-/ai-building-chatbots Build a customer support chatbot for our SaaS product. It should answer questions from our help docs (markdown files in docs/), remember conversation context, and escalate to human when confidence is low.
-```
-
-```
-/ai-writing-content Generate weekly product changelog emails from our GitHub commit history and Linear tickets. Tone should be friendly and non-technical, aimed at end users not developers.
-```
-
-```
-/ai-moderating-content We have a community forum and need to auto-flag harmful content. Categories: harassment, spam, NSFW, misinformation, and clean. Need severity levels (warning vs auto-remove) and appeal routing.
-```
-
-### Multi-skill sequence examples
-
-These mix `ai-` and `dspy-` skills freely — use whichever is the right tool for each step.
-
-**"I want to build an AI-powered help center"**
-1. `/ai-searching-docs` — Build RAG over your help articles
-2. `/ai-stopping-hallucinations` — Ground answers in source docs with citations
-3. `/dspy-evaluate` — Set up SemanticF1 and answer_passage_match metrics
-4. `/dspy-miprov2` — Optimize prompts and demos for your best metric
-5. `/ai-serving-apis` — Deploy as an API for your frontend
-
-**"I want to auto-process incoming invoices"**
-1. `/ai-parsing-data` — Extract vendor, amount, line items, dates from PDF/email text
-2. `/dspy-signatures` — Define a typed Signature with Pydantic models for invoice fields
-3. `/ai-checking-outputs` — Validate extracted fields (amounts add up, dates are valid)
-4. `/ai-sorting` — Route to the right approval workflow based on amount/department
-5. `/dspy-bootstrap-few-shot` — Auto-generate demos from your labeled invoices
-
-**"I need a support ticket system with AI triage"**
-1. `/ai-sorting` — Classify tickets by category and priority
-2. `/ai-summarizing` — Generate a one-line summary for the queue
-3. `/dspy-modules` — Compose classify + summarize into a single Module
-4. `/dspy-evaluate` — Measure end-to-end pipeline quality
-5. `/dspy-miprov2` — Optimize the full pipeline
-
-**"Build a content moderation system for our app"**
-1. `/ai-moderating-content` — Build the base classifier with severity levels
-2. `/ai-following-rules` — Enforce your content policy rules strictly
-3. `/ai-testing-safety` — Red-team it to find bypasses
-4. `/dspy-best-of-n` — Run moderation N times and pick the most conservative result
-5. `/ai-monitoring` — Track moderation quality in production
-
-**"I want to replace our expensive GPT-4 system with something cheaper"**
-1. `/dspy-evaluate` — Measure current quality as a baseline with proper metrics
-2. `/dspy-bootstrap-finetune` — Generate training data from your best GPT-4 outputs
-3. `/ai-fine-tuning` — Fine-tune a cheap model on that data
-4. `/dspy-lm` — Swap to the fine-tuned model with fallback to GPT-4
-5. `/ai-monitoring` — Track quality after the switch
-
-**"Build an AI research assistant that finds and summarizes papers"**
-1. `/dspy-retrieval` — Set up ColBERTv2 or embeddings over your paper corpus
-2. `/ai-summarizing` — Summarize retrieved papers
-3. `/dspy-react` — Build an agent that searches, retrieves, and summarizes in a loop
-4. `/dspy-tools` — Wrap external APIs (arxiv, semantic scholar) as DSPy tools
-5. `/ai-coordinating-agents` — Orchestrate multiple specialist agents
-
-**"I need AI to grade student essays against a rubric"**
-1. `/ai-scoring` — Build rubric-based scoring with per-criteria grades
-2. `/dspy-chain-of-thought` — Add reasoning so the grader explains its scores
-3. `/ai-making-consistent` — Ensure grading is fair and repeatable across essays
-4. `/dspy-evaluate` — Measure agreement with teacher-graded examples
-5. `/dspy-miprov2` — Optimize grading prompts against teacher labels
-
-**"We need a chatbot that can look up orders and process returns"**
-1. `/ai-building-chatbots` — Build the conversational interface with memory
-2. `/dspy-tools` — Wrap order lookup, return processing, status checks as tools
-3. `/dspy-react` — Wire the tools into a ReAct agent that reasons about what to call
-4. `/ai-following-rules` — Enforce return policy rules (time limits, conditions)
-5. `/ai-testing-safety` — Test for prompt injection and policy bypass
-
-**"I want to monitor our AI in production and catch when it degrades"**
-1. `/dspy-evaluate` — Define metrics and build an evaluation suite
-2. `/ai-monitoring` — Set up production quality tracking and alerts
-3. `/dspy-utils` — Add inspect_history and StreamListener for debugging
-4. `/ai-tracing-requests` — Add request-level tracing for debugging failures
-5. `/ai-tracking-experiments` — Track optimization runs when you need to fix issues
+For multi-skill sequence examples (e.g., "build an AI-powered help center", "auto-process invoices", "replace expensive GPT-4"), see [catalog.md](catalog.md).
 
 ### If nothing fits
 

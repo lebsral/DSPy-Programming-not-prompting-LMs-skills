@@ -441,3 +441,4 @@ This is why good error messages matter — they're literally the feedback the mo
 - Use `/ai-checking-outputs` for general output validation (format, safety, quality)
 - Use `/ai-following-rules` for enforcing business rules and content policies
 - See `examples.md` for complete worked examples
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

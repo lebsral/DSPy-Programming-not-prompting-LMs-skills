@@ -250,3 +250,4 @@ You can even stack them: ensemble multiple optimized programs, then wrap the ens
 - **MIPROv2** for instruction optimization -- see `/ai-improving-accuracy`
 - **Evaluate** for measuring ensemble quality with metrics -- see `/dspy-evaluate`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

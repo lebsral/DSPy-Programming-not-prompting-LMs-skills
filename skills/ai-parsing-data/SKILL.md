@@ -325,3 +325,4 @@ if errors:
 - **List extraction undercounts by default** — when extracting lists of items (e.g., "all people mentioned"), the LM tends to stop early. Set `max_tokens` higher and add a "be exhaustive" instruction in the signature docstring.
 - **Long inputs get truncated silently** — if your input text exceeds the model's context window, DSPy doesn't warn you. Chunk long documents before parsing, or use a model with a larger context window.
 - **Nested Pydantic models increase failure rate** — each level of nesting adds extraction difficulty. Flatten where possible, or break into multiple extraction steps (extract outer structure first, then fill in nested fields).
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

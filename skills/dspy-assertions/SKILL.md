@@ -219,3 +219,4 @@ except DSPyAssertionError as e:
 - **Stopping hallucinations** with grounding and citations — see `/ai-stopping-hallucinations`
 - **Enforcing business rules** and content policies — see `/ai-following-rules`
 - **Optimizers** that learn to satisfy constraints — see `/dspy-bootstrap-rs`, `/dspy-miprov2`
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

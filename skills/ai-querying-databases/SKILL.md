@@ -467,3 +467,4 @@ def get_safe_schema(engine, allowed=ALLOWED_TABLES):
 - Use `/ai-following-rules` to enforce query policies (e.g., no queries on PII columns)
 - Use `/ai-improving-accuracy` to measure and optimize query quality
 - Use `/ai-tracing-requests` to debug individual query failures
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

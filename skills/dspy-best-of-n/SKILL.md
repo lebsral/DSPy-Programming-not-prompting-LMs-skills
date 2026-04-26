@@ -223,3 +223,4 @@ This stacks two quality improvements: better prompts from the optimizer, and rej
 - **Evaluate** for measuring quality with metrics and devsets -- see `/dspy-evaluate`
 - **Improving accuracy** for the full optimization workflow -- see `/ai-improving-accuracy`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

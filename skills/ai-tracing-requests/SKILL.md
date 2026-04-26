@@ -455,3 +455,4 @@ for t in wrong_traces:
 - Use `/ai-improving-accuracy` to optimize based on patterns found in traces
 - Use `/dspy-langtrace` for in-depth Langtrace setup (auto-instrumentation, self-hosted)
 - Use `/dspy-phoenix` for in-depth Phoenix setup (local UI, evals)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

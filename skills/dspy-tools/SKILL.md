@@ -424,3 +424,4 @@ def search(query: str) -> str:
 - **Signatures** for defining agent inputs/outputs -- see `/dspy-signatures`
 - **Modules** for composing agents -- see `/dspy-modules`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

@@ -205,3 +205,4 @@ Both sub-modules use CoT because code review and fix suggestion both benefit fro
 - **Modules** for building multi-step programs with CoT sub-modules -- see `/dspy-modules`
 - **Reasoning patterns** for broader strategies (decomposition, self-correction) -- see `/ai-reasoning`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

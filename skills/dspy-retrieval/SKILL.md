@@ -356,3 +356,4 @@ For broader anti-hallucination patterns beyond citations, see `/ai-stopping-hall
 - **End-to-end document search** with vector stores and chunking -- see `/ai-searching-docs`
 - **Keeping answers grounded** and avoiding hallucination -- see `/ai-stopping-hallucinations`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

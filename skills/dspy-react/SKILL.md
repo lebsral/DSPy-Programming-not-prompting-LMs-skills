@@ -293,3 +293,4 @@ print(agent)
 - **Action-taking AI** from a problem-first perspective -- see `/ai-taking-actions`
 - **Multi-agent coordination** -- see `/ai-coordinating-agents`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

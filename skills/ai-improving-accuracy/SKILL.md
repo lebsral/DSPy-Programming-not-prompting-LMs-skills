@@ -298,3 +298,4 @@ my_program.load("optimized_program.json")
 - Use `/ai-tracking-experiments` to log, compare, and manage multiple optimization runs
 - Accuracy plateaued despite optimization? Try `/ai-decomposing-tasks` to restructure your task
 - If things are broken, use `/ai-fixing-errors` to diagnose
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

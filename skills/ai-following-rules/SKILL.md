@@ -270,3 +270,4 @@ optimized = optimizer.compile(
 - Use `/ai-improving-accuracy` to measure and improve quality after adding rules
 - Use `/ai-testing-safety` to verify your rules hold up against adversarial users
 - See `examples.md` for complete worked examples
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

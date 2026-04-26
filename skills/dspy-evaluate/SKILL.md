@@ -222,3 +222,4 @@ print(f"Delta:     {optimized_score - baseline_score:+.1f}%")
 - For the full measure-improve-verify loop, see `/ai-improving-accuracy`
 - For **decomposed RAG evaluation** (faithfulness, context precision/recall) see `/dspy-ragas`
 - For worked examples (exact match, LM judge, composite), see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

@@ -235,3 +235,4 @@ optimized.save("optimized_codeact.json")
 - **Modules** for composing CodeAct with other modules -- see `/dspy-modules`
 - **Signatures** for defining agent inputs/outputs -- see `/dspy-signatures`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

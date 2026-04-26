@@ -1,6 +1,6 @@
 ---
 name: ai-building-pipelines
-description: Chain multiple AI steps into one reliable pipeline. Use when your AI task is too complex for one prompt, you need to break AI logic into stages, combine classification then generation, do multi-step reasoning, build a compound AI system, orchestrate multiple models, or wire AI components together. Powered by DSPy multi-module pipelines., "LangChain LCEL alternative\", \"how to chain LLM calls together\", \"one prompt isn't enough\", \"multi-step AI workflow\", \"AI pipeline that actually works in production\", \"prompt chaining keeps breaking\", \"DAG of LLM calls\", \"sequential AI processing\", \"extract then classify then generate\", \"compound AI system design\", \"CrewAI alternative for pipelines\", \"reliable multi-model orchestration\", \"how to combine multiple AI steps without spaghetti code\", \"AI workflow engine"
+description: "Chain multiple AI steps into one reliable pipeline. Use when your AI task is too complex for one prompt, you need to break AI logic into stages, combine classification then generation, do multi-step reasoning, build a compound AI system, orchestrate multiple models, or wire AI components together. Also: \"LangChain LCEL alternative\", \"how to chain LLM calls together\", \"one prompt isn't enough\", \"multi-step AI workflow\", \"AI pipeline that actually works in production\", \"prompt chaining keeps breaking\", \"DAG of LLM calls\", \"extract then classify then generate\", \"compound AI system design\", \"how to combine multiple AI steps without spaghetti code\""
 ---
 
 # Build a Multi-Step AI Pipeline
@@ -208,8 +208,8 @@ class IterativeRefiner(dspy.Module):
 Not every stage needs the same model. Use cheap models for simple steps:
 
 ```python
-expensive_lm = dspy.LM("openai/gpt-4o")
-cheap_lm = dspy.LM("openai/gpt-4o-mini")
+expensive_lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+cheap_lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-haiku-4-5-20251001", etc.
 
 pipeline = SupportPipeline()
 
@@ -310,3 +310,4 @@ This gives you LangGraph's state management and routing with DSPy's optimizable 
 - **Don't overuse ChainOfThought** — not every module in a pipeline needs reasoning. Use `dspy.Predict` for simple steps (extraction, formatting) and reserve `ChainOfThought` for steps that actually benefit from reasoning. Unnecessary reasoning adds latency and cost.
 - **Pipeline order affects optimization** — DSPy optimizers trace through your `forward()` method. If module A's output feeds module B, the optimizer sees this dependency. Reordering modules or adding conditional logic changes what the optimizer can learn.
 - **Test intermediate outputs, not just final output** — add metrics that check each stage's output independently. A pipeline can produce correct final output for wrong reasons, which breaks when inputs change.
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

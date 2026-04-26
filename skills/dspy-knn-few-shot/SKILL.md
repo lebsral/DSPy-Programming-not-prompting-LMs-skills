@@ -226,3 +226,4 @@ This retrieves 5 nearest neighbors per query and then applies BootstrapFewShot l
 - **LabeledFewShot** for simple static demo selection without bootstrapping -- see `/dspy-labeled-few-shot`
 - **Improving accuracy** for the full optimization workflow -- see `/ai-improving-accuracy`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

@@ -292,3 +292,4 @@ AWS SageMaker, Google Cloud, Lambda Labs, or Together AI for training:
 - Use `/ai-improving-accuracy` to build a strong baseline before fine-tuning
 - Use `/ai-cutting-costs` for other cost reduction strategies beyond distillation
 - Use `/ai-fixing-errors` if fine-tuning or evaluation errors occur
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

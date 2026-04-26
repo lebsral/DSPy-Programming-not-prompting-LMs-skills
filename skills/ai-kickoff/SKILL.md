@@ -270,3 +270,4 @@ After generating the project, tell the user:
 5. **Serve as API?** Use `/ai-serving-apis` to put your AI behind FastAPI endpoints
 
 Next: `/ai-improving-accuracy` to measure and improve your AI's quality.
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

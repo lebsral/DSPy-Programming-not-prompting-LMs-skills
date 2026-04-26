@@ -255,3 +255,4 @@ CUDA_VISIBLE_DEVICES=1 vllm serve meta-llama/Llama-3.1-8B-Instruct --port 8002
 - **Deploying as an API** (FastAPI wrapper around your DSPy program) — `/ai-serving-apis`
 - **Reducing costs** (model routing, caching) — `/ai-cutting-costs`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

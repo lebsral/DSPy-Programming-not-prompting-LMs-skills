@@ -1,0 +1,44 @@
+{
+  "skill_name": "ai-building-pipelines",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I get support tickets via a webhook and need to process them in three steps: classify the ticket (billing, technical, account), pull relevant docs from our help center, then draft a response using the classification and docs. About 100 labeled examples. Using GPT-4o-mini.",
+      "expected_output": "A DSPy Module with three sub-modules wired together in forward(): a classifier, a retriever, and a response drafter. Each step should have its own Signature. Should show how to optimize the full pipeline end-to-end with a single metric, not each stage separately.",
+      "files": [],
+      "assertions": [
+        {"name": "defines_pipeline_module", "description": "Creates a dspy.Module subclass that composes multiple sub-modules in __init__"},
+        {"name": "has_separate_signatures", "description": "Defines distinct dspy.Signature classes for classification and response drafting"},
+        {"name": "wires_in_forward", "description": "The forward() method chains outputs from earlier stages as inputs to later stages"},
+        {"name": "end_to_end_optimization", "description": "Uses a DSPy optimizer (BootstrapFewShot or MIPROv2) on the full pipeline, not individual modules"},
+        {"name": "includes_retrieval", "description": "Includes a retrieval step (dspy.Retrieve or similar) between classification and generation"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "I want to build a content pipeline that takes a rough draft blog post, checks it for factual claims, looks up sources for each claim, then rewrites the draft with citations. The tricky part is the verification step might find some claims are wrong and those need to be flagged or removed, not just cited.",
+      "expected_output": "A multi-stage DSPy pipeline with generate/extract claims, verify claims, and rewrite stages. Should handle the branching case where unverifiable claims are flagged. Each stage is its own module with a clear signature.",
+      "files": [],
+      "assertions": [
+        {"name": "defines_pipeline_module", "description": "Creates a dspy.Module that composes claim extraction, verification, and rewriting sub-modules"},
+        {"name": "handles_branching", "description": "Includes conditional logic in forward() to handle verified vs unverifiable claims differently"},
+        {"name": "has_verification_stage", "description": "Includes a distinct verification or fact-checking module with its own signature"},
+        {"name": "has_rewrite_stage", "description": "Includes a rewriting module that takes verified claims and produces cited output"},
+        {"name": "provider_agnostic", "description": "Any dspy.LM() call includes a provider-alternative comment"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "We have a customer onboarding flow where we need to: 1) extract key info from a signup form (company name, industry, size), 2) classify them into a tier (starter, growth, enterprise), 3) generate a personalized welcome email based on their tier. I want to use a cheap model for extraction and classification but a better model for the email. No labeled data yet.",
+      "expected_output": "A DSPy pipeline with three stages using different models per stage. Should show how to assign cheap_lm to extraction/classification modules and expensive_lm to the email generator. Should address the cold-start scenario.",
+      "files": [],
+      "assertions": [
+        {"name": "defines_pipeline_module", "description": "Creates a dspy.Module composing extraction, classification, and generation sub-modules"},
+        {"name": "assigns_different_models", "description": "Shows how to assign different dspy.LM instances to different stages of the pipeline"},
+        {"name": "has_extraction_stage", "description": "Includes a module that extracts structured fields from the signup form text"},
+        {"name": "handles_cold_start", "description": "Addresses the no-labeled-data scenario with zero-shot approach or synthetic data suggestion"},
+        {"name": "generates_personalized_email", "description": "Final stage generates a welcome email conditioned on the extracted tier and company info"}
+      ]
+    }
+  ]
+}

@@ -243,3 +243,4 @@ For full vLLM setup (tensor parallelism, GPU sizing, quantization, production de
 - **`/dspy-modules`** -- Wrap signatures with inference strategies (Predict, ChainOfThought, ReAct)
 - **`/ai-switching-models`** -- Safely migrate between providers with re-optimization
 - **`/ai-cutting-costs`** -- Reduce LM costs with per-module assignment and cheaper models
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

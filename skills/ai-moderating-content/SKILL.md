@@ -275,3 +275,4 @@ Brief notes on content that's hard to moderate correctly:
 - Use `/ai-testing-safety` to adversarially test your moderator
 - Use `/ai-monitoring` to track moderation quality in production
 - See `examples.md` for complete worked examples
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

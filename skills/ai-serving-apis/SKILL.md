@@ -351,3 +351,4 @@ async def query(request: QueryRequest):
 - Use `/ai-searching-docs` to build the RAG program to serve
 - Use `/ai-monitoring` to monitor your deployed API
 - Use `/ai-cutting-costs` to optimize API costs in production
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

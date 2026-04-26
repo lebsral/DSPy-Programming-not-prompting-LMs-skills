@@ -223,3 +223,4 @@ result = loaded(text="New input here")
 - **Data preparation** for training and validation sets -- see `/dspy-data`
 - **Signatures and instructions** that InferRules modifies -- see `/dspy-signatures`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

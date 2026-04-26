@@ -1,0 +1,44 @@
+{
+  "skill_name": "ai-checking-outputs",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I have a support chatbot that answers questions from our help docs. Sometimes it makes up features that don't exist or gives wrong pricing info. I need to add a check that verifies the answer is actually grounded in the source docs before showing it to the user. Using GPT-4o-mini.",
+      "expected_output": "A DSPy module with a verification step that checks if the generated answer is supported by the retrieved context. Should use dspy.Assert with a VerifyFacts-style signature, include specific error messages for backtracking, and handle the case where verification fails after retries.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_dspy_assert", "description": "Uses dspy.Assert (not just if/raise) so DSPy's backtracking mechanism activates"},
+        {"name": "has_verification_signature", "description": "Defines a separate dspy.Signature for verifying answer against context/sources"},
+        {"name": "specific_error_messages", "description": "Assert messages include specific details (what failed, what to do instead), not vague strings"},
+        {"name": "inside_forward_method", "description": "Assertions are placed inside a dspy.Module.forward() method, not in standalone code"},
+        {"name": "grounds_in_context", "description": "The verification step checks that claims in the answer are present in the retrieved passages"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "We extract invoice data from emails — vendor name, amount, date, line items. The LLM sometimes returns amounts that don't add up (line items don't sum to total), dates in the wrong format, or completely hallucinated vendor names. I need format and consistency checks on the extracted fields.",
+      "expected_output": "A DSPy module that extracts invoice fields then validates them with dspy.Assert checks: amount arithmetic, date format regex, non-empty required fields. Should use Pydantic models for type validation and dspy.Assert for business logic checks.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_pydantic_model", "description": "Defines a Pydantic BaseModel for invoice fields with type constraints (Field with ge/le, min_length, etc.)"},
+        {"name": "validates_arithmetic", "description": "Includes a check that line item amounts sum to the total amount"},
+        {"name": "validates_date_format", "description": "Uses regex or parsing to validate date format"},
+        {"name": "uses_dspy_assert", "description": "Uses dspy.Assert for business logic checks that trigger backtracking"},
+        {"name": "specific_error_messages", "description": "Error messages tell the LM exactly what's wrong (e.g., 'Line items sum to $X but total is $Y')"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I'm building a content moderation API and I need a safety filter that blocks responses containing PII (emails, phone numbers, SSNs), hate speech, or prompt injection attempts. It's public-facing so the cost of a bad output is high. What's the most robust approach?",
+      "expected_output": "A multi-layered checking approach: regex patterns for PII detection with dspy.Assert, an AI safety judge signature for content policy, and an ensemble/cross-check pattern for high-stakes decisions. Should use Assert for hard blocks and Suggest for borderline cases.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_regex_for_pii", "description": "Includes regex patterns to detect PII (email, phone, SSN formats) in output"},
+        {"name": "uses_safety_judge", "description": "Defines a safety-check Signature that uses AI to evaluate content policy compliance"},
+        {"name": "distinguishes_assert_suggest", "description": "Uses dspy.Assert for hard blocks (PII, safety) and dspy.Suggest for soft preferences"},
+        {"name": "inside_forward_method", "description": "All checks are inside a dspy.Module.forward() method"},
+        {"name": "handles_high_stakes", "description": "Uses ensemble, cross-check, or multi-layer approach appropriate for public-facing high-stakes output"}
+      ]
+    }
+  ]
+}

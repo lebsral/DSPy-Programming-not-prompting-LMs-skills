@@ -63,3 +63,4 @@ print(result.contact.phone)  # 555-0123
 - **Building multi-step programs** with modules that compose Predict calls -- see `/dspy-modules`
 - **Classification and sorting** with real-world patterns -- see `/ai-sorting`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

@@ -327,3 +327,4 @@ print(f"Optimized MAE: {optimized_score:.1f}%")
 - Need to validate AI output (not score human work)? Use `/ai-checking-outputs`
 - Need to improve scorer accuracy? Use `/ai-improving-accuracy`
 - Next: `/ai-improving-accuracy` to measure and optimize your scorer
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

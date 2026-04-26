@@ -377,3 +377,4 @@ Quick decision tree for common monitoring alerts:
 - Use `/dspy-phoenix` for in-depth Phoenix setup (local UI, evals)
 - Use `/dspy-weave` for in-depth W&B Weave setup (team dashboards)
 - See `examples.md` for complete worked examples
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

@@ -181,3 +181,4 @@ result2 = my_program(question="What is Python?")
 
 - If the AI is consistent but *wrong*, use `/ai-improving-accuracy`
 - If the AI is throwing errors, use `/ai-fixing-errors`
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

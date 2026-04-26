@@ -238,3 +238,4 @@ This is useful when you want a capable model to brainstorm instructions but eval
 - **Preparing training data** -- see `/dspy-data`
 - **Signatures and instructions** -- see `/dspy-signatures`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

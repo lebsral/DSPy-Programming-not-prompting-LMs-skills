@@ -196,3 +196,4 @@ final = mipro_optimizer.compile(bootstrapped, trainset=trainset)
 - **Data handling** for preparing training sets -- see `/dspy-data`
 - **Improving accuracy** for the full optimization decision framework -- see `/ai-improving-accuracy`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

@@ -423,3 +423,4 @@ optimized_team = optimizer.compile(TeamModule(), trainset=team_trainset)
 - Building a stateless pipeline instead? Use `/ai-building-pipelines`
 - Need the agents to hold conversations? Use `/ai-building-chatbots`
 - Next: `/ai-improving-accuracy` to measure and improve your agents
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

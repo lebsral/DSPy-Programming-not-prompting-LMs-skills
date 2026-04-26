@@ -252,3 +252,4 @@ print(result.summary)
 - **Checking and validating outputs** with assertions -- see `/ai-checking-outputs`
 - **Improving accuracy** with optimization -- see `/ai-improving-accuracy`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

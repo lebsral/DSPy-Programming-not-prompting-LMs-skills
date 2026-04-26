@@ -252,3 +252,4 @@ pipeline.generate.set_lm(expensive_lm)
 - **Multi-step pipelines** with real-world patterns -- see `/ai-building-pipelines`
 - **Optimizing modules** to improve accuracy -- see `/ai-improving-accuracy`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

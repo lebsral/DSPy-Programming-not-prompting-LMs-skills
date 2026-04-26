@@ -212,3 +212,4 @@ dspy.inspect_history(n=1)
 - To measure and improve accuracy, use `/ai-improving-accuracy`
 - Use `/ai-tracing-requests` to trace a specific request end-to-end (every LM call, retrieval, latency)
 - For DSPy API details, see `docs/dspy-reference.md`
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

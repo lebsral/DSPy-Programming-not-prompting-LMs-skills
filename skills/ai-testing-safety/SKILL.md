@@ -248,3 +248,4 @@ report = {
 - Use `/ai-monitoring` to track safety metrics in production after launch
 - Use `/ai-moderating-content` to moderate user-generated content
 - See `examples.md` for complete worked examples
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

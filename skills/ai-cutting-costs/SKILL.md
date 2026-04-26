@@ -237,3 +237,4 @@ Test with `/ai-improving-accuracy` to make sure quality doesn't drop.
 - Use `/ai-building-pipelines` to design multi-step systems with per-stage model assignment
 - Use `/ai-improving-accuracy` to make sure quality holds after cost cuts
 - Use `/ai-fixing-errors` if things break during cost optimization
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

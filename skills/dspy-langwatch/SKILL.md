@@ -276,3 +276,4 @@ What do you need?
 - **Lightweight experiment tracking** (JSONL-based, no extra tools) — `/ai-tracking-experiments`
 - **Production monitoring** — `/ai-monitoring`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

@@ -174,3 +174,4 @@ Rule of thumb: if you would reach for a calculator or a spreadsheet, use `Progra
 - **Building modules** that combine ProgramOfThought with other steps -- see `/dspy-modules`
 - **Reasoning patterns** and when to add structured thinking -- see `/ai-reasoning`
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

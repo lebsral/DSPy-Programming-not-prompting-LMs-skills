@@ -371,3 +371,4 @@ optimized = optimizer.compile(summarizer, trainset=trainset)
 - **Map-reduce loses cross-chunk context** — when summarizing long documents in chunks, information that spans chunk boundaries gets lost. Use overlapping chunks or a hierarchical approach.
 - **"Summarize this" is too vague** — always specify the audience and purpose in the signature docstring (e.g., "Summarize for a technical PM who needs to decide whether to escalate"). Vague instructions produce generic summaries.
 - **Bullet points ≠ summaries** — if you want narrative summaries, say so explicitly. LMs default to bullet points when the instruction is ambiguous.
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

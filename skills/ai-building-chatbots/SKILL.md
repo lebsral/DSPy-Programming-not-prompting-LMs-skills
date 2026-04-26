@@ -1,6 +1,6 @@
 ---
 name: ai-building-chatbots
-description: Build a conversational AI assistant with memory and state. Use when you need a customer support chatbot, helpdesk bot, onboarding assistant, sales qualification bot, FAQ assistant, or any multi-turn conversational AI. Powered by DSPy for response quality and LangGraph for conversation state management., "how do I make my chatbot remember previous messages\", \"conversational AI keeps forgetting context\", \"build a helpdesk bot that actually works\", \"chatbot drops context after a few turns\", \"Intercom bot alternative\", \"Zendesk AI alternative\", \"Drift chatbot replacement\", \"build WhatsApp bot\", \"Slack bot with AI\", \"multi-turn conversation state management\", \"chatbot escalation to human agent\", \"how to build AI customer service\", \"LangChain chatbot but simpler\", \"chatbot for SaaS onboarding flow\", \"FAQ bot that doesn't suck"
+description: "Build a conversational AI assistant with memory and state. Use when you need a customer support chatbot, helpdesk bot, onboarding assistant, sales qualification bot, FAQ assistant, or any multi-turn conversational AI. Also: \"chatbot remember previous messages\", \"conversational AI keeps forgetting context\", \"build a helpdesk bot that actually works\", \"chatbot drops context after a few turns\", \"Intercom bot alternative\", \"Zendesk AI alternative\", \"build WhatsApp bot\", \"Slack bot with AI\", \"chatbot escalation to human agent\", \"LangChain chatbot but simpler\", \"chatbot for SaaS onboarding flow\""
 ---
 
 # Build a Conversational AI Chatbot
@@ -18,6 +18,11 @@ Ask the user:
 ## Step 2: Build the response module (DSPy)
 
 The core of your chatbot is a DSPy module that generates responses given conversation history and context.
+
+```python
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+dspy.configure(lm=lm)
+```
 
 ### Basic response module
 
@@ -401,6 +406,14 @@ optimized_bot.save("chatbot_optimized.json")
 - **Interrupt before real actions** — use LangGraph's `interrupt_before` so humans approve refunds, cancellations, etc.
 - **Optimize on real conversations** — collect actual chat logs to build training data for DSPy optimization
 
+## Gotchas
+
+- **Claude puts conversation flow logic inside DSPy modules.** DSPy modules should only handle LM calls (classify, respond, summarize). State transitions, routing, and memory belong in LangGraph nodes and edges. If you catch yourself writing `if/else` chains inside `forward()` to manage conversation state, move that logic to LangGraph.
+- **Claude passes full message history every turn.** This works for short conversations but blows up token usage on long ones. After ~20 messages, summarize older messages and keep only the summary + last 5 messages. Use the `maybe_summarize` pattern from Step 4.
+- **Claude forgets `with_inputs()` when building conversation training data.** Every `dspy.Example` for chatbot training needs `.with_inputs("conversation_history", "user_message", "context")` — without it, the optimizer treats all fields as outputs and optimization silently produces garbage.
+- **Claude defines a single monolithic `ChatResponse` signature for all intents.** Different intents need different handling — a complaint needs empathy and escalation logic, a question needs retrieval accuracy, a greeting needs brevity. Use `ClassifyIntent` + separate handler modules per intent rather than one signature trying to do everything.
+- **Claude skips the escalation check.** Chatbots that can't hand off to humans are a liability. Always include an escalation path — at minimum, a turn-count threshold combined with intent detection for complaints or sensitive topics.
+
 ## Additional resources
 
 - For worked examples (support bot, FAQ assistant), see [examples.md](examples.md)
@@ -409,3 +422,4 @@ optimized_bot.save("chatbot_optimized.json")
 - Need the bot to take actions (call APIs, tools)? Use `/ai-taking-actions`
 - Building multiple bots that work together? Use `/ai-coordinating-agents`
 - Next: `/ai-improving-accuracy` to measure and improve your chatbot
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

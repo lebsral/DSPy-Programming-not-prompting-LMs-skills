@@ -432,3 +432,4 @@ print(f"Label distribution: {labels}")
 - **`/dspy-evaluate`** — evaluate your program on a devset with metrics
 - **`/ai-generating-data`** — generate synthetic training data when you have none
 - **`/ai-improving-accuracy`** — use optimizers that consume your trainset to boost quality
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

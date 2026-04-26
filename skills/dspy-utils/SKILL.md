@@ -381,3 +381,4 @@ Assertions work with optimizers -- the optimizer learns to avoid triggering them
 - **`/ai-tracing-requests`** -- Production observability and tracing for DSPy programs
 - **`/ai-serving-apis`** -- Serve DSPy programs as web APIs (pairs well with streaming and asyncify)
 - For worked examples, see [examples.md](examples.md)
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
