@@ -1,20 +1,13 @@
 ---
 name: ai-serving-apis
-description: Put your AI behind an API. Use when you need to serve AI features as web endpoints, add AI to an existing backend, deploy AI for other services to call, wrap a DSPy program in REST/HTTP, build an AI microservice, or put a language model behind FastAPI. Covers FastAPI integration, program loading, request/response models, per-request configuration, error handling, and Docker deployment., deploy AI model to production, FastAPI with LLM, AI REST API, serve DSPy program over HTTP, production AI deployment, Docker AI service, AI endpoint for mobile app, how to productionize my AI, LLM behind a web API, AI microservice architecture, deploy to AWS with AI, AI backend for React app, serverless AI deployment, put my AI in production, AI API for frontend to call, wrap LLM in an API endpoint.
+description: Put your AI behind an API. Use when you need to serve AI features as web endpoints, add AI to an existing backend, deploy AI for other services to call, wrap a DSPy program in REST or HTTP, build an AI microservice, or put a language model behind FastAPI or Flask. Also use for deploy AI model to production, AI REST API, serve DSPy program over HTTP, Docker AI service, AI endpoint for mobile app, how to productionize my AI, LLM behind a web API, AI microservice architecture, AI backend for React app, put my AI in production, AI API for frontend to call.
 ---
 
 # Put Your AI Behind an API
 
-Guide the user through wrapping a DSPy program in a web API so other services (or a frontend) can call it over HTTP. Uses FastAPI for the web layer, with clean separation between DSPy logic and API code.
+Wrap a DSPy program in a web API so other services or a frontend can call it over HTTP. Defaults to FastAPI but adapts to the user's existing framework.
 
-## When you need this
-
-- You built an AI feature and need to serve it as a web endpoint
-- You're adding AI capabilities to an existing backend
-- Other services need to call your AI over HTTP
-- You want to deploy your AI with Docker
-
-## Step 1: Understand the setup
+## Step 1: Gather context
 
 Ask the user:
 1. **What DSPy program are you serving?** (classification, RAG, extraction, pipeline, etc.)
@@ -40,8 +33,6 @@ project/
 
 ## Step 3: Define request/response models
 
-Use Pydantic models for all inputs and outputs. This gives you validation, documentation, and serialization for free.
-
 ```python
 # models.py
 from pydantic import BaseModel, Field
@@ -66,11 +57,7 @@ class HealthResponse(BaseModel):
     optimized: bool
 ```
 
-Adapt fields to match your DSPy program's inputs and outputs. If your program takes `question` and returns `answer` and `reasoning`, mirror that in the schemas.
-
 ## Step 4: Load the optimized program at startup
-
-Load the DSPy program once when the server starts, not on every request. Use FastAPI's lifespan handler:
 
 ```python
 # server.py
@@ -102,8 +89,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="My AI API", lifespan=lifespan)
 ```
-
-**Why lifespan?** Loading a program + configuring an LM takes time. Doing it once at startup means requests are fast. The `app.state` object makes the program available to all route handlers.
 
 ## Step 5: Create endpoints
 
@@ -207,7 +192,7 @@ Use pydantic-settings to manage configuration:
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    model_name: str = "openai/gpt-4o-mini"
+    model_name: str = "openai/gpt-4o-mini"  # or "anthropic/claude-sonnet-4-5-20250929", etc.
     program_path: str = "optimized.json"
     api_key: str = ""  # Set via environment variable
 
@@ -218,7 +203,7 @@ settings = Settings()
 
 ```
 # .env.example
-AI_MODEL_NAME=openai/gpt-4o-mini
+AI_MODEL_NAME=openai/gpt-4o-mini  # or anthropic/claude-sonnet-4-5-20250929, etc.
 AI_PROGRAM_PATH=optimized.json
 AI_API_KEY=your-api-key-here
 ```
@@ -271,19 +256,33 @@ services:
       - ./optimized.json:/app/optimized.json:ro
 ```
 
+## Step 9: Verify it works
+
+After starting the server, test the endpoints:
+
+```bash
+# Health check
+curl http://localhost:8000/health
+
+# Query endpoint
+curl -X POST http://localhost:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "test question"}'
+
+# Check auto-generated docs
+open http://localhost:8000/docs
+```
+
 ## Key patterns
 
 - **Load once, serve many.** Load the program and LM at startup via lifespan, not per request.
-- **Pydantic everything.** Request/response models give you validation, docs, and serialization.
-- **`dspy.context()` for overrides.** Let callers switch models or temperature without affecting other requests.
+- **`dspy.context()` for per-request overrides.** Isolates model/temperature changes without affecting other concurrent requests — critical because `dspy.configure()` sets global state.
 - **Separate DSPy from API code.** Keep `program.py` independent — the same module runs in scripts, tests, and the API.
-- **Map errors to HTTP codes.** Assertion failures → 422, rate limits → 429, timeouts → 504.
+- **Map DSPy errors to HTTP codes.** `DSPyAssertionError` → 422, rate limits → 429, timeouts → 504.
 
 ## DSPy-specific production patterns
 
 ### Saving and loading optimized programs
-
-After optimization, save the program artifact and load it at deploy time:
 
 ```python
 # After optimization
@@ -294,44 +293,22 @@ program = MyProgram()
 program.load("./artifacts/v1.json")
 ```
 
-This is the same `save()`/`load()` API used throughout DSPy — it serializes the optimized prompts, demos, and weights so you don't need the training data or optimizer at deploy time.
+The `save()`/`load()` API serializes optimized prompts, demos, and weights — no training data or optimizer needed at deploy time.
 
 ### Observability with MLflow
-
-DSPy integrates with MLflow Tracing via OpenTelemetry. Enable it to get per-request traces of every LM call, retrieval, and module step:
 
 ```python
 import mlflow
 
 mlflow.dspy.autolog()  # auto-traces all DSPy calls
-
-# Optionally set an experiment for grouping
 mlflow.set_experiment("production-qa-api")
 ```
 
-This gives you latency breakdowns, token counts, and full prompt/response logs in the MLflow UI — useful for debugging production issues. For the full MLflow guide (experiment tracking, model registry), see `/dspy-mlflow`.
+This gives you latency breakdowns, token counts, and full prompt/response logs per request. For the full MLflow guide, see `/dspy-mlflow`.
 
-### Reproducibility
+### Thread safety
 
-Log the configuration alongside your program so you can reproduce results:
-
-```python
-import json
-
-config = {
-    "model": settings.model_name,
-    "program_path": settings.program_path,
-    "dspy_version": dspy.__version__,
-    "temperature": 0.0,
-}
-# Write to a file or log to MLflow
-with open("./artifacts/config.json", "w") as f:
-    json.dump(config, f)
-```
-
-### Thread safety and async
-
-`dspy.configure()` sets global state. For concurrent request handling, use `dspy.context()` to isolate per-request overrides without affecting other threads:
+`dspy.configure()` sets global state. For concurrent requests with per-request overrides, always use `dspy.context()`:
 
 ```python
 @app.post("/query")
@@ -344,11 +321,25 @@ async def query(request: QueryRequest):
     return QueryResponse(answer=result.answer)
 ```
 
+## Gotchas
+
+- **Creating a new `dspy.LM()` instance on every request.** Claude tends to put `dspy.LM()` inside the route handler. LM initialization has overhead (connection pooling, auth validation). Configure the default LM once at startup; only create per-request LM instances when the caller explicitly overrides the model via `dspy.context()`.
+- **Loading the optimized program inside the route handler.** `program.load()` reads from disk and deserializes — doing it per request adds latency and can cause file handle exhaustion under load. Always load in the lifespan handler and store on `app.state`.
+- **Using `async def` routes but calling DSPy synchronously.** DSPy LM calls are blocking I/O. In an `async def` FastAPI route, a blocking call ties up the event loop. Either use `def` (sync) routes so FastAPI runs them in a thread pool, or wrap DSPy calls in `asyncio.to_thread()`.
+- **Forgetting that `dspy.configure()` is global state.** Claude often calls `dspy.configure()` inside a route to change the model per request. This mutates global state and causes race conditions under concurrent load. Use `dspy.context()` (context manager) for per-request overrides instead.
+- **Returning raw DSPy `Prediction` objects from the API.** Claude sometimes returns `result` directly instead of mapping to a Pydantic response model. `Prediction` objects are not JSON-serializable by FastAPI — always extract the fields you need into your response model.
+
+## Cross-references
+
+- Scaffold a new project with API structure — see `/ai-kickoff`
+- Build the RAG program to serve — see `/ai-searching-docs`
+- Monitor your deployed API — see `/ai-monitoring`
+- Optimize API costs in production — see `/ai-cutting-costs`
+- Trace requests end-to-end with MLflow — see `/dspy-mlflow`
+- Define input/output contracts for your DSPy program — see `/dspy-signatures`
+- Fix errors in your deployed AI — see `/ai-fixing-errors`
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+
 ## Additional resources
 
 - For worked examples (RAG API, classification API, streaming), see [examples.md](examples.md)
-- Use `/ai-kickoff` to scaffold a new project (add `--api` structure with Step 2b)
-- Use `/ai-searching-docs` to build the RAG program to serve
-- Use `/ai-monitoring` to monitor your deployed API
-- Use `/ai-cutting-costs` to optimize API costs in production
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

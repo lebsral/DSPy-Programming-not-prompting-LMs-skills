@@ -55,7 +55,7 @@ from fastapi import FastAPI, HTTPException
 from program import RAGProgram
 from models import SearchRequest, SearchResponse, HealthResponse
 
-MODEL_NAME = "openai/gpt-4o-mini"
+MODEL_NAME = "openai/gpt-4o-mini"  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 PROGRAM_PATH = "optimized.json"
 
 @asynccontextmanager
@@ -142,7 +142,7 @@ class ClassifyResponse(BaseModel):
 # --- FastAPI app ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+    dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
     app.state.classifier = Classifier()
     try:
         app.state.classifier.load("optimized.json")

@@ -1,0 +1,36 @@
+[
+  {
+    "prompt": "I have a DSPy program that classifies support tickets and I need to put it behind a REST API so our React frontend can call it",
+    "expected_output": "A FastAPI server with lifespan handler that loads the DSPy program at startup, Pydantic request/response models, and a POST endpoint that calls the program",
+    "assertions": [
+      "Uses FastAPI lifespan to load the DSPy program once at startup, not per request",
+      "Stores the program on app.state",
+      "Defines Pydantic BaseModel classes for request and response",
+      "Uses dspy.context() for any per-request LM overrides instead of dspy.configure()",
+      "Includes a health check endpoint",
+      "Does not hardcode a single LM provider without showing alternatives"
+    ]
+  },
+  {
+    "prompt": "I need to deploy my optimized RAG pipeline as a Docker container with an API. I have an optimized.json from running BootstrapFewShot",
+    "expected_output": "A complete deployment setup with FastAPI server loading the optimized program, Dockerfile, requirements.txt, and environment configuration",
+    "assertions": [
+      "Loads the optimized program via program.load() in the lifespan handler",
+      "Includes a Dockerfile with Python base image and uvicorn CMD",
+      "Uses pydantic-settings or environment variables for configuration (model name, program path)",
+      "Maps DSPy errors to appropriate HTTP status codes (422 for assertion errors, 429 for rate limits)",
+      "Does not call dspy.LM() or program.load() inside route handlers",
+      "Includes dspy in requirements.txt"
+    ]
+  },
+  {
+    "prompt": "My FastAPI AI endpoint is slow under concurrent load. Multiple users hit it at the same time and responses back up",
+    "expected_output": "Diagnosis of blocking DSPy calls in async routes and dspy.configure() global state issues, with fixes using sync routes or asyncio.to_thread() and dspy.context()",
+    "assertions": [
+      "Identifies that DSPy LM calls are blocking I/O that ties up the async event loop",
+      "Recommends either sync def routes or asyncio.to_thread() for DSPy calls",
+      "Warns about dspy.configure() being global state and causing race conditions",
+      "Recommends dspy.context() for per-request isolation"
+    ]
+  }
+]
