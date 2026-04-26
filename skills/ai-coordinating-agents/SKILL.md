@@ -1,6 +1,6 @@
 ---
 name: ai-coordinating-agents
-description: Build multiple AI agents that work together. Use when you need a supervisor agent that delegates to specialists, agent handoff, parallel research agents, support escalation (L1 to L2), content pipeline (writer + editor + fact-checker), or any multi-agent system. Also: CrewAI alternative, AutoGen alternative, LangGraph multi-agent, agents that talk to each other, specialist agents with a supervisor, agents keep stepping on each other, build an AI team, route tasks to the right agent, when one agent isn't enough, parallel agents for research.
+description: Build multiple AI agents that work together. Use when you need a supervisor agent that delegates to specialists, agent handoff, parallel research agents, support escalation (L1 to L2), content pipeline (writer + editor + fact-checker), or any multi-agent system. Also: CrewAI alternative, AutoGen alternative, LangGraph multi-agent, agents that talk to each other, specialist agents with a supervisor, agents keep stepping on each other, build an AI team, route tasks to the right agent, when one agent is not enough, parallel agents for research.
 ---
 
 # Build Multi-Agent Systems

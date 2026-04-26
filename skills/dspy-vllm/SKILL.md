@@ -1,6 +1,6 @@
 ---
 name: dspy-vllm
-description: Use vLLM for high-throughput production serving of self-hosted models with DSPy. Use when you want production LLM serving, tensor parallelism, multi-GPU inference, batch processing, or high-concurrency self-hosted models. Also: 'vllm', 'vLLM', 'production serving', 'high throughput LLM', 'tensor parallelism', 'self-hosted production', 'PagedAttention', 'local production server', 'GPU serving', 'batch inference', 'vllm serve', 'pip install vllm', 'multi-GPU LLM', 'speculative decoding', 'continuous batching', 'deploy local model', 'NVIDIA GPU serving', 'openai compatible server', 'AWQ quantization vllm', 'GPTQ vllm'.
+description: Use vLLM for high-throughput production serving of self-hosted models with DSPy. Use when you want production LLM serving, tensor parallelism, multi-GPU inference, batch processing, or high-concurrency self-hosted models. Also: vllm, vLLM, production serving, high throughput LLM, tensor parallelism, self-hosted production, PagedAttention, local production server, GPU serving, batch inference, vllm serve, pip install vllm, multi-GPU LLM, speculative decoding, continuous batching, deploy local model, NVIDIA GPU serving, openai compatible server, AWQ quantization vllm, GPTQ vllm.
 ---
 
 # vLLM — High-Throughput Production Serving for DSPy

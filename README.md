@@ -204,6 +204,12 @@ npx skills update         # Pull latest versions
 
 For manual/symlink installs, run `git pull` in your cloned repo.
 
+> **Migrating from v1.12.1 or earlier?** A YAML formatting change in v1.12.2 means `npx skills update` may fail on some skills. Reinstall to fix:
+> ```bash
+> npx skills remove dspy-skills
+> npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills -g -s '*'
+> ```
+
 ### Adding new skills after initial install
 
 `npx skills update` only updates skills you already have. When new skills are added to this repo (like the `dspy-` API-first skills), re-run the add command to pick them up:

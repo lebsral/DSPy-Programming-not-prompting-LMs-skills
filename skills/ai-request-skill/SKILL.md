@@ -1,6 +1,6 @@
 ---
 name: ai-request-skill
-description: Request or contribute a new AI skill that doesn't exist yet. Use when DSPy supports something but there's no skill for it — helps you build the skill and submit a PR, or file an issue requesting it. Also use when the user says 'there should be a skill for this', 'can we make a skill', 'I want to contribute a skill', or 'none of the ai- skills cover my use case'.
+description: Request or contribute a new AI skill that does not exist yet. Use when DSPy supports something but there is no skill for it — helps you build the skill and submit a PR, or file an issue requesting it. Also use when the user says there should be a skill for this, can we make a skill, I want to contribute a skill, or none of the ai- skills cover my use case.
 argument-hint: "[describe the missing capability]"
 ---
 
@@ -111,7 +111,7 @@ Read 2-3 existing skills in `skills/` to match the tone and structure. Key thing
 description: "Help with AI observability"
 
 # Good: specific triggers, covers edge cases
-description: "Monitor your AI's quality, latency, and cost in production. Use when you need to track AI accuracy over time, detect model degradation, set up alerts for quality drops, log predictions, measure production performance, or answer 'is our AI still working well?'"
+description: "Monitor your AIs quality, latency, and cost in production. Use when you need to track AI accuracy over time, detect model degradation, set up alerts for quality drops, log predictions, measure production performance, or answer is our AI still working well?'"
 ```
 
 **Code examples** — Every code block should be copy-pasteable. Include imports, LM configuration, and a usage example at the bottom. Use `docs/dspy-reference.md` for correct API patterns.
