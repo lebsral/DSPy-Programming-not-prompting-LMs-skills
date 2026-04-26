@@ -6,7 +6,7 @@
 import dspy
 
 # Setup
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 colbert = dspy.ColBERTv2(url="http://20.102.90.50:2017/wiki17_abstracts")
 dspy.configure(lm=lm, rm=colbert)
 

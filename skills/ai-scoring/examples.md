@@ -6,7 +6,7 @@
 import dspy
 from pydantic import BaseModel, Field
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Define the rubric

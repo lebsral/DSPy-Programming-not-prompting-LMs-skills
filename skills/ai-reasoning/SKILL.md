@@ -326,10 +326,27 @@ optimized = optimizer.compile(SelfDiscoveryReasoner(), trainset=trainset)
 - **Evaluate the reasoning, not just the answer** — good reasoning produces reliably correct answers
 - **Structured traces** — JSON reasoning steps make debugging and optimization easier
 
+## Gotchas
+
+- **Adding a `reasoning` field to your signature when using ChainOfThought.** DSPy injects the reasoning field automatically. Adding your own creates a duplicate that confuses the LM and produces garbled output. Just define your task-specific input/output fields and let `dspy.ChainOfThought` handle the rest.
+- **Using ProgramOfThought for everything involving numbers.** ProgramOfThought generates and executes Python code, which requires a sandbox and adds latency. For simple numeric comparisons or estimates that do not need exact computation, ChainOfThought is faster and sufficient. Reserve ProgramOfThought for actual arithmetic, date math, or data manipulation.
+- **Forgetting that MultiChainComparison makes N separate LM calls.** Each chain is an independent call, so cost and latency scale linearly. For latency-sensitive paths, consider using ChainOfThought with `dspy.Suggest` constraints instead of MultiChainComparison with 3-5 chains.
+- **Building a Self-Discovery pipeline without optimizing each stage separately.** When you call `BootstrapFewShot` on a multi-stage module, it optimizes end-to-end but the intermediate stages (select, adapt, plan) often get weak demos. Evaluate intermediate outputs during development to catch silent degradation in early stages.
+- **Using string matching to route between reasoning strategies.** The `SmartReasoner` pattern with `if "math" in task_type` is brittle — LMs produce unpredictable classification labels. Use `dspy.Predict` with `Literal` types for routing, or better yet, let the optimizer discover which strategy works best via `dspy.Evaluate` comparisons.
+
+## Cross-references
+
+- **ChainOfThought** for the core reasoning module — see `/dspy-chain-of-thought`
+- **ProgramOfThought** for code-generating computation — see `/dspy-program-of-thought`
+- **MultiChainComparison** for multi-path reasoning — see `/dspy-multi-chain-comparison`
+- **Signatures** for defining input/output contracts — see `/dspy-signatures`
+- **Assertions** for constraining reasoning quality with Suggest/Assert — see `/dspy-assertions`
+- **Simple calls without reasoning** — see `/dspy-predict`
+- Need AI to call APIs and use tools? See `/ai-taking-actions`
+- Need multi-step pipelines with predetermined stages? See `/ai-building-pipelines`
+- Measure and improve your reasoning system — see `/ai-improving-accuracy`
+- Not sure which skill to use? Try `/ai-do`
+
 ## Additional resources
 
 - For worked examples (complex questions, data analysis, planning), see [examples.md](examples.md)
-- Need AI to call APIs and use tools? Use `/ai-taking-actions`
-- Need multi-step pipelines with predetermined stages? Use `/ai-building-pipelines`
-- Next: `/ai-improving-accuracy` to measure and improve your reasoning system
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

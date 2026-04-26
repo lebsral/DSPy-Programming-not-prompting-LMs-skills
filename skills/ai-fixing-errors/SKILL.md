@@ -1,13 +1,22 @@
 ---
 name: ai-fixing-errors
-description: Fix broken AI features. Use when your AI is throwing errors, producing wrong outputs, crashing, returning garbage, not responding, or behaving unexpectedly. Also use when you get Could not parse LLM output errors, or outputs appear coherent but contain factual drift. Covers DSPy debugging, error diagnosis, and troubleshooting., DSPy program crashes, my AI broke after deployment, LLM timeout errors, rate limit exceeded, API key not working with DSPy, JSON parse error from LLM, model returns empty response, AI works sometimes fails sometimes, intermittent LLM failures, debug DSPy pipeline, LLM output truncated, context window exceeded, token limit error, my AI feature stopped working overnight, production AI errors.
+description: Fix broken AI features. Use when your AI is throwing errors, producing wrong outputs, crashing, returning garbage, not responding, or behaving unexpectedly. Also use when you get Could not parse LLM output errors, DSPy program crashes, LLM timeout or rate limit errors, API key not working with DSPy, JSON parse error from LLM, model returns empty response, AI works sometimes but fails other times, intermittent LLM failures, debug DSPy pipeline, context window exceeded, token limit error, AI feature stopped working overnight, production AI errors.
 ---
 
 # Fix Your Broken AI
 
-Systematic approach to diagnosing and fixing AI features that aren't working. Run through these checks in order.
+Systematic approach to diagnosing and fixing AI features that aren't working.
 
-## Quick Diagnostic Checklist
+## Step 1 — Gather context
+
+Before debugging, ask the user:
+
+1. What error message or unexpected behavior are you seeing? (paste the traceback or describe the output)
+2. Did this work before, or is it a new feature that has never worked?
+3. Are you using an optimizer, or is this a zero-shot / few-shot program?
+4. What LM provider and model are you using?
+
+## Step 2 — Quick Diagnostic Checklist
 
 ### 1. Is the AI provider configured?
 
@@ -18,7 +27,7 @@ import dspy
 print(dspy.settings.lm)  # Should show your LM, not None
 
 # If None, configure it:
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 ```
 
@@ -31,7 +40,7 @@ dspy.configure(lm=lm)
 
 ```python
 # Test the AI provider directly
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 response = lm("Hello, respond with just 'OK'")
 print(response)
 ```
@@ -205,6 +214,21 @@ optimized(question="test")
 print("=== OPTIMIZED PROMPT ===")
 dspy.inspect_history(n=1)
 ```
+
+## Gotchas
+
+- **Jumping to code changes before reading `dspy.inspect_history()`.** Claude tends to guess at fixes based on the error message alone. Always inspect the actual prompt and response first — the root cause is usually visible in the raw LM output (wrong format, truncated response, misunderstood instruction).
+- **Treating parse errors as LM problems when they are signature problems.** When DSPy cannot parse the output, Claude often tries switching models or adding retry logic. The real fix is usually to simplify the output type, add field descriptions, or switch from `Predict` to `ChainOfThought` so the model has space to reason before producing structured output.
+- **Rewriting the whole program instead of isolating the broken component.** Claude tends to refactor everything when one step fails. Test each predictor in the pipeline individually by calling it directly — the bug is typically in one specific step.
+- **Adding `try/except` around DSPy calls to swallow errors.** This hides the real problem. DSPy errors (especially `ValueError` from parsing) are diagnostic — they tell you exactly what the LM returned vs what was expected. Fix the root cause instead of catching and retrying.
+- **Forgetting that optimized programs load stale demos.** When a program worked before but breaks after changes, Claude often misses that `.load()` restores old few-shot demos that no longer match the current signature. Re-optimize or clear the saved state after signature changes.
+
+## Cross-references
+
+- Measure and improve accuracy after fixing errors — see `/ai-improving-accuracy`
+- Trace a specific request end-to-end (every LM call, retrieval, latency) — see `/ai-tracing-requests`
+- Monitor AI in production to catch errors early — see `/ai-monitoring`
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
 
 ## Additional resources
 

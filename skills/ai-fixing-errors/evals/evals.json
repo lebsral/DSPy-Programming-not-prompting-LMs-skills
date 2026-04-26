@@ -1,0 +1,42 @@
+{
+  "skill_name": "ai-fixing-errors",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I have a DSPy program that classifies support tickets. It was working fine last week but now I get 'ValueError: Could not parse output' on about half the inputs. I did not change any code. Using openai/gpt-4o-mini. Here is the signature:\n\nclass ClassifyTicket(dspy.Signature):\n    ticket_text: str = dspy.InputField()\n    category: Literal['billing', 'technical', 'account'] = dspy.OutputField()\n    urgency: Literal['low', 'medium', 'high'] = dspy.OutputField()\n\nI optimized it with BootstrapFewShot and load from classify_ticket.json.",
+      "expected_output": "Debugging guidance that starts with inspecting dspy.inspect_history() to see what the LM is actually returning. Should consider that loaded demos from classify_ticket.json might be stale or that a model update changed output formatting. Should NOT immediately rewrite the signature or switch models.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_inspect_history", "description": "Recommends dspy.inspect_history() to see the raw LM output before making changes"},
+        {"name": "checks_saved_state", "description": "Considers that loaded optimized state (classify_ticket.json) might contain stale demos"},
+        {"name": "does_not_rewrite_signature_first", "description": "Does not jump to rewriting the signature as the first fix — diagnoses first"},
+        {"name": "provider_agnostic_code", "description": "Any dspy.LM() calls include provider-alternative comments"},
+        {"name": "mentions_model_update_possibility", "description": "Notes that the model provider may have updated behavior since optimization"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "My DSPy pipeline has 3 steps — generate search query, retrieve docs, then answer the question. It runs but the final answer is always wrong or generic. No errors in the console. I think the retriever is broken but not sure. How do I figure out what is going wrong?",
+      "expected_output": "Step-by-step isolation strategy: test each component individually, starting with inspect_history to see all 3 LM calls. Should show how to call each predictor separately and print intermediate outputs. Should NOT suggest rewriting the whole pipeline.",
+      "files": [],
+      "assertions": [
+        {"name": "isolates_components", "description": "Suggests testing each pipeline step individually rather than rewriting everything"},
+        {"name": "uses_inspect_history", "description": "Uses dspy.inspect_history() to examine what each step produced"},
+        {"name": "checks_retriever_directly", "description": "Shows how to test the retriever independently to verify it returns relevant passages"},
+        {"name": "prints_intermediate_outputs", "description": "Adds or suggests print statements between pipeline steps to see data flow"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I just set up DSPy for the first time. I'm trying to run a simple Predict call but I get AttributeError: 'NoneType' object has no attribute 'generate'. My code is:\n\nimport dspy\nclassify = dspy.Predict('text -> label')\nresult = classify(text='hello world')\n\nWhat am I doing wrong?",
+      "expected_output": "Identifies that dspy.configure(lm=...) was never called. Shows the fix with a provider-agnostic LM configuration. Should be concise since this is a simple setup issue.",
+      "files": [],
+      "assertions": [
+        {"name": "identifies_missing_configure", "description": "Correctly identifies that dspy.configure(lm=lm) is missing"},
+        {"name": "shows_fix_with_configure", "description": "Provides working code with dspy.configure() before the Predict call"},
+        {"name": "provider_agnostic_code", "description": "Any dspy.LM() calls include provider-alternative comments"},
+        {"name": "concise_response", "description": "Does not over-explain or suggest unnecessary changes beyond the missing configure call"}
+      ]
+    }
+  ]
+}

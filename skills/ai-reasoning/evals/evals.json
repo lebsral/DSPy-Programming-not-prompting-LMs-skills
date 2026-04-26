@@ -1,0 +1,45 @@
+{
+  "skill_name": "ai-reasoning",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I have a support bot that answers billing questions, but it keeps getting wrong answers on questions that require multiple steps — like calculating prorated refunds or figuring out which discount applies. The answers are close but the math is off or it skips a step. Can you build something with DSPy that actually reasons through these step by step?",
+      "expected_output": "A DSPy module using ChainOfThought or ProgramOfThought that breaks down multi-step billing questions. Should show the reasoning trace, handle computation correctly, and include a metric that evaluates reasoning quality — not just final answer correctness.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_chain_of_thought_or_pot", "description": "Uses dspy.ChainOfThought for logic or dspy.ProgramOfThought for computation, not plain dspy.Predict"},
+        {"name": "defines_signature", "description": "Defines a dspy.Signature with descriptive input/output fields for the billing reasoning task"},
+        {"name": "does_not_add_reasoning_field", "description": "Does not manually add a reasoning output field to the signature — lets ChainOfThought inject it"},
+        {"name": "includes_reasoning_metric", "description": "Defines a metric that evaluates reasoning quality, not just final answer correctness"},
+        {"name": "shows_reasoning_trace", "description": "Accesses and prints the reasoning attribute from the ChainOfThought result"},
+        {"name": "provider_agnostic", "description": "LM configuration uses a generic provider with an alternative comment, not hardcoded to one provider"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "We need to build an AI that helps our team evaluate vendor proposals. Each proposal has multiple sections (pricing, SLA, security, support) and we need to compare 3-4 vendors across all dimensions and pick the best one. The current approach just asks the LLM to pick a winner but it gives inconsistent results. How can I make this more rigorous with DSPy?",
+      "expected_output": "A DSPy module that uses MultiChainComparison or a Self-Discovery reasoning pattern to systematically evaluate vendors across dimensions. Should structure the evaluation with explicit criteria, compare approaches, and produce a justified recommendation.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_advanced_reasoning", "description": "Uses MultiChainComparison, a multi-stage pipeline, or Self-Discovery pattern — not a single Predict call"},
+        {"name": "structured_evaluation", "description": "Evaluates vendors across explicit dimensions rather than asking for an overall winner"},
+        {"name": "uses_pydantic_models", "description": "Uses Pydantic BaseModel for structured output like scoring rubrics or comparison results"},
+        {"name": "includes_optimization_path", "description": "Shows how to optimize the reasoning with BootstrapFewShot or MIPROv2"},
+        {"name": "handles_multiple_inputs", "description": "Accepts multiple vendor proposals as input, not just a single text blob"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I want to build an AI planning assistant that helps project managers create migration plans. The AI needs to figure out task dependencies, estimate timelines, and flag risks. Simple prompting gives generic plans that miss constraints. Can you make it actually think through the problem?",
+      "expected_output": "A DSPy module using a Self-Discovery or multi-stage reasoning approach that selects relevant planning strategies, creates structured task plans with dependencies, and uses dspy.Suggest to enforce plan quality constraints.",
+      "files": [],
+      "assertions": [
+        {"name": "multi_stage_reasoning", "description": "Uses a multi-stage pipeline (select strategies, plan, execute) rather than a single reasoning call"},
+        {"name": "structured_output", "description": "Produces structured task items with dependencies, durations, and assignments — not just text"},
+        {"name": "uses_suggest_or_assert", "description": "Uses dspy.Suggest or dspy.Assert to enforce quality constraints on the plan"},
+        {"name": "includes_risk_identification", "description": "Identifies risks or failure modes as part of the planning output"},
+        {"name": "includes_evaluation", "description": "Shows how to evaluate plan quality with a DSPy metric"}
+      ]
+    }
+  ]
+}

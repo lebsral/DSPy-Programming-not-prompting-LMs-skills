@@ -1,0 +1,47 @@
+{
+  "skill_name": "ai-scoring",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I manage a coding bootcamp and want to auto-grade student project submissions. Each project should be scored on code correctness, code readability, and documentation quality on a 1-5 scale. Correctness should count for 50%, readability 30%, and docs 20%. I have about 40 projects that two instructors have already graded by hand. Can you build a scorer that matches our instructors' grading and flags anything where the AI disagrees significantly?",
+      "expected_output": "A Python script that defines a DSPy rubric scorer with three weighted criteria, scores each criterion independently using ChainOfThought, includes anchor examples for calibration, validates scores with dspy.Assert, compares against gold-standard human grades using a MAE or agreement metric, and optimizes with MIPROv2 or BootstrapFewShot.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_dspy_signature", "description": "Defines a dspy.Signature for scoring a single criterion"},
+        {"name": "scores_per_criterion", "description": "Scores each criterion in a separate call to avoid halo effect"},
+        {"name": "uses_chain_of_thought", "description": "Uses ChainOfThought so the model reasons before assigning a score"},
+        {"name": "includes_weights", "description": "Applies the specified weights (50/30/20) when computing overall score"},
+        {"name": "includes_anchor_examples", "description": "Provides calibration anchors showing what different score levels look like"},
+        {"name": "uses_assert_for_validation", "description": "Uses dspy.Assert to enforce valid score ranges"},
+        {"name": "includes_evaluation_metric", "description": "Defines a metric (MAE or agreement) comparing AI scores to human gold scores"},
+        {"name": "includes_optimization", "description": "Uses a DSPy optimizer to improve scorer accuracy against the metric"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Our customer success team reviews 200 support conversations per week for quality. We score each on helpfulness, accuracy, and tone — all equally weighted on a 1-5 scale. Right now it takes 3 hours a week. Can you build an AI auditor that scores these automatically and gives a pass/needs_coaching decision? A conversation passes if the overall score is 3.5 or above.",
+      "expected_output": "A Python script with a DSPy module that scores support conversations on three criteria independently, computes a weighted overall score, and makes a pass/needs_coaching decision based on a 3.5 threshold. Should require justifications citing evidence from the conversation.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_dspy_signature", "description": "Defines a dspy.Signature for scoring support conversations"},
+        {"name": "scores_per_criterion", "description": "Scores helpfulness, accuracy, and tone in separate calls"},
+        {"name": "requires_justification", "description": "Each score includes a justification field citing conversation evidence"},
+        {"name": "includes_threshold_decision", "description": "Implements pass/needs_coaching logic based on the 3.5 threshold"},
+        {"name": "uses_chain_of_thought", "description": "Uses ChainOfThought for reasoning before scoring"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "We are evaluating vendor proposals for a procurement process. Each proposal needs to be scored on technical fit, cost competitiveness, and team experience. The stakes are high so I want multiple independent AI raters and I want to flag any proposal where the raters disagree by more than 1 point on any criterion. Can you build an ensemble scorer?",
+      "expected_output": "A Python script with an ensemble scoring module that runs 3 independent raters on each proposal, averages scores, detects disagreements above 1 point spread per criterion, and flags proposals needing human review.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_dspy_module", "description": "Defines a dspy.Module for the ensemble scorer"},
+        {"name": "multiple_independent_raters", "description": "Creates 3 or more independent scorer instances"},
+        {"name": "detects_disagreement", "description": "Computes per-criterion score spread and flags disagreements above 1 point"},
+        {"name": "flags_for_human_review", "description": "Returns a flag indicating whether the proposal needs human review"},
+        {"name": "averages_scores", "description": "Computes averaged overall score across raters"}
+      ]
+    }
+  ]
+}

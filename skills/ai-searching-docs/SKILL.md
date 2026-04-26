@@ -1,6 +1,6 @@
 ---
 name: ai-searching-docs
-description: Build AI that searches your documents and answers questions. Use when building a knowledge base, help center Q&A, chatting with documents, answering questions from a database, search-and-answer over internal docs, customer support bot, or FAQ system. Also use when embedding search loses critical context, retrieval returns irrelevant results, or the right document is buried deep in search results. Powered by DSPy RAG (retrieval-augmented generation)., build knowledge base with AI, RAG pipeline tutorial, semantic search over documents, AI help center, search internal docs with AI, Pinecone integration with DSPy, ChromaDB RAG pipeline, retrieval augmented generation, AI answers from company docs, my RAG returns garbage, improve retrieval quality, vector database search quality.
+description: Build AI that searches your documents and answers questions. Use when building a knowledge base, help center Q&A, chatting with documents, answering questions from a database, search-and-answer over internal docs, customer support bot, or FAQ system. Also use when embedding search loses critical context, retrieval returns irrelevant results, the right document is buried deep in search results, RAG pipeline tutorial, semantic search over documents, or vector database search quality.
 ---
 
 # Build AI-Powered Document Search
@@ -64,7 +64,7 @@ chunks = splitter.split_documents(docs)
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
 
-embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+embeddings = OpenAIEmbeddings(model="text-embedding-3-small")  # or HuggingFaceEmbeddings, etc.
 vectorstore = Chroma.from_documents(chunks, embeddings, persist_directory="./chroma_db")
 
 # Use as a retriever
@@ -90,6 +90,9 @@ Ask the user:
 
 ```python
 import dspy
+
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+dspy.configure(lm=lm)
 
 class AnswerFromDocs(dspy.Signature):
     """Answer the question based on the given context."""
@@ -386,19 +389,11 @@ optimized = optimizer.compile(DocSearch(), trainset=trainset)
 
 ## Key patterns
 
-- **Always use `ChainOfThought`** for the answer step — reasoning helps ground answers in the documents
+- **Prefer `ChainOfThought`** for the answer step — reasoning typically helps ground answers in the documents. Use `Predict` if latency matters more than accuracy
 - **Include context in the signature** so the AI knows to use the retrieved passages
 - **Multi-step search for complex questions** — if one search isn't enough, chain search queries
 - **Use `dspy.Assert`** to ensure answers actually cite the documents
 - **Separate search from answer generation** — optimize each independently
-
-## Additional resources
-
-- For worked examples, see [examples.md](examples.md)
-- Need to summarize docs instead of answering questions? Use `/ai-summarizing`
-- Use `/ai-serving-apis` to put your document search behind a REST API
-- Building a chatbot on top of doc search? Use `/ai-building-chatbots`
-- Next: `/ai-improving-accuracy` to measure and improve your AI
 
 ## Gotchas
 
@@ -407,4 +402,17 @@ optimized = optimizer.compile(DocSearch(), trainset=trainset)
 - **k=3 is not always right** — the default `k` (number of retrieved passages) is a critical hyperparameter. Too few and you miss relevant context; too many and you overwhelm the LM. Tune it against your dev set.
 - **Test with questions that require combining information** — single-hop retrieval fails when the answer spans multiple chunks. Use `dspy.ChainOfThought` with multi-step retrieval for these cases.
 - **Embedding models and chunk sizes must match at index and query time** — if you re-chunk or switch embedding models, you must rebuild the vector index. Stale indexes silently return bad results.
+
+## Cross-references
+
+- Need to summarize docs instead of answering questions? Use `/ai-summarizing`
+- Put your document search behind a REST API — see `/ai-serving-apis`
+- Building a chatbot on top of doc search? Use `/ai-building-chatbots`
+- Measure and improve your AI — see `/ai-improving-accuracy`
+- Define input/output contracts for your signatures — see `/dspy-signatures`
+- Add reasoning to your answer step — see `/dspy-chain-of-thought`
 - Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+
+## Additional resources
+
+- For worked examples, see [examples.md](examples.md)

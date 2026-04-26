@@ -7,7 +7,7 @@ Build reliable AI features. Powered by [DSPy](https://dspy.ai/) — a framework 
 The only skill you need is `/ai-do`. Describe what you want to build and it tells you which skill to use next.
 
 ```bash
-npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skills ai-do
+npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do
 ```
 
 Then in Claude Code:

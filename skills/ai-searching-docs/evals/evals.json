@@ -1,0 +1,35 @@
+[
+  {
+    "prompt": "I have a folder of PDF help articles and I want users to ask questions and get answers from them. Build me a document search system.",
+    "expected_output": "A DSPy module using Retrieve + ChainOfThought with a signature that takes context and question as inputs and produces an answer grounded in the retrieved passages.",
+    "assertions": [
+      "Uses dspy.Retrieve or a custom Retrieve subclass for retrieval",
+      "Defines a dspy.Signature with context (list[str]) and question inputs",
+      "Uses dspy.ChainOfThought or dspy.Predict for the answer generation step",
+      "Configures a retrieval backend (ChromaDB, ColBERTv2, or custom)",
+      "Does not hardcode a single LM provider without showing alternatives"
+    ]
+  },
+  {
+    "prompt": "My RAG pipeline returns irrelevant results. The answers are wrong because the retrieved passages do not match the question. How do I fix this?",
+    "expected_output": "Diagnosis and fixes for retrieval quality: chunk size tuning, reranking, multi-step retrieval, embedding model selection, and k tuning.",
+    "assertions": [
+      "Suggests tuning chunk size as a primary fix",
+      "Mentions reranking or LM-based reranking to filter candidates",
+      "Suggests tuning k (number of retrieved passages)",
+      "Mentions multi-step retrieval for complex questions",
+      "Does not only suggest switching the embedding model"
+    ]
+  },
+  {
+    "prompt": "I have a Pinecone index already set up. How do I wire it into DSPy for document Q&A?",
+    "expected_output": "A custom dspy.Retrieve subclass that wraps Pinecone's query API and returns passages as a dspy.Prediction.",
+    "assertions": [
+      "Subclasses dspy.Retrieve",
+      "Implements forward() method with query and k parameters",
+      "Returns dspy.Prediction(passages=...)",
+      "Uses Pinecone client to query the index",
+      "Shows how to pass the retriever to dspy.configure or use it in a module"
+    ]
+  }
+]
