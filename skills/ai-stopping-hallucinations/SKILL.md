@@ -1,21 +1,17 @@
 ---
 name: ai-stopping-hallucinations
-description: Stop your AI from making things up. Use when your AI hallucinates, fabricates facts, is not grounded in real data, does not cite sources, makes unsupported claims, or you need to verify AI responses against source material. Also use when your LLM makes up facts, responses are disconnected from the input, or outputs are not grounded in source documents. Covers citation enforcement, faithfulness verification, grounding via retrieval, confidence thresholds, and evaluation of anti-hallucination quality., AI makes up citations, LLM fabricates data, ground AI in source documents, RAG but AI still hallucinates, force AI to cite sources, factual accuracy for AI, prevent AI from inventing facts, AI confident but wrong, LLM confabulation, hallucination detection, verify AI claims against documents.
+description: Stop your AI from making things up. Use when your AI hallucinates, fabricates facts, is not grounded in real data, does not cite sources, makes unsupported claims, or you need to verify AI responses against source material. Also use when your LLM makes up facts, responses are disconnected from the input, or outputs are not grounded in source documents. Covers citation enforcement, faithfulness verification, grounding via retrieval, confidence thresholds, and evaluation of anti-hallucination quality. Also: AI makes up citations, LLM fabricates data, ground AI in source documents, RAG but AI still hallucinates, force AI to cite sources, factual accuracy for AI, prevent AI from inventing facts, AI confident but wrong, LLM confabulation, hallucination detection, verify AI claims against documents.
 ---
 
 # Stop Your AI From Making Things Up
 
 Guide the user through making their AI factually grounded. The core principle: never trust a bare LM output — always verify against sources.
 
-## Why AI hallucinates
+## When NOT to use anti-hallucination patterns
 
-LMs generate plausible-sounding text, not verified facts. Hallucination happens when:
-- The model has no source material to ground its answer
-- The prompt doesn't enforce citations or evidence
-- There's no verification step after generation
-- Temperature is too high for factual tasks
-
-The fix isn't better prompting — it's **programmatic constraints** that force grounding.
+- **Creative tasks** (brainstorming, fiction, ideation) — hallucination is the feature, not the bug
+- **Simple extraction** where the answer is a direct copy from input — citation overhead adds cost without benefit
+- **You have no source documents and cannot add them** — self-consistency checks help but retrieval-grounded approaches are far more effective. Consider `/ai-searching-docs` first to add a knowledge base
 
 ## Step 1: Understand the grounding situation
 
@@ -358,7 +354,7 @@ class CostEfficientVerifier(dspy.Module):
         self.verify = dspy.Predict(CheckFaithfulness)
 
         # Use a cheaper model for the verification step
-        cheap_lm = dspy.LM("openai/gpt-4o-mini")
+        cheap_lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-haiku-4-5-20251001", etc.
         self.verify.set_lm(cheap_lm)
 
     def forward(self, context, question):
@@ -426,19 +422,23 @@ This is why good error messages matter — they're literally the feedback the mo
 | Confidence gating | 1 LM call | Low | Human-in-the-loop systems |
 | Cheap verifier | 1 expensive + 1 cheap | Low-Medium | Cost-sensitive production |
 
-## Key principles
+## Gotchas
 
-- **Grounding beats prompting.** Giving the AI sources to cite is more effective than asking it to "be accurate."
-- **Assert for critical facts.** Use `dspy.Assert` when hallucination is unacceptable (medical, legal, financial).
-- **Suggest for nice-to-haves.** Use `dspy.Suggest` when you want to flag but not block.
-- **Layer your defenses.** Combine retrieval + citation + verification for the strongest protection.
-- **Good error messages help.** The Assert message becomes the model's self-correction prompt.
-- **Measure faithfulness.** Use the evaluation patterns above to quantify how well your verification works — don't guess.
+- **Claude splits sentences on `.` for citation counting, breaking on abbreviations and decimals.** Naive `.split(".")` breaks on "Dr. Smith", "$50.00", and URLs, inflating the uncited sentence count and causing false assertion failures. Use `re.split(r'(?<=[.!?])\s+', text)` for sentence splitting instead.
+- **Claude validates citation numbers with `\[(\d+)\]` but misses grouped citations.** When users or models write `[1, 2]` or `[1-3]`, the standard regex only catches `[1]` format. Extend the pattern to handle ranges and comma-separated lists, or normalize citation format in the signature instructions.
+- **Claude puts the faithfulness verifier on the same expensive LM by default.** Verification is a classification task — cheaper models handle it well. Always call `.set_lm()` on the verifier predictor to use a smaller model. This typically cuts verification cost by 5-10x with minimal accuracy loss.
+- **Claude uses `dspy.Retrieve(k=5)` without configuring a retriever.** `dspy.Retrieve` requires a retrieval model configured via `dspy.configure(rm=...)`. Without it, the call fails at runtime. Either configure a retriever or pass context directly as a function parameter.
+- **`dspy.Assert` error messages are the self-correction prompt — vague messages produce vague fixes.** Claude tends to write generic assertion messages like "Answer must be faithful." Include the specific failing claims and valid source numbers in the message so the model knows exactly what to fix on retry.
+
+## Cross-references
+
+- Retrieval-augmented generation (RAG) setup — see `/ai-searching-docs`
+- General output validation (format, safety, quality) — see `/ai-checking-outputs`
+- Enforcing business rules and content policies — see `/ai-following-rules`
+- `dspy.Assert` and `dspy.Suggest` backtracking patterns — see `/dspy-assertions`
+- Retrieval model configuration and search — see `/dspy-retrieval`
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
 
 ## Additional resources
 
-- Use `/ai-searching-docs` for retrieval-augmented generation (RAG) setup
-- Use `/ai-checking-outputs` for general output validation (format, safety, quality)
-- Use `/ai-following-rules` for enforcing business rules and content policies
-- See `examples.md` for complete worked examples
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- For complete worked examples, see [examples.md](examples.md)

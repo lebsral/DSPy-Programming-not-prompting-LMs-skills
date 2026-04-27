@@ -13,12 +13,17 @@ This is a collection of Claude Code skills for building AI features with DSPy.
 - **DSPy API reference**: See `docs/dspy-reference.md` for DSPy modules, optimizers, and patterns. Reference this when building or modifying skills.
 - **Provider-agnostic**: Skills should work with any LM provider DSPy supports (OpenAI, Anthropic, local models, etc.). Don't hardcode specific providers.
 
+## Workspace Directory
+
+Skill eval workspaces (from the skill-creator plugin and similar tools) go in `.workspaces/` at the repo root — NOT as siblings to skill directories. When creating workspace output for a skill, use `.workspaces/<skill-name>/` instead of `skills/<skill-name>-workspace/`. This keeps the `skills/` directory clean.
+
 ## Repo Structure
 
 ```
 skills/           # Claude Code skills (each has SKILL.md)
 docs/             # Reference documentation
 examples/         # Full working example projects
+.workspaces/      # Skill eval workspaces (gitignored)
 ```
 
 ## Adding or Updating a Skill
