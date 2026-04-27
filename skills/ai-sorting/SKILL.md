@@ -5,7 +5,7 @@ description: Auto-sort, categorize, or label content using AI. Use when sorting 
 
 # Build an AI Content Sorter
 
-Guide the user through building an AI that sorts, tags, or categorizes content using DSPy. This skill covers the full lifecycle: defining categories, building the sorter, loading real data, evaluating quality, optimizing accuracy, and deploying.
+Build an AI sorter with DSPy: define categories, load data, evaluate, optimize, and deploy.
 
 ## Step 1: Define the sorting task
 
@@ -40,9 +40,12 @@ class SortContent(dspy.Signature):
 sorter = dspy.ChainOfThought(SortContent)
 ```
 
-`Literal` locks the output to valid categories — the model can't invent labels. `ChainOfThought` adds reasoning before the answer, which typically improves classification accuracy by 5-15% over bare `Predict`.
+`Literal` locks the output to valid categories — the model cannot invent labels.
 
-**When to use `Predict` instead:** If your categories are very obvious (spam vs not-spam, yes vs no) and you're optimizing for speed/cost, `dspy.Predict(SortContent)` skips the reasoning step. Start with `ChainOfThought` and drop to `Predict` only if the reasoning isn't helping.
+| Module | When to use | Tradeoff |
+|--------|-------------|----------|
+| `ChainOfThought` | Default — most classification tasks | ~5-15% accuracy gain over Predict, but 2x tokens |
+| `Predict` | Binary/obvious categories (spam vs not-spam) | Faster and cheaper, skip if reasoning is not helping |
 
 ### Multiple tags
 
@@ -247,7 +250,10 @@ def multilabel_metric(example, pred, trace=None):
 
 ## Step 5: Optimize accuracy
 
-Start with `BootstrapFewShot` — it's fast and typically gives a meaningful accuracy bump by finding good few-shot examples from your training data:
+| Optimizer | When to use | What it optimizes |
+|-----------|-------------|-------------------|
+| `BootstrapFewShot` | Start here — fast, typically gives 10-20% accuracy bump | Selects few-shot demos from training data |
+| `MIPROv2` | Accuracy plateaus after BootstrapFewShot | Demos + instructions jointly |
 
 ```python
 optimizer = dspy.BootstrapFewShot(
@@ -261,7 +267,7 @@ score = evaluator(optimized_sorter)
 print(f"Optimized accuracy: {score}%")
 ```
 
-If that's not enough, upgrade to `MIPROv2` which also optimizes the instructions:
+If accuracy plateaus, upgrade to `MIPROv2`:
 
 ```python
 optimizer = dspy.MIPROv2(
@@ -354,18 +360,25 @@ sorter = dspy.ChainOfThought(SortContent)
 sorter.load("ticket_sorter.json")
 ```
 
+## Gotchas
+
+- **Using `Literal[list]` instead of `Literal[tuple(list)]`.** Claude writes `Literal[["a", "b"]]` which raises a TypeError. Must be `Literal[tuple(["a", "b"])]` — Python requires a tuple of values inside `Literal`.
+- **Categories > 15 degrade accuracy.** With many flat categories, the LM confuses semantically close labels. Use hierarchical classification (coarse category first, then sub-category) instead of a flat list.
+- **Omitting a catch-all category.** Without "other" or "unknown", the model is forced to misclassify edge cases into the closest wrong bucket. Always include an explicit escape hatch for content that does not fit.
+- **Using verbose category names like "Issues related to billing".** Short, unambiguous names ("billing_issue") give the LM a clearer signal. Add a `desc` field on the signature only if the name alone is ambiguous.
+- **Skipping adversarial inputs in the dev set.** Inputs that span two categories or contain no relevant content expose classification weaknesses early. Add these before optimizing, not after.
+
+## Cross-references
+
+- Need scores instead of categories? See `/ai-scoring`
+- Measure and improve sorting accuracy — see `/ai-improving-accuracy`
+- Generate training data when you have none — see `/ai-generating-data`
+- Define input/output contracts for signatures — see `/dspy-signatures`
+- Add reasoning before classification — see `/dspy-chain-of-thought`
+- Simple classification without reasoning — see `/dspy-predict`
+- Constrain output quality with assertions — see `/dspy-assertions`
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+
 ## Additional resources
 
 - For worked examples (sentiment, intent routing, topics, hierarchical), see [examples.md](examples.md)
-- Need scores instead of categories? Use `/ai-scoring`
-- Want to measure and improve further? Use `/ai-improving-accuracy`
-- Need to generate training data? Use `/ai-generating-data`
-
-## Gotchas
-
-- **Don't use `Literal[list]`** — must be `Literal[tuple(list)]` for DSPy signatures. `Literal[["a", "b"]]` raises a TypeError; use `Literal[tuple(["a", "b"])]` instead.
-- **Categories > 15 degrade accuracy** — if you have more than ~15 categories, use hierarchical classification (coarse category first, then sub-category) instead of a flat list.
-- **Always include an "other" category** — without one, the model is forced to misclassify edge cases into the closest wrong bucket. An "other" or "unknown" category catches these gracefully.
-- **Category names matter more than descriptions** — short, unambiguous category names (e.g., "billing_issue" not "Issues related to billing") give the LM a clearer signal. Add a `desc` field on the signature only if the name alone is ambiguous.
-- **Test with adversarial inputs early** — inputs that span two categories or contain no relevant content expose classification weaknesses. Add these to your dev set before optimizing.
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
