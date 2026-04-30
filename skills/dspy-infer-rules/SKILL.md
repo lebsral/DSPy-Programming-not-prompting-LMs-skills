@@ -46,7 +46,7 @@ Three things are needed: a DSPy program, a metric function, and a training set.
 ```python
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or any LiteLLM-supported provider
 
 # 1. Define a program
 classify = dspy.ChainOfThought("text -> label")
@@ -206,14 +206,13 @@ loaded.load("compiled_with_rules.json")
 result = loaded(text="New input here")
 ```
 
-## Tips
+## Gotchas
 
-- **Start with 20+ diverse examples** -- rules need enough variety to capture real patterns
-- **Inspect the rules after compilation** -- read what InferRules discovered and remove any that are wrong or unhelpful
-- **Use a separate validation set** when you have enough data -- the auto 50/50 split may waste training examples
-- **Combine with ChainOfThought** -- rules in the instructions plus step-by-step reasoning is a strong combination
-- **Compare against BootstrapFewShot** -- if few-shot examples alone match InferRules' accuracy, the simpler approach may be better
-- **Watch for overfitting** -- if validation scores are much lower than training scores, reduce `num_rules`
+1. **Claude skips inspecting the discovered rules.** After `optimizer.compile()`, always print the enhanced instructions with `predictor.signature.instructions`. InferRules can generate incorrect or contradictory rules. Read them, edit or remove bad ones before deploying.
+2. **Claude sets `num_rules` too high.** More rules is not always better. Too many rules overwhelm the LM's context window or introduce contradictions. Start with 10 (the default) and only increase if validation scores improve. Reduce if you see contradictory behavior.
+3. **Claude does not compare against BootstrapFewShot.** InferRules adds complexity. Research shows it sometimes matches or underperforms the baseline — a 2025 study found InferRules achieved the same 87% accuracy as the unoptimized prompt on a code generation task. Always compare against plain BootstrapFewShot; if few-shot examples alone match InferRules accuracy, use the simpler approach.
+4. **Claude forgets that InferRules splits trainset 50/50 automatically.** If you have 40 examples and do not pass `valset`, InferRules uses only 20 for training — often too few for good rule induction. Pass `valset` explicitly to control the split.
+5. **Claude uses InferRules for open-ended or creative tasks.** InferRules works best on tasks with consistent, describable patterns (classification, routing, triage). For creative writing or open-ended generation where there are no consistent rules to discover, it adds noise. Use BootstrapFewShot or MIPROv2 instead.
 
 ## Cross-references
 
@@ -226,3 +225,10 @@ result = loaded(text="New input here")
 - **Signatures and instructions** that InferRules modifies -- see `/dspy-signatures`
 - For worked examples, see [examples.md](examples.md)
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+
+## Additional resources
+
+- [dspy.InferRules API docs](https://dspy.ai/api/optimizers/InferRules/)
+- [DSPy optimizer selection guide](https://dspy.ai/learn/optimization/optimizers/)
+- For constructor signatures and method reference, see [reference.md](reference.md)
+- For worked examples (ticket classification, content moderation), see [examples.md](examples.md)

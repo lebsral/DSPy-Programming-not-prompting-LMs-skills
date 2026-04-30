@@ -40,7 +40,7 @@ Do NOT use it when:
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Inline signature -- same as you'd use with ChainOfThought
@@ -86,18 +86,15 @@ Input --> CoT Chain 1 --> reasoning_1 + answer_1 --|
 
 ## Configuring the number of chains
 
-By default, `MultiChainComparison` generates 3 chains. You can adjust this with the `M` parameter:
+By default, `MultiChainComparison` generates 3 chains. You can adjust `M` and `temperature`:
 
 ```python
-# Fewer chains -- faster, cheaper, but less diversity
-quick = dspy.MultiChainComparison("question -> answer", M=2)
-
-# Default -- good balance
-default = dspy.MultiChainComparison("question -> answer", M=3)
-
-# More chains -- better quality ceiling, but slower and more expensive
-thorough = dspy.MultiChainComparison("question -> answer", M=5)
+# Constructor signature
+dspy.MultiChainComparison(signature, M=3, temperature=0.7, **config)
 ```
+
+- `M` — number of independent reasoning chains (default 3)
+- `temperature` — sampling temperature for chain generation (default 0.7). Higher values produce more diverse chains, which gives the comparison step more to work with.
 
 Guidelines for choosing M:
 
@@ -172,8 +169,8 @@ Strategies to manage cost:
 - **Use a cheaper model for chains, expensive model for comparison** -- the comparison step benefits most from a strong model:
 
 ```python
-cheap_lm = dspy.LM("openai/gpt-4o-mini")
-expensive_lm = dspy.LM("openai/gpt-4o")
+cheap_lm = dspy.LM("openai/gpt-4o-mini")  # or any smaller model
+expensive_lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 dspy.configure(lm=cheap_lm)  # default for chains
 
@@ -236,6 +233,14 @@ Pick a simpler alternative when:
 
 MultiChainComparison is most valuable when the problem genuinely benefits from diverse perspectives -- not when there is a single clearly correct approach.
 
+## Gotchas
+
+1. **Claude omits the `temperature` parameter.** MultiChainComparison relies on diverse chains — with `temperature=0` (or very low), chains produce near-identical outputs and the comparison step adds cost with no quality gain. Keep the default `temperature=0.7` or set it higher for more diversity.
+2. **Claude uses MultiChainComparison for simple tasks.** For straightforward classification, extraction, or lookup, MultiChainComparison adds 3-4x cost with no quality improvement. Use `dspy.Predict` or `dspy.ChainOfThought` for simple tasks and reserve MultiChainComparison for genuinely ambiguous or high-stakes decisions.
+3. **Claude sets M too high.** Beyond M=5, diminishing returns set in quickly — each additional chain adds a full LM call but contributes marginal diversity. Start with M=3 and only increase if evaluation shows improvement.
+4. **Claude ignores the cost multiplier during optimization.** Running MIPROv2 or BootstrapFewShot on a MultiChainComparison module means every optimization trial makes M+1 LM calls. With M=3 and 100 trials, that is 400 LM calls per predictor. Use `auto="light"` for MIPROv2 or keep trial counts low.
+5. **Claude wraps MultiChainComparison around ChainOfThought.** MultiChainComparison already generates multiple CoT chains internally. Wrapping it in another reasoning module compounds the cost without proportional quality gains.
+
 ## Cross-references
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
@@ -243,5 +248,10 @@ MultiChainComparison is most valuable when the problem genuinely benefits from d
 - **ChainOfThought** is the single-chain version and the right default -- see `/dspy-chain-of-thought`
 - **Reasoning strategies** including when to pick MultiChainComparison vs other approaches -- see `/ai-reasoning`
 - **Improving accuracy** with evaluation and optimization -- see `/ai-improving-accuracy`
-- For worked examples, see [examples.md](examples.md)
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+
+## Additional resources
+
+- [dspy.MultiChainComparison API docs](https://dspy.ai/api/modules/MultiChainComparison/)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)

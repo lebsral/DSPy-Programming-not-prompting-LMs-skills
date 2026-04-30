@@ -6,14 +6,14 @@
 
 ```python
 import phoenix as px
-from openinference.instrumentation.dspy import DSPyInstrumentor
+from phoenix.otel import register
 
 px.launch_app()  # http://localhost:6006
-DSPyInstrumentor().instrument()
+register(project_name="qa-pipeline", auto_instrument=True)
 
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or any LiteLLM-supported provider
 ```
 
 ### Build and run a pipeline
@@ -53,6 +53,33 @@ for q in questions:
    - **Child span 2**: `ChainOfThought` — shows the full prompt, response, token count
 4. Sort by latency to find the slowest request
 5. Check token counts to identify expensive queries
+
+## Trace with metadata using `using_attributes`
+
+```python
+import phoenix as px
+from phoenix.otel import register, using_attributes
+
+px.launch_app()
+register(project_name="qa-pipeline", auto_instrument=True)
+
+import dspy
+
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or any LiteLLM-supported provider
+
+pipeline = QAPipeline()
+
+# Attach user and session metadata to traces
+with using_attributes(
+    session_id="support-session-42",
+    user_id="customer-789",
+    tags=["production", "support-bot"],
+    metadata={"channel": "web-chat"},
+):
+    result = pipeline(question="How do I get a refund?")
+
+# In Phoenix UI, filter traces by session_id or user_id
+```
 
 ## Evaluate trace quality with Phoenix evals
 
@@ -94,33 +121,33 @@ print(f"Unhelpful trace IDs: {unhelpful.index.tolist()}")
 
 ```python
 import phoenix as px
-from openinference.instrumentation.dspy import DSPyInstrumentor
+from phoenix.otel import register, using_attributes
 
 px.launch_app()
-DSPyInstrumentor().instrument()
+register(project_name="optimization-comparison", auto_instrument=True)
 
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or any LiteLLM-supported provider
 
 pipeline = QAPipeline()
 
-# Run baseline
-print("--- Baseline ---")
-for q in questions:
-    result = pipeline(question=q)
+# Run baseline with a tag
+with using_attributes(tags=["baseline"]):
+    for q in questions:
+        result = pipeline(question=q)
 
 # Optimize
 optimizer = dspy.BootstrapFewShot(metric=my_metric)
 optimized = optimizer.compile(pipeline, trainset=trainset)
 
-# Run optimized
-print("--- Optimized ---")
-for q in questions:
-    result = optimized(question=q)
+# Run optimized with a tag
+with using_attributes(tags=["optimized"]):
+    for q in questions:
+        result = optimized(question=q)
 
 # In Phoenix UI:
-# - Filter by time to compare before/after traces
+# - Filter by tag "baseline" vs "optimized" to compare
 # - Check if token counts changed (optimized may use more tokens for demos)
 # - Compare latency distributions
 ```

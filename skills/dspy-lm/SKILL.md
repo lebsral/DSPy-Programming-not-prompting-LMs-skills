@@ -13,7 +13,7 @@ description: Use when you need to configure which language model DSPy uses — s
 import dspy
 
 # Create an LM instance with a provider/model string
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 # Set it as the default for all DSPy modules
 dspy.configure(lm=lm)
@@ -71,7 +71,7 @@ lm = dspy.LM(
 
 ## Per-module LM assignment
 
-You don't have to use the same model for every step. Assign different LMs to different modules with `set_lm()`:
+You do not have to use the same model for every step. Assign different LMs to different modules with `set_lm()`:
 
 ```python
 expensive_lm = dspy.LM("openai/gpt-4o")
@@ -236,6 +236,21 @@ dspy.configure(lm=lm)
 For any server that exposes an OpenAI-compatible `/v1/chat/completions` endpoint, use the `"openai/model-name"` provider string with `api_base` pointing to your server.
 
 For full vLLM setup (tensor parallelism, GPU sizing, quantization, production deployment), see `/dspy-vllm`.
+
+## Gotchas
+
+1. **Claude omits the provider prefix from the model string.** Claude writes `dspy.LM("gpt-4o-mini")` instead of `dspy.LM("openai/gpt-4o-mini")`. While some models auto-detect the provider, the explicit `"provider/model"` format is required for reliable routing through LiteLLM. Always include the provider prefix.
+2. **Claude sets `temperature=0` for reasoning models.** OpenAI reasoning models (o1, o3, o4, gpt-5 families) require `temperature=1.0` or `None`. Setting `temperature=0` raises an error. Similarly, `max_tokens` must be `>= 16000` or `None` for these models.
+3. **Claude calls `dspy.configure(lm=lm)` inside `forward()`.** Configuration should happen once at the top of your script, not per-call. Calling `dspy.configure` inside `forward()` resets global state on every invocation and breaks caching. Use `set_lm()` or `dspy.context()` for per-module or temporary overrides instead.
+4. **Claude forgets `api_base` for local models.** Ollama and vLLM require `api_base` pointing to the local server (`http://localhost:11434` for Ollama, `http://localhost:8000/v1` for vLLM). Without it, DSPy tries to reach the cloud API and fails with an authentication error.
+5. **Claude hardcodes API keys in source code.** API keys should be set as environment variables (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.), never passed directly to `dspy.LM()`. DSPy reads them automatically via LiteLLM.
+
+## Additional resources
+
+- [dspy.LM API docs](https://dspy.ai/api/models/LM/)
+- [LiteLLM provider docs](https://docs.litellm.ai/docs/providers)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)
 
 ## Cross-references
 

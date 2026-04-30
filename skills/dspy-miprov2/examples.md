@@ -8,7 +8,7 @@ A sentiment classifier optimized with MIPROv2 for production use. Shows the full
 import dspy
 from dspy.evaluate import Evaluate
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Program: sentiment classification with reasoning
@@ -103,7 +103,7 @@ A multi-step RAG pipeline optimized with `auto="heavy"` for the highest quality.
 import dspy
 from dspy.evaluate import Evaluate
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Multi-step program: extract key info, then generate a detailed answer
@@ -187,7 +187,7 @@ class JudgeAnswer(dspy.Signature):
     is_correct: bool = dspy.OutputField(desc="True if key facts are covered accurately")
     is_complete: bool = dspy.OutputField(desc="True if no major facts are missing")
 
-judge_lm = dspy.LM("openai/gpt-4o")
+judge_lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 def quality_metric(example, prediction, trace=None):
     # Correctness and completeness via LM judge

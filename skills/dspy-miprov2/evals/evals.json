@@ -1,0 +1,34 @@
+[
+  {
+    "prompt": "I have a DSPy ChainOfThought pipeline for question answering with about 100 training examples. I want to get the best possible accuracy. How should I optimize it?",
+    "expected_output": "Uses MIPROv2 with auto preset, evaluates before and after, saves the result",
+    "assertions": [
+      "Uses dspy.MIPROv2 as the optimizer (not BootstrapFewShot alone)",
+      "Passes metric as a required parameter to MIPROv2 constructor",
+      "Uses auto parameter (light, medium, or heavy) or sets num_candidates and num_trials manually",
+      "Passes trainset as a keyword argument to compile(): optimizer.compile(program, trainset=trainset)",
+      "Shows evaluation with Evaluate to measure improvement"
+    ]
+  },
+  {
+    "prompt": "I want to optimize my DSPy program but I am worried about cost. What are the different auto settings in MIPROv2 and how do I control the budget?",
+    "expected_output": "Explains auto=light/medium/heavy with cost tradeoffs and manual override options",
+    "assertions": [
+      "Describes all three auto levels: light, medium, heavy",
+      "Notes that light is the default auto setting",
+      "Mentions num_candidates and num_trials as manual alternatives to auto",
+      "Recommends starting with medium and upgrading to heavy only with large datasets",
+      "Mentions that auto=None requires both num_candidates and num_trials"
+    ]
+  },
+  {
+    "prompt": "I already ran BootstrapFewShot on my DSPy pipeline and got some improvement. Now I want to squeeze out more accuracy. Should I try MIPROv2 on top of it?",
+    "expected_output": "Shows stacking pattern: run MIPROv2 on the bootstrapped result",
+    "assertions": [
+      "Shows passing the bootstrapped program as the student to MIPROv2 compile()",
+      "Explains that MIPROv2 jointly optimizes instructions AND demos (unlike BootstrapFewShot which only does demos)",
+      "Includes evaluation before and after to measure the additional improvement",
+      "Uses trainset with .with_inputs() on each example"
+    ]
+  }
+]

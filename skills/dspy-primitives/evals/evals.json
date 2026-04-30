@@ -1,0 +1,35 @@
+[
+  {
+    "prompt": "I want to build a DSPy module that takes a product image and generates a catalog description. How do I pass the image?",
+    "expected_output": "Uses dspy.Image in a signature with dspy.InputField. Shows the constructor dspy.Image(url=...) not deprecated from_file/from_url methods. Uses a vision-capable model.",
+    "assertions": [
+      "Uses dspy.Image as the type annotation for an InputField",
+      "Uses dspy.Image(url=...) constructor, not deprecated from_file or from_url",
+      "Configures a vision-capable LM (GPT-4o, Claude 3+, Gemini, etc.)",
+      "LM configuration is provider-agnostic with alternative comment",
+      "Does not pass a raw image URL string where dspy.Image is expected"
+    ]
+  },
+  {
+    "prompt": "How do I build a multi-turn chatbot in DSPy that remembers previous conversation turns?",
+    "expected_output": "Uses dspy.History with messages list. Shows building history incrementally by creating new History objects each turn. Uses signature field names as message keys.",
+    "assertions": [
+      "Uses dspy.History as the type annotation for an InputField",
+      "Creates History with messages matching signature field names (e.g. question/answer), not role/content",
+      "Shows creating a new History object each turn (does not try to mutate)",
+      "Mentions that History is frozen/immutable",
+      "Does not fabricate a History.append() or History.add() method"
+    ]
+  },
+  {
+    "prompt": "I want DSPy to generate Python code and also review existing code. How do I use typed code fields?",
+    "expected_output": "Uses dspy.Code with bracket notation for language. Shows Code as both InputField and OutputField. Explains that raw strings are auto-coerced for Code fields.",
+    "assertions": [
+      "Uses dspy.Code['python'] bracket notation for language specification",
+      "Shows Code as OutputField for code generation",
+      "Shows Code as InputField for code review/analysis",
+      "Does not require wrapping raw code strings in dspy.Code() for input fields",
+      "LM configuration is provider-agnostic with alternative comment"
+    ]
+  }
+]

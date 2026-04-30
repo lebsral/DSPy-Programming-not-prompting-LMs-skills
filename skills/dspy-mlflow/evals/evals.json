@@ -1,0 +1,33 @@
+[
+  {
+    "prompt": "I want to trace my DSPy pipeline and see what prompts and responses are being sent. How do I set up MLflow for this?",
+    "expected_output": "Sets up mlflow.dspy.autolog() for auto-tracing with MLflow UI",
+    "assertions": [
+      "Calls mlflow.dspy.autolog() before any DSPy code executes",
+      "Shows how to launch MLflow UI with mlflow ui command",
+      "Mentions what autolog captures: prompts, responses, token counts, latency",
+      "Includes pip install mlflow in setup"
+    ]
+  },
+  {
+    "prompt": "I want to compare different DSPy optimizers (BootstrapFewShot vs MIPROv2) and track which one gives the best results. How do I do experiment tracking with MLflow?",
+    "expected_output": "Uses MLflow experiment tracking with separate runs for each optimizer",
+    "assertions": [
+      "Calls mlflow.set_experiment() to group related runs",
+      "Uses mlflow.start_run() as a context manager for each optimizer run",
+      "Logs optimizer parameters with mlflow.log_param()",
+      "Logs evaluation score with mlflow.log_metric()",
+      "Shows how to compare runs in the MLflow UI"
+    ]
+  },
+  {
+    "prompt": "I have an optimized DSPy program and want to version it so I can roll back if the new version performs worse in production. How do I use the MLflow model registry?",
+    "expected_output": "Registers model with MLflow and uses aliases for production management",
+    "assertions": [
+      "Uses mlflow.dspy.log_model() to log the DSPy module",
+      "Uses mlflow.register_model() to add to the registry",
+      "Uses model aliases (client.set_registered_model_alias) NOT the deprecated transition_model_version_stage",
+      "Shows loading by alias: mlflow.dspy.load_model('models:/name@champion')"
+    ]
+  }
+]

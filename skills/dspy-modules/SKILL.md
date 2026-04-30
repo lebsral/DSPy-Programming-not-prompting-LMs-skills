@@ -230,19 +230,30 @@ class MultiOutput(dspy.Module):
 Assign cheaper models to simpler steps:
 
 ```python
-expensive_lm = dspy.LM("openai/gpt-4o")
-cheap_lm = dspy.LM("openai/gpt-4o-mini")
+expensive_lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+cheap_lm = dspy.LM("openai/gpt-4o-mini")  # or any smaller model
 
 pipeline = MyProgram()
 pipeline.classify.set_lm(cheap_lm)
 pipeline.generate.set_lm(expensive_lm)
 ```
 
+## Batch processing
+
+Use `batch()` to process multiple examples in parallel:
+
+```python
+pipeline = MyProgram()
+examples = [dspy.Example(question=q).with_inputs("question") for q in questions]
+results = pipeline.batch(examples, num_threads=4, timeout=120)
+```
+
 ## Gotchas
 
-1. **Sub-modules must be assigned as `self.` attributes in `__init__`** -- otherwise optimizers can't discover them. A `Predict` stored in a local variable or a plain list won't be optimized.
-2. **Don't put `dspy.configure()` inside `forward()`** -- configure once at startup. Calling it per-forward adds overhead and can cause unexpected behavior during optimization.
-3. **`forward()` args must match your top-level signature inputs** -- if an optimizer traces your module, it passes the inputs from your training examples to `forward()`. Mismatched argument names cause silent failures.
+1. **Claude stores sub-modules in a plain list instead of as `self.` attributes.** Optimizers discover sub-modules by traversing `self.` attributes in `__init__`. A `Predict` stored in a local variable or a plain `list` is invisible to optimization. Use a `dict` assigned to `self.` — DSPy traverses dicts for parameters.
+2. **Claude puts `dspy.configure()` inside `forward()`.** Configure once at startup. Calling it per-forward adds overhead and causes unexpected behavior during optimization.
+3. **Claude names `forward()` args differently from training example fields.** When an optimizer traces your module, it passes inputs from training examples to `forward()`. Mismatched argument names cause silent failures. Use the same field names as your `dspy.Example` inputs.
+4. **Claude creates a module with no `forward()` method.** Every `dspy.Module` subclass must implement `forward()`. Without it, calling the module raises an error.
 
 ## Cross-references
 
@@ -253,5 +264,10 @@ pipeline.generate.set_lm(expensive_lm)
 - **ChainOfThought** adds step-by-step reasoning -- see `/dspy-chain-of-thought`
 - **Multi-step pipelines** with real-world patterns -- see `/ai-building-pipelines`
 - **Optimizing modules** to improve accuracy -- see `/ai-improving-accuracy`
-- For worked examples, see [examples.md](examples.md)
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+
+## Additional resources
+
+- [dspy.Module API docs](https://dspy.ai/api/modules/Module/)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)

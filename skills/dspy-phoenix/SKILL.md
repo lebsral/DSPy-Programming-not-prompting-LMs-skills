@@ -1,6 +1,6 @@
 ---
 name: dspy-phoenix
-description: Use Arize Phoenix for DSPy tracing and evaluation. Use when you want to set up Phoenix, arize-phoenix, openinference, DSPyInstrumentor, open-source trace viewer, localhost:6006, or LLM evals. Also: phoenix setup, arize phoenix, pip install arize-phoenix, phoenix local UI, phoenix evaluations, DSPy trace viewer, open-source LLM observability, phoenix vs langtrace, openinference-instrumentation-dspy.
+description: Use Arize Phoenix for DSPy tracing and evaluation. Use when you want to set up Phoenix, arize-phoenix, openinference, DSPyInstrumentor, open-source trace viewer, localhost:6006, or LLM evals. Also: phoenix setup, arize phoenix, pip install arize-phoenix, phoenix local UI, phoenix evaluations, DSPy trace viewer, open-source LLM observability, phoenix vs langtrace, openinference-instrumentation-dspy, phoenix.otel register.
 ---
 
 # Arize Phoenix — Open-Source LLM Observability for DSPy
@@ -44,24 +44,29 @@ Do NOT use Phoenix when:
 ### Install
 
 ```bash
-pip install arize-phoenix openinference-instrumentation-dspy
+pip install arize-phoenix openinference-instrumentation-dspy openinference-instrumentation-litellm
 ```
 
-### Local mode (quickest)
+DSPy uses LiteLLM under the hood — install both instrumentors to get token counts and cost tracking.
+
+### Local mode (recommended for development)
 
 ```python
 import phoenix as px
-from openinference.instrumentation.dspy import DSPyInstrumentor
+from phoenix.otel import register
 
-# Launch local UI
-px.launch_app()  # Opens at http://localhost:6006
+# Launch local UI at http://localhost:6006
+px.launch_app()
 
-# Auto-instrument DSPy
-DSPyInstrumentor().instrument()
+# Register with auto-instrumentation (instruments DSPy + LiteLLM automatically)
+tracer_provider = register(
+    project_name="my-dspy-project",
+    auto_instrument=True,
+)
 
 # All DSPy calls are now traced
 import dspy
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or any LiteLLM-supported provider
 
 program = dspy.ChainOfThought("question -> answer")
 result = program(question="What is DSPy?")
@@ -73,45 +78,47 @@ result = program(question="What is DSPy?")
 For teams that want persistent storage and collaboration:
 
 ```python
-import phoenix as px
-from openinference.instrumentation.dspy import DSPyInstrumentor
+import os
+from phoenix.otel import register
 
-# Connect to Arize cloud
-px.launch_app(endpoint="https://app.phoenix.arize.com")
+os.environ["PHOENIX_COLLECTOR_ENDPOINT"] = "https://app.phoenix.arize.com"
+os.environ["PHOENIX_API_KEY"] = "your-api-key"
 
-DSPyInstrumentor().instrument()
-
-# Traces are stored in the cloud — accessible to the whole team
+tracer_provider = register(
+    project_name="my-dspy-project",
+    auto_instrument=True,
+)
 ```
 
-### Environment variable configuration
+### Adding metadata to traces
 
-```bash
-export PHOENIX_COLLECTOR_ENDPOINT="http://localhost:6006"  # or cloud URL
-```
+Use `using_attributes` to attach session, user, and tag metadata:
 
 ```python
-import phoenix as px
-from openinference.instrumentation.dspy import DSPyInstrumentor
+from phoenix.otel import using_attributes
 
-px.launch_app()
-DSPyInstrumentor().instrument()
+with using_attributes(
+    session_id="session-123",
+    user_id="user-456",
+    metadata={"environment": "staging"},
+    tags=["experiment-v2"],
+):
+    result = program(question="What is DSPy?")
+    # This trace will carry the session/user/tag metadata in Phoenix
 ```
 
 ## Tracing a DSPy pipeline
 
-The OpenInference plugin auto-instruments all DSPy modules:
-
 ```python
 import phoenix as px
-from openinference.instrumentation.dspy import DSPyInstrumentor
+from phoenix.otel import register
 
 px.launch_app()
-DSPyInstrumentor().instrument()
+register(project_name="rag-pipeline", auto_instrument=True)
 
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or any LiteLLM-supported provider
 
 class RAGPipeline(dspy.Module):
     def __init__(self):
@@ -129,22 +136,6 @@ result = pipeline(question="How do refunds work?")
 #   +-- Retrieve (query, passages, latency)
 #   +-- ChainOfThought (prompt, response, tokens)
 ```
-
-## Inspecting traces in the Phoenix UI
-
-The Phoenix UI at `http://localhost:6006` provides:
-
-- **Trace list**: all requests with status, latency, and token counts
-- **Trace detail**: waterfall view of every span in a request
-- **Prompt viewer**: full prompt and response text for each LM call
-- **Filters**: by time range, latency, status, span kind
-- **Token analysis**: cost and token usage breakdowns
-
-### Sorting and filtering
-
-- Click column headers to sort by latency, token count, or timestamp
-- Use the filter bar to find traces with specific attributes
-- Click any trace to drill into the span tree
 
 ## Evaluations with Phoenix
 
@@ -196,6 +187,13 @@ Want DSPy tracing?
 +- Team already uses Jaeger? -> Jaeger (see /ai-tracing-requests)
 ```
 
+## Gotchas
+
+1. **Missing LiteLLM instrumentor hides token counts.** Claude installs `openinference-instrumentation-dspy` but forgets `openinference-instrumentation-litellm`. Without it, traces show LM calls but token counts and costs are missing. Always install both.
+2. **Using the old `DSPyInstrumentor().instrument()` pattern instead of `register(auto_instrument=True)`.** The `register` function from `phoenix.otel` is the current recommended approach — it auto-discovers and instruments all installed OpenInference packages. Manual `DSPyInstrumentor().instrument()` still works but misses LiteLLM spans.
+3. **Forgetting `px.launch_app()` before `register()` in local mode.** Without `px.launch_app()`, there is no local collector to receive traces. Call `px.launch_app()` first, then `register()`. In cloud mode, set `PHOENIX_COLLECTOR_ENDPOINT` instead.
+4. **Traces missing metadata for filtering.** Without `using_attributes`, all traces look identical in the UI. Wrap DSPy calls in `using_attributes(session_id=..., user_id=..., tags=[...])` to make traces filterable and attributable.
+
 ## Cross-references
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
@@ -207,3 +205,10 @@ Want DSPy tracing?
 - **Per-request debugging** (inspect_history, JSONL traces) — `/ai-tracing-requests`
 - For worked examples, see [examples.md](examples.md)
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+
+## Additional resources
+
+- [Phoenix DSPy integration docs](https://arize.com/docs/phoenix/integrations/python/dspy/dspy-tracing)
+- [Phoenix GitHub](https://github.com/Arize-ai/phoenix)
+- For complete setup options and API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)

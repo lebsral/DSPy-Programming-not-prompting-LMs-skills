@@ -1,0 +1,34 @@
+[
+  {
+    "prompt": "I have a classifier with 15 categories and 200 labeled examples. Static few-shot demos only cover 3 categories at a time so accuracy is poor on the other 12. How do I make the demos adapt to each input?",
+    "expected_output": "Uses KNNFewShot for dynamic per-input demo selection",
+    "assertions": [
+      "Uses dspy.KNNFewShot (not BootstrapFewShot or LabeledFewShot)",
+      "Creates a dspy.Embedder with an embedding function (sentence-transformers or similar)",
+      "Sets k to a reasonable value (3-5) given 15 categories",
+      "Calls knn_optimizer.compile(program) to get a compiled module",
+      "Explains that each input automatically gets the most relevant demos at inference time"
+    ]
+  },
+  {
+    "prompt": "I want to use KNN to find similar examples from my training set for a custom pipeline. I do not want the full KNNFewShot optimizer, just the retrieval part.",
+    "expected_output": "Uses dspy.KNN directly for nearest neighbor retrieval",
+    "assertions": [
+      "Uses dspy.KNN (not KNNFewShot)",
+      "Initializes with k, trainset, and vectorizer parameters",
+      "Calls knn(**kwargs) to retrieve similar examples",
+      "Shows that the result is a list of dspy.Example objects ranked by similarity",
+      "Explains that training examples must have .with_inputs() called"
+    ]
+  },
+  {
+    "prompt": "I want dynamic few-shot demos but I also want to use a metric to filter which demos are good. Can KNNFewShot do bootstrapping too?",
+    "expected_output": "Passes BootstrapFewShot arguments through KNNFewShot",
+    "assertions": [
+      "Passes metric and max_bootstrapped_demos via **few_shot_bootstrap_args to KNNFewShot",
+      "Explains that KNNFewShot wraps BootstrapFewShot internally",
+      "Shows the two-stage process: KNN retrieves k neighbors, then BootstrapFewShot selects demos from those",
+      "Sets k higher than max_bootstrapped_demos + max_labeled_demos so BootstrapFewShot has examples to choose from"
+    ]
+  }
+]

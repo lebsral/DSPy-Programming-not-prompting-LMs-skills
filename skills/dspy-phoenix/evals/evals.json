@@ -1,0 +1,33 @@
+[
+  {
+    "prompt": "I want to trace my DSPy pipeline locally so I can see what prompts are being sent and how many tokens each call uses.",
+    "expected_output": "Sets up Phoenix with local mode and auto-instrumentation for DSPy tracing",
+    "assertions": [
+      "Installs arize-phoenix AND openinference-instrumentation-dspy AND openinference-instrumentation-litellm",
+      "Calls px.launch_app() to start the local UI",
+      "Uses register(auto_instrument=True) from phoenix.otel (not the legacy DSPyInstrumentor pattern)",
+      "Shows how to configure a DSPy LM and run a traced call",
+      "Mentions the UI is available at localhost:6006"
+    ]
+  },
+  {
+    "prompt": "My team wants to use Phoenix in the cloud so everyone can see DSPy traces. How do I set that up?",
+    "expected_output": "Configures Phoenix for cloud mode with Arize platform",
+    "assertions": [
+      "Sets PHOENIX_COLLECTOR_ENDPOINT to the Arize cloud URL",
+      "Sets PHOENIX_API_KEY for authentication",
+      "Uses register(auto_instrument=True) from phoenix.otel",
+      "Does not call px.launch_app() for cloud mode (or explains it is not needed)"
+    ]
+  },
+  {
+    "prompt": "I have traces in Phoenix and want to automatically score whether my DSPy outputs are helpful. How do I use Phoenix evals?",
+    "expected_output": "Uses Phoenix evals module to classify traced outputs",
+    "assertions": [
+      "Imports llm_classify and OpenAIModel from phoenix.evals",
+      "Gets spans as a DataFrame using px.Client().get_spans_dataframe()",
+      "Defines a template with column placeholders for evaluation",
+      "Uses rails parameter to constrain classification labels"
+    ]
+  }
+]

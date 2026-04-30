@@ -7,7 +7,7 @@ import dspy
 from qdrant_client import QdrantClient, models
 from dspy_qdrant import QdrantRM
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 # --- Step 1: Index documents ---
 client = QdrantClient("http://localhost:6333")
@@ -35,7 +35,7 @@ vectors = embedder(docs)
 client.upsert(
     collection_name="support_docs",
     points=[
-        models.PointStruct(id=i, vector=v, payload={"text": doc})
+        models.PointStruct(id=i, vector=v, payload={"document": doc})
         for i, (doc, v) in enumerate(zip(docs, vectors))
     ],
 )
@@ -43,7 +43,7 @@ client.upsert(
 # --- Step 2: Set up QdrantRM ---
 retriever = QdrantRM(
     qdrant_collection_name="support_docs",
-    qdrant_client_url="http://localhost:6333",
+    qdrant_client=client,
     k=3,
 )
 
@@ -89,7 +89,7 @@ class PineconeRetriever(dspy.Retrieve):
         return dspy.Prediction(passages=passages)
 
 # Usage in a DSPy pipeline
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 embedder = dspy.Embedder("openai/text-embedding-3-small", dimensions=512)
 retriever = PineconeRetriever("support-index", embedder, k=5)
 
@@ -124,7 +124,7 @@ class ChromaRetriever(dspy.Retrieve):
         return dspy.Prediction(passages=results["documents"][0])
 
 # Quick prototype — index and search in one script
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 client = chromadb.PersistentClient(path="./chroma_db")
 collection = client.get_or_create_collection("quick_test")

@@ -66,7 +66,7 @@ pip install langfuse dspy openinference-instrumentation-dspy -U
 ```bash
 export LANGFUSE_PUBLIC_KEY="pk-lf-..."
 export LANGFUSE_SECRET_KEY="sk-lf-..."
-export LANGFUSE_BASE_URL="https://cloud.langfuse.com"  # US default; EU: https://eu.cloud.langfuse.com
+export LANGFUSE_BASE_URL="https://cloud.langfuse.com"  # US: us.cloud.langfuse.com | EU: cloud.langfuse.com | JP: jp.cloud.langfuse.com | HIPAA: hipaa.cloud.langfuse.com
 ```
 
 ### Quickstart
@@ -133,6 +133,24 @@ with langfuse.start_as_current_observation(as_type="span", name="batch-qa"):
         result = program(question="What is DSPy?")
 
 langfuse.flush()  # Required for short-lived scripts
+# Use langfuse.shutdown() instead if the process is exiting (also terminates background threads)
+```
+
+### Controlling I/O capture
+
+DSPy prompts can contain sensitive data or be very large. Disable input/output capture on specific observations:
+
+```python
+@observe(capture_input=False, capture_output=False)
+def process_pii_data(user_data: str):
+    # Traces timing and structure but not the actual data
+    return program(question=user_data)
+```
+
+Or disable globally via environment variable:
+
+```bash
+export LANGFUSE_OBSERVE_DECORATOR_IO_CAPTURE_ENABLED=false
 ```
 
 ## Scoring traces
@@ -234,8 +252,9 @@ Want DSPy observability?
 - **Claude forgets `langfuse.flush()` in scripts and notebooks.** Langfuse sends traces asynchronously in the background. In long-running servers this is fine, but in scripts, notebooks, and batch jobs the process exits before traces are sent. Always call `langfuse.flush()` (or `langfuse.shutdown()`) at the end of short-lived processes.
 - **Claude installs `langfuse` but forgets `openinference-instrumentation-dspy`.** The DSPy auto-instrumentation lives in a separate package. Without it, `DSPyInstrumentor` is not available and no DSPy spans are captured. Install both: `pip install langfuse openinference-instrumentation-dspy`.
 - **Claude calls `DSPyInstrumentor().instrument()` after `dspy.configure()` and DSPy calls.** The instrumentor must be activated before any DSPy module runs. Calls made before instrumentation are not captured. Always instrument first, then configure DSPy, then run modules.
-- **Claude hardcodes `LANGFUSE_BASE_URL` to US cloud for all users.** Langfuse has region-specific endpoints: US (`https://cloud.langfuse.com`), EU (`https://eu.cloud.langfuse.com`), and self-hosted URLs. Always ask the user which region or instance they use, or read it from environment variables rather than hardcoding.
+- **Claude hardcodes `LANGFUSE_BASE_URL` to US cloud for all users.** Langfuse has region-specific endpoints: US (`us.cloud.langfuse.com`), EU (`cloud.langfuse.com`), Japan (`jp.cloud.langfuse.com`), HIPAA (`hipaa.cloud.langfuse.com`), and self-hosted URLs. Always ask the user which region or instance they use, or read it from environment variables rather than hardcoding.
 - **Claude creates a new `get_client()` instance in every function.** `get_client()` returns a singleton -- calling it multiple times is safe but unnecessary clutter. Call it once at module level or in setup, then reuse the reference.
+- **Traces not appearing? Enable debug mode.** Set `export LANGFUSE_DEBUG="True"` to get verbose logging that shows whether traces are being sent and any API errors. This is the fastest way to diagnose missing traces.
 
 ## Cross-references
 

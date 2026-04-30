@@ -26,7 +26,7 @@ Pass a list of `(module, inputs)` pairs. Each pair is one unit of work:
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or any LiteLLM-supported provider
 dspy.configure(lm=lm)
 
 # A module to run on every input
@@ -58,7 +58,7 @@ for text, result in zip(texts, results):
 ```python
 dspy.Parallel(
     num_threads=4,               # number of concurrent threads (default: settings.num_threads)
-    max_errors=5,                # stop after this many failures (default: None = no limit)
+    max_errors=5,                # stop after this many failures (default: settings.max_errors)
     return_failed_examples=False,# if True, return failures separately instead of raising
     provide_traceback=False,     # include tracebacks in error output
     disable_progress_bar=False,  # suppress the tqdm progress bar
@@ -69,7 +69,8 @@ dspy.Parallel(
 | Parameter | Type | Default | Purpose |
 |-----------|------|---------|---------|
 | `num_threads` | `int \| None` | `None` | Number of concurrent threads. Falls back to `dspy.settings.num_threads`. |
-| `max_errors` | `int \| None` | `None` | Stop execution after this many errors. `None` means no limit. |
+| `max_errors` | `int \| None` | `None` | Stop execution after this many errors. Falls back to `dspy.settings.max_errors`. |
+| `access_examples` | `bool` | `True` | Unpack `Example` objects via `.inputs()`. Set `False` to pass raw Examples. |
 | `return_failed_examples` | `bool` | `False` | When `True`, return failed examples separately instead of raising. |
 | `provide_traceback` | `bool \| None` | `None` | Include Python tracebacks for failed examples. |
 | `disable_progress_bar` | `bool` | `False` | Suppress the progress bar. |
@@ -293,6 +294,14 @@ print(result.labels)  # ["positive", "negative", "neutral"]
 
 This keeps the parallelism as an implementation detail. Callers don't need to know about threading -- they just pass a list and get a list back.
 
+## Gotchas
+
+1. **Claude writes a `for` loop instead of using `dspy.Parallel`.** When asked to process a batch of inputs, Claude defaults to a sequential loop. For any batch of 5+ independent LM calls, use `dspy.Parallel` — it is dramatically faster because LM calls are I/O-bound.
+2. **Claude sets `num_threads` to match CPU cores.** LM calls are network-bound (waiting on HTTP responses), not CPU-bound. Thread count should match your provider rate limit, not your CPU count. 8-16 threads is typical even on a 4-core machine.
+3. **Claude forgets that `return_failed_examples=True` changes the return type.** Without it, `parallel(pairs)` returns a flat list. With it, it returns a 3-tuple `(results, failed_examples, exceptions)`. Destructure accordingly or the code will break.
+4. **Claude nests Parallel inside Parallel without considering total concurrency.** An inner `Parallel(num_threads=3)` inside an outer `Parallel(num_threads=4)` creates up to 12 concurrent LM calls. This can exceed provider rate limits. Calculate the total: `outer_threads * inner_threads`.
+5. **Claude uses `dspy.Parallel` for 1-2 items.** The threading overhead is not worth it for fewer than ~5 items. Just call the module directly.
+
 ## Cross-references
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
@@ -302,3 +311,9 @@ This keeps the parallelism as an implementation detail. Callers don't need to kn
 - **Evaluation** uses its own threading via `num_threads` -- see `/dspy-evaluate`
 - For worked examples (batch classification, multi-aspect analysis), see [examples.md](examples.md)
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+
+## Additional resources
+
+- [dspy.Parallel API docs](https://dspy.ai/api/modules/Parallel/)
+- For constructor signatures and method reference, see [reference.md](reference.md)
+- For worked examples (batch classification, multi-aspect analysis), see [examples.md](examples.md)

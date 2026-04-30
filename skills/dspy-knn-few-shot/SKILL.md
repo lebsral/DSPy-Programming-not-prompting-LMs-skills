@@ -35,7 +35,7 @@ Do **not** use KNNFewShot when:
 import dspy
 from sentence_transformers import SentenceTransformer
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or any LiteLLM-supported provider
 dspy.configure(lm=lm)
 
 # 1. Prepare training data
@@ -220,6 +220,14 @@ optimized = knn_optimizer.compile(my_program, teacher=teacher_program)
 
 This retrieves 5 nearest neighbors per query and then applies BootstrapFewShot logic (with the given metric and demo limits) over those neighbors.
 
+## Gotchas
+
+1. **Claude uses unnormalized embeddings with KNN.** KNN uses dot-product similarity internally, which assumes vectors are normalized. Most sentence-transformer models normalize by default, but custom embedding functions may not. If retrieval quality is poor, check whether your embedder normalizes its output. Add `normalize_embeddings=True` to `SentenceTransformer.encode()` if needed.
+2. **Claude forgets to call `.with_inputs()` on training examples.** KNN concatenates only the input fields (not output fields) to create the query embedding. If `.with_inputs()` is missing, KNN does not know which fields are inputs and may embed the wrong thing or fail silently.
+3. **Claude sets k too high for long examples.** Each retrieved example is injected as a few-shot demo in the prompt. With k=10 and multi-paragraph examples, the prompt can easily exceed context limits. Start with k=3 and only increase if your examples are short (single-sentence).
+4. **Claude uses KNNFewShot when all inputs are similar.** If your inputs are homogeneous (e.g., all similar support tickets in one category), every query retrieves nearly the same demos. Static few-shot with BootstrapFewShot is simpler and equally effective in this case.
+5. **Claude uses OpenAI embeddings without considering cost.** The embedding function runs at init time (to index all training examples) AND at every inference call. With a large trainset and high query volume, OpenAI embedding costs add up. Use local sentence-transformers (`all-MiniLM-L6-v2`) for cost-sensitive workloads.
+
 ## Cross-references
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
@@ -229,3 +237,11 @@ This retrieves 5 nearest neighbors per query and then applies BootstrapFewShot l
 - **Improving accuracy** for the full optimization workflow -- see `/ai-improving-accuracy`
 - For worked examples, see [examples.md](examples.md)
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+
+## Additional resources
+
+- [dspy.KNN API docs](https://dspy.ai/api/optimizers/KNN/)
+- [dspy.KNNFewShot API docs](https://dspy.ai/api/optimizers/KNNFewShot/)
+- [DSPy optimizer selection guide](https://dspy.ai/learn/optimization/optimizers/)
+- For constructor signatures and method reference, see [reference.md](reference.md)
+- For worked examples (ticket classification, custom embeddings), see [examples.md](examples.md)

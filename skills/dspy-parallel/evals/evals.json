@@ -1,0 +1,32 @@
+[
+  {
+    "prompt": "I have 200 support tickets and I need to classify each one by category and priority using DSPy. It is too slow doing them one at a time.",
+    "expected_output": "Uses dspy.Parallel to batch-process tickets concurrently",
+    "assertions": [
+      "Uses dspy.Parallel with num_threads parameter",
+      "Builds exec_pairs as a list of (module, dict) tuples",
+      "Results are iterable in the same order as inputs",
+      "Does not use a sequential for loop for the main batch"
+    ]
+  },
+  {
+    "prompt": "I want to analyze a document from three angles at once: sentiment, topic extraction, and entity extraction. How do I run all three DSPy modules in parallel on the same input?",
+    "expected_output": "Fan-out pattern using dspy.Parallel with different modules per pair",
+    "assertions": [
+      "Creates three separate DSPy modules (one per analysis type)",
+      "Builds exec_pairs with different modules but the same input text",
+      "Uses dspy.Parallel to run all three concurrently",
+      "Accesses results by index (results[0], results[1], results[2]) to get each analysis"
+    ]
+  },
+  {
+    "prompt": "My parallel DSPy batch keeps failing partway through because some inputs cause errors. I want to get partial results and retry just the failures.",
+    "expected_output": "Uses return_failed_examples=True for graceful error handling",
+    "assertions": [
+      "Sets return_failed_examples=True in the Parallel constructor",
+      "Destructures the return as a 3-tuple: results, failed_examples, exceptions",
+      "Shows how to retry the failed examples (e.g., with a fallback module or second pass)",
+      "Sets max_errors to control when to abort the batch"
+    ]
+  }
+]

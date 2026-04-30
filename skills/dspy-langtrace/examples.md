@@ -11,7 +11,7 @@ langtrace.init(api_key="your-key")
 
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 class SupportBot(dspy.Module):
     def __init__(self):
@@ -59,7 +59,7 @@ langtrace.init(api_key="your-key")
 
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 bot = SupportBot()
 

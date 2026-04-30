@@ -1,0 +1,34 @@
+[
+  {
+    "prompt": "I want to use Qdrant as my vector database with DSPy for a RAG pipeline. Show me how to set it up.",
+    "expected_output": "Sets up QdrantRM with correct constructor: qdrant_client (QdrantClient instance) and qdrant_collection_name. Shows a RAG module using the retriever.",
+    "assertions": [
+      "Uses from dspy_qdrant import QdrantRM",
+      "Creates a QdrantClient instance separately, then passes it as qdrant_client parameter",
+      "Does NOT use fabricated params like qdrant_client_url or qdrant_client_api_key",
+      "Uses document_field parameter correctly (default is 'document', not 'text')",
+      "LM configuration is provider-agnostic with alternative comment"
+    ]
+  },
+  {
+    "prompt": "I already have a Pinecone index with my documents. How do I use it as a retriever in DSPy?",
+    "expected_output": "Shows a custom dspy.Retrieve subclass for Pinecone with forward() method returning dspy.Prediction(passages=...).",
+    "assertions": [
+      "Subclasses dspy.Retrieve",
+      "Implements forward() method with query and k parameters",
+      "Returns dspy.Prediction with passages field",
+      "Does NOT import from dspy.retrieve.pinecone_rm or similar removed modules",
+      "Mentions that DSPy 3.0 removed community retriever modules"
+    ]
+  },
+  {
+    "prompt": "Which vector database should I use with DSPy? I am starting a new project.",
+    "expected_output": "Recommends Qdrant as the default (official dspy-qdrant package). Mentions dspy.Embeddings for simple in-memory cases. Mentions ChromaDB for quick prototyping.",
+    "assertions": [
+      "Recommends Qdrant as the default choice for new DSPy projects",
+      "Mentions dspy.Embeddings as simpler alternative for small corpora without a vector DB",
+      "Does not claim any vector DB other than Qdrant has an official DSPy package",
+      "Provides a comparison or decision framework, not just one recommendation"
+    ]
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "prompt": "I want to trace my DSPy pipeline so I can see all the LM calls, prompts, and token counts. What is the easiest way to set this up?",
+    "expected_output": "Sets up Langtrace with langtrace.init() for automatic DSPy tracing",
+    "assertions": [
+      "Includes pip install langtrace-python-sdk",
+      "Calls langtrace.init() before importing or configuring DSPy",
+      "Sets API key via LANGTRACE_API_KEY env var or api_key parameter",
+      "Does NOT add decorators to individual DSPy modules — auto-instrumentation handles it",
+      "Mentions what gets traced: LM calls, token counts, cost, latency"
+    ]
+  },
+  {
+    "prompt": "I want to run Langtrace on my own infrastructure for data privacy. How do I self-host it?",
+    "expected_output": "Shows Docker Compose self-hosted setup with api_host pointing to local instance",
+    "assertions": [
+      "Clones the Langtrace repo from GitHub",
+      "Uses docker compose up to start the self-hosted instance",
+      "Configures langtrace.init() with api_host pointing to localhost",
+      "Does NOT require a cloud API key for self-hosted setup"
+    ]
+  },
+  {
+    "prompt": "I want to add metadata like user_id and environment to my DSPy traces so I can filter them in production. How?",
+    "expected_output": "Uses @with_langtrace_root_span and inject_additional_attributes for metadata",
+    "assertions": [
+      "Uses @with_langtrace_root_span decorator to create a named parent span",
+      "Calls langtrace.inject_additional_attributes() with a dictionary of metadata",
+      "Shows filtering by metadata in the Langtrace UI"
+    ]
+  }
+]

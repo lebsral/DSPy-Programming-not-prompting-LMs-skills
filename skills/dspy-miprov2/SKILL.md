@@ -31,7 +31,7 @@ If you have fewer than 50 examples or need a quick first pass, start with `Boots
 import dspy
 from dspy.evaluate import Evaluate
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # 1. Your program
@@ -72,8 +72,8 @@ The `auto` parameter controls how much computation MIPROv2 uses. It sets the num
 
 | Level | What it does | Typical cost | When to use |
 |-------|-------------|-------------|-------------|
-| `"light"` | Fewer candidates, fewer trials | ~$1-2 | Quick experiments, early iteration |
-| `"medium"` | Balanced search | ~$5-10 | Default choice for most tasks |
+| `"light"` (default) | Fewer candidates, fewer trials | ~$1-2 | Quick experiments, early iteration |
+| `"medium"` | Balanced search | ~$5-10 | Recommended starting point for most tasks |
 | `"heavy"` | More candidates, more trials | ~$15-30 | Production, maximum quality |
 
 ```python
@@ -121,15 +121,21 @@ optimized = optimizer.compile(
 
 ### Manual configuration (advanced)
 
-If `auto` doesn't give you enough control, you can set parameters directly:
+If `auto` does not give you enough control, you can set parameters directly:
 
 ```python
 optimizer = dspy.MIPROv2(
     metric=metric,
-    num_candidates=10,          # Number of instruction candidates to generate per module
-    max_bootstrapped_demos=4,   # Max bootstrapped demos per module
-    max_labeled_demos=4,        # Max labeled demos per module
-    num_trials=30,              # Number of Bayesian optimization trials
+    auto=None,                      # Disable auto presets for manual control
+    num_candidates=10,              # Number of instruction candidates per module
+    max_bootstrapped_demos=4,       # Max bootstrapped demos per module
+    max_labeled_demos=4,            # Max labeled demos per module
+)
+
+optimized = optimizer.compile(
+    my_program,
+    trainset=trainset,
+    num_trials=30,                  # Bayesian optimization trials (passed to compile, not constructor)
 )
 ```
 
@@ -163,21 +169,22 @@ Times vary significantly based on model latency, number of modules, and thread c
 
 ## Comparison with other optimizers
 
-| | MIPROv2 | BootstrapFewShot | BootstrapFewShotWithRandomSearch | GEPA |
-|---|---------|-----------------|--------------------------------|------|
-| **Tunes instructions** | Yes | No | No | Yes |
-| **Tunes demos** | Yes | Yes | Yes | No |
-| **Joint optimization** | Yes | No | No | No |
-| **Min examples** | ~50 | ~10 | ~50 | ~10 |
-| **Typical improvement** | 15-35% | 5-20% | 10-25% | 5-15% |
-| **Cost** | Medium-High | Low | Medium | Low |
-| **Best for** | Production | Quick start | Better than bootstrap | Few examples |
+| | MIPROv2 | BootstrapFewShot | SIMBA | BetterTogether | GEPA |
+|---|---------|-----------------|-------|----------------|------|
+| **Tunes instructions** | Yes | No | Yes | Yes | Yes |
+| **Tunes demos** | Yes | Yes | Yes | Yes | No |
+| **Joint optimization** | Yes | No | Yes | Yes (alternating) | No |
+| **Min examples** | ~50 | ~10 | ~50 | ~50 | ~10 |
+| **Typical improvement** | 15-35% | 5-20% | 15-35% | 15-35% | 5-15% |
+| **Cost** | Medium-High | Low | Medium-High | High | Low |
+| **Best for** | Production prompts | Quick start | Iterative refinement | Multi-strategy | Few examples |
 
 ### When to use what
 
 - **BootstrapFewShot** — first optimization pass, quick iteration, small datasets
-- **BootstrapFewShotWithRandomSearch** — better than BootstrapFewShot when you have 50+ examples and more budget
 - **MIPROv2** — best prompt optimization, production use, 50+ examples
+- **SIMBA** — iterative refinement with support for minibatching; good alternative to MIPROv2
+- **BetterTogether** — alternates between prompt optimization and fine-tuning for maximum quality
 - **GEPA** — instruction-only tuning, very few examples
 - **BootstrapFinetune** — fine-tuning model weights (different category entirely)
 
@@ -271,6 +278,20 @@ rag = RAGPipeline()
 optimizer = dspy.MIPROv2(metric=metric, auto="medium")
 optimized_rag = optimizer.compile(rag, trainset=trainset)
 ```
+
+## Gotchas
+
+1. **Claude sets `auto="heavy"` by default for production.** The `auto` parameter defaults to `"light"`, and `"medium"` is the recommended starting point. Heavy is 5-10x more expensive and only justified with 200+ examples and a well-validated metric. Start with `"medium"` and upgrade only if the score plateaus.
+2. **Claude passes `trainset` as a positional argument to `compile()`.** The `trainset` parameter is keyword-only in MIPROv2: `optimizer.compile(program, trainset=trainset)`, not `optimizer.compile(program, trainset)`. Passing it positionally raises a TypeError.
+3. **Claude forgets `.with_inputs()` on training examples.** Every `dspy.Example` in the trainset must call `.with_inputs("field1", "field2")` to mark which fields are inputs vs labels. Without this, MIPROv2 cannot distinguish inputs from expected outputs and optimization silently underperforms.
+4. **Claude sets `num_candidates` without also setting `num_trials`.** When using manual configuration (no `auto`), both `num_candidates` and `num_trials` must be set. Setting only one produces suboptimal search — more candidates without enough trials to evaluate them is wasted compute.
+5. **Claude uses the deprecated `requires_permission_to_run` parameter.** This parameter has been removed from MIPROv2. Passing `True` raises a ValueError. Remove it entirely from `compile()` calls.
+
+## Additional resources
+
+- [dspy.MIPROv2 API docs](https://dspy.ai/api/optimizers/MIPROv2/)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)
 
 ## Cross-references
 

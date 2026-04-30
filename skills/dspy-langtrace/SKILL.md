@@ -60,7 +60,7 @@ langtrace.init(api_key="your-key")  # or set LANGTRACE_API_KEY env var
 
 # That's it — all DSPy calls are now traced automatically
 import dspy
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 program = dspy.ChainOfThought("question -> answer")
 result = program(question="What is DSPy?")
@@ -113,7 +113,7 @@ langtrace.init(api_key="your-key")
 
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 class RAGPipeline(dspy.Module):
     def __init__(self):
@@ -143,7 +143,7 @@ langtrace.init(api_key="your-key")
 
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 trainset = [...]  # your training examples
 
@@ -203,6 +203,19 @@ Want DSPy tracing?
 +- Need full ML lifecycle (registry, deploy)? -> MLflow (/dspy-mlflow)
 +- Team already uses Jaeger? -> Jaeger (see /ai-tracing-requests)
 ```
+
+## Gotchas
+
+1. **Claude calls `langtrace.init()` after importing and configuring DSPy.** Langtrace must be initialized before any DSPy imports or configuration — it patches DSPy modules at import time. Always call `langtrace.init()` as the first line after `from langtrace_python_sdk import langtrace`, before `import dspy`.
+2. **Claude sees no traces and does not realize DSPy caching is the cause.** DSPy caches LM responses by default. Repeated calls with the same input return cached results and do not generate new traces. To see traces for repeated calls, either change the input or disable DSPy caching with `dspy.configure_cache(enable=False)`.
+3. **Claude omits `TRACE_DSPY_CHECKPOINT=false` in production.** Checkpoint tracing is enabled by default and serializes predictor state at each step, adding latency. For production deployments, set `export TRACE_DSPY_CHECKPOINT=false` to disable it.
+4. **Claude wraps every function with `@with_langtrace_root_span` when auto-instrumentation already traces everything.** The root span decorator is only needed when you want to group DSPy calls under a named parent span with custom metadata. For basic tracing, `langtrace.init()` alone is sufficient — do not add decorators unless you need metadata filtering.
+
+## Additional resources
+
+- [Langtrace DSPy integration docs](https://docs.langtrace.ai/supported-integrations/llm-frameworks/dspy)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)
 
 ## Cross-references
 

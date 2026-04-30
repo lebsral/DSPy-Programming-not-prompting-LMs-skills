@@ -1,0 +1,33 @@
+[
+  {
+    "prompt": "I need to classify support tickets into categories like billing, technical, and general. Keep it simple and fast — no reasoning needed.",
+    "expected_output": "A DSPy program using dspy.Predict with a Literal-typed output field for classification categories",
+    "assertions": [
+      "Uses dspy.Predict (not ChainOfThought)",
+      "Defines a dspy.Signature with InputField and OutputField",
+      "Uses Literal type to constrain classification categories",
+      "Configures an LM with dspy.LM and dspy.configure",
+      "Does not hardcode a single provider as the only option"
+    ]
+  },
+  {
+    "prompt": "Extract the sender name, subject, and date from raw email text. Return it as a structured object I can pass to my API.",
+    "expected_output": "A DSPy program using dspy.Predict with a Pydantic BaseModel output type for structured extraction",
+    "assertions": [
+      "Uses dspy.Predict for direct extraction (not ChainOfThought)",
+      "Defines a Pydantic BaseModel for the output structure",
+      "Uses the BaseModel as an OutputField type in the signature",
+      "Shows how to access the extracted fields from the result"
+    ]
+  },
+  {
+    "prompt": "I have thousands of product descriptions to tag. How do I process them efficiently with DSPy Predict?",
+    "expected_output": "Uses dspy.Predict with batch() or dspy.Parallel for concurrent processing",
+    "assertions": [
+      "Uses dspy.Predict as the core module",
+      "Uses predict.batch() or dspy.Parallel for batch processing (not a plain Python for loop)",
+      "Shows how to pass a list of examples or items",
+      "Mentions concurrency or parallelism benefit"
+    ]
+  }
+]

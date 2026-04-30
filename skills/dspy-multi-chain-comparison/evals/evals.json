@@ -1,0 +1,35 @@
+[
+  {
+    "prompt": "I have a DSPy classification task but sometimes the model reasons poorly and gives wrong answers. How can I get more reliable results by having it try multiple reasoning paths?",
+    "expected_output": "Uses dspy.MultiChainComparison to generate and compare multiple reasoning chains",
+    "assertions": [
+      "Uses dspy.MultiChainComparison (not just ChainOfThought or Predict)",
+      "Sets M parameter to control number of chains (default 3)",
+      "Explains that each chain reasons independently and a comparison step picks the best",
+      "Mentions the cost tradeoff: M+1 LM calls per invocation",
+      "Keeps temperature at 0.7 or higher for chain diversity"
+    ]
+  },
+  {
+    "prompt": "I want to use MultiChainComparison but I am worried about costs. How do I balance quality and expense?",
+    "expected_output": "Shows cost management strategies for MultiChainComparison",
+    "assertions": [
+      "Recommends starting with M=3 as a default",
+      "Suggests using MultiChainComparison selectively — only for hard or high-stakes tasks",
+      "Shows the adaptive routing pattern: classify difficulty, then route hard tasks to MCC and easy tasks to CoT",
+      "Mentions cost scales linearly with M (M+1 LM calls per invocation)",
+      "Does not recommend M higher than 5 without evaluation evidence"
+    ]
+  },
+  {
+    "prompt": "When should I use MultiChainComparison vs ChainOfThought vs Predict? My task involves evaluating technical proposals.",
+    "expected_output": "Compares the three modules and recommends MultiChainComparison for the ambiguous evaluation task",
+    "assertions": [
+      "Recommends MultiChainComparison for the evaluation task since it benefits from multiple perspectives",
+      "Explains that ChainOfThought is a single reasoning chain — good default but less reliable on ambiguous tasks",
+      "Explains that Predict is for simple tasks without reasoning",
+      "Notes when NOT to use MultiChainComparison: simple tasks, latency-critical, cost-constrained",
+      "Shows a working code example with a signature appropriate for technical evaluation"
+    ]
+  }
+]

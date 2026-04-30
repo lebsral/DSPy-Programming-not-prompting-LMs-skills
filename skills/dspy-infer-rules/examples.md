@@ -8,7 +8,7 @@ A support ticket classifier that uses InferRules to discover the decision logic 
 import dspy
 from typing import Literal
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or any LiteLLM-supported provider
 
 # Define a typed signature for ticket classification
 class ClassifyTicket(dspy.Signature):
@@ -170,7 +170,7 @@ import dspy
 from typing import Literal
 from pydantic import BaseModel
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or any LiteLLM-supported provider
 
 
 # Structured output for moderation decisions

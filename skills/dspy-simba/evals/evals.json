@@ -1,23 +1,35 @@
 [
   {
-    "id": "dspy-simba-incremental-optimization",
     "prompt": "My DSPy classifier works at about 75% accuracy after BootstrapFewShot. I want to push it higher without breaking what already works. How do I use SIMBA?",
-    "should_contain": ["dspy.SIMBA", "compile", "metric", "trainset"],
-    "should_not_contain": [],
-    "notes": "Should show SIMBA constructor with metric, compile call on the already-bootstrapped program. Should mention incremental improvement and evaluating before/after."
+    "expected_output": "Uses dspy.SIMBA to incrementally improve a bootstrapped program",
+    "assertions": [
+      "Uses dspy.SIMBA (not MIPROv2 or BootstrapFewShot) for the incremental step",
+      "Passes the already-bootstrapped program to optimizer.compile(), not a fresh unoptimized program",
+      "Defines a metric function that returns floats (not just binary 0/1)",
+      "Shows how to compare before/after scores to verify improvement",
+      "Mentions inspecting candidate_programs or trial_logs to understand what SIMBA found"
+    ]
   },
   {
-    "id": "dspy-simba-production-safety",
     "prompt": "I need to optimize my production DSPy pipeline but I cannot afford regressions. What is the safest optimizer to use?",
-    "should_contain": ["SIMBA", "conservative", "regression"],
-    "should_not_contain": [],
-    "notes": "Should recommend SIMBA for conservative optimization. Should show regression checking pattern — comparing old vs new predictions on a held-out set before deploying."
+    "expected_output": "Recommends SIMBA for conservative, regression-safe optimization",
+    "assertions": [
+      "Recommends dspy.SIMBA as the conservative optimizer",
+      "Explains that SIMBA makes small targeted changes per iteration rather than rewriting entire prompts",
+      "Shows a pattern for regression checking — evaluating old vs new on a held-out set before deploying",
+      "Mentions saving the optimized program with .save() for rollback capability",
+      "Contrasts with MIPROv2 which can make larger changes that risk regressions"
+    ]
   },
   {
-    "id": "dspy-simba-vs-miprov2",
     "prompt": "Should I use SIMBA or MIPROv2 to optimize my DSPy program? What are the tradeoffs?",
-    "should_contain": ["SIMBA", "MIPROv2", "incremental"],
-    "should_not_contain": [],
-    "notes": "Should present tradeoff comparison — SIMBA for conservative incremental improvement, MIPROv2 for maximum quality. Should mention layering: BootstrapFewShot -> SIMBA -> optionally MIPROv2."
+    "expected_output": "Presents tradeoff comparison between SIMBA and MIPROv2",
+    "assertions": [
+      "Compares SIMBA (incremental, conservative) vs MIPROv2 (full optimization, higher ceiling)",
+      "Mentions the layering approach: BootstrapFewShot -> SIMBA -> optionally MIPROv2",
+      "Notes that SIMBA needs fewer examples (50+) while MIPROv2 benefits from more (200+)",
+      "Explains that SIMBA has lower regression risk due to small-step changes",
+      "Recommends SIMBA for production stability and MIPROv2 for maximum quality"
+    ]
   }
 ]

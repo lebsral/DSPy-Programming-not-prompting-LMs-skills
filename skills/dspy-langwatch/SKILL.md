@@ -74,7 +74,7 @@ export LANGWATCH_ENDPOINT="http://localhost:5560"
 
 #### Helm chart (Kubernetes)
 
-LangWatch provides a Helm chart for production Kubernetes deployments. See the [LangWatch docs](https://docs.langwatch.ai/self-hosting) for Helm values and configuration.
+LangWatch provides a Helm chart for production Kubernetes deployments. See the [LangWatch docs](https://langwatch.ai/docs/self-hosting) for Helm values and configuration.
 
 ## Integration 1: Auto-Tracing (Inference)
 
@@ -95,7 +95,7 @@ Use `@langwatch.trace()` and `autotrack_dspy()` to automatically capture all DSP
 import langwatch
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 @langwatch.trace()
 def answer_question(question):
@@ -114,7 +114,7 @@ result = answer_question("What is DSPy?")
 import langwatch
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 class RAGPipeline(dspy.Module):
     def __init__(self):
@@ -178,7 +178,7 @@ LangWatch patches DSPy optimizer classes to stream live step-by-step progress. T
 import langwatch.dspy
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 trainset = [...]  # your training examples
 
@@ -205,7 +205,7 @@ optimized = optimizer.compile(program, trainset=trainset)
 import langwatch.dspy
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 program = dspy.ChainOfThought("question -> answer")
 optimizer = dspy.BootstrapFewShot(metric=metric, max_bootstrapped_demos=4)
@@ -226,7 +226,7 @@ Run multiple experiments with different names — they appear side-by-side in th
 import langwatch.dspy
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 experiments = [
     ("bootstrap-4", dspy.BootstrapFewShot, {"metric": metric, "max_bootstrapped_demos": 4}),
@@ -266,6 +266,19 @@ What do you need?
 +- Tracing + experiment tracking (cloud)? -> Weave (/dspy-weave)
 +- Full ML lifecycle + model registry? -> MLflow (/dspy-mlflow)
 ```
+
+## Gotchas
+
+1. **Claude forgets to call `autotrack_dspy()` inside the traced function.** The `@langwatch.trace()` decorator creates the trace context, but DSPy auto-tracking only activates when you call `langwatch.get_current_trace().autotrack_dspy()` inside the function body. Without it, you get an empty trace with no DSPy spans.
+2. **Claude puts `autotrack_dspy()` outside the `@langwatch.trace()` function.** The `autotrack_dspy()` call must be inside the decorated function where a trace context exists. Calling it at module level or before the trace starts raises an error because there is no current trace.
+3. **Claude calls `langwatch.dspy.init()` after `optimizer.compile()`.** The `init()` call must come before `compile()` — it patches the optimizer to stream progress. If called after, no progress data is captured. Always: create optimizer, call `langwatch.dspy.init(experiment=..., optimizer=...)`, then call `optimizer.compile()`.
+4. **Claude reuses the same experiment name across runs.** Each `langwatch.dspy.init(experiment=...)` call should use a unique experiment name so runs appear as separate entries in the dashboard. Reusing names overwrites or merges data, making comparison impossible.
+
+## Additional resources
+
+- [LangWatch DSPy integration docs](https://langwatch.ai/docs/integration/python/integrations/dspy)
+- [LangWatch self-hosting docs](https://langwatch.ai/docs/self-hosting)
+- For worked examples, see [examples.md](examples.md)
 
 ## Cross-references
 

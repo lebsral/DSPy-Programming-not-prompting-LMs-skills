@@ -6,7 +6,7 @@
 import langwatch
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 class SupportBot(dspy.Module):
     def __init__(self):
@@ -53,7 +53,7 @@ import langwatch.dspy
 import dspy
 from dspy.evaluate import Evaluate
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 # Prepare data
 trainset = [
@@ -96,7 +96,7 @@ print(f"Final score: {score:.1f}%")
 import langwatch.dspy
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 def metric(example, prediction, trace=None):
     return prediction.answer.strip().lower() == example.answer.strip().lower()
@@ -143,7 +143,7 @@ for strategy in strategies:
 import langwatch
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 bot = SupportBot()
 

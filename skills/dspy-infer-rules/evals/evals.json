@@ -1,0 +1,34 @@
+[
+  {
+    "prompt": "I have 50 labeled support tickets with priority levels (critical, high, normal, low). I want to extract the decision rules so I can document them for my team. What DSPy optimizer should I use?",
+    "expected_output": "Uses dspy.InferRules to extract interpretable classification rules",
+    "assertions": [
+      "Uses dspy.InferRules (not BootstrapFewShot or MIPROv2)",
+      "Defines a metric function with the (example, prediction, trace=None) signature",
+      "Calls optimizer.compile(program, trainset=trainset) to run optimization",
+      "Shows how to inspect the discovered rules via predictor.signature.instructions",
+      "Mentions that rules can be read, edited, or removed before deploying"
+    ]
+  },
+  {
+    "prompt": "I need my AI content moderation system to be explainable for compliance. My manager wants to see the exact rules the system follows. I have labeled moderation examples.",
+    "expected_output": "Uses InferRules for explainable moderation with auditable rules",
+    "assertions": [
+      "Uses dspy.InferRules for interpretability and auditability",
+      "Explains that InferRules produces human-readable rules appended to instructions",
+      "Shows how to extract and display the discovered moderation policy after compilation",
+      "Recommends providing a separate valset for better evaluation control",
+      "Does not use BootstrapFewShot or MIPROv2 since interpretability is the requirement"
+    ]
+  },
+  {
+    "prompt": "I tried InferRules on my creative writing task and the output quality got worse. What went wrong and what should I use instead?",
+    "expected_output": "Explains InferRules limitations and recommends alternatives",
+    "assertions": [
+      "Explains that InferRules works best on tasks with consistent patterns (classification, routing, triage)",
+      "States that creative or open-ended tasks have no consistent rules to discover",
+      "Recommends BootstrapFewShot or MIPROv2 as alternatives",
+      "Suggests comparing InferRules accuracy against a baseline to verify it actually helps"
+    ]
+  }
+]

@@ -1,0 +1,33 @@
+[
+  {
+    "prompt": "I have a DSPy RAG pipeline and I want to figure out whether my retriever or my generator is the weak link. How do I evaluate this?",
+    "expected_output": "Uses Ragas with decomposed metrics (Faithfulness, ContextPrecision, ContextRecall, AnswerRelevancy) to diagnose retriever vs generator. Shows how to collect predictions, build an EvaluationDataset with SingleTurnSample, and interpret results.",
+    "assertions": [
+      "Uses SingleTurnSample and EvaluationDataset (not datasets.Dataset)",
+      "Shows at least Faithfulness and one context metric",
+      "Explains which metrics evaluate the retriever vs the generator",
+      "Does not use deprecated LangchainLLMWrapper — uses llm_factory() if custom LLM needed",
+      "Mentions that ContextPrecision and ContextRecall require ground truth references"
+    ]
+  },
+  {
+    "prompt": "Should I use Ragas or dspy.Evaluate to measure my RAG pipeline quality? What is the difference?",
+    "expected_output": "Explains that dspy.Evaluate is for overall accuracy and optimization objectives, while Ragas decomposes quality into retriever vs generator metrics. Recommends dspy.Evaluate for optimization and Ragas for post-optimization diagnosis.",
+    "assertions": [
+      "Recommends dspy.Evaluate with SemanticF1 as the optimization objective",
+      "Recommends Ragas for post-optimization analysis to diagnose retriever vs generator",
+      "Warns that Ragas metrics are too slow for inner-loop optimization",
+      "Does not claim one tool replaces the other — they are complementary"
+    ]
+  },
+  {
+    "prompt": "I want to evaluate my RAG pipeline with Ragas but I do not have ground truth answers. Which metrics can I still use?",
+    "expected_output": "Recommends Faithfulness and AnswerRelevancy as reference-free metrics. Explains that ContextPrecision, ContextRecall, and AnswerCorrectness require ground truth.",
+    "assertions": [
+      "Identifies Faithfulness and AnswerRelevancy as reference-free",
+      "States that ContextPrecision, ContextRecall, and AnswerCorrectness need reference answers",
+      "Shows working code using SingleTurnSample without the reference field or with reference=None",
+      "Does not use deprecated Ragas APIs (Dataset, LangchainLLMWrapper, ground_truths)"
+    ]
+  }
+]

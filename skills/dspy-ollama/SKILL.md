@@ -1,6 +1,6 @@
 ---
 name: dspy-ollama
-description: Run DSPy with local models using Ollama — no API key needed. Use when you want to run DSPy locally, use Ollama, set up a local LLM, run offline, or configure local model parameters. Also: ollama, local model, run LLM locally, llama local, self-hosted LLM, ollama serve, ollama_chat, local inference, run DSPy offline, no API key needed, ollama pull, num_ctx, ollama context window, ollama GPU, OLLAMA_NUM_GPU, which local model, best model for ollama, ollama too slow, ollama vs vllm, develop locally deploy remotely.
+description: Run DSPy with local models using Ollama — no API key needed. Use when you want to run DSPy locally, use Ollama, set up a local LLM, run offline, or configure local model parameters. Also: ollama, local model, run LLM locally, llama local, self-hosted LLM, ollama serve, ollama_chat, local inference, run DSPy offline, no API key needed, ollama pull, ollama list, ollama rm, num_ctx, ollama context window, ollama GPU, OLLAMA_NUM_GPU, OLLAMA_HOST, ollama remote, ollama embeddings, nomic-embed-text, dspy.Embedder ollama, which local model, best model for ollama, ollama too slow, ollama vs vllm, develop locally deploy remotely, ollama environment variables, ollama systemd, ollama background service.
 ---
 
 # Ollama — Run DSPy with Local Models
@@ -121,6 +121,36 @@ lm = dspy.LM(
 | 16384 | +4-8 GB | RAG with long contexts |
 | 32768 | +8-16 GB | Long document processing |
 
+## Environment variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `OLLAMA_HOST` | `127.0.0.1:11434` | Bind address. Set to `0.0.0.0:11434` to allow remote access (e.g., GPU server serving DSPy clients on other machines) |
+| `OLLAMA_NUM_GPU` | auto | Number of GPU layers. `999` = all GPU, `0` = CPU only |
+| `OLLAMA_NUM_PARALLEL` | `1` | Concurrent requests. Increase for DSPy batch/optimization runs |
+| `OLLAMA_MAX_LOADED_MODELS` | `1` | Models kept in memory simultaneously. Increase for multi-model pipelines |
+| `OLLAMA_MODELS` | `~/.ollama/models` | Model storage directory. Change if disk space is limited |
+
+Setting env vars per platform:
+- **macOS (app):** `launchctl setenv OLLAMA_HOST "0.0.0.0:11434"` then restart Ollama
+- **Linux (systemd):** `sudo systemctl edit ollama.service`, add `Environment=` lines under `[Service]`, then `systemctl daemon-reload && systemctl restart ollama`
+- **Everywhere else:** `export OLLAMA_HOST="0.0.0.0:11434"` before `ollama serve`
+
+### Remote Ollama (GPU server)
+
+If Ollama runs on a different machine (e.g., a GPU server), point DSPy to it:
+
+```python
+lm = dspy.LM(
+    "ollama_chat/llama3.1:8b",
+    api_base="http://gpu-server:11434",  # remote Ollama host
+    api_key="",
+    num_ctx=8192,
+)
+```
+
+Make sure the server has `OLLAMA_HOST=0.0.0.0:11434` set.
+
 ## Performance tuning
 
 ### GPU acceleration
@@ -128,30 +158,7 @@ lm = dspy.LM(
 Ollama automatically uses GPU if available. Check with:
 
 ```bash
-ollama ps  # shows which models are loaded and GPU usage
-```
-
-Control GPU usage with environment variables:
-
-```bash
-# Use all GPU layers (default if GPU detected)
-export OLLAMA_NUM_GPU=999
-
-# CPU only (useful for testing or shared machines)
-export OLLAMA_NUM_GPU=0
-
-# Partial offload (when model doesn't fully fit in VRAM)
-export OLLAMA_NUM_GPU=20
-```
-
-### Concurrent requests
-
-```bash
-# Allow multiple parallel requests (default: 1)
-export OLLAMA_NUM_PARALLEL=4
-
-# Keep multiple models loaded (for multi-model pipelines)
-export OLLAMA_MAX_LOADED_MODELS=2
+ollama ps  # shows which models are loaded and GPU/CPU split
 ```
 
 ### Apple Silicon optimization
@@ -162,6 +169,42 @@ Ollama runs natively on Apple Silicon using Metal. Performance tips:
 - **M1/M2 Pro (16GB):** 8B models with `num_ctx=8192`, or 14B with `num_ctx=4096`
 - **M1/M2 Max (32GB+):** 70B quantized models with `num_ctx=4096`
 - **M3/M4 Max (64GB+):** 70B models with `num_ctx=8192`
+
+## Embedding models (for retrieval pipelines)
+
+Ollama can serve embedding models for `dspy.Embedder`:
+
+```python
+embedder = dspy.Embedder(
+    "ollama/nomic-embed-text",
+    api_base="http://localhost:11434",
+    api_key="",
+    batch_size=200,  # default; reduce if Ollama OOMs on large batches
+)
+```
+
+| Model | Dimensions | Size | Notes |
+|-------|-----------|------|-------|
+| `nomic-embed-text` | 768 | 274 MB | Good default, fast |
+| `mxbai-embed-large` | 1024 | 670 MB | Higher accuracy |
+| `bge-m3` | 1024 | 1.2 GB | Multilingual |
+
+Pull embedding models the same way: `ollama pull nomic-embed-text`
+
+## Model management
+
+```bash
+ollama list                    # show installed models and sizes
+ollama pull llama3.1:8b        # download or update a model
+ollama rm codellama:7b         # remove a model to free disk space
+ollama ps                      # show running models and GPU/CPU split
+ollama show llama3.1:8b        # show model details (parameters, template, license)
+curl http://localhost:11434/api/tags  # verify Ollama is running (useful in scripts)
+```
+
+Run Ollama as a background service instead of `ollama serve &`:
+- **macOS:** The Ollama app runs as a menu bar service automatically
+- **Linux:** `sudo systemctl enable --now ollama` (installed by the install script)
 
 ## Per-module model assignment
 
@@ -258,5 +301,12 @@ lm = dspy.LM("openai/meta-llama/Llama-3.1-8B-Instruct", api_base="http://gpu-ser
 - **Production serving with vLLM** — `/dspy-vllm`
 - **Reducing costs** (model routing, caching) — `/ai-cutting-costs`
 - **Switching models** without breaking things — `/ai-switching-models`
-- For worked examples, see [examples.md](examples.md)
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+
+## Additional resources
+
+- [dspy.LM API docs](https://dspy.ai/api/models/LM/)
+- [dspy.Embedder API docs](https://dspy.ai/api/models/Embedder/)
+- [Ollama model library](https://ollama.com/library)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)

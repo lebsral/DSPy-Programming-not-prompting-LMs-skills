@@ -1,0 +1,33 @@
+[
+  {
+    "prompt": "I need to build a DSPy pipeline that first classifies a support ticket, then routes it to different handlers based on the category. How do I structure this as a module?",
+    "expected_output": "Creates a dspy.Module subclass with classify-then-route pattern",
+    "assertions": [
+      "Subclasses dspy.Module with __init__ and forward methods",
+      "Declares sub-modules (Predict or ChainOfThought) as self. attributes in __init__",
+      "Uses conditional logic in forward() to route based on classification result",
+      "Returns a dspy.Prediction with structured output fields",
+      "Uses different module types appropriately (Predict for simple tasks, ChainOfThought for complex)"
+    ]
+  },
+  {
+    "prompt": "I optimized my DSPy module and want to save it so I can load it in production later. How does save and load work?",
+    "expected_output": "Shows save/load workflow with correct API",
+    "assertions": [
+      "Calls optimized_program.save('path.json') after optimization",
+      "Shows loading into a fresh instance: program = MyProgram(); program.load('path.json')",
+      "Mentions that dspy.configure() must be called before loading (LM config is not saved)",
+      "Explains what gets saved (few-shot demos, instructions) vs what does not (forward logic, model weights)"
+    ]
+  },
+  {
+    "prompt": "How do I compose multiple DSPy modules together? I want a summarizer module that I can reuse inside a larger analysis module.",
+    "expected_output": "Shows nested module composition with optimizer discovery",
+    "assertions": [
+      "Creates a custom Module subclass for the summarizer",
+      "Uses the summarizer as a self. attribute inside the larger module",
+      "Explains that optimizers traverse the full module tree and optimize nested sub-modules",
+      "Shows print(module) to verify the module hierarchy"
+    ]
+  }
+]

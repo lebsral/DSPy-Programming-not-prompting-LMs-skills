@@ -11,7 +11,7 @@ from sentence_transformers import SentenceTransformer
 
 # --- Setup ---
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or any LiteLLM-supported provider
 dspy.configure(lm=lm)
 
 encoder = SentenceTransformer("all-MiniLM-L6-v2")
@@ -96,7 +96,7 @@ from dspy.evaluate import Evaluate
 
 # --- Setup ---
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or any LiteLLM-supported provider
 dspy.configure(lm=lm)
 
 

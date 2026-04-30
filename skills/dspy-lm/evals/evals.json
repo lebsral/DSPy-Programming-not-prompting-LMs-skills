@@ -1,0 +1,32 @@
+[
+  {
+    "prompt": "I want to set up DSPy with my OpenAI API key and start making LM calls. How do I configure the language model?",
+    "expected_output": "Creates a dspy.LM with provider string and configures it globally",
+    "assertions": [
+      "Uses dspy.LM() with provider/model string format (e.g., openai/gpt-4o-mini)",
+      "Calls dspy.configure(lm=lm) to set the default model",
+      "Sets API key via environment variable (OPENAI_API_KEY), not hardcoded in code",
+      "Shows a complete working example with a DSPy module call"
+    ]
+  },
+  {
+    "prompt": "I have a DSPy pipeline with a cheap classification step and an expensive generation step. How do I use different models for each?",
+    "expected_output": "Uses set_lm() or dspy.context() for per-module LM assignment",
+    "assertions": [
+      "Creates two separate dspy.LM instances with different models",
+      "Uses set_lm() on individual modules to assign specific LMs",
+      "Shows dspy.context() as an alternative for temporary overrides",
+      "Does NOT call dspy.configure() inside forward() — configures once at top level"
+    ]
+  },
+  {
+    "prompt": "I want to run DSPy with a local Ollama model for privacy. How do I connect it?",
+    "expected_output": "Configures dspy.LM with ollama_chat provider and api_base",
+    "assertions": [
+      "Uses ollama_chat/ provider prefix (not just ollama/)",
+      "Includes api_base parameter pointing to http://localhost:11434",
+      "Mentions ollama pull and ollama serve as prerequisites",
+      "Shows the model working with standard DSPy modules after configuration"
+    ]
+  }
+]

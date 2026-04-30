@@ -51,7 +51,7 @@ import mlflow
 mlflow.dspy.autolog()  # auto-traces all DSPy calls
 
 import dspy
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 program = dspy.ChainOfThought("question -> answer")
 result = program(question="What is DSPy?")
@@ -80,7 +80,7 @@ import mlflow
 mlflow.dspy.autolog()
 
 import dspy
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 class RAGPipeline(dspy.Module):
     def __init__(self):
@@ -121,7 +121,7 @@ from dspy.evaluate import Evaluate
 mlflow.dspy.autolog()
 mlflow.set_experiment("dspy-optimization")
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 trainset = [...]  # your training examples
 devset = [...]    # your dev examples
@@ -194,19 +194,20 @@ result = model(question="What is your return policy?")
 model_v2 = mlflow.dspy.load_model("models:/production-qa/2")
 ```
 
-### Stage transitions
+### Model aliases
+
+Use aliases (like `champion`) to tag which version serves production traffic. Reassign the alias to promote a new version — no downtime, instant rollback:
 
 ```python
 from mlflow import MlflowClient
 
 client = MlflowClient()
 
-# Transition model version to production
-client.transition_model_version_stage(
-    name="production-qa",
-    version=2,
-    stage="Production",
-)
+# Set the champion alias to version 2
+client.set_registered_model_alias("production-qa", "champion", version=2)
+
+# Load by alias in production code
+model = mlflow.dspy.load_model("models:/production-qa@champion")
 ```
 
 ## MLflow UI features
@@ -215,7 +216,7 @@ The MLflow UI at `http://localhost:5000` provides:
 
 - **Traces tab**: waterfall view of every DSPy call with full details
 - **Experiments tab**: compare runs by parameters and metrics
-- **Models tab**: versioned models with stage management
+- **Models tab**: versioned models with alias management
 - **Artifacts viewer**: browse saved program files, configs, and outputs
 - **Latency breakdown**: per-step timing for identifying bottlenecks
 
@@ -244,6 +245,13 @@ What do you need?
 +- Already on Databricks? -> MLflow (native integration)
 ```
 
+## Gotchas
+
+1. **Claude uses `transition_model_version_stage()` which is deprecated.** MLflow replaced model stages with model aliases. Use `client.set_registered_model_alias("model-name", "champion", version=N)` and load with `mlflow.dspy.load_model("models:/model-name@champion")`.
+2. **Claude calls `mlflow.dspy.autolog()` after importing and configuring DSPy.** Autolog must be called before any DSPy code executes — it patches DSPy modules at import time. Call `mlflow.dspy.autolog()` as the first line after `import mlflow`.
+3. **Claude forgets to set `mlflow.set_experiment()` before `start_run()`.** Without it, all runs go to the "Default" experiment, making it impossible to compare related optimization runs. Always set an experiment name before starting runs.
+4. **Claude does not log the LM configuration as a parameter.** The model name and provider are critical for reproducing results. Always `mlflow.log_param("model", "openai/gpt-4o-mini")` inside the run so you can filter and compare across models later.
+
 ## Cross-references
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
@@ -254,5 +262,10 @@ What do you need?
 - **Serving APIs** (deploy your registered model) — `/ai-serving-apis`
 - **Experiment tracking patterns** (JSONL-based, lightweight) — `/ai-tracking-experiments`
 - **Production monitoring** — `/ai-monitoring`
-- For worked examples, see [examples.md](examples.md)
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+
+## Additional resources
+
+- [MLflow DSPy integration docs](https://mlflow.org/docs/latest/genai/flavors/dspy/index.html)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)
