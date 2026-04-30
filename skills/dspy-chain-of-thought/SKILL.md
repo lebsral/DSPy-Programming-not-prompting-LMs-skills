@@ -200,9 +200,11 @@ Both sub-modules use CoT because code review and fix suggestion both benefit fro
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **Predict** for simple calls without reasoning -- see `/dspy-predict`
 - **Signatures** for defining input/output contracts -- see `/dspy-signatures`
 - **Modules** for building multi-step programs with CoT sub-modules -- see `/dspy-modules`
 - **Reasoning patterns** for broader strategies (decomposition, self-correction) -- see `/ai-reasoning`
 - For worked examples, see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

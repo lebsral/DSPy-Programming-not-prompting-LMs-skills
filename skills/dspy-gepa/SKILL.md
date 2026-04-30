@@ -326,6 +326,8 @@ print(f"Improvement: {baseline} -> {optimized_score}")
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **Improving accuracy** with other optimizers -- see `/ai-improving-accuracy`
 - **MIPROv2** for instruction + few-shot optimization -- see the optimizer table in `docs/dspy-reference.md`
 - **Chain of thought reasoning** as the inner module -- see `/dspy-chain-of-thought`
@@ -334,4 +336,4 @@ print(f"Improvement: {baseline} -> {optimized_score}")
 - **Signatures and Pydantic outputs** -- see `/dspy-signatures` for field descriptions, typed outputs, and gotchas about what optimizers can/cannot tune
 - **VizPy** (commercial alternative for instruction optimization) -- see `/dspy-vizpy`
 - For worked examples, see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

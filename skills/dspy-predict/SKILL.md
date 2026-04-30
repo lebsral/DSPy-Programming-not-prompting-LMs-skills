@@ -58,9 +58,11 @@ print(result.contact.phone)  # 555-0123
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **Defining signatures** (inline and class-based, typed fields, Pydantic outputs) -- see `/dspy-signatures`
 - **Adding step-by-step reasoning** -- see `/dspy-chain-of-thought`
 - **Building multi-step programs** with modules that compose Predict calls -- see `/dspy-modules`
 - **Classification and sorting** with real-world patterns -- see `/ai-sorting`
 - For worked examples, see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

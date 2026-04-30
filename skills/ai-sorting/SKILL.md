@@ -370,6 +370,8 @@ sorter.load("ticket_sorter.json")
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - Need scores instead of categories? See `/ai-scoring`
 - Measure and improve sorting accuracy — see `/ai-improving-accuracy`
 - Generate training data when you have none — see `/ai-generating-data`
@@ -377,7 +379,7 @@ sorter.load("ticket_sorter.json")
 - Add reasoning before classification — see `/dspy-chain-of-thought`
 - Simple classification without reasoning — see `/dspy-predict`
 - Constrain output quality with assertions — see `/dspy-assertions`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources
 

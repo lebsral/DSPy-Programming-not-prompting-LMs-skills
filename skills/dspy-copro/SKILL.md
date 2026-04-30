@@ -231,6 +231,8 @@ This is useful when you want a capable model to brainstorm instructions but eval
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **Improving accuracy end-to-end** (metrics, evaluation, optimizer selection) -- see `/ai-improving-accuracy`
 - **MIPROv2 for combined instruction + demo optimization** -- see `/ai-improving-accuracy`
 - **GEPA for lightweight instruction tuning** -- see `/ai-improving-accuracy`
@@ -238,4 +240,4 @@ This is useful when you want a capable model to brainstorm instructions but eval
 - **Preparing training data** -- see `/dspy-data`
 - **Signatures and instructions** -- see `/dspy-signatures`
 - For worked examples, see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

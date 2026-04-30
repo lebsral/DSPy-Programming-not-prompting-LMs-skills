@@ -216,10 +216,12 @@ print(f"Delta:     {optimized_score - baseline_score:+.1f}%")
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - Need to prepare training and evaluation data? Use `/dspy-data`
 - Ready to optimize with few-shot examples? Use `/dspy-bootstrap-few-shot`
 - Want the best prompt optimization? Use `/dspy-miprov2`
 - For the full measure-improve-verify loop, see `/ai-improving-accuracy`
 - For **decomposed RAG evaluation** (faithfulness, context precision/recall) see `/dspy-ragas`
 - For worked examples (exact match, LM judge, composite), see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

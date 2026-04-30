@@ -296,13 +296,15 @@ AWS SageMaker, Google Cloud, Lambda Labs, or Together AI for training:
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - Build a strong baseline before fine-tuning — see `/ai-improving-accuracy`
 - BootstrapFinetune API details — see `/dspy-bootstrap-finetune`
 - BetterTogether optimizer — see `/dspy-better-together`
 - Cost reduction beyond distillation — see `/ai-cutting-costs`
 - Generate synthetic training data — see `/ai-generating-data`
 - Fix fine-tuning or evaluation errors — see `/ai-fixing-errors`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources
 

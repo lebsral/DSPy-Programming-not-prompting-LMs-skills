@@ -275,4 +275,4 @@ Brief notes on content that's hard to moderate correctly:
 - Use `/ai-testing-safety` to adversarially test your moderator
 - Use `/ai-monitoring` to track moderation quality in production
 - See `examples.md` for complete worked examples
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

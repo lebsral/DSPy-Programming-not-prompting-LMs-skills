@@ -239,8 +239,10 @@ For full vLLM setup (tensor parallelism, GPU sizing, quantization, production de
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **`/dspy-signatures`** -- Define what your LM should do (inputs, outputs, types)
 - **`/dspy-modules`** -- Wrap signatures with inference strategies (Predict, ChainOfThought, ReAct)
 - **`/ai-switching-models`** -- Safely migrate between providers with re-optimization
 - **`/ai-cutting-costs`** -- Reduce LM costs with per-module assignment and cheaper models
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

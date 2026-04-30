@@ -418,4 +418,4 @@ If you have even a small number of real examples, use them as the dev set instea
 - Use `/ai-improving-accuracy` to measure and improve your optimized program
 - Use `/ai-fine-tuning` once you have enough generated data for weight optimization
 - Use `/ai-kickoff` to scaffold a project, then fill data with this skill
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

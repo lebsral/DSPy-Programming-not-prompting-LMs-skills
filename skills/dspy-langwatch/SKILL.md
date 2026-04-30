@@ -269,6 +269,8 @@ What do you need?
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **Langtrace** (auto-instrumentation, easiest one-line setup) — `/dspy-langtrace`
 - **Arize Phoenix** (open-source with evals) — `/dspy-phoenix`
 - **W&B Weave** (team dashboards, experiment tracking) — `/dspy-weave`
@@ -276,4 +278,4 @@ What do you need?
 - **Lightweight experiment tracking** (JSONL-based, no extra tools) — `/ai-tracking-experiments`
 - **Production monitoring** — `/ai-monitoring`
 - For worked examples, see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

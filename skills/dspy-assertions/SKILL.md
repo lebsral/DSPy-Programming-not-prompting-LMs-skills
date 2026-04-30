@@ -215,8 +215,10 @@ except DSPyAssertionError as e:
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **Problem-first framing** with worked examples — see `/ai-checking-outputs`
 - **Stopping hallucinations** with grounding and citations — see `/ai-stopping-hallucinations`
 - **Enforcing business rules** and content policies — see `/ai-following-rules`
 - **Optimizers** that learn to satisfy constraints — see `/dspy-bootstrap-rs`, `/dspy-miprov2`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

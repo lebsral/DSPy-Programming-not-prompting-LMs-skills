@@ -387,9 +387,11 @@ For detailed patterns, constraint examples, and backtracking behavior, see **`/d
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **`/dspy-lm`** -- Configure language models, per-LM caching, `inspect_history` on LM instances
 - **`/dspy-modules`** -- Build composable programs with `dspy.Module`, assertions in modules, save/load patterns
 - **`/ai-tracing-requests`** -- Production observability and tracing for DSPy programs
 - **`/dspy-assertions`** -- Assert/Suggest patterns, constraint examples, and backtracking behavior
 - **`/ai-serving-apis`** -- Serve DSPy programs as web APIs (pairs well with streaming and asyncify)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

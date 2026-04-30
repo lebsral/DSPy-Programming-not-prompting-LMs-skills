@@ -245,4 +245,4 @@ Test with `/ai-improving-accuracy` to make sure quality doesn't drop.
 - Use `/ai-building-pipelines` to design multi-step systems with per-stage model assignment
 - Use `/ai-improving-accuracy` to make sure quality holds after cost cuts
 - Use `/ai-fixing-errors` if things break during cost optimization
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

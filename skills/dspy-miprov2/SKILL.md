@@ -274,10 +274,12 @@ optimized_rag = optimizer.compile(rag, trainset=trainset)
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - Need to prepare training data? Use `/dspy-data`
 - Want to write and run metrics? Use `/dspy-evaluate`
 - Starting with a simpler optimizer first? Use `/dspy-bootstrap-few-shot`
 - Want random search over few-shot demos? Use `/dspy-bootstrap-rs`
 - For the full measure-improve-verify loop, see `/ai-improving-accuracy`
 - For worked examples, see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

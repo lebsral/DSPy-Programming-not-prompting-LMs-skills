@@ -222,8 +222,10 @@ This retrieves 5 nearest neighbors per query and then applies BootstrapFewShot l
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **BootstrapFewShot** for static few-shot optimization -- see `/dspy-bootstrap-few-shot`
 - **LabeledFewShot** for simple static demo selection without bootstrapping -- see `/dspy-labeled-few-shot`
 - **Improving accuracy** for the full optimization workflow -- see `/ai-improving-accuracy`
 - For worked examples, see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

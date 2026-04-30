@@ -374,6 +374,8 @@ optimized = optimizer.compile(summarizer, trainset=trainset)
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - Extract structured fields instead of summaries — see `/ai-parsing-data`
 - Answer questions about documents — see `/ai-searching-docs`
 - Measure and improve summarizer quality — see `/ai-improving-accuracy`
@@ -381,7 +383,7 @@ optimized = optimizer.compile(summarizer, trainset=trainset)
 - DSPy signatures for defining input/output contracts — see `/dspy-signatures`
 - Assertions for enforcing length and quality constraints — see `/dspy-assertions`
 - ChainOfThought for reasoning-based summarization — see `/dspy-chain-of-thought`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources
 

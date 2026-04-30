@@ -239,6 +239,8 @@ Want DSPy observability?
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **Langtrace** (easiest DSPy auto-instrumentation) -- `/dspy-langtrace`
 - **Arize Phoenix** (local trace viewer + evals) -- `/dspy-phoenix`
 - **W&B Weave** (team dashboards, experiment tracking) -- `/dspy-weave`
@@ -246,7 +248,7 @@ Want DSPy observability?
 - **LangWatch** (real-time optimizer progress) -- `/dspy-langwatch`
 - **Aggregate monitoring** (not per-request) -- `/ai-monitoring`
 - **Per-request debugging** (inspect_history, JSONL traces) -- `/ai-tracing-requests`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources
 

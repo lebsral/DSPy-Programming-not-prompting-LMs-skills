@@ -259,4 +259,4 @@ Always check this flag in production workflows.
 - For prompt optimization alone, see `/ai-improving-accuracy`
 - For evaluation and metrics, see `/dspy-evaluate`
 - For data preparation, see `/dspy-data`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

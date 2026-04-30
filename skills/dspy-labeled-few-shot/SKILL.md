@@ -200,10 +200,12 @@ optimized = optimizer.compile(program, trainset=trainset)
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **Creating training examples** (dspy.Example, with_inputs, datasets) -- see `/dspy-data`
 - **Defining signatures** (inline and class-based, typed fields) -- see `/dspy-signatures`
 - **BootstrapFewShot** for metric-driven demo selection -- see `/ai-improving-accuracy`
 - **Evaluating your program** to measure if LabeledFewShot is enough -- see `/dspy-evaluate`
 - **Building modules** with multiple predictors -- see `/dspy-modules`
 - For worked examples, see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

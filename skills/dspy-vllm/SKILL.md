@@ -266,8 +266,10 @@ CUDA_VISIBLE_DEVICES=1 vllm serve meta-llama/Llama-3.1-8B-Instruct --port 8002
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **LM configuration basics** (providers, parameters, caching) — `/dspy-lm`
 - **Local development with Ollama** — `/dspy-ollama`
 - **Deploying as an API** (FastAPI wrapper around your DSPy program) — `/ai-serving-apis`
 - **Reducing costs** (model routing, caching) — `/ai-cutting-costs`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

@@ -1,11 +1,19 @@
 ---
 name: dspy-primitives
-description: Use when working with non-text inputs like images, audio, or code — DSPy typed wrappers for multimodal data in signatures. Common scenarios: processing images alongside text, handling audio transcription inputs, working with code files as typed inputs, building multimodal AI pipelines, or declaring non-string field types in signatures for structured data. Related: ai-parsing-data, dspy-signatures. Also: dspy.Image, dspy.History, multimodal DSPy, image input in DSPy signature, process images with DSPy, audio input in DSPy, typed fields in signatures, non-text data in DSPy, vision model with DSPy, GPT-4V with DSPy, Claude vision with DSPy, multimodal pipeline, image classification with DSPy, pass images to language model in DSPy, conversation history type, handle binary data in DSPy, structured types beyond strings.
+description: DSPy typed wrappers (dspy.Image, dspy.Audio, dspy.Code, dspy.History) for multimodal data in signatures. Use when working with non-text inputs like images, audio, or code, building multimodal AI pipelines, processing images alongside text, handling audio transcription inputs, working with code files as typed inputs, or managing conversation history in multi-turn chatbots. Also: multimodal DSPy, image input in DSPy signature, process images with DSPy, audio input in DSPy, typed fields in signatures, non-text data in DSPy, vision model with DSPy, Claude vision with DSPy, multimodal pipeline, image classification with DSPy, pass images to language model, conversation history type, structured types beyond strings.
 ---
 
 # DSPy Primitives
 
 Guide the user through DSPy's built-in primitive types for multimodal inputs, code handling, and conversation history.
+
+## Step 1: Understand the task
+
+Before using primitives, clarify:
+
+1. **What kind of non-text data?** Images, audio, code, or conversation history — each has its own primitive type.
+2. **Does the LM support it natively?** `dspy.Image` needs a vision model (GPT-4o, Claude 3+, Gemini). `dspy.Audio` needs an audio model (GPT-4o-audio-preview, Gemini). `dspy.Code` and `dspy.History` work with any LM.
+3. **Is the data an input, output, or both?** All primitives work as both input and output fields, but some patterns are more natural (e.g., `dspy.Code` for code generation output, `dspy.Image` for image analysis input).
 
 ## What are primitives
 
@@ -46,7 +54,7 @@ dspy.Image(url=<source>, download=False, verify=True)
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o")  # or any vision-capable LM
+lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc. (must be vision-capable)
 dspy.configure(lm=lm)
 
 class DescribeImage(dspy.Signature):
@@ -105,7 +113,7 @@ audio = dspy.Audio(data="<base64-string>", audio_format="wav")
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-audio-preview")  # or any audio-capable LM
+lm = dspy.LM("openai/gpt-4o-audio-preview")  # or "google/gemini-2.0-flash", etc. (must be audio-capable)
 dspy.configure(lm=lm)
 
 class TranscribeAudio(dspy.Signature):
@@ -155,7 +163,7 @@ The language tag tells DSPy to format the code as a fenced markdown block (` ```
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")  # or any LiteLLM-supported provider
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 class GenerateCode(dspy.Signature):
@@ -219,7 +227,7 @@ History objects are **immutable** (frozen). Create a new History to add turns.
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")  # or any LiteLLM-supported provider
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 class Chat(dspy.Signature):
@@ -315,10 +323,28 @@ Not all LM providers support all primitives natively:
 
 DSPy's adapter system handles the provider-specific formatting. You write the signature once; DSPy translates it for the target LM.
 
+## Gotchas
+
+1. **Claude uses `dspy.Image.from_file()` or `dspy.Image.from_url()` instead of the constructor.** These class methods are deprecated. Use `dspy.Image(url="path/or/url")` directly — the constructor accepts file paths, URLs, bytes, and PIL images via the `url` parameter.
+2. **Claude passes raw strings where a primitive is expected.** If a signature field is typed as `dspy.Code["python"]`, pass a string directly — DSPy's `validate_input` coerces it. But for `dspy.Image` and `dspy.Audio`, you must construct the primitive object explicitly. Raw strings will not be auto-converted.
+3. **Claude uses `role`/`content` keys in History messages instead of signature field names.** History messages should use keys matching the signature fields (e.g., `{"question": ..., "answer": ...}`), not the generic `role`/`content` format. Using `role`/`content` works but produces worse prompt formatting because DSPy cannot map the history entries to the right signature fields.
+4. **Claude forgets that History is frozen (immutable).** You cannot append to an existing History object. Create a new `dspy.History(messages=[...old_turns, new_turn])` each time. Attempting to mutate raises a `ValidationError`.
+5. **Claude uses `dspy.Image` with a non-vision model.** If the configured LM does not support vision (e.g., GPT-4o-mini, older Claude models), image inputs are silently ignored or cause errors. Always verify the model supports the primitive type.
+
+## Additional resources
+
+- [dspy.Image API docs](https://dspy.ai/api/primitives/Image/)
+- [dspy.Audio API docs](https://dspy.ai/api/primitives/Audio/)
+- [dspy.Code API docs](https://dspy.ai/api/primitives/Code/)
+- [dspy.History API docs](https://dspy.ai/api/primitives/History/)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)
+
 ## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
 - **Defining signatures** — see `/dspy-signatures`
 - **Using signatures with modules** — see `/dspy-modules`, `/dspy-predict`, `/dspy-chain-of-thought`
 - **Building chatbots with History** — see `/ai-building-chatbots`
-- **Full working examples** — see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

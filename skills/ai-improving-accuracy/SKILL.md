@@ -298,4 +298,4 @@ my_program.load("optimized_program.json")
 - Use `/ai-tracking-experiments` to log, compare, and manage multiple optimization runs
 - Accuracy plateaued despite optimization? Try `/ai-decomposing-tasks` to restructure your task
 - If things are broken, use `/ai-fixing-errors` to diagnose
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

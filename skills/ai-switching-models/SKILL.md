@@ -318,12 +318,14 @@ When a provider updates their model (e.g., GPT-4o version bump):
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - Set up metrics and evaluation before switching -- see `/ai-improving-accuracy`
 - Per-module model assignment for cost optimization -- see `/ai-cutting-costs`
 - Multi-step pipelines with mixed models -- see `/ai-building-pipelines`
 - Distill from expensive model to cheap one -- see `/ai-fine-tuning`
 - Understand DSPy optimizers for re-optimization -- see `/dspy-optimizers`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources
 

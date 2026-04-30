@@ -231,9 +231,11 @@ If the call does not appear: check `WANDB_API_KEY` is set, confirm `weave.init()
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **Langtrace** (auto-instrumentation, easiest setup) — `/dspy-langtrace`
 - **Arize Phoenix** (open-source with evals) — `/dspy-phoenix`
 - **MLflow** (full ML lifecycle) — `/dspy-mlflow`
 - **Aggregate monitoring** — `/ai-monitoring`
 - **Experiment tracking patterns** (JSONL-based, lightweight) — `/ai-tracking-experiments`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

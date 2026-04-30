@@ -294,6 +294,8 @@ First, determine whether the problem is within DSPy's scope:
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - Need a specific skill? See [catalog.md](catalog.md) for the full flat list
 - Want to request a skill that doesn't exist? `/ai-request-skill`
 - Already know which DSPy API you want? Skip ai-do and go directly to the matching `/dspy-*` skill

@@ -181,4 +181,4 @@ result2 = my_program(question="What is Python?")
 
 - If the AI is consistent but *wrong*, use `/ai-improving-accuracy`
 - If the AI is throwing errors, use `/ai-fixing-errors`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

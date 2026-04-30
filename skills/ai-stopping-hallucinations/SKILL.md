@@ -432,12 +432,14 @@ This is why good error messages matter — they're literally the feedback the mo
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - Retrieval-augmented generation (RAG) setup — see `/ai-searching-docs`
 - General output validation (format, safety, quality) — see `/ai-checking-outputs`
 - Enforcing business rules and content policies — see `/ai-following-rules`
 - `dspy.Assert` and `dspy.Suggest` backtracking patterns — see `/dspy-assertions`
 - Retrieval model configuration and search — see `/dspy-retrieval`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources
 

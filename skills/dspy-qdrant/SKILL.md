@@ -59,16 +59,19 @@ client = QdrantClient(":memory:")  # no server needed
 
 ```python
 import dspy
+from qdrant_client import QdrantClient
 from dspy_qdrant import QdrantRM
+
+client = QdrantClient("http://localhost:6333")
 
 retriever = QdrantRM(
     qdrant_collection_name="my_docs",
-    qdrant_client_url="http://localhost:6333",  # or your cloud URL
-    qdrant_client_api_key=None,                 # set for cloud
+    qdrant_client=client,
     k=5,
+    document_field="document",  # payload field containing document text (default)
 )
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"), rm=retriever)
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"), rm=retriever)  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 # Now dspy.Retrieve() uses Qdrant
 search = dspy.Retrieve(k=5)
@@ -76,30 +79,36 @@ result = search("How do refunds work?")
 print(result.passages)
 ```
 
-### QdrantRM with custom embeddings
+### QdrantRM constructor
 
 ```python
-from dspy_qdrant import QdrantRM
-
-retriever = QdrantRM(
-    qdrant_collection_name="my_docs",
-    qdrant_client_url="http://localhost:6333",
-    k=5,
-    embedding_model="openai/text-embedding-3-small",  # LiteLLM format
-    embedding_dimensions=512,
+QdrantRM(
+    qdrant_collection_name: str,       # required — collection name in Qdrant
+    qdrant_client: QdrantClient,       # required — initialized client instance
+    k: int = 3,                        # top passages to retrieve
+    document_field: str = "document",  # payload field with document text
+    vectorizer=None,                   # BaseSentenceVectorizer (default: FastEmbedVectorizer)
+    vector_name: str = None,           # named vector to search (default: first available)
 )
 ```
+
+By default, QdrantRM uses [FastEmbed](https://qdrant.github.io/fastembed/) (`BAAI/bge-small-en-v1.5`) for query vectorization. To use a different embedder, pass a custom `vectorizer`.
 
 ### Using Qdrant Cloud
 
 ```python
 import os
+from qdrant_client import QdrantClient
 from dspy_qdrant import QdrantRM
+
+client = QdrantClient(
+    url=os.environ["QDRANT_URL"],
+    api_key=os.environ["QDRANT_API_KEY"],
+)
 
 retriever = QdrantRM(
     qdrant_collection_name="my_docs",
-    qdrant_client_url=os.environ["QDRANT_URL"],
-    qdrant_client_api_key=os.environ["QDRANT_API_KEY"],
+    qdrant_client=client,
     k=5,
 )
 ```
@@ -117,9 +126,9 @@ embedder = dspy.Embedder("openai/text-embedding-3-small", dimensions=512)
 
 # Your documents
 docs = [
-    {"id": 1, "text": "Refunds are processed within 5-7 business days.", "category": "billing"},
-    {"id": 2, "text": "Reset your password at Settings > Security.", "category": "account"},
-    {"id": 3, "text": "Enterprise plans include SSO and dedicated support.", "category": "plans"},
+    {"id": 1, "document": "Refunds are processed within 5-7 business days.", "category": "billing"},
+    {"id": 2, "document": "Reset your password at Settings > Security.", "category": "account"},
+    {"id": 3, "document": "Enterprise plans include SSO and dedicated support.", "category": "plans"},
 ]
 
 # Create collection
@@ -129,14 +138,14 @@ client.create_collection(
 )
 
 # Upsert with embeddings
-vectors = embedder([d["text"] for d in docs])
+vectors = embedder([d["document"] for d in docs])
 client.upsert(
     collection_name="my_docs",
     points=[
         models.PointStruct(
             id=d["id"],
             vector=v,
-            payload={"text": d["text"], "category": d["category"]},
+            payload={"document": d["document"], "category": d["category"]},
         )
         for d, v in zip(docs, vectors)
     ],
@@ -147,13 +156,14 @@ client.upsert(
 
 ```python
 import dspy
+from qdrant_client import QdrantClient
 from dspy_qdrant import QdrantRM
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 retriever = QdrantRM(
     qdrant_collection_name="my_docs",
-    qdrant_client_url="http://localhost:6333",
+    qdrant_client=QdrantClient("http://localhost:6333"),
     k=5,
 )
 
@@ -322,16 +332,28 @@ Need hybrid search (keyword + semantic)?
 
 ## Gotchas
 
-1. **DSPy 3.0 removed community retrievers** — `from dspy.retrieve.chromadb_rm import ChromadbRM` no longer works. Use `dspy-qdrant` or write a custom subclass.
-2. **QdrantRM expects a `text` payload field** — when indexing, store the document text in a payload field named `text` (or configure the field name in QdrantRM).
-3. **Embeddings must match** — the embedding model and dimensions used for indexing must match what QdrantRM uses for querying.
-4. **ChromaDB is great for prototyping but not production** — it's single-process, no replication. Migrate to Qdrant or Pinecone for production.
+1. **Claude fabricates QdrantRM constructor parameters.** Claude invents params like `qdrant_client_url`, `qdrant_client_api_key`, `embedding_model`, and `embedding_dimensions`. These do not exist. QdrantRM takes a `qdrant_client` (an initialized `QdrantClient` instance) and a `vectorizer` (a `BaseSentenceVectorizer`). Always construct the `QdrantClient` separately, then pass it.
+2. **Claude uses `document_field="text"` but the default is `"document"`.** When indexing, store content in a payload field named `document` (the default), or explicitly set `document_field="text"` if your payload uses `text`. Mismatched field names silently return empty passages.
+3. **DSPy 3.0 removed community retrievers** — `from dspy.retrieve.chromadb_rm import ChromadbRM` no longer works. Use `dspy-qdrant` or write a custom `dspy.Retrieve` subclass.
+4. **QdrantRM uses FastEmbed by default, not OpenAI embeddings.** The default vectorizer is `FastEmbedVectorizer` using `BAAI/bge-small-en-v1.5`. Your indexed vectors must match this model. If you indexed with OpenAI embeddings, pass a custom vectorizer that uses the same model.
+5. **`dspy.Embeddings` is simpler for in-memory retrieval.** If you just need to search a small corpus (under ~100k passages) without a vector DB, use `dspy.Embeddings(corpus=docs, embedder=embedder)` instead. It handles indexing and search in one class. Use Qdrant when you need persistence, filtering, hybrid search, or scale.
+
+## Additional resources
+
+- [Qdrant documentation](https://qdrant.tech/documentation/)
+- [dspy-qdrant GitHub](https://github.com/qdrant/dspy-qdrant)
+- [Qdrant hybrid search guide](https://qdrant.tech/documentation/search/hybrid-queries/)
+- [dspy.Embeddings API docs](https://dspy.ai/api/tools/Embeddings/)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)
 
 ## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
 - **DSPy retrieval basics** (Retrieve, ColBERTv2, Embedder, Embeddings) — `/dspy-retrieval`
 - **Building RAG pipelines** end-to-end — `/ai-searching-docs`
 - **Evaluating RAG quality** with decomposed metrics — `/dspy-ragas`
 - **Stopping hallucinations** in RAG — `/ai-stopping-hallucinations`
 - For worked examples, see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

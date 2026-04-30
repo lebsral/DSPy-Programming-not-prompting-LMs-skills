@@ -181,4 +181,4 @@ For the full LangChain/LangGraph API reference, see [`docs/langchain-langgraph-r
 - For worked examples (calculator, search, APIs), see [examples.md](examples.md)
 - Need multiple agents working together (not just one)? Use `/ai-coordinating-agents`
 - Next: `/ai-improving-accuracy` to measure and improve your AI
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

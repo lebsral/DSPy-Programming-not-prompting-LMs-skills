@@ -225,10 +225,12 @@ dspy.inspect_history(n=1)
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - Measure and improve accuracy after fixing errors — see `/ai-improving-accuracy`
 - Trace a specific request end-to-end (every LM call, retrieval, latency) — see `/ai-tracing-requests`
 - Monitor AI in production to catch errors early — see `/ai-monitoring`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources
 
@@ -236,4 +238,3 @@ dspy.inspect_history(n=1)
 - To measure and improve accuracy, use `/ai-improving-accuracy`
 - Use `/ai-tracing-requests` to trace a specific request end-to-end (every LM call, retrieval, latency)
 - For DSPy API details, see `docs/dspy-reference.md`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

@@ -191,8 +191,10 @@ RLM instances with custom interpreters are not thread-safe. For concurrent usage
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **Refine** for reward-function-based retry loops -- see `/dspy-refine`
 - **Best-of-N** for generating and scoring multiple candidates -- see `/dspy-best-of-n`
 - **Improving accuracy** with optimizers and evaluation -- see `/ai-improving-accuracy`
 - **Building pipelines** with multi-step module composition -- see `/ai-building-pipelines`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

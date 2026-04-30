@@ -334,4 +334,4 @@ See `/ai-cutting-costs` for more cost strategies.
 - Need to improve accuracy within a single step? Use `/ai-improving-accuracy`
 - Need to extract structured data? Start with `/ai-parsing-data` — decompose only if it struggles on complex inputs
 - Next: `/ai-improving-accuracy` to measure and optimize your decomposed pipeline
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

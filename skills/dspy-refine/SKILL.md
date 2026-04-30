@@ -242,12 +242,14 @@ print(result.summary)
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **BestOfN** for independent sampling without feedback -- see `/dspy-best-of-n`
 - **Chain of thought reasoning** as the inner module -- see `/dspy-chain-of-thought`
 - **Checking and validating outputs** with assertions -- see `/ai-checking-outputs`
 - **Improving accuracy** with optimization -- see `/ai-improving-accuracy`
 - **Writing content** that benefits from iterative refinement -- see `/ai-writing-content`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources
 

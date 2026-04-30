@@ -405,13 +405,15 @@ optimized = optimizer.compile(DocSearch(), trainset=trainset)
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - Need to summarize docs instead of answering questions? Use `/ai-summarizing`
 - Put your document search behind a REST API — see `/ai-serving-apis`
 - Building a chatbot on top of doc search? Use `/ai-building-chatbots`
 - Measure and improve your AI — see `/ai-improving-accuracy`
 - Define input/output contracts for your signatures — see `/dspy-signatures`
 - Add reasoning to your answer step — see `/dspy-chain-of-thought`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources
 

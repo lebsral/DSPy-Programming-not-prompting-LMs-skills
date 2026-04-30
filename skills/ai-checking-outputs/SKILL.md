@@ -310,4 +310,4 @@ When combined with optimization (`/ai-improving-accuracy`), the model learns to 
 - Use `/ai-testing-safety` to stress-test your guardrails with adversarial attacks
 - Need to evaluate human work against criteria? Use `/ai-scoring`
 - Next: `/ai-improving-accuracy` to measure and improve quality
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

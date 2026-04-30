@@ -448,9 +448,11 @@ def search(query: str) -> str:
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **ReAct agents** -- see `/dspy-react`
 - **CodeAct agents** -- see `/dspy-codeact`
 - **Action-taking AI** from a problem-first perspective -- see `/ai-taking-actions`
 - **Signatures** for defining agent inputs/outputs -- see `/dspy-signatures`
 - **Modules** for composing agents -- see `/dspy-modules`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

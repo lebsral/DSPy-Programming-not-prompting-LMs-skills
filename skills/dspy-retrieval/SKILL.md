@@ -397,8 +397,10 @@ result = predictor(documents=docs, question="What is the refund policy?")
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **Building custom modules** to wrap retrieval logic -- see `/dspy-modules`
 - **Vector database setup** (Qdrant, Pinecone, ChromaDB, Weaviate) -- see `/dspy-qdrant`
 - **End-to-end document search** with vector stores and chunking -- see `/ai-searching-docs`
 - **Keeping answers grounded** and avoiding hallucination -- see `/ai-stopping-hallucinations`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

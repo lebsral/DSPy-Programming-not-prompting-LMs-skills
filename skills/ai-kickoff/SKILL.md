@@ -270,4 +270,4 @@ After generating the project, tell the user:
 5. **Serve as API?** Use `/ai-serving-apis` to put your AI behind FastAPI endpoints
 
 Next: `/ai-improving-accuracy` to measure and improve your AI's quality.
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

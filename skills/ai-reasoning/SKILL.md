@@ -336,6 +336,8 @@ optimized = optimizer.compile(SelfDiscoveryReasoner(), trainset=trainset)
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **ChainOfThought** for the core reasoning module — see `/dspy-chain-of-thought`
 - **ProgramOfThought** for code-generating computation — see `/dspy-program-of-thought`
 - **MultiChainComparison** for multi-path reasoning — see `/dspy-multi-chain-comparison`

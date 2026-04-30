@@ -7,6 +7,14 @@ description: Use Ragas to evaluate DSPy RAG pipelines with decomposed metrics. U
 
 Guide the user through evaluating DSPy RAG pipelines with Ragas, an evaluation framework that decomposes RAG quality into independent metrics for retriever and generator.
 
+## Step 1: Understand the evaluation need
+
+Before setting up Ragas, clarify:
+
+1. **Do you have a RAG pipeline already?** Ragas evaluates retriever + generator quality — you need a working pipeline first.
+2. **Do you have ground-truth answers?** Some metrics (Faithfulness, AnswerRelevancy) are reference-free; others (ContextPrecision, ContextRecall) need reference answers.
+3. **What are you diagnosing?** If you just need an accuracy score, use `dspy.Evaluate`. Ragas shines when you need to know *whether the retriever or generator* is the weak link.
+
 ## What is Ragas
 
 [Ragas](https://github.com/explodinggradients/ragas) is an open-source evaluation framework (12.9k+ GitHub stars, Apache 2.0) purpose-built for RAG pipelines. Instead of a single accuracy score, it breaks evaluation into decomposed metrics:
@@ -153,13 +161,13 @@ AnswerCorrectness low but Faithfulness high?
 
 ## Using a custom LLM with Ragas
 
-By default Ragas uses OpenAI. To use another provider:
+By default Ragas uses OpenAI (`OPENAI_API_KEY`). Ragas v0.4+ supports multiple LLM backends via Instructor or LiteLLM adapters:
 
 ```python
-from ragas.llms import LangchainLLMWrapper
-from langchain_anthropic import ChatAnthropic
+from ragas.llms import llm_factory
 
-evaluator_llm = LangchainLLMWrapper(ChatAnthropic(model="claude-sonnet-4-5-20250929"))
+# Use any LiteLLM-supported provider string
+evaluator_llm = llm_factory("anthropic/claude-sonnet-4-5-20250929")
 
 result = evaluate(
     dataset=dataset,
@@ -167,6 +175,8 @@ result = evaluate(
     llm=evaluator_llm,
 )
 ```
+
+**Note:** `LangchainLLMWrapper` was deprecated in Ragas v0.3.8. If you see old examples using it, switch to `llm_factory()` instead.
 
 ## Per-sample scores
 
@@ -228,14 +238,23 @@ This is advanced — only needed if Ragas's default metrics don't align well wit
 1. **Ragas metrics call an LLM** — each metric makes multiple LLM calls per sample. A 100-sample evaluation with 5 metrics = ~500 LLM calls. Budget for the cost.
 2. **Don't use Ragas as an optimizer objective** — it's too slow for inner-loop optimization. Use DSPy's built-in metrics for `compile()`, then Ragas for analysis.
 3. **ContextPrecision and ContextRecall need ground truth** — if you don't have reference answers, use Faithfulness + AnswerRelevancy (reference-free).
-4. **Ragas v0.2+ changed the API** — if you find old examples using `Dataset` from `datasets`, update to `EvaluationDataset` and `SingleTurnSample`.
+4. **Claude uses deprecated Ragas APIs from older tutorials.** Ragas has had multiple breaking changes: v0.2 introduced `EvaluationDataset`/`SingleTurnSample` (replacing `Dataset` from `datasets`), v0.3.8 deprecated `LangchainLLMWrapper`, and v0.4 migrated metrics to a new BasePrompt architecture. If Claude generates code using `Dataset`, `LangchainLLMWrapper`, or `ground_truths`, it is using deprecated APIs. Always use `EvaluationDataset`, `SingleTurnSample`, and `llm_factory()`.
+5. **Claude installs `ragas` without checking the version.** Ragas v0.4+ has significant API changes from v0.2/v0.3. Pin the version in requirements (`ragas>=0.4`) to avoid mixing old and new APIs.
+
+## Additional resources
+
+- [Ragas documentation](https://docs.ragas.io/)
+- [Ragas GitHub](https://github.com/explodinggradients/ragas)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)
 
 ## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
 - **DSPy's built-in evaluation** (SemanticF1, exact match, LM-as-judge) — `/dspy-evaluate`
 - **Building RAG pipelines** — `/ai-searching-docs`
 - **Retrieval modules and vector DBs** — `/dspy-retrieval`, `/dspy-qdrant`
 - **Stopping hallucinations** (when Faithfulness is low) — `/ai-stopping-hallucinations`
 - **Optimizing RAG accuracy** — `/ai-improving-accuracy`, `/dspy-miprov2`
-- For worked examples, see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

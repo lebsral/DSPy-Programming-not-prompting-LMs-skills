@@ -167,7 +167,9 @@ DSPy also supports special input types: `dspy.Image` for image inputs and `dspy.
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **Using signatures with modules** — see `/dspy-predict` (Predict), `/dspy-chain-of-thought` (ChainOfThought), `/dspy-modules` (custom modules)
 - **Parsing structured data from text** — see `/ai-parsing-data`
 - **Classification and sorting** — see `/ai-sorting`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

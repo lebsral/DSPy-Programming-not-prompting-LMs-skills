@@ -429,7 +429,9 @@ print(f"Label distribution: {labels}")
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **`/dspy-evaluate`** — evaluate your program on a devset with metrics
 - **`/ai-generating-data`** — generate synthetic training data when you have none
 - **`/ai-improving-accuracy`** — use optimizers that consume your trainset to boost quality
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

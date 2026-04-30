@@ -259,8 +259,10 @@ The exact numbers depend on your task, data, and LM. SIMBA shines on the increme
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **Quick-start optimization** with few-shot examples -- see `/ai-improving-accuracy`
 - **Evaluating your program** before and after optimization -- see `/dspy-evaluate`
 - **Building the program to optimize** -- see `/dspy-chain-of-thought` or `/dspy-modules`
 - **Preparing training data** -- see `/dspy-data`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

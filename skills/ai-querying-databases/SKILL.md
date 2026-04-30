@@ -467,4 +467,4 @@ def get_safe_schema(engine, allowed=ALLOWED_TABLES):
 - Use `/ai-following-rules` to enforce query policies (e.g., no queries on PII columns)
 - Use `/ai-improving-accuracy` to measure and optimize query quality
 - Use `/ai-tracing-requests` to debug individual query failures
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

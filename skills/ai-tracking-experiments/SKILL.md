@@ -361,4 +361,4 @@ For the full LangWatch guide (auto-tracing, optimizer dashboard, self-hosted), s
 - Use `/dspy-weave` for in-depth W&B Weave setup (team dashboards, run comparison)
 - Use `/dspy-mlflow` for in-depth MLflow setup (experiment tracking, model registry)
 - Use `/dspy-langwatch` for in-depth LangWatch setup (real-time optimizer progress, auto-tracing)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

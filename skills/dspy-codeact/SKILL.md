@@ -229,10 +229,12 @@ optimized.save("optimized_codeact.json")
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **ReAct** for tool-calling agents -- see `/ai-taking-actions`
 - **Tools** and tool patterns -- see `/ai-taking-actions`
 - **Multi-agent coordination** -- see `/ai-coordinating-agents`
 - **Modules** for composing CodeAct with other modules -- see `/dspy-modules`
 - **Signatures** for defining agent inputs/outputs -- see `/dspy-signatures`
 - For worked examples, see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

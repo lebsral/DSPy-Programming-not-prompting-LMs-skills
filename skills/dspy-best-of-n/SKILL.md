@@ -219,8 +219,10 @@ This stacks two quality improvements: better prompts from the optimizer, and rej
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **MultiChainComparison** for LM-based candidate selection -- see `/dspy-multi-chain-comparison`
 - **Evaluate** for measuring quality with metrics and devsets -- see `/dspy-evaluate`
 - **Improving accuracy** for the full optimization workflow -- see `/ai-improving-accuracy`
 - For worked examples, see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

@@ -190,10 +190,12 @@ final = mipro_optimizer.compile(bootstrapped, trainset=trainset)
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **BootstrapFewShot** for the simpler single-run version -- see `/ai-improving-accuracy`
 - **MIPROv2** for instruction + demo optimization -- see `/ai-improving-accuracy`
 - **Evaluate** for measuring quality with metrics and devsets -- see `/dspy-evaluate`
 - **Data handling** for preparing training sets -- see `/dspy-data`
 - **Improving accuracy** for the full optimization decision framework -- see `/ai-improving-accuracy`
 - For worked examples, see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

@@ -7,6 +7,14 @@ description: Use when the task requires precise computation, math, or data manip
 
 Guide the user through using DSPy's `ProgramOfThought` module, which has the LM write Python code to solve a problem and then executes that code to produce the answer.
 
+## Step 1: Understand the task
+
+Before using ProgramOfThought, clarify:
+
+1. **Does the task involve computation?** ProgramOfThought shines for math, data manipulation, date reasoning — anything where running code gives a more reliable answer than verbal reasoning. If the task is purely qualitative (classification, summarization), use ChainOfThought instead.
+2. **Is Deno installed?** ProgramOfThought requires [Deno](https://docs.deno.com/runtime/getting_started/installation/) to run generated code in a WASM sandbox. Without it, the module will crash.
+3. **What should the output look like?** A single number, a list, a formatted string? This determines your signature.
+
 ## What is ProgramOfThought
 
 `dspy.ProgramOfThought` is a module that asks the LM to express its reasoning as executable Python code instead of natural language. The generated code runs in a sandboxed environment, and the execution result becomes the output.
@@ -35,12 +43,26 @@ Do **not** use it when:
 - No computation is needed -- use `dspy.Predict` or `dspy.ChainOfThought` instead
 - You need tool use or external API calls -- use `dspy.ReAct` instead
 
+## Setup
+
+ProgramOfThought requires **Deno** for sandboxed code execution:
+
+```bash
+# macOS
+brew install deno
+
+# Linux / Windows
+curl -fsSL https://deno.land/install.sh | sh
+```
+
+Verify: `deno --version`. The first run will download Pyodide (~30s).
+
 ## Basic usage
 
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Inline signature
@@ -75,17 +97,21 @@ The LM does not directly produce the answer. It produces code, and the code prod
 
 ### What the sandbox provides
 
-The generated code runs with access to Python's standard library. This includes `math`, `datetime`, `collections`, `itertools`, `re`, `json`, `statistics`, and other built-in modules. External packages like `numpy` or `pandas` are not available unless they are installed in the environment.
+The generated code runs in a Deno/Pyodide WASM sandbox — isolated from your host filesystem, network, and environment. Pyodide includes Python's standard library (`math`, `datetime`, `collections`, `itertools`, `re`, `json`, `statistics`) plus some scientific packages. External packages not bundled with Pyodide are not available by default.
+
+### Constructor
+
+```python
+dspy.ProgramOfThought(
+    signature,                    # str | type[Signature] -- required
+    max_iters=3,                  # int -- max code generation/retry attempts
+    interpreter=None,             # PythonInterpreter | None -- custom sandbox config
+)
+```
 
 ### Retry on execution failure
 
-If the generated code raises an exception, `ProgramOfThought` can retry by generating new code. You can control the number of retries:
-
-```python
-solver = dspy.ProgramOfThought("question -> answer", max_iters=5)
-```
-
-The default is 3 iterations. On each retry, the LM sees the error traceback from the previous attempt, which helps it self-correct.
+If the generated code raises an exception, `ProgramOfThought` retries by generating new code. The LM sees the error traceback from the previous attempt, which helps it self-correct. Control retries with `max_iters` (default: 3).
 
 ## Using ProgramOfThought in a module
 
@@ -117,7 +143,7 @@ class FinancialAnalyzer(dspy.Module):
         )
 
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 analyzer = FinancialAnalyzer()
@@ -147,11 +173,11 @@ Optimization improves the quality of the generated code by showing the LM exampl
 
 ## Limitations
 
-- **Standard library only** -- generated code cannot import packages that are not installed. If your task needs `pandas` or `numpy`, ensure they are in the environment.
-- **No side effects** -- the sandbox restricts file I/O, network access, and other side effects. The code is meant to compute a value, not interact with the world.
+- **Requires Deno** -- the sandbox uses Deno/Pyodide WASM. Install Deno first or the module crashes.
+- **Sandboxed by default** -- no host filesystem, network, or environment access. Use a custom `PythonInterpreter` with `enable_read_paths`, `enable_network_access`, etc. if needed.
 - **Code generation cost** -- generating code takes more tokens than a direct answer. For trivial arithmetic (2 + 2), `ChainOfThought` is faster and cheaper.
 - **LM capability matters** -- weaker models generate buggier code. Use a capable model (GPT-4o, Claude Sonnet, etc.) for complex computations.
-- **Output is the code's return value** -- the generated code must produce a result that maps to your signature's output fields.
+- **First run is slow** -- Deno downloads and caches Pyodide (~30s) on the first execution. Subsequent runs are fast.
 
 ## ProgramOfThought vs ChainOfThought -- when to use which
 
@@ -167,11 +193,27 @@ Optimization improves the quality of the generated code by showing the LM exampl
 
 Rule of thumb: if you would reach for a calculator or a spreadsheet, use `ProgramOfThought`.
 
+## Gotchas
+
+1. **Claude forgets Deno is required.** ProgramOfThought uses a Deno/Pyodide WASM sandbox — not a simple `exec()` call. Without Deno installed, the module crashes with a subprocess error. Always check `deno --version` or include Deno installation in setup instructions.
+2. **Claude uses ProgramOfThought for tasks that do not need computation.** Classification, summarization, and extraction are qualitative — ProgramOfThought adds code-generation overhead with no benefit. Use ChainOfThought or Predict for non-computational tasks.
+3. **Claude sets `max_iters=5` without justification.** The default is 3, which handles most retry scenarios. Only increase if you have evidence that code generation is failing due to complex logic. Higher values burn more tokens on retries.
+4. **Claude ignores the `interpreter` parameter.** For tasks that need file access, network access, or environment variables, pass a custom `PythonInterpreter(enable_read_paths=[...], enable_network_access=[...])` instead of trying to work around sandbox restrictions.
+
+## Additional resources
+
+- [dspy.ProgramOfThought API docs](https://dspy.ai/api/modules/ProgramOfThought/)
+- [Deno installation](https://docs.deno.com/runtime/getting_started/installation/)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)
+
 ## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
 - **dspy.Predict** for simple direct LM calls -- see `/dspy-predict`
 - **dspy.ChainOfThought** for natural language reasoning -- see `/dspy-chain-of-thought`
 - **Building modules** that combine ProgramOfThought with other steps -- see `/dspy-modules`
 - **Reasoning patterns** and when to add structured thinking -- see `/ai-reasoning`
 - For worked examples, see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

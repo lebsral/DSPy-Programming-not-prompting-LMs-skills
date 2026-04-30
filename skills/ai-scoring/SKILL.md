@@ -329,4 +329,4 @@ print(f"Optimized MAE: {optimized_score:.1f}%")
 - Next: `/ai-improving-accuracy` to measure and optimize your scorer
 - **ChainOfThought** for reasoning before scoring — see `/dspy-chain-of-thought`
 - **Assertions** for enforcing score ranges and justification quality — see `/dspy-assertions`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

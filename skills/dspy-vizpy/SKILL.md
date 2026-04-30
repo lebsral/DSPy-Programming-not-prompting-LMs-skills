@@ -252,8 +252,10 @@ If the optimized score is not higher, the instruction change may not help this t
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **GEPA** (open-source instruction optimizer) — `/dspy-gepa`
 - **MIPROv2** (instructions + demos, best overall) — `/dspy-miprov2`
 - **Improving accuracy** (full optimizer comparison) — `/ai-improving-accuracy`
 - **Evaluating results** before and after — `/dspy-evaluate`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

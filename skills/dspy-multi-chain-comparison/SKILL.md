@@ -238,8 +238,10 @@ MultiChainComparison is most valuable when the problem genuinely benefits from d
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **ChainOfThought** is the single-chain version and the right default -- see `/dspy-chain-of-thought`
 - **Reasoning strategies** including when to pick MultiChainComparison vs other approaches -- see `/ai-reasoning`
 - **Improving accuracy** with evaluation and optimization -- see `/ai-improving-accuracy`
 - For worked examples, see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

@@ -377,4 +377,4 @@ Quick decision tree for common monitoring alerts:
 - Use `/dspy-phoenix` for in-depth Phoenix setup (local UI, evals)
 - Use `/dspy-weave` for in-depth W&B Weave setup (team dashboards)
 - See `examples.md` for complete worked examples
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

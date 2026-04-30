@@ -262,8 +262,10 @@ If only a small fraction of training examples produce passing traces, the fine-t
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **BootstrapFewShot** for lighter optimization without fine-tuning -- see `/ai-improving-accuracy`
 - **Fine-tuning workflow** for the full decision framework, prerequisites, and BetterTogether -- see `/ai-fine-tuning`
 - **Cost reduction** for distillation and other strategies to cut API spend -- see `/ai-cutting-costs`
 - For worked examples (distillation, production cost reduction), see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

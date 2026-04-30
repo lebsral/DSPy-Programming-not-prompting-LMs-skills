@@ -310,4 +310,4 @@ This gives you LangGraph's state management and routing with DSPy's optimizable 
 - **Don't overuse ChainOfThought** — not every module in a pipeline needs reasoning. Use `dspy.Predict` for simple steps (extraction, formatting) and reserve `ChainOfThought` for steps that actually benefit from reasoning. Unnecessary reasoning adds latency and cost.
 - **Pipeline order affects optimization** — DSPy optimizers trace through your `forward()` method. If module A's output feeds module B, the optimizer sees this dependency. Reordering modules or adding conditional logic changes what the optimizer can learn.
 - **Test intermediate outputs, not just final output** — add metrics that check each stage's output independently. A pipeline can produce correct final output for wrong reasons, which breaks when inputs change.
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

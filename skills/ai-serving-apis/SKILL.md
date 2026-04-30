@@ -331,6 +331,8 @@ async def query(request: QueryRequest):
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - Scaffold a new project with API structure — see `/ai-kickoff`
 - Build the RAG program to serve — see `/ai-searching-docs`
 - Monitor your deployed API — see `/ai-monitoring`
@@ -338,7 +340,7 @@ async def query(request: QueryRequest):
 - Trace requests end-to-end with MLflow — see `/dspy-mlflow`
 - Define input/output contracts for your DSPy program — see `/dspy-signatures`
 - Fix errors in your deployed AI — see `/ai-fixing-errors`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources
 

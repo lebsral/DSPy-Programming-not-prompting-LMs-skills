@@ -245,9 +245,11 @@ You can even stack them: ensemble multiple optimized programs, then wrap the ens
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **BestOfN** for picking the best from multiple runs of a single program -- see `/dspy-best-of-n`
 - **BootstrapFewShot** for generating the programs to ensemble -- see `/ai-improving-accuracy`
 - **MIPROv2** for instruction optimization -- see `/ai-improving-accuracy`
 - **Evaluate** for measuring ensemble quality with metrics -- see `/dspy-evaluate`
 - For worked examples, see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

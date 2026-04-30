@@ -310,9 +310,11 @@ print(agent)
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **Defining tools** in detail -- see `/dspy-tools`
 - **CodeAct** for code-based agents -- see `/dspy-codeact`
 - **Building custom modules** to wrap ReAct -- see `/dspy-modules`
 - **Action-taking AI** from a problem-first perspective -- see `/ai-taking-actions`
 - **Multi-agent coordination** -- see `/ai-coordinating-agents`
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

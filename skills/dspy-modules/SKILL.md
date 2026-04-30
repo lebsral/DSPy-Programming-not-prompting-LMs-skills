@@ -246,10 +246,12 @@ pipeline.generate.set_lm(expensive_lm)
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **Signatures** define inputs and outputs for each sub-module -- see `/dspy-signatures`
 - **Predict** is the simplest sub-module for direct LM calls -- see `/dspy-predict`
 - **ChainOfThought** adds step-by-step reasoning -- see `/dspy-chain-of-thought`
 - **Multi-step pipelines** with real-world patterns -- see `/ai-building-pipelines`
 - **Optimizing modules** to improve accuracy -- see `/ai-improving-accuracy`
 - For worked examples, see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

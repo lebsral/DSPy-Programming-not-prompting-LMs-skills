@@ -217,10 +217,12 @@ result = loaded(text="New input here")
 
 ## Cross-references
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - **Bootstrapping few-shot examples** as the foundation -- see `/ai-improving-accuracy`
 - **Full prompt optimization** with MIPROv2 -- see `/ai-improving-accuracy`
 - **Evaluating your program** to measure rule quality -- see `/dspy-evaluate`
 - **Data preparation** for training and validation sets -- see `/dspy-data`
 - **Signatures and instructions** that InferRules modifies -- see `/dspy-signatures`
 - For worked examples, see [examples.md](examples.md)
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
