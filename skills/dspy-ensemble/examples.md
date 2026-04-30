@@ -51,7 +51,7 @@ devset = [ex.with_inputs("question") for ex in devset]
 
 # --- Setup ---
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 
@@ -163,8 +163,8 @@ devset = [ex.with_inputs("message", "categories") for ex in devset]
 
 # --- Setup: two different LMs ---
 
-fast_lm = dspy.LM("openai/gpt-4o-mini")
-strong_lm = dspy.LM("openai/gpt-4o")
+fast_lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+strong_lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 
 # --- Step 1: Optimize a program with the fast LM ---

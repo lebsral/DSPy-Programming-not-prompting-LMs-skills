@@ -53,7 +53,7 @@ Avoid CodeAct when:
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Define tools as pure functions with type hints and docstrings
@@ -226,6 +226,20 @@ optimized.save("optimized_codeact.json")
 | Quick prototype with many tools | ReAct |
 | Math-heavy or logic-heavy problems | **CodeAct** |
 | Tasks needing external libraries in tools | ReAct (more flexible tool format) |
+
+## Gotchas
+
+- **Claude passes callable objects or class methods as tools.** CodeAct only accepts plain functions — not callable objects (`__call__`), not bound methods, not lambdas. If you need to wrap state, define a closure that captures the state and pass the inner function.
+- **Claude writes tool functions that import external libraries.** Tools execute in your Python process, but the glue code between tool calls runs in the Deno sandbox which has no pip packages. If the LM-generated code tries to `import pandas` between tool calls, it fails. Move all library usage inside the tool function itself, not in the generated code.
+- **Claude forgets to pass dependent functions as tools.** If tool A calls helper function B internally, B runs fine (it executes in your Python process). But if the agent needs to call B directly in generated code, B must be in the `tools` list. Claude often defines helper functions but forgets to register them.
+- **Claude uses CodeAct for simple lookup tasks where ReAct is better.** CodeAct adds overhead — code generation, sandbox execution, iteration. For tasks that just call one or two tools and combine results, ReAct is simpler and faster. Reserve CodeAct for computation, data transformation, and multi-step logic.
+- **Claude sets `max_iters` too low for complex tasks.** The default `max_iters=5` is fine for simple computation, but data analysis tasks that fetch multiple sources and process results often need 8-10 iterations. Watch for "max iterations reached" and increase accordingly.
+
+## Additional resources
+
+- [CodeAct API docs](https://dspy.ai/api/modules/CodeAct/)
+- [reference.md](reference.md) — constructor parameters, tool requirements, execution model
+- [examples.md](examples.md) — data analysis, file processing, math agents, optimization
 
 ## Cross-references
 

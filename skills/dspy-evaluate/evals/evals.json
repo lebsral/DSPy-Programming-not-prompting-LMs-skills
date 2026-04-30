@@ -1,0 +1,34 @@
+[
+  {
+    "prompt": "I have a QA program and 50 labeled examples. How do I measure how well it performs?",
+    "expected_output": "Sets up dspy.Evaluate with a devset and metric to score the program",
+    "assertions": [
+      "Uses dspy.Evaluate with devset and metric parameters",
+      "Defines a metric function with (example, prediction, trace=None) signature",
+      "Accesses result.score for the aggregate percentage",
+      "Does NOT use return_all_scores or return_outputs (these are removed)",
+      "Uses result.results to inspect per-example scores"
+    ]
+  },
+  {
+    "prompt": "My QA answers are correct but worded differently from the gold answers, so exact match gives a low score. What metric should I use instead?",
+    "expected_output": "Recommends SemanticF1 or an LM-as-judge metric for partial credit",
+    "assertions": [
+      "Recommends SemanticF1 for token-level F1 scoring",
+      "Notes that SemanticF1 expects response fields (not answer)",
+      "Alternatively shows an LM-as-judge pattern using dspy.Predict with a judge signature",
+      "Suggests using a separate stronger LM for the judge via dspy.context(lm=judge_lm)"
+    ]
+  },
+  {
+    "prompt": "I want to compare my DSPy program before and after optimization. How do I measure the improvement?",
+    "expected_output": "Runs Evaluate on both the original and optimized program and compares scores",
+    "assertions": [
+      "Creates an Evaluate instance with a devset and metric",
+      "Evaluates the unoptimized program first as a baseline",
+      "Evaluates the optimized program with the same evaluator",
+      "Compares the two scores and prints the delta",
+      "Accesses .score on the EvaluationResult objects"
+    ]
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "prompt": "My classifier instructions are mediocre and I want to automatically find better ones. I have 100 labeled examples. How do I use COPRO?",
+    "expected_output": "Sets up dspy.COPRO with metric, breadth, and depth to search for better instructions",
+    "assertions": [
+      "Uses dspy.COPRO with metric, breadth, and depth parameters",
+      "Calls optimizer.compile(program, trainset=trainset, eval_kwargs=...) with keyword arguments",
+      "Shows how to evaluate before and after optimization",
+      "Does NOT set breadth=1 (must be >1)"
+    ]
+  },
+  {
+    "prompt": "I ran COPRO but want to see what instructions it tried. How do I inspect the candidates?",
+    "expected_output": "Accesses candidate_programs on the optimized program to inspect all tried instructions and their scores",
+    "assertions": [
+      "Accesses optimized.candidate_programs to get all candidates",
+      "Shows how to sort candidates by score to find top performers",
+      "Mentions total_calls for cost tracking",
+      "Suggests track_stats=True for per-iteration statistics"
+    ]
+  },
+  {
+    "prompt": "Should I use COPRO or MIPROv2 for my optimization? I want both better instructions and few-shot examples.",
+    "expected_output": "Recommends MIPROv2 since it optimizes both instructions and demos, while COPRO only optimizes instructions",
+    "assertions": [
+      "Explains that COPRO only optimizes instructions, not few-shot demos",
+      "Recommends MIPROv2 for combined instruction + demo optimization",
+      "Notes when COPRO is still preferred (instruction-only control, candidate inspection)",
+      "Does NOT recommend COPRO for the combined case"
+    ]
+  }
+]

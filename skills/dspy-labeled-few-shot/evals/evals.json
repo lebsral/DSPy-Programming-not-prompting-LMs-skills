@@ -1,0 +1,32 @@
+[
+  {
+    "prompt": "I have 10 hand-picked examples for classifying support tickets. I want to use them directly as few-shot demos without any bootstrapping. How do I set this up in DSPy?",
+    "expected_output": "Uses dspy.LabeledFewShot to compile the program with the curated examples as demonstrations",
+    "assertions": [
+      "Uses dspy.LabeledFewShot, not BootstrapFewShot",
+      "Creates dspy.Example objects with .with_inputs() to mark input fields",
+      "Calls optimizer.compile(program, trainset=trainset)",
+      "Does NOT define a metric — LabeledFewShot does not need one",
+      "Sets k to a reasonable value based on the number of examples"
+    ]
+  },
+  {
+    "prompt": "I have a set of gold-standard examples ordered from most important to least important. I want the first 5 to always be used as demonstrations, in that exact order. How?",
+    "expected_output": "Uses LabeledFewShot with sample=False and k=5 to take the first 5 examples in order",
+    "assertions": [
+      "Uses dspy.LabeledFewShot(k=5)",
+      "Passes sample=False to compile()",
+      "Explains that sample=False takes the first k examples sequentially instead of random sampling"
+    ]
+  },
+  {
+    "prompt": "I tried LabeledFewShot with my examples but accuracy is not good enough. What should I try next?",
+    "expected_output": "Recommends upgrading to BootstrapFewShot which filters examples using a metric",
+    "assertions": [
+      "Recommends dspy.BootstrapFewShot as the next step",
+      "Explains that BootstrapFewShot evaluates examples against a metric and keeps only the ones that work",
+      "Shows how to define a simple metric function",
+      "Shows the compile() call with metric and trainset"
+    ]
+  }
+]

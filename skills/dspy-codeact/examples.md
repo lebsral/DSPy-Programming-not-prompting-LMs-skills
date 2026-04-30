@@ -7,7 +7,7 @@ An agent that answers questions about data by writing computation code:
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Simulate a data source -- in production, this could query a database or API
@@ -62,7 +62,7 @@ An agent that processes structured text content:
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Simulated file store -- in production, read from disk or object storage
@@ -112,7 +112,7 @@ An agent that solves math problems by writing code to work through them:
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 def is_prime(n: int) -> bool:
@@ -173,7 +173,7 @@ Why CodeAct fits here: math problems often require writing loops, conditionals, 
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 def compute(expression: str) -> str:
@@ -215,7 +215,7 @@ print(result.answer)
 import dspy
 from dspy.evaluate import Evaluate
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 def is_prime(n: int) -> bool:

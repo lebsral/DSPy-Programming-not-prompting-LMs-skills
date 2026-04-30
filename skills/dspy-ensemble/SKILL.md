@@ -5,7 +5,7 @@ description: Use when you have multiple optimized versions of a program and want
 
 # Combine Programs with dspy.Ensemble
 
-Guide the user through using DSPy's `Ensemble` optimizer to combine multiple optimized programs into a single ensemble that aggregates their outputs. This is useful when you've run several optimization passes (different optimizers, different hyperparameters, different random seeds) and want to combine them for more robust predictions.
+Guide the user through using DSPy's `Ensemble` optimizer to combine multiple optimized programs into a single ensemble that aggregates their outputs. This is useful when you have run several optimization passes (different optimizers, different hyperparameters, different random seeds) and want to combine them for more robust predictions.
 
 ## What is Ensemble
 
@@ -17,7 +17,7 @@ Program B ──┼──> Run all ──> reduce_fn ──> Single output
 Program C ──┘
 ```
 
-Unlike other optimizers that tune prompts or weights, Ensemble doesn't change the programs themselves. It combines their outputs at inference time.
+Unlike other optimizers that tune prompts or weights, Ensemble does not change the programs themselves. It combines their outputs at inference time.
 
 ## When to use Ensemble
 
@@ -38,7 +38,7 @@ Do **not** use Ensemble when:
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # 1. Define your base program
@@ -167,7 +167,7 @@ One of the most powerful uses of Ensemble is combining programs from different o
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 qa = dspy.ChainOfThought("question -> answer")
@@ -242,6 +242,20 @@ Both combine multiple outputs, but they work differently:
 | **Optimizer type** | Combines at the program level | Combines at the inference level |
 
 You can even stack them: ensemble multiple optimized programs, then wrap the ensemble with BestOfN for additional quality.
+
+## Gotchas
+
+- **Claude passes a single program instead of a list to `compile()`.** `Ensemble.compile()` expects a `list[dspy.Module]`, not a single module. Always wrap even two programs in a list: `ensemble.compile([prog1, prog2])`.
+- **Claude forgets that each ensemble member uses its own LM context.** Programs optimized under different `dspy.configure(lm=...)` calls retain their LM binding. You do not need to re-configure the LM before calling the ensemble -- each program already knows which LM to use.
+- **Claude sets `deterministic=True` expecting reproducible sampling.** The `deterministic` parameter is reserved but not yet implemented -- setting it to `True` raises an error. Leave it at the default `False`.
+- **Claude uses Ensemble when BestOfN is the right tool.** Ensemble combines different optimized programs. If you have one program and want to run it multiple times with temperature sampling and pick the best output, use `dspy.BestOfN` instead.
+- **Claude builds a custom reduce function that returns a raw string instead of a Prediction.** The `reduce_fn` receives a list of `dspy.Prediction` objects and must return a `dspy.Prediction` (or compatible object). Returning a plain string breaks downstream field access.
+
+## Additional resources
+
+- [Ensemble API docs](https://dspy.ai/api/optimizers/Ensemble/)
+- [reference.md](reference.md) -- constructor parameters, compile method, reduce function protocol
+- [examples.md](examples.md) -- worked examples with majority voting and multi-model ensembles
 
 ## Cross-references
 

@@ -51,7 +51,7 @@ print(f"Dev label distribution:   {dev_labels}")
 
 # --- Use with an optimizer ---
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 from typing import Literal
@@ -121,7 +121,7 @@ print(f"Dev labels:   {Counter(ex.label for ex in devset)}")
 
 # --- Build a classifier and optimize ---
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 from typing import Literal
@@ -228,7 +228,7 @@ print(f"\nTrain: {len(trainset)}, Dev: {len(devset)}")
 
 # --- Build and test a classifier ---
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 from typing import Literal

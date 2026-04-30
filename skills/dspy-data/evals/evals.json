@@ -1,0 +1,32 @@
+[
+  {
+    "prompt": "I have a CSV file with columns 'ticket_text' and 'department'. How do I load it into DSPy for optimization?",
+    "expected_output": "Loads CSV rows into dspy.Example objects with with_inputs set on the input field",
+    "assertions": [
+      "Creates dspy.Example objects from CSV rows (using csv.DictReader or pandas)",
+      "Calls .with_inputs() on each Example to mark 'ticket_text' as the input field",
+      "Shows how to split into trainset and devset",
+      "Does NOT pass raw dicts to the optimizer — always converts to dspy.Example"
+    ]
+  },
+  {
+    "prompt": "I have a list of dspy.Example objects but my optimizer is complaining about missing input keys. What am I doing wrong?",
+    "expected_output": "Identifies missing with_inputs() call and shows how to fix it",
+    "assertions": [
+      "Diagnoses that with_inputs() was not called on the Examples",
+      "Shows the fix: examples = [ex.with_inputs('field_name') for ex in examples]",
+      "Explains that with_inputs marks which fields are inputs vs expected outputs",
+      "Does NOT suggest passing output field names to with_inputs"
+    ]
+  },
+  {
+    "prompt": "How do I convert a HuggingFace dataset to DSPy format and use it for training? The dataset has 'sentence' and 'label' columns.",
+    "expected_output": "Loads HuggingFace dataset, converts to dspy.Example with field renaming and with_inputs",
+    "assertions": [
+      "Uses datasets.load_dataset to load the HuggingFace dataset",
+      "Converts each row to dspy.Example with with_inputs on the input field",
+      "Shows field renaming if the HuggingFace column names differ from the signature",
+      "Limits the dataset size for DSPy optimization (DSPy does not need huge datasets)"
+    ]
+  }
+]

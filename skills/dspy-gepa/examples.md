@@ -10,7 +10,7 @@ import dspy
 from dspy.evaluate import Evaluate
 
 # Configure LMs
-task_lm = dspy.LM("openai/gpt-4o-mini")
+task_lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 reflection_lm = dspy.LM("openai/gpt-4o", temperature=1.0, max_tokens=4096)
 dspy.configure(lm=task_lm)
 
@@ -144,7 +144,7 @@ import dspy
 from dspy.evaluate import Evaluate
 
 # Configure LMs
-task_lm = dspy.LM("openai/gpt-4o-mini")
+task_lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 reflection_lm = dspy.LM("openai/gpt-4o", temperature=1.0, max_tokens=4096)
 dspy.configure(lm=task_lm)
 

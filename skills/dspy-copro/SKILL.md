@@ -42,7 +42,7 @@ Three things are needed: a program, a metric, and training data.
 ```python
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 # 1. Define a program
 classify = dspy.ChainOfThought("text -> label")
@@ -173,8 +173,8 @@ You can use a stronger (or cheaper) LM specifically for generating instruction c
 
 ```python
 # Use a strong model to generate candidates, evaluate with the production model
-candidate_lm = dspy.LM("openai/gpt-4o")
-production_lm = dspy.LM("openai/gpt-4o-mini")
+candidate_lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+production_lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-haiku-4-5-20251001", etc.
 
 dspy.configure(lm=production_lm)
 
@@ -219,15 +219,19 @@ This is useful when you want a capable model to brainstorm instructions but eval
 - You want evolutionary search rather than breadth-first generation
 - You want something lightweight and fast
 
-## Tips
+## Gotchas
 
-- **Start with defaults** -- breadth=10, depth=3 is a solid starting point for most tasks
-- **Increase breadth before depth** -- more candidates per round usually helps more than more rounds
-- **Use `track_stats=True`** during development to understand the optimization landscape
-- **Check `candidate_programs`** after optimization to see what instructions were tried and how they scored
-- **Higher `init_temperature`** (e.g., 1.8-2.0) produces more diverse candidates, useful when the default instructions are far from optimal
-- **Lower `init_temperature`** (e.g., 0.8-1.0) produces candidates closer to the original, useful for fine-tuning already decent instructions
-- **Pass `num_threads`** in `eval_kwargs` to speed up evaluation with parallel execution
+- **Claude sets `breadth=1` which silently breaks optimization.** `breadth` must be greater than 1 — with breadth=1 there are no alternative candidates to evaluate. Use at least breadth=5 for a meaningful search.
+- **Claude forgets that `compile()` modifies the student in-place.** Unlike most optimizers, COPRO mutates the program you pass to `compile()`. If you need the original program for baseline comparison, clone it first or create a fresh instance before calling `compile()`.
+- **Claude passes `eval_kwargs` as positional instead of keyword.** The `compile()` signature is `compile(student, *, trainset, eval_kwargs)` — `trainset` and `eval_kwargs` are keyword-only. Always use `optimizer.compile(program, trainset=trainset, eval_kwargs={})`.
+- **Claude uses COPRO when MIPROv2 would be better.** COPRO only optimizes instructions. If the task also benefits from few-shot demonstrations (most tasks do), MIPROv2 optimizes both and typically outperforms COPRO. Use COPRO when you specifically want instruction-only optimization or need to inspect all candidate instructions.
+- **Claude skips the `eval_kwargs` parameter.** COPRO requires `eval_kwargs` to be passed to `compile()`, even if empty. Omitting it causes a TypeError. Always include `eval_kwargs={}` or `eval_kwargs=dict(num_threads=4)`.
+
+## Additional resources
+
+- [COPRO API docs](https://dspy.ai/api/optimizers/COPRO/)
+- [reference.md](reference.md) — constructor parameters, compile method, candidate inspection
+- [examples.md](examples.md) — worked examples with breadth search and configuration comparison
 
 ## Cross-references
 

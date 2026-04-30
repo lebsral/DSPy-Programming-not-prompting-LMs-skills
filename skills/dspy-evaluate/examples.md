@@ -8,7 +8,7 @@ A simple QA pipeline evaluated with exact match. Shows the full workflow: setup,
 import dspy
 from dspy.evaluate import Evaluate
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Program
@@ -41,20 +41,17 @@ evaluator = Evaluate(
     num_threads=4,
     display_progress=True,
     display_table=5,
-    return_all_scores=True,
 )
 
-score, all_scores = evaluator(qa)
-print(f"\nOverall accuracy: {score:.1f}%")
+result = evaluator(qa)
+print(f"\nOverall accuracy: {result.score:.1f}%")
 
-# Inspect failures
+# Inspect failures using result.results (list of (example, prediction, score) tuples)
 print("\nFailing examples:")
-for i, (example, s) in enumerate(zip(devset, all_scores)):
+for i, (example, pred, s) in enumerate(result.results):
     if not s:
         print(f"  [{i}] Q: {example.question}")
         print(f"       Expected: {example.answer}")
-        # Re-run to see what was predicted
-        pred = qa(question=example.question)
         print(f"       Got:      {pred.answer}")
 ```
 
@@ -66,7 +63,7 @@ Grading open-ended answers where exact match is too strict. Uses a separate LM t
 import dspy
 from dspy.evaluate import Evaluate
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Program: explain concepts
@@ -106,7 +103,7 @@ class JudgeExplanation(dspy.Signature):
     reasoning: str = dspy.OutputField(desc="Brief explanation of the judgment")
 
 # Use a stronger model as the judge
-judge_lm = dspy.LM("openai/gpt-4o")
+judge_lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 def llm_judge(example, prediction, trace=None):
     judge = dspy.ChainOfThought(JudgeExplanation)
@@ -139,7 +136,7 @@ Combining correctness, conciseness, and safety into a single weighted score. Dem
 import dspy
 from dspy.evaluate import Evaluate
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Program: answer health questions
@@ -184,7 +181,7 @@ class CheckCorrectness(dspy.Signature):
     predicted_answer: str = dspy.InputField()
     is_correct: bool = dspy.OutputField(desc="True if key facts are covered accurately")
 
-judge_lm = dspy.LM("openai/gpt-4o")
+judge_lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 def composite_metric(example, prediction, trace=None):
     # 1. Correctness (0.6 weight) — LM judge
@@ -231,14 +228,13 @@ evaluator = Evaluate(
     num_threads=4,
     display_progress=True,
     display_table=5,
-    return_all_scores=True,
 )
 
-aggregate, all_scores = evaluator(health_qa)
-print(f"\nComposite score: {aggregate:.1f}%")
+result = evaluator(health_qa)
+print(f"\nComposite score: {result.score:.1f}%")
 
-# Breakdown per example
-for i, (example, score) in enumerate(zip(devset, all_scores)):
+# Breakdown per example using result.results
+for i, (example, pred, score) in enumerate(result.results):
     status = "PASS" if score >= 0.8 else "WARN" if score >= 0.5 else "FAIL"
     print(f"  [{status}] {example.question[:60]}... score={score:.2f}")
 ```

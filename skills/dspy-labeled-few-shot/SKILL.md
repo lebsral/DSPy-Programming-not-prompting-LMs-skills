@@ -198,6 +198,19 @@ optimizer = dspy.BootstrapFewShot(metric=metric, max_bootstrapped_demos=4)
 optimized = optimizer.compile(program, trainset=trainset)
 ```
 
+## Gotchas
+
+1. **Claude forgets `.with_inputs()` on training examples.** Without `.with_inputs("field_name")`, DSPy does not know which fields are inputs vs labels. The demonstrations appear malformed in the prompt — the LM sees all fields as input, which confuses it. Always call `.with_inputs()` on every `dspy.Example` in your trainset.
+2. **Claude uses LabeledFewShot when the user needs metric-driven selection.** LabeledFewShot uses examples as-is with no quality filtering. If the user mentions "accuracy is low" or "some examples are noisy," recommend `BootstrapFewShot` instead — it evaluates examples against a metric and keeps only the ones that help.
+3. **Claude sets `k` larger than the trainset without explaining the behavior.** When `k` exceeds `len(trainset)`, DSPy silently uses all available examples. This is fine, but Claude should tell the user: "You have 5 examples and k=16, so all 5 will be used as demos."
+4. **Claude creates separate trainsets for multi-predictor programs.** `LabeledFewShot` assigns the same demos to every predictor. If predictors have different signatures, the examples need all fields across all signatures, or the user should compile predictors separately. Claude sometimes splits the trainset incorrectly — explain the shared-demo behavior.
+
+## Additional resources
+
+- [dspy.LabeledFewShot API docs](https://dspy.ai/api/optimizers/LabeledFewShot/)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)
+
 ## Cross-references
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`

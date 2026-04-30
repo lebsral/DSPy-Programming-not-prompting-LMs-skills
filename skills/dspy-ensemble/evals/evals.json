@@ -1,0 +1,31 @@
+[
+  {
+    "prompt": "I optimized a QA program three times with BootstrapFewShot using different seeds. How do I combine them for more reliable answers?",
+    "expected_output": "Uses dspy.Ensemble with dspy.majority to combine the three programs via majority voting",
+    "assertions": [
+      "Uses dspy.Ensemble(reduce_fn=dspy.majority)",
+      "Passes a list of programs to ensemble.compile([prog1, prog2, prog3])",
+      "Shows how to call the ensemble program like a normal module",
+      "Does NOT set deterministic=True (not implemented)"
+    ]
+  },
+  {
+    "prompt": "I have 10 optimized programs from random search. Running all 10 per query is too expensive. Can I sample a subset?",
+    "expected_output": "Uses the size parameter to randomly sample a subset of programs per inference call",
+    "assertions": [
+      "Sets size parameter in dspy.Ensemble constructor (e.g., size=3)",
+      "Explains that size=None runs all programs while size=N samples N randomly",
+      "Mentions the cost/diversity tradeoff of choosing size"
+    ]
+  },
+  {
+    "prompt": "I want to average numeric scores from multiple DSPy programs instead of majority voting. How do I write a custom reduce function?",
+    "expected_output": "Defines a custom reduce_fn that averages numeric output fields and returns a Prediction object",
+    "assertions": [
+      "Defines a custom function that takes a list of predictions",
+      "Extracts numeric values from prediction fields",
+      "Returns a dspy.Prediction or compatible object (not a raw string or number)",
+      "Passes the custom function as reduce_fn to dspy.Ensemble"
+    ]
+  }
+]

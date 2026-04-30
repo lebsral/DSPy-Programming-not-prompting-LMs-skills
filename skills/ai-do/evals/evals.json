@@ -36,6 +36,30 @@
         {"name": "recommends_sequence", "description": "Recognizes this spans multiple skills and recommends a sequence rather than a single skill"},
         {"name": "generates_runnable_prompt", "description": "Provides a runnable /ai-<skill> <prompt> for the first step"}
       ]
+    },
+    {
+      "id": 3,
+      "prompt": "We have a DSPy pipeline that returns Pydantic model objects from signatures, but downstream code treats them as plain dicts and crashes with 'str object has no attribute scenario'. The config is typed as dict[str, Any] which erases all type info from DSPy outputs. Help me fix the type issues and serialize DSPy outputs properly at the boundary.",
+      "expected_output": "Routes to dspy- skills like /dspy-signatures, /dspy-modules, or /dspy-predict — does NOT refuse by saying 'this is not a DSPy problem'",
+      "files": [],
+      "assertions": [
+        {"name": "does_not_refuse", "description": "Does NOT say this is not a DSPy/AI problem or refuse to route"},
+        {"name": "routes_to_dspy_skill", "description": "Recommends at least one dspy- skill (e.g., /dspy-signatures, /dspy-modules, /dspy-predict, /dspy-primitives)"},
+        {"name": "acknowledges_dspy_types", "description": "Recognizes that Pydantic models from DSPy signatures and Prediction objects are DSPy concepts worth routing to a skill for"},
+        {"name": "generates_runnable_prompt", "description": "Provides a runnable /dspy-<skill> <prompt> that could be copy-pasted and run"}
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "I already have DSPy code that works but I want to make sure I'm using the APIs correctly — am I handling dspy.Prediction objects right? Should I be using model_dump() or accessing fields directly? Also not sure if my custom Module.forward() is returning the right type.",
+      "expected_output": "Routes to relevant dspy- skills for API correctness, does NOT refuse by saying the user already has working code",
+      "files": [],
+      "assertions": [
+        {"name": "does_not_refuse", "description": "Does NOT say this is not a routing problem or refuse to help because the user already has code"},
+        {"name": "routes_to_dspy_skill", "description": "Recommends at least one dspy- skill (e.g., /dspy-modules, /dspy-predict, /dspy-signatures)"},
+        {"name": "covers_multiple_concerns", "description": "Addresses both the Prediction handling question and the Module.forward() question, potentially with multiple skills"},
+        {"name": "generates_runnable_prompt", "description": "Provides a runnable /dspy-<skill> <prompt> that could be copy-pasted and run"}
+      ]
     }
   ]
 }

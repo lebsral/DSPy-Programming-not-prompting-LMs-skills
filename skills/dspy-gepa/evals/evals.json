@@ -1,0 +1,33 @@
+[
+  {
+    "prompt": "I want to optimize the instructions in my DSPy classifier but I do not want to add few-shot examples to the prompt. I have about 60 labeled examples. What optimizer should I use?",
+    "expected_output": "Uses dspy.GEPA for instruction-only optimization",
+    "assertions": [
+      "Uses dspy.GEPA (not MIPROv2 or BootstrapFewShot)",
+      "Defines a feedback metric that returns a dict with score and feedback keys",
+      "Sets a budget via auto, max_full_evals, or max_metric_calls",
+      "Configures a strong reflection_lm for proposing instructions",
+      "Calls gepa.compile(program, trainset=trainset)"
+    ]
+  },
+  {
+    "prompt": "I am using GEPA but my metric just returns True or False. The optimization is not improving much. How can I make GEPA work better?",
+    "expected_output": "Improve the metric to return textual feedback for the reflection LM",
+    "assertions": [
+      "Explains that GEPA benefits from textual feedback, not just scalar scores",
+      "Shows how to return a dict with score and feedback keys",
+      "Feedback describes what went wrong and what the instruction should change",
+      "Gives concrete examples of actionable vs vague feedback"
+    ]
+  },
+  {
+    "prompt": "My DSPy program uses Pydantic models for structured output. I ran GEPA but it did not fix issues with specific output fields. Why?",
+    "expected_output": "Explains that GEPA only optimizes the signature docstring, not field descriptions",
+    "assertions": [
+      "States that GEPA only tunes the signature docstring (instruction text)",
+      "Explains that Pydantic Field(description=...) and OutputField(desc=...) are not modified",
+      "Suggests the workaround of flattening field descriptions into the instruction",
+      "Does NOT recommend switching to a different optimizer as the first step"
+    ]
+  }
+]

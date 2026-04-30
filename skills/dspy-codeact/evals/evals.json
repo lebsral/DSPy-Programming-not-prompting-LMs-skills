@@ -1,0 +1,32 @@
+[
+  {
+    "prompt": "I need an AI agent that can analyze sales data by writing Python code — fetching quarterly numbers, computing averages, and finding trends. How do I build this with DSPy?",
+    "expected_output": "Uses dspy.CodeAct with tool functions for data access and lets the agent write computation code",
+    "assertions": [
+      "Uses dspy.CodeAct (not dspy.ReAct) since the task involves computation and data transformation",
+      "Defines tool functions as plain functions with type hints and docstrings",
+      "Does NOT pass callable objects or class instances as tools",
+      "Sets max_iters appropriately (5-10 for data analysis tasks)"
+    ]
+  },
+  {
+    "prompt": "What is the difference between CodeAct and ReAct? When should I use each one?",
+    "expected_output": "Explains that CodeAct writes and executes code while ReAct makes tool calls, with guidance on when each is better",
+    "assertions": [
+      "Explains CodeAct writes Python code while ReAct selects tools by name",
+      "Recommends CodeAct for computation, data transformation, and multi-step logic",
+      "Recommends ReAct for simple tool orchestration and lookup tasks",
+      "Notes CodeAct tool restrictions (plain functions only, no external library imports in generated code)"
+    ]
+  },
+  {
+    "prompt": "My CodeAct agent keeps failing because the generated code tries to import pandas. How do I fix this?",
+    "expected_output": "Explains the sandbox limitation and suggests moving library usage inside tool functions",
+    "assertions": [
+      "Explains that generated code runs in a sandbox with no pip packages",
+      "Suggests moving pandas logic inside a tool function (which runs in normal Python)",
+      "Does NOT suggest installing packages in the sandbox",
+      "Notes that tool functions themselves can use any library since they run in the host Python process"
+    ]
+  }
+]

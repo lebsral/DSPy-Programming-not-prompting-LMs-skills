@@ -28,7 +28,7 @@ evaluator = Evaluate(devset=devset, metric=semantic_f1, num_threads=4)
 score = evaluator(my_program)
 ```
 
-`SemanticF1` is a good default metric for open-ended QA tasks where exact match is too strict. It returns a float between 0.0 and 1.0.
+`SemanticF1` is a good default metric for open-ended QA tasks where exact match is too strict. It expects `response` fields on both the example and prediction (not `answer`). Constructor: `SemanticF1(threshold=0.66, decompositional=False)`. The `threshold` controls the minimum score during optimization (when `trace` is set).
 
 ### CompleteAndGrounded
 
@@ -43,7 +43,7 @@ evaluator = Evaluate(devset=devset, metric=complete_and_grounded, num_threads=4)
 score = evaluator(my_program)
 ```
 
-This is an LM-based metric — it uses the configured LM to judge completeness and groundedness. Useful for summarization and RAG tasks where you care about both recall and precision of facts.
+This is an LM-based metric — it uses the configured LM to judge completeness and groundedness. It expects `response` and `context` fields on the prediction, and `question` and `response` on the example. Constructor: `CompleteAndGrounded(threshold=0.66)`. Useful for RAG tasks where you care about both recall and precision of facts.
 
 ## Custom metrics
 
@@ -88,7 +88,7 @@ def llm_judge_metric(example, prediction, trace=None):
 To avoid the model grading its own work, use a different (often stronger) LM for the judge:
 
 ```python
-judge_lm = dspy.LM("openai/gpt-4o")
+judge_lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 def llm_judge_metric(example, prediction, trace=None):
     judge = dspy.Predict(AssessAnswer)
@@ -163,7 +163,7 @@ def hybrid_metric(example, prediction, trace=None):
 
 ## Debugging with per-example scores
 
-Pass `return_all_scores=True` to get a tuple of `(aggregate_score, all_scores)`. Use this to find failing examples and understand failure patterns.
+`Evaluate` returns an `EvaluationResult` with `.score` (aggregate percentage) and `.results` (list of `(example, prediction, score)` tuples). Use `.results` to find failing examples and understand failure patterns.
 
 ## Common patterns
 
@@ -194,25 +194,34 @@ from dspy.evaluate import Evaluate
 evaluator = Evaluate(devset=devset, metric=metric, num_threads=4, display_table=5)
 
 # Baseline
-baseline_score = evaluator(my_program)
+baseline = evaluator(my_program)
 
 # Optimize
 optimizer = dspy.MIPROv2(metric=metric, auto="medium")
 optimized = optimizer.compile(my_program, trainset=trainset)
 
 # Compare
-optimized_score = evaluator(optimized)
-print(f"Baseline:  {baseline_score:.1f}%")
-print(f"Optimized: {optimized_score:.1f}%")
-print(f"Delta:     {optimized_score - baseline_score:+.1f}%")
+optimized_result = evaluator(optimized)
+print(f"Baseline:  {baseline.score:.1f}%")
+print(f"Optimized: {optimized_result.score:.1f}%")
+print(f"Delta:     {optimized_result.score - baseline.score:+.1f}%")
 ```
 
 ## Gotchas
 
-1. **Metrics must return a `float` or `bool`, not a string** -- returning a string silently breaks scoring.
-2. **Use the `trace` parameter to differentiate optimization-time vs evaluation-time behavior** -- during optimization, `trace` is not `None`, so you can require stricter criteria (e.g., good reasoning + correct answer) for selecting few-shot demos.
-3. **Small dev sets (<30 examples) give unreliable scores** -- results can swing 10-20% between runs. Aim for 50+ examples for stable evaluation.
-4. **`SemanticF1` and `CompleteAndGrounded` call the LM** -- they're slower and cost money, but much better than exact match for open-ended tasks. Budget for the extra API calls.
+1. **Claude uses `return_all_scores=True` or `return_outputs=True` which no longer exist.** `Evaluate` now returns an `EvaluationResult` object. Access `.score` for the aggregate percentage and `.results` for per-example `(example, prediction, score)` tuples. Do not pass `return_all_scores` or `return_outputs`.
+2. **Claude uses `SemanticF1` with `answer` fields but it expects `response`.** `SemanticF1` looks for `response` on both the example and prediction, not `answer`. If your signature uses `answer`, either rename the field or write a wrapper metric.
+3. **Claude uses `CompleteAndGrounded` without providing `context`.** `CompleteAndGrounded` expects `response` and `context` on the prediction, and `question` and `response` on the example. Without `context`, it cannot check groundedness.
+4. **Metrics must return a `float` or `bool`, not a string** -- returning a string silently breaks scoring.
+5. **Small dev sets (<30 examples) give unreliable scores** -- results can swing 10-20% between runs. Aim for 50+ examples for stable evaluation.
+
+## Additional resources
+
+- [dspy.Evaluate API docs](https://dspy.ai/api/evaluation/Evaluate/)
+- [dspy.SemanticF1 API docs](https://dspy.ai/api/evaluation/SemanticF1/)
+- [dspy.CompleteAndGrounded API docs](https://dspy.ai/api/evaluation/CompleteAndGrounded/)
+- For constructor signatures and method reference, see [reference.md](reference.md)
+- For worked examples (exact match, LM judge, composite), see [examples.md](examples.md)
 
 ## Cross-references
 

@@ -273,4 +273,5 @@ Want DSPy observability?
 
 - [Langfuse DSPy integration docs](https://langfuse.com/docs/integrations/dspy)
 - [Langfuse Python SDK docs](https://langfuse.com/docs/sdk/python/decorators)
+- For API details, see [reference.md](reference.md)
 - For worked examples, see [examples.md](examples.md)

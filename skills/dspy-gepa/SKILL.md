@@ -43,7 +43,7 @@ Three things are needed: a DSPy program, a feedback metric, and a training set.
 ```python
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 # 1. Define your program
 classify = dspy.ChainOfThought("text -> label")
@@ -65,7 +65,7 @@ trainset = [
 # 4. Optimize
 gepa = dspy.GEPA(
     metric=metric,
-    reflection_lm=dspy.LM("openai/gpt-4o", temperature=1.0, max_tokens=4096),
+    reflection_lm=dspy.LM("openai/gpt-4o", temperature=1.0, max_tokens=4096),  # use a strong model for reflection
     auto="light",
 )
 optimized = gepa.compile(classify, trainset=trainset)
@@ -225,7 +225,7 @@ GEPA can be used at inference time to find the best instructions for a specific 
 ```python
 gepa = dspy.GEPA(
     metric=metric,
-    reflection_lm=dspy.LM("openai/gpt-4o", temperature=1.0, max_tokens=4096),
+    reflection_lm=dspy.LM("openai/gpt-4o", temperature=1.0, max_tokens=4096),  # use a strong model for reflection
     auto="light",
     track_stats=True,
     track_best_outputs=True,
@@ -307,29 +307,27 @@ dspy.inspect_history(n=1)
 - Structured output tasks where the LM consistently misinterprets specific fields despite good top-level instructions
 - When field-level `desc` strings are doing heavy lifting (e.g., date formats, enum explanations, nested object guidance)
 
-## Tips
+## Gotchas
 
-- **Use a strong reflection LM** -- the quality of proposed instructions depends on the reflection model. Use GPT-4o, Claude Sonnet, or similar
-- **Write actionable feedback** -- "Expected positive sentiment but got negative; the review contains sarcasm" is better than "Wrong label"
-- **Start with `auto="light"`** -- iterate on your metric before spending budget on heavy optimization
-- **Use `track_stats=True`** during development to inspect which instructions were tried and how they scored
-- **Combine with Evaluate** -- run `dspy.Evaluate` before and after GEPA to measure the improvement
+1. **Claude writes GEPA metrics that return only a float.** GEPA can use plain float scores, but its key advantage is textual feedback. When the metric returns `{"score": 0.0, "feedback": "Expected positive but got negative; the review is sarcastic"}`, the reflection LM uses that feedback to propose better instructions. Without feedback, GEPA degrades to blind search. Always return a dict with both `score` and `feedback`.
+2. **Claude uses a weak model as the reflection LM.** The quality of proposed instructions depends entirely on the reflection model. Using `gpt-4o-mini` or a small local model for reflection produces generic, unhelpful instruction changes. Use a strong model (GPT-4o, Claude Sonnet) for `reflection_lm` -- the task LM can be cheaper.
+3. **Claude starts with `auto="heavy"` before validating the metric.** A broken or noisy metric wastes the entire optimization budget. Start with `auto="light"` to verify the metric produces meaningful scores and feedback, then scale up to `"medium"` or `"heavy"` for production runs.
+4. **Claude does not run `dspy.Evaluate` before and after GEPA.** Without a baseline measurement, there is no way to know if GEPA actually improved anything. Always evaluate the unoptimized program first, then compare against the optimized version.
+5. **Claude expects GEPA to optimize Pydantic field descriptions.** GEPA only tunes the signature docstring (instruction). `InputField(desc=...)`, `OutputField(desc=...)`, and Pydantic `Field(description=...)` are never modified. If field descriptions are causing failures, flatten them into the instruction before optimizing (see the workaround in this skill).
 
-```python
-from dspy.evaluate import Evaluate
+## Additional resources
 
-evaluator = Evaluate(devset=devset, metric=metric, num_threads=4)
-baseline = evaluator(program)
-optimized_score = evaluator(optimized)
-print(f"Improvement: {baseline} -> {optimized_score}")
-```
+- [dspy.GEPA API docs](https://dspy.ai/api/optimizers/GEPA/)
+- [DSPy optimizer selection guide](https://dspy.ai/learn/optimization/optimizers/)
+- For constructor signatures and method reference, see [reference.md](reference.md)
+- For worked examples (sentiment classification, multi-step summarization), see [examples.md](examples.md)
 
 ## Cross-references
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
 - **Improving accuracy** with other optimizers -- see `/ai-improving-accuracy`
-- **MIPROv2** for instruction + few-shot optimization -- see the optimizer table in `docs/dspy-reference.md`
+- **MIPROv2** for instruction + few-shot optimization -- see `/dspy-miprov2`
 - **Chain of thought reasoning** as the inner module -- see `/dspy-chain-of-thought`
 - **Evaluating programs** before and after optimization -- see `/dspy-evaluate`
 - **Iterative self-improvement** at inference time -- see `/dspy-refine`

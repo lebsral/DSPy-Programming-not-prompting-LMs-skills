@@ -427,6 +427,21 @@ labels = Counter(ex.label for ex in trainset)
 print(f"Label distribution: {labels}")
 ```
 
+## Gotchas
+
+- **Claude forgets `with_inputs()` on every Example.** Without it, optimizers cannot distinguish inputs from expected outputs. Every example passed to an optimizer or evaluator must have `with_inputs()` called. Claude often creates examples and only calls `with_inputs()` on the first one or skips it entirely when building lists inline.
+- **Claude calls `with_inputs()` with output field names.** Mark only the fields your module receives as input — not the fields it should produce. If your signature is `question -> answer`, call `.with_inputs("question")`, not `.with_inputs("question", "answer")`. Including output fields means the optimizer has nothing to score against.
+- **Claude uses `Literal[list]` instead of `Literal[tuple(list)]` for dynamic categories.** When building categories from data (`CATEGORIES = list(set(...))`), the type annotation must be `Literal[tuple(CATEGORIES)]`, not `Literal[CATEGORIES]`. The latter silently fails to constrain the output.
+- **Claude passes raw dicts to optimizers instead of `dspy.Example` objects.** DSPy optimizers and evaluators require `dspy.Example` objects, not plain Python dicts. Always convert with `dspy.Example(**row).with_inputs(...)`.
+- **Claude creates train/dev splits without shuffling first.** If data is sorted by label or date, taking the first 80% as train and last 20% as dev creates a biased split. Always shuffle with a fixed seed before splitting.
+
+## Additional resources
+
+- [dspy.Example API docs](https://dspy.ai/api/primitives/Example/)
+- [dspy.Prediction API docs](https://dspy.ai/api/primitives/Prediction/)
+- [reference.md](reference.md) — constructor signatures, method tables, Prediction details
+- [examples.md](examples.md) — worked examples with CSV, HuggingFace, and manual data
+
 ## Cross-references
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
