@@ -7,6 +7,16 @@ description: Use when you need to define the input/output contract for an LM cal
 
 Guide the user through defining DSPy Signatures — typed declarations of what goes into and comes out of an LM call.
 
+## Step 1: What kind of signature?
+
+Ask the user before diving in:
+
+1. **How complex is your I/O?** One input, one output (use inline)? Multiple fields, type constraints, or nested objects (use class-based)?
+2. **Do you need structured output?** If the output maps to a database model or API response, you likely want a Pydantic model as the output type.
+3. **Are outputs constrained?** If you need categories, booleans, or numeric ranges, you need type annotations.
+
+Then jump to the relevant section below.
+
 ## What is a Signature
 
 A Signature declares the input/output contract for an LM call -- field names, types, and descriptions. DSPy compiles it into an optimized prompt automatically. You define the I/O spec; DSPy handles the prompting.
@@ -61,7 +71,7 @@ import dspy
 from pydantic import BaseModel, Field
 from typing import Optional
 
-lm = dspy.LM("openai/gpt-4o-mini")  # or any LiteLLM-supported provider
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 class LineItem(BaseModel):
@@ -115,6 +125,30 @@ class Good(dspy.Signature):
     department: Literal["billing", "technical", "account", "general"] = dspy.OutputField()
 ```
 
+## Advanced: dynamic signatures
+
+For runtime customization without defining new classes:
+
+```python
+# Override instructions at call time (inline signatures)
+predict = dspy.Predict("question -> answer", instructions="Answer in exactly one sentence.")
+
+# Programmatically modify a class-based signature
+MySignature = MySignature.with_instructions("New instructions for this run")
+
+# Add/remove fields dynamically
+MySignature = MySignature.append("confidence", dspy.OutputField(), type_=float)
+MySignature = MySignature.delete("unused_field")
+```
+
+DSPy also supports special input types: `dspy.Image` for image inputs and `dspy.History` for conversation history.
+
+## When NOT to use class-based signatures
+
+- **Simple extraction or Q&A** — if `"question -> answer"` captures your task, an inline signature is clearer and shorter. Do not over-engineer with a class when a string works.
+- **Prototyping** — start inline, switch to class-based only when you need type constraints, descriptions, or Pydantic outputs.
+- **Too many output fields** — if you need more than 4-5 outputs, the LM quality degrades. Split into multiple calls with simpler signatures instead.
+
 ## Gotchas
 
 1. **Field names ARE the prompt** -- `text -> summary` works better than `input -> output` because DSPy uses field names directly in the generated prompt. Choose descriptive names.
@@ -123,10 +157,17 @@ class Good(dspy.Signature):
 4. **The docstring on a Signature class becomes the task instruction** -- write it carefully, as a clear directive. A vague docstring like "Classify the text" performs much worse than "Classify the customer support message into a department for routing."
 5. **Field `desc` values are NOT optimized** -- DSPy optimizers (GEPA, MIPROv2, COPRO) tune the Signature docstring and/or few-shot demos, but `InputField(desc=...)`, `OutputField(desc=...)`, and Pydantic `Field(description=...)` values are fixed. If your structured output task relies heavily on field descriptions for guidance, see `/dspy-gepa` for a workaround that flattens field descriptions into the instruction for optimization.
 
+## Additional resources
+
+- [dspy.Signature API docs](https://dspy.ai/api/signatures/Signature)
+- [dspy.InputField API docs](https://dspy.ai/api/signatures/InputField)
+- [dspy.OutputField API docs](https://dspy.ai/api/signatures/OutputField)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)
+
 ## Cross-references
 
 - **Using signatures with modules** — see `/dspy-predict` (Predict), `/dspy-chain-of-thought` (ChainOfThought), `/dspy-modules` (custom modules)
 - **Parsing structured data from text** — see `/ai-parsing-data`
 - **Classification and sorting** — see `/ai-sorting`
-- **Full working examples** — see [examples.md](examples.md)
 - Not sure which skill to use next? Try `/ai-do` to get routed to the right one

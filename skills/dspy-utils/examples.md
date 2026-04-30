@@ -13,7 +13,7 @@ from fastapi.responses import StreamingResponse
 app = FastAPI()
 
 # Configure DSPy
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Define the program
@@ -63,7 +63,7 @@ import dspy
 from typing import Literal
 
 # Set up
-lm = dspy.LM("openai/gpt-4o-mini", temperature=0.0)
+lm = dspy.LM("openai/gpt-4o-mini", temperature=0.0)  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # A classification program that isn't working right
@@ -144,7 +144,7 @@ from dspy.evaluate import Evaluate
 # Part A: Optimize and save (run once, offline)
 # ==============================
 
-lm = dspy.LM("openai/gpt-4o-mini", temperature=0.0)
+lm = dspy.LM("openai/gpt-4o-mini", temperature=0.0)  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Define the program
@@ -205,7 +205,7 @@ print("Saved optimized program to support_responder_v1.json")
 import dspy
 
 # Must configure LM before loading
-lm = dspy.LM("openai/gpt-4o-mini", temperature=0.0)
+lm = dspy.LM("openai/gpt-4o-mini", temperature=0.0)  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Create a fresh instance and load saved state

@@ -1,0 +1,35 @@
+[
+  {
+    "prompt": "I have a 500K character CSV export of customer support tickets. I need to find which product categories have the most complaints and summarize the top issues per category. Use DSPy.",
+    "expected_output": "Code using dspy.RLM with a signature like 'tickets, query -> category_summary: list[str], top_issues: str'. Should use sub_lm for cheaper sub-queries. Should show trajectory inspection for debugging.",
+    "assertions": [
+      "uses dspy.RLM (not Predict or ChainOfThought for this large-context task)",
+      "signature includes at least one input field and one output field",
+      "sets sub_lm to a cheaper model for cost control",
+      "includes max_iterations parameter (not lowered below 10 for complex exploration)",
+      "mentions Deno as a prerequisite or checks for it",
+      "does not hardcode a single LM provider without alternatives"
+    ]
+  },
+  {
+    "prompt": "I want to analyze a large codebase (all Python files concatenated, about 200K chars) to find security vulnerabilities using DSPy. The AI should be able to search through the code, find patterns, and report issues.",
+    "expected_output": "Code using dspy.RLM that lets the LM programmatically search through the code using the REPL. Should use llm_query for semantic analysis of code snippets. Should show structured output with vulnerability details.",
+    "assertions": [
+      "uses dspy.RLM for programmatic code exploration",
+      "signature has typed output fields (e.g., list[str] for vulnerabilities)",
+      "shows or mentions llm_query or llm_query_batched for semantic analysis within the REPL",
+      "does not try to stuff the entire 200K input into a single ChainOfThought call",
+      "includes SUBMIT() in explanation of how RLM produces final output",
+      "mentions verbose=True or trajectory inspection for debugging"
+    ]
+  },
+  {
+    "prompt": "I have a simple 500-word product description and I want the AI to extract the product name, price, and key features. Should I use RLM?",
+    "expected_output": "Should recommend against RLM for this task. 500 words fits easily in context. Recommend dspy.Predict or dspy.ChainOfThought with a typed signature instead.",
+    "assertions": [
+      "recommends Predict or ChainOfThought instead of RLM",
+      "explains that RLM adds unnecessary overhead for short inputs",
+      "does not build an RLM solution for this simple extraction task"
+    ]
+  }
+]

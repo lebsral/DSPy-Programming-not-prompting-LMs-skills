@@ -1,0 +1,23 @@
+[
+  {
+    "id": "dspy-tools-wrap-function",
+    "prompt": "I have a Python function that searches our Postgres database. How do I make it available as a tool for a DSPy ReAct agent?",
+    "should_contain": ["dspy.Tool", "type hints", "docstring", "ReAct"],
+    "should_not_contain": [],
+    "notes": "Should show wrapping with type hints and docstring, passing to ReAct. Should mention returning strings. May mention implicit wrapping vs explicit dspy.Tool."
+  },
+  {
+    "id": "dspy-tools-sandbox-execution",
+    "prompt": "I need my DSPy agent to run arbitrary Python code safely in a sandbox. How do I set up PythonInterpreter?",
+    "should_contain": ["PythonInterpreter", "Deno", "CodeAct"],
+    "should_not_contain": [],
+    "notes": "Should show PythonInterpreter with context manager, mention Deno prerequisite, selective permissions. Should mention CodeAct integration."
+  },
+  {
+    "id": "dspy-tools-mcp-integration",
+    "prompt": "I have an MCP server running and want to use its tools in a DSPy agent. How do I convert MCP tools to DSPy tools?",
+    "should_contain": ["from_mcp_tool", "ClientSession", "aforward"],
+    "should_not_contain": [],
+    "notes": "Should show from_mcp_tool pattern with session setup, mention tools are async so use aforward."
+  }
+]

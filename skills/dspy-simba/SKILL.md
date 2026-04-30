@@ -43,7 +43,7 @@ Three things are needed: a DSPy program, a metric function, and a training set.
 ```python
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 # 1. Define your program
 classify = dspy.ChainOfThought("text -> label")
@@ -110,6 +110,8 @@ dspy.SIMBA(
     max_steps=8,                    # Number of optimization iterations
     max_demos=4,                    # Max demonstrations per predictor
     prompt_model=None,              # LM for generating rules (defaults to global LM)
+    teacher_settings=None,          # Teacher model configuration dict
+    num_threads=None,               # Parallel execution threads
     temperature_for_sampling=0.2,   # Temperature for trajectory sampling
     temperature_for_candidates=0.2, # Temperature for source program selection
 )
@@ -123,6 +125,8 @@ dspy.SIMBA(
 | `max_steps` | `int` | `8` | Total optimization iterations. Each step samples a fresh mini-batch and produces new candidates |
 | `max_demos` | `int` | `4` | Maximum few-shot demonstrations added to any predictor. Keeps prompts from growing too large |
 | `prompt_model` | `dspy.LM` | `None` | LM used for generating introspective rules. Falls back to the globally configured LM if not set |
+| `teacher_settings` | `dict` | `None` | Configuration dict for the teacher model |
+| `num_threads` | `int` | `None` | Number of parallel threads for evaluation. Defaults to `dspy.settings.num_threads` |
 | `temperature_for_sampling` | `float` | `0.2` | Temperature when running programs on mini-batches. Lower values produce more deterministic outputs |
 | `temperature_for_candidates` | `float` | `0.2` | Temperature for softmax selection of source programs from the pool. Lower values favor the top performers |
 
@@ -159,8 +163,10 @@ dspy.SIMBA(
 Runs the optimization loop and returns the best program found.
 
 ```python
-optimized = optimizer.compile(program, trainset=trainset)
+optimized = optimizer.compile(program, trainset=trainset, seed=0)
 ```
+
+The `seed` parameter (default `0`) controls random sampling for reproducible results.
 
 The returned program includes two additional attributes:
 
@@ -224,6 +230,18 @@ simba = dspy.SIMBA(metric=metric, max_steps=8)
 improved = simba.compile(baseline, trainset=trainset)
 ```
 
+## Typical improvement trajectory
+
+Expect incremental gains per step rather than a single large jump:
+
+| Stage | Example score | Notes |
+|-------|-------------|-------|
+| Unoptimized baseline | ~60-70% | Raw program with no demos or instructions |
+| After BootstrapFewShot | ~75-85% | Good demos added, biggest single jump |
+| After SIMBA (4-8 steps) | ~80-90% | Incremental +3-8% from targeting hard examples |
+
+The exact numbers depend on your task, data, and LM. SIMBA shines on the incremental step — it finds the examples your program is inconsistent on and fixes those specifically.
+
 ## Tips
 
 - **Start with defaults** -- `bsize=32`, `max_steps=8`, `num_candidates=6` work well for most tasks
@@ -233,11 +251,16 @@ improved = simba.compile(baseline, trainset=trainset)
 - **Keep `max_demos` reasonable** -- more than 4-6 demos can bloat prompts and hurt performance on some LMs
 - **Use a separate `prompt_model`** for introspective rules if your main LM is small -- rule generation benefits from a stronger model
 
+## Additional resources
+
+- [dspy.SIMBA API docs](https://dspy.ai/api/optimizers/SIMBA)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)
+
 ## Cross-references
 
 - **Quick-start optimization** with few-shot examples -- see `/ai-improving-accuracy`
 - **Evaluating your program** before and after optimization -- see `/dspy-evaluate`
 - **Building the program to optimize** -- see `/dspy-chain-of-thought` or `/dspy-modules`
 - **Preparing training data** -- see `/dspy-data`
-- For worked examples, see [examples.md](examples.md)
 - Not sure which skill to use next? Try `/ai-do` to get routed to the right one

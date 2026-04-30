@@ -1,0 +1,23 @@
+[
+  {
+    "id": "dspy-signatures-inline-vs-class",
+    "prompt": "I need to classify customer messages into categories. Should I use an inline signature or a class-based one?",
+    "should_contain": ["Literal", "dspy.Signature", "OutputField"],
+    "should_not_contain": [],
+    "notes": "Should recommend class-based for classification with Literal type constraint. Should show the class-based pattern with docstring and OutputField."
+  },
+  {
+    "id": "dspy-signatures-pydantic-output",
+    "prompt": "I want to extract structured invoice data from raw text — vendor, date, line items with quantities and prices. How do I define the DSPy signature?",
+    "should_contain": ["BaseModel", "dspy.Signature", "OutputField", "list"],
+    "should_not_contain": [],
+    "notes": "Should use Pydantic BaseModel for nested output (LineItem inside Invoice). Should show InputField for raw text and OutputField with the Pydantic type."
+  },
+  {
+    "id": "dspy-signatures-field-descriptions",
+    "prompt": "My DSPy signature works but the LM keeps misunderstanding what the output fields mean. How do I improve it?",
+    "should_contain": ["desc", "docstring"],
+    "should_not_contain": [],
+    "notes": "Should recommend adding desc= to OutputField and improving the Signature docstring. Should mention that field names themselves matter since DSPy uses them in the prompt."
+  }
+]

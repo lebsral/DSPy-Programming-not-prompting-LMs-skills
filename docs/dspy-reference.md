@@ -51,9 +51,13 @@ Modules wrap signatures with inference strategies:
 | `dspy.Predict` | Direct LM call | Simple input -> output |
 | `dspy.ChainOfThought` | Adds step-by-step reasoning | Most tasks (default choice) |
 | `dspy.ProgramOfThought` | Generates + executes code | Math, computation |
-| `dspy.ReAct` | Reasoning + tool use loop | Agents with tools |
-| `dspy.CodeAct` | Code-based action agent | Agents that write code to act |
+| `dspy.ReAct` | Reasoning + tool use loop (default `max_iters=20`) | Agents with tools |
+| `dspy.CodeAct` | Code-based action agent (default `max_iters=5`) | Agents that write code to act |
 | `dspy.MultiChainComparison` | Runs multiple chains, picks best | When quality matters more than speed |
+| `dspy.BestOfN` | Runs module N times, returns best by reward_fn | When you want sampling diversity with selection |
+| `dspy.Refine` | Runs module N times with feedback, returns best | Like BestOfN but with iterative feedback on failures |
+| `dspy.RLM` | Recursive LM — explores large contexts via sandboxed REPL | When context exceeds effective window limits |
+| `dspy.Parallel` | Executes (module, example) pairs concurrently | Batch processing with thread pooling |
 
 ### Usage
 
@@ -74,8 +78,20 @@ def search(query: str) -> str:
     """Search for information."""
     ...
 
-agent = dspy.ReAct("question -> answer", tools=[search])
+agent = dspy.ReAct("question -> answer", tools=[search], max_iters=20)
 result = agent(question="What is DSPy?")
+```
+
+### Batch processing (all modules)
+
+```python
+# All modules support batch() for parallel execution
+results = my_module.batch(
+    examples,                    # list of dspy.Example
+    num_threads=4,               # parallel threads
+    max_errors=5,                # error threshold
+    return_failed_examples=False,
+)
 ```
 
 ### Custom modules
@@ -100,7 +116,8 @@ Optimizers improve your program's prompts or weights:
 | `dspy.BootstrapFewShot` | Few-shot examples | ~50 examples | Quick start, first optimization |
 | `dspy.BootstrapFewShotWithRandomSearch` | Few-shot examples | ~200 examples | Better than BootstrapFewShot |
 | `dspy.MIPROv2` | Instructions + few-shot | ~200 examples | Best prompt optimization |
-| `dspy.GEPA` | Instructions | ~50 examples | Instruction tuning |
+| `dspy.GEPA` | Instructions | ~50 examples | Reflective prompt evolution |
+| `dspy.SIMBA` | Instructions + few-shot via self-analysis | ~50+ examples | Mini-batch introspective optimization |
 | `dspy.BootstrapFinetune` | LM weights | ~500+ examples | Maximum quality, smaller LMs |
 | `dspy.BetterTogether` | Instructions + weights | ~500+ examples | Combining prompt + weight tuning |
 
@@ -147,6 +164,19 @@ evaluator = Evaluate(
     display_table=5,
 )
 score = evaluator(my_program)
+```
+
+### Built-in metrics
+
+```python
+from dspy.evaluate import SemanticF1
+
+# LM-based semantic F1 (precision + recall via LLM)
+semantic_f1 = SemanticF1(threshold=0.66, decompositional=False)
+score = semantic_f1(example, prediction)
+
+# Exact match helpers
+from dspy.evaluate import answer_exact_match, answer_passage_match
 ```
 
 ### Common metric patterns

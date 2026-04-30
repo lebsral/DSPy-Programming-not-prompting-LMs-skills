@@ -1,0 +1,32 @@
+[
+  {
+    "prompt": "I have meeting transcripts from Zoom and I need to automatically extract action items, decisions, and a one-line TLDR from each one. The transcripts are plain text, usually 2000-5000 words.",
+    "expected_output": "A DSPy module using structured output (Pydantic model) to extract action items, decisions, and TLDR from meeting transcripts",
+    "assertions": [
+      "output contains a Pydantic BaseModel or typed OutputField for structured meeting data",
+      "output includes action_items and decisions as list fields",
+      "output uses dspy.ChainOfThought for reasoning about what is important",
+      "output does not hardcode a single LM provider without alternatives"
+    ]
+  },
+  {
+    "prompt": "I need to summarize long legal documents (50-100 pages) into executive briefs. The documents are too long for a single LM call. How do I handle this with DSPy?",
+    "expected_output": "A map-reduce or hierarchical summarization pipeline that chunks the document and combines summaries",
+    "assertions": [
+      "output includes a chunking/splitting strategy for long documents",
+      "output has a map step (summarize each chunk) and a reduce step (combine summaries)",
+      "output uses dspy.ChainOfThought or dspy.Predict for the summarization steps",
+      "output addresses cross-chunk context loss (overlapping chunks or hierarchical approach)"
+    ]
+  },
+  {
+    "prompt": "My AI summarizer keeps making the summaries too long. Users want 3-5 bullet points max but they get 10-15. How do I enforce length limits?",
+    "expected_output": "A summarization module with dspy.Assert to enforce word or bullet count limits",
+    "assertions": [
+      "output uses dspy.Assert or dspy.Suggest for length enforcement",
+      "output includes a programmatic length check (word count or bullet count)",
+      "output shows the assertion error message includes the actual vs expected count",
+      "output explains that DSPy retries with the error feedback on assertion failure"
+    ]
+  }
+]

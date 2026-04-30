@@ -52,7 +52,7 @@ Keep tools focused on one thing. A `search` tool should search, not search-and-s
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 def search(query: str) -> str:
@@ -69,6 +69,22 @@ That's it. The agent will:
 2. Decide whether to call `search`
 3. Use the search result to formulate an answer
 
+## Constructor parameters
+
+```python
+dspy.ReAct(
+    signature,      # str | Signature -- required, defines inputs/outputs
+    tools,          # list[Callable | dspy.Tool] -- required, available tools
+    max_iters=20,   # int -- max reasoning-action cycles
+)
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `signature` | `str \| type[Signature]` | required | Input/output contract (inline or class-based) |
+| `tools` | `list[Callable \| dspy.Tool]` | required | Functions the agent can call. DSPy wraps plain functions automatically |
+| `max_iters` | `int` | `20` | Max Thought-Action-Observation cycles before forcing an answer |
+
 ## The max_iters parameter
 
 `max_iters` controls how many Thought-Action-Observation cycles the agent can take before it must produce an answer:
@@ -82,9 +98,9 @@ agent = dspy.ReAct("question -> answer", tools=[search, lookup], max_iters=8)
 ```
 
 Guidelines:
-- **Default** is usually fine for simple tasks
-- **Set it higher** (5-10) for multi-step research tasks
-- **Set it lower** (2-3) when you want quick answers and the task is simple
+- **Default is 20** -- usually fine for most tasks
+- **Set it lower** (2-5) for simple lookups where one or two tool calls suffice
+- **Keep it at 20** for complex multi-step research tasks
 - If the agent hits `max_iters` without finishing, it returns its best answer so far
 
 ## Multi-tool agents
@@ -280,10 +296,17 @@ print(agent)
 
 ## Gotchas
 
-1. **`max_iters` defaults to 5** -- increase for tasks requiring many tool calls, but watch for infinite loops where the agent retries the same failing action.
+1. **Claude sets `max_iters=5` but the default is 20.** Claude habitually passes `max_iters=5` which cuts off complex multi-step tasks too early. The actual default is 20. Only lower it when you want to constrain simple tasks (2-3 for lookups). For complex research, the default of 20 is appropriate.
 2. **Tool errors are passed back as observations** -- make your error messages informative so the agent can recover (e.g., "No user found with that email" not just "Error").
 3. **ReAct is slow by design** -- each iteration is a separate LM call. Use `CodeAct` for computation-heavy tasks where the agent can do work in code between tool calls.
 4. **Tool function docstrings become part of the prompt** -- write clear, concise docstrings. Verbose docstrings waste tokens every iteration.
+5. **Claude ignores the `trajectory` in the return value.** `ReAct` returns a `dspy.Prediction` with a `.trajectory` dict containing the full Thought-Action-Observation trace. Access `result.trajectory` to log or debug the agent's reasoning path. Claude often discards this and only uses `result.answer`.
+
+## Additional resources
+
+- [dspy.ReAct API docs](https://dspy.ai/api/modules/ReAct/)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)
 
 ## Cross-references
 
@@ -292,5 +315,4 @@ print(agent)
 - **Building custom modules** to wrap ReAct -- see `/dspy-modules`
 - **Action-taking AI** from a problem-first perspective -- see `/ai-taking-actions`
 - **Multi-agent coordination** -- see `/ai-coordinating-agents`
-- For worked examples, see [examples.md](examples.md)
 - Not sure which skill to use next? Try `/ai-do` to get routed to the right one

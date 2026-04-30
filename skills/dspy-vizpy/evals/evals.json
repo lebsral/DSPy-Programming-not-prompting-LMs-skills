@@ -1,0 +1,36 @@
+[
+  {
+    "prompt": "I want to optimize my DSPy ticket classifier using VizPy. I have 100 labeled tickets with categories: billing, technical, account, security.",
+    "expected_output": "A VizPy ContraPromptOptimizer setup for classification with proper metric, evaluation before/after, and save step",
+    "assertions": [
+      "uses vizpy.ContraPromptOptimizer (not PromptGradOptimizer) since this is a classification task",
+      "sets vizpy.api_key or mentions VIZPY_API_KEY environment variable",
+      "includes a metric function comparing predicted vs expected labels",
+      "includes dspy.Evaluate on a held-out devset to verify improvement",
+      "uses dspy.LM with provider-agnostic comment",
+      "calls optimized.save() to persist the result"
+    ]
+  },
+  {
+    "prompt": "I want to improve my DSPy summarizer. Should I use VizPy or GEPA?",
+    "expected_output": "A comparison recommending PromptGradOptimizer for generation tasks, with GEPA as the open-source alternative, and guidance on when each is better",
+    "assertions": [
+      "recommends PromptGradOptimizer (not ContraPromptOptimizer) for summarization/generation",
+      "mentions GEPA as the open-source alternative that tunes the same thing (instructions only)",
+      "mentions MIPROv2 if they also want few-shot demo optimization",
+      "asks about data privacy since VizPy sends data to external servers",
+      "does not recommend ContraPromptOptimizer for this generation task"
+    ]
+  },
+  {
+    "prompt": "Set up VizPy to optimize my DSPy program and compare the results with GEPA",
+    "expected_output": "Side-by-side optimization with VizPy and GEPA, with evaluation comparing both on the same devset",
+    "assertions": [
+      "shows both vizpy optimizer and dspy.GEPA compile calls",
+      "uses the same metric and trainset for both",
+      "evaluates both optimized programs on the same devset for fair comparison",
+      "mentions that both only tune instructions (same optimization target)",
+      "saves both optimized programs separately"
+    ]
+  }
+]

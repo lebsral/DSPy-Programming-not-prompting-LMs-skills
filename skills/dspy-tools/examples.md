@@ -41,7 +41,7 @@ def get_user(user_id: int) -> str:
 
 # --- Implicit wrapping (pass functions directly) ---
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # DSPy wraps these automatically when passed to an agent
@@ -194,7 +194,7 @@ class ProductAgent(dspy.Module):
 
 # --- Usage ---
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 agent = ProductAgent()
@@ -330,7 +330,7 @@ print("Sandbox with custom permissions")
 
 # --- CodeAct agent with PythonInterpreter ---
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 def fetch_stats(dataset: str) -> str:

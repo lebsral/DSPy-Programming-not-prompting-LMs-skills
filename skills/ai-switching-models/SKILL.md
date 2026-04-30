@@ -1,6 +1,6 @@
 ---
 name: ai-switching-models
-description: Switch AI providers or models without breaking things. Use when you want to switch from OpenAI to Anthropic, try a cheaper model, stop depending on one vendor, compare models side-by-side, a model update broke your outputs, you need vendor diversification, or you want to migrate to a local model. Also use when your prompt broke after a model update, prompts that work for GPT-4 do not work for Claude or Llama, or you need to do a model migration. Covers DSPy model portability — provider config, re-optimization, model comparison, and multi-model pipelines., migrate from OpenAI to Anthropic, GPT to Claude migration, try Llama instead of GPT, model comparison framework, multi-provider AI setup, avoid vendor lock-in for AI, prompts break when switching models, model-agnostic AI code.
+description: Switch AI providers or models without breaking things. Use when you want to switch from OpenAI to Anthropic, try a cheaper model, stop depending on one vendor, compare models side-by-side, a model update broke your outputs, you need vendor diversification, or you want to migrate to a local model. Also use when your prompt broke after a model update, prompts that work for GPT-4 do not work for Claude or Llama, or you need to do a model migration. Covers DSPy model portability with provider config, re-optimization, model comparison, and multi-model pipelines. Also: migrate from OpenAI to Anthropic, GPT to Claude migration, try Llama instead of GPT, model comparison framework, multi-provider AI setup, avoid vendor lock-in for AI, prompts break when switching models, model-agnostic AI code.
 ---
 
 # Switch Models Without Breaking Things
@@ -301,11 +301,30 @@ When a provider updates their model (e.g., GPT-4o version bump):
 6. Save per-model optimized programs
 7. Deploy with model selection via environment variable
 
+## When NOT to switch models
+
+- **You have not set up evaluation yet.** Without a metric and test set, you cannot tell if the new model is better or worse. Set up evaluation first with `/ai-improving-accuracy`.
+- **You are debugging prompt quality, not the model.** If your outputs are bad on your current model, switching models will not fix a poorly defined signature or missing examples. Optimize your current setup first.
+- **You only need a faster response, not a different model.** If latency is the issue, consider caching (`dspy.cache`), shorter signatures, or `dspy.Predict` instead of `dspy.ChainOfThought` before switching to a weaker model.
+- **Your task is simple enough that any model works.** If zero-shot `dspy.Predict` already scores 95%+, the model choice barely matters. Focus effort elsewhere.
+
+## Gotchas
+
+- **Reusing optimized prompts across models without re-optimization.** Claude defaults to loading a saved program and swapping only the LM config. The compiled few-shot demos and instructions are tuned for the original model and typically degrade on a different one. Always re-optimize from a fresh (uncompiled) program after switching models.
+- **Comparing models using unoptimized or single-model prompts.** Running candidates with zero-shot prompts or with prompts optimized for one model gives misleading rankings. Optimize each candidate independently before comparing scores, or the comparison measures prompt fit, not model capability.
+- **Forgetting to pin the judge model during model shootouts.** When using an LLM-as-judge metric, the judge model changes if you call `dspy.configure(lm=candidate_lm)` without isolating the judge. Use `dspy.context(lm=judge_lm)` inside your metric function so the judge stays constant across all candidates.
+- **Using `dspy.context` when `set_lm` is needed (and vice versa).** `dspy.context(lm=...)` is temporary and scoped to a `with` block -- good for per-call overrides. `module.set_lm(lm)` is permanent and persists through optimization -- use it when a module should always use a specific model. Mixing them up causes silent evaluation bugs.
+- **Expecting local models to match cloud model quality without heavier optimization.** Smaller local models (7B-13B) typically need more bootstrapped demos and heavier optimization (`auto="heavy"`) to approach cloud model quality. Start with `BootstrapFewShot` with `max_bootstrapped_demos=8` and move to `MIPROv2` if scores are still low.
+
+## Cross-references
+
+- Set up metrics and evaluation before switching -- see `/ai-improving-accuracy`
+- Per-module model assignment for cost optimization -- see `/ai-cutting-costs`
+- Multi-step pipelines with mixed models -- see `/ai-building-pipelines`
+- Distill from expensive model to cheap one -- see `/ai-fine-tuning`
+- Understand DSPy optimizers for re-optimization -- see `/dspy-optimizers`
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+
 ## Additional resources
 
 - For worked examples (cost migration, vendor switch, model shootout), see [examples.md](examples.md)
-- Use `/ai-improving-accuracy` to set up metrics and evaluation before switching
-- Use `/ai-cutting-costs` for per-module model assignment and cost optimization
-- Use `/ai-building-pipelines` for multi-step pipelines with mixed models
-- Use `/ai-fine-tuning` to distill from an expensive model to a cheap one
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

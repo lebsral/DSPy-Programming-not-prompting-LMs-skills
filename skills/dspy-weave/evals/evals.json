@@ -1,0 +1,36 @@
+[
+  {
+    "prompt": "I want to track my DSPy optimization experiments with W&B Weave so my team can compare runs",
+    "expected_output": "A DSPy project with weave.init() at module level, @weave.op() on the optimization function, and experiment parameters logged as function arguments for dashboard comparison",
+    "assertions": [
+      "imports weave",
+      "calls weave.init() at module level, not inside a request handler",
+      "uses @weave.op() decorator on the function that calls the DSPy module, not on the module class itself",
+      "includes WANDB_API_KEY in environment setup",
+      "does not auto-instrument all DSPy calls — uses selective @weave.op() decorators",
+      "uses dspy.LM with a provider-agnostic example (includes 'or' comment with alternative provider)"
+    ]
+  },
+  {
+    "prompt": "Set up Weave tracing for my DSPy RAG pipeline that has retrieval and generation steps",
+    "expected_output": "A multi-function pipeline where each step (retrieve, generate, orchestrator) has its own @weave.op() decorator, producing a nested call tree in the Weave dashboard",
+    "assertions": [
+      "calls weave.init() once at startup before any decorated functions",
+      "decorates each pipeline step with @weave.op() individually",
+      "does not put @weave.op() on a dspy.Module subclass",
+      "shows the call tree structure (parent function calling child functions)",
+      "mentions checking the Weave dashboard to verify traces appear"
+    ]
+  },
+  {
+    "prompt": "I want observability for my DSPy app but I am not sure whether to use Weave, Langtrace, or Phoenix",
+    "expected_output": "A comparison of the three tools with a clear decision guide based on the user's situation (team usage, auto vs manual instrumentation, cloud vs local)",
+    "assertions": [
+      "mentions Weave uses manual @weave.op() decorators vs auto-instrumentation in Langtrace/Phoenix",
+      "recommends Weave for teams already using W&B or needing experiment comparison",
+      "recommends Langtrace for zero-setup auto-instrumentation",
+      "recommends Phoenix for local-only or open-source needs",
+      "does not default to one tool without asking about the user's context"
+    ]
+  }
+]

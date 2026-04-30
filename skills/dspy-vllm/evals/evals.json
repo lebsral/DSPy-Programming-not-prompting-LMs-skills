@@ -1,0 +1,36 @@
+[
+  {
+    "prompt": "I want to serve Llama 3.1 70B for my DSPy app in production. I have 2x A100-80GB GPUs.",
+    "expected_output": "A vLLM server command with tensor-parallel-size 2, prefix caching enabled, and DSPy connection code using dspy.LM with openai/ prefix and api_base",
+    "assertions": [
+      "uses vllm serve with --tensor-parallel-size 2",
+      "includes --enable-prefix-caching for DSPy workloads",
+      "connects DSPy with dspy.LM('openai/meta-llama/...', api_base=..., api_key='none')",
+      "does NOT use the deprecated dspy.HFClientVLLM",
+      "includes api_key parameter set to a non-empty string",
+      "suggests --gpu-memory-utilization around 0.9"
+    ]
+  },
+  {
+    "prompt": "Set up vLLM for running MIPROv2 optimization with a local Llama model on my RTX 4090",
+    "expected_output": "vLLM server config for a single GPU with high concurrency settings, DSPy optimization code connecting to vLLM",
+    "assertions": [
+      "recommends an 8B or 13B model that fits in 24GB VRAM (RTX 4090)",
+      "includes --max-num-seqs 256 or similar for optimizer parallel requests",
+      "includes --enable-prefix-caching",
+      "connects DSPy with dspy.LM and openai/ prefix, not HFClientVLLM",
+      "shows MIPROv2 compile call using the vLLM-backed LM"
+    ]
+  },
+  {
+    "prompt": "I develop with Ollama on my Mac but want to deploy with vLLM to our GPU server",
+    "expected_output": "A dual-config pattern using environment variables to switch between Ollama (dev) and vLLM (prod), showing that optimized DSPy programs transfer between backends",
+    "assertions": [
+      "does NOT recommend vLLM for macOS — uses Ollama for local dev",
+      "shows environment-based switching between ollama_chat/ and openai/ providers",
+      "explains that optimized programs (instructions + demos) transfer between backends",
+      "includes vLLM production config with api_base and api_key='none'",
+      "mentions program.save and program.load for transferring optimized programs"
+    ]
+  }
+]

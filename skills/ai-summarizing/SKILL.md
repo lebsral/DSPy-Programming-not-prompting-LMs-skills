@@ -1,6 +1,6 @@
 ---
 name: ai-summarizing
-description: Condense long content into short summaries using AI. Use when summarizing meeting notes, condensing articles, creating executive briefs, extracting action items, generating TL;DRs, creating digests from long threads, summarizing customer conversations, or turning lengthy documents into bullet points. Powered by DSPy summarization., AI summary too generic, summarize Slack threads, condense customer feedback, meeting transcript summary, executive summary generator, AI-powered digest, summarize legal documents, TLDR for long emails, abstractive summarization, extractive summary with AI, bullet point summary from long text, summarize research papers, call transcript summary, weekly digest generator, summarize support tickets, AI loses important details when summarizing, key takeaways extraction.
+description: Condense long content into short summaries using AI. Use when summarizing meeting notes, condensing articles, creating executive briefs, extracting action items, generating TL;DRs, creating digests from long threads, summarizing customer conversations, or turning lengthy documents into bullet points. Also: AI summary too generic, summarize Slack threads, condense customer feedback, meeting transcript summary, executive summary generator, AI-powered digest, summarize legal documents, TLDR for long emails, abstractive summarization, extractive summary with AI, bullet point summary from long text, summarize research papers, call transcript summary, weekly digest generator, summarize support tickets, AI loses important details when summarizing, key takeaways extraction.
 ---
 
 # Build an AI Summarizer
@@ -348,27 +348,41 @@ optimizer = dspy.BootstrapFewShot(metric=summary_metric, max_bootstrapped_demos=
 optimized = optimizer.compile(summarizer, trainset=trainset)
 ```
 
-## Key patterns
+## When NOT to build a summarizer
 
-- **ChainOfThought for summaries** — reasoning helps the model decide what's important to keep
-- **Pydantic models for structured summaries** — extract action items, decisions, key facts in one pass
-- **Assert for length limits** — enforce word counts; DSPy retries with feedback
-- **Map-reduce for long docs** — chunk, summarize each piece, combine results
-- **Faithfulness metrics** — always check that summaries don't fabricate claims
-- **Detail levels** — give users control over summary depth with a simple parameter
+- **You need specific fields, not a summary** — extracting names, dates, amounts from text is parsing, not summarizing. Use `/ai-parsing-data` instead.
+- **You need to answer questions about the content** — if the user will ask different questions each time, build a Q&A system with `/ai-searching-docs` instead of pre-generating summaries.
+- **The content is already short** (under ~500 words) — a single `dspy.Predict` call is cheaper and faster than a full summarization pipeline. Only build the infrastructure in this skill for content that genuinely needs condensing.
+
+## Choosing the right approach
+
+| Approach | Input length | LM calls | Best for |
+|----------|-------------|----------|----------|
+| Single-pass (`ChainOfThought`) | Under ~4K words | 1 | Most use cases — articles, emails, threads |
+| Structured extraction (Pydantic) | Under ~4K words | 1 | Meetings, support threads — need action items, decisions |
+| Parallel multi-aspect | Under ~4K words | 3-4 | When extraction quality matters more than cost |
+| Map-reduce | 4K-50K words | N chunks + 1 | Reports, transcripts — fits in context per chunk |
+| Hierarchical | 50K+ words | N chunks + log(N) | Books, legal docs — too many chunks for map-reduce |
+
+## Gotchas
+
+- **Word/sentence limits are suggestions, not guarantees.** LMs routinely overshoot length constraints. Use `dspy.Assert` with a word-counting function to enforce hard limits — `dspy.Suggest` for soft guidance.
+- **Faithfulness is the number one failure mode.** Summaries confidently include facts not in the source. Always evaluate with a faithfulness metric that checks every claim against the source text.
+- **Map-reduce loses cross-chunk context.** Information that spans chunk boundaries gets lost. Use overlapping chunks (50-100 words overlap) or a hierarchical approach for documents where cross-references matter.
+- **Claude writes vague signature docstrings like "Summarize the text."** Always specify the audience and purpose in the docstring (e.g., "Summarize for a technical PM who needs to decide whether to escalate"). Vague instructions produce generic summaries.
+- **Claude defaults to bullet points even when narrative is requested.** If you want flowing prose, say "narrative paragraph" explicitly in the OutputField desc, not just "summary."
+
+## Cross-references
+
+- Extract structured fields instead of summaries — see `/ai-parsing-data`
+- Answer questions about documents — see `/ai-searching-docs`
+- Measure and improve summarizer quality — see `/ai-improving-accuracy`
+- Verify summaries against source text — see `/ai-stopping-hallucinations`
+- DSPy signatures for defining input/output contracts — see `/dspy-signatures`
+- Assertions for enforcing length and quality constraints — see `/dspy-assertions`
+- ChainOfThought for reasoning-based summarization — see `/dspy-chain-of-thought`
+- Not sure which skill to use next? Try `/ai-do` to get routed to the right one
 
 ## Additional resources
 
 - For worked examples (meetings, support threads, long docs), see [examples.md](examples.md)
-- Need to extract structured fields instead of summaries? Use `/ai-parsing-data`
-- Need to answer questions about docs? Use `/ai-searching-docs`
-- Next: `/ai-improving-accuracy` to measure and improve your summarizer
-
-## Gotchas
-
-- **Word/sentence limits are suggestions, not guarantees** — LMs routinely overshoot length constraints. Use `dspy.Assert` with a length-checking function to enforce hard limits, or post-process by truncating.
-- **Faithfulness is the #1 failure mode** — summaries confidently include facts not in the source. Always evaluate with a faithfulness metric (e.g., check every claim in the summary against the source).
-- **Map-reduce loses cross-chunk context** — when summarizing long documents in chunks, information that spans chunk boundaries gets lost. Use overlapping chunks or a hierarchical approach.
-- **"Summarize this" is too vague** — always specify the audience and purpose in the signature docstring (e.g., "Summarize for a technical PM who needs to decide whether to escalate"). Vague instructions produce generic summaries.
-- **Bullet points ≠ summaries** — if you want narrative summaries, say so explicitly. LMs default to bullet points when the instruction is ambiguous.
-- Not sure which skill to use next? Try `/ai-do` to get routed to the right one

@@ -1,6 +1,6 @@
 ---
 name: dspy-rlm
-description: Use when you want recursive self-refinement — the model iteratively explores data in a sandboxed REPL, writing code and querying sub-LMs until it produces a final answer. Common scenarios: complex tasks requiring the model to explore data iteratively, recursive self-refinement with code execution, tasks where the model needs to write queries and inspect results before answering, or research-style tasks requiring iterative investigation. Related: ai-reasoning, dspy-codeact, dspy-program-of-thought. Also: dspy.RLM, recursive language model, iterative exploration with LLM, model explores data in REPL, self-refinement through code, recursive problem solving, agent that keeps digging until it finds the answer, investigative AI agent, REPL-based reasoning, explore then answer pattern, deep research agent, LLM explores data iteratively, when one pass is not enough.
+description: Recursive Language Model (dspy.RLM) that explores large contexts via a sandboxed Python REPL -- the LM writes code, queries sub-LMs, and iterates until it produces a final answer. Use when your input is too large for the context window, the model needs to explore data iteratively, you need recursive self-refinement with code execution, or you have research-style tasks requiring programmatic investigation. Also: recursive language model, iterative exploration with LLM, model explores data in REPL, agent that keeps digging until it finds the answer, REPL-based reasoning, explore then answer pattern, deep research agent, when one pass is not enough.
 ---
 
 # Iterative Self-Refinement with dspy.RLM
@@ -8,6 +8,15 @@ description: Use when you want recursive self-refinement — the model iterative
 Guide the user through using DSPy's RLM (Recursive Language Model) module. RLM lets the LM explore data programmatically in a sandboxed Python REPL, writing code to examine inputs, querying sub-LMs for semantic analysis, and iterating until it produces a final answer.
 
 > **Experimental.** RLM is marked as experimental in DSPy. The API may change in future releases.
+
+## Step 1: Gather context
+
+Before building with RLM, clarify:
+
+1. **What data will the LM explore?** Large text corpus, log files, structured data dumps, multi-document collections?
+2. **What kind of answer do you need?** Free-text summary, structured extraction (counts, lists), or a specific value?
+3. **Does the task need external tools?** If the LM needs to call APIs or databases during exploration, you can pass custom tool functions.
+4. **What LM are you using?** RLM works best with strong reasoning models (GPT-4o, Claude Sonnet) as the main LM; cheaper models can handle sub-queries.
 
 ## What is RLM
 
@@ -48,7 +57,7 @@ curl -fsSL https://deno.land/install.sh | sh
 ```python
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 rlm = dspy.RLM("context, query -> answer")
 result = rlm(
@@ -95,8 +104,8 @@ When the LM writes code in the sandbox, these functions are available:
 Route expensive reasoning to a strong model while using a cheap model for sub-queries:
 
 ```python
-main_lm = dspy.LM("openai/gpt-4o")
-cheap_lm = dspy.LM("openai/gpt-4o-mini")
+main_lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+cheap_lm = dspy.LM("openai/gpt-4o-mini")  # or any cheaper model
 
 dspy.configure(lm=main_lm)
 
@@ -166,11 +175,24 @@ Key difference: RLM gives the LM a **code execution environment** to actively ex
 
 RLM instances with custom interpreters are not thread-safe. For concurrent usage, create separate instances or use the default `PythonInterpreter`.
 
+## Gotchas
+
+- **Forgetting Deno installation.** RLM's default PythonInterpreter uses a Pyodide WASM sandbox that requires Deno. If Deno is not installed, you get a cryptic subprocess error. Always check `deno --version` before running RLM code.
+- **Using RLM for tasks that fit in context.** Claude defaults to RLM when asked about "iterative refinement" even for short inputs. RLM adds significant overhead (multiple REPL loops, sub-LM calls). For inputs under ~50K chars, use `dspy.ChainOfThought` or `dspy.Predict` instead.
+- **Forgetting `print()` in REPL code.** The LM must `print()` values to see REPL output -- assignments alone produce no visible result. If the LM's exploration seems stuck, check the trajectory for code that computes but never prints.
+- **Setting `max_iterations` too low for complex tasks.** Claude tends to set `max_iterations=5` for brevity. RLM defaults to 20 for a reason -- complex data exploration often needs 10-15 iterations. Only lower it for simple lookups.
+- **Not using `sub_lm` for cost control.** Every `llm_query()` call inside the REPL uses the main LM by default. For large-context tasks with many sub-queries, this gets expensive fast. Always set `sub_lm` to a cheaper model for semantic analysis calls.
+
+## Additional resources
+
+- [dspy.RLM API docs](https://dspy.ai/api/modules/RLM)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)
+
 ## Cross-references
 
 - **Refine** for reward-function-based retry loops -- see `/dspy-refine`
 - **Best-of-N** for generating and scoring multiple candidates -- see `/dspy-best-of-n`
 - **Improving accuracy** with optimizers and evaluation -- see `/ai-improving-accuracy`
 - **Building pipelines** with multi-step module composition -- see `/ai-building-pipelines`
-- For worked examples, see [examples.md](examples.md)
 - Not sure which skill to use next? Try `/ai-do` to get routed to the right one

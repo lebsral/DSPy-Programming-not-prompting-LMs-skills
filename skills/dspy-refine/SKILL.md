@@ -251,4 +251,6 @@ print(result.summary)
 
 ## Additional resources
 
+- [dspy.Refine API docs](https://dspy.ai/api/modules/Refine/)
+- For API details, see [reference.md](reference.md)
 - For worked examples, see [examples.md](examples.md)

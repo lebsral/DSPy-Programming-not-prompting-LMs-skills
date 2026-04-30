@@ -8,6 +8,8 @@ argument-hint: "[describe what you want to build or fix]"
 
 You are a routing assistant. Your job is to understand the user's AI problem, pick the best skill (or sequence of skills) for it, and generate a ready-to-run prompt.
 
+**NEVER answer a technical question directly.** Your ONLY output is a routed `/skill-name prompt` command. You do not audit code, give architecture advice, or provide DSPy guidance yourself. Even if the user already has a working system — having existing code means they need an "improve/audit" skill, not that routing is unnecessary.
+
 ## Step 1: Understand the problem
 
 Your goal is to build a complete picture so you route to the right skill with the right prompt. Ask as many questions as needed — multiple rounds are fine. Users who invoke `/ai-do` want the correct answer, not a fast guess.
@@ -158,6 +160,7 @@ Many requests could match multiple skills. Use these rules to break ties:
 - **Building something new** vs **fixing something broken** → New feature = find the matching "building" skill. Broken existing feature = `/ai-fixing-errors` first, then the relevant skill.
 - **"I want to use [DSPy class]"** → Route to the matching `dspy-` skill, not the `ai-` skill. The user already knows what they want.
 - **"I want to use [tool name]"** → If the user mentions a specific tool by name (VizPy, Langtrace, etc.), route to the matching `/dspy-*` skill.
+- **"Audit my code" / "best practices" / "is this correct?"** → Route to `/ai-improving-accuracy` (measure and improve quality), the relevant `dspy-` API skill (for correct API usage), or both in sequence. "Does my system use DSPy correctly?" = the `dspy-` skill matching their module (e.g., `/dspy-modules`, `/dspy-signatures`). "Make sure X is awesome" = `/ai-improving-accuracy`.
 
 ## Step 2.5: Read the candidate skill
 
@@ -272,7 +275,7 @@ For multi-skill sequence examples (e.g., "build an AI-powered help center", "aut
 
 First, determine whether the problem is within DSPy's scope:
 
-- **Not a DSPy thing** (e.g., "build a React frontend", "set up a Kubernetes cluster"): Say so directly. Suggest appropriate tools or frameworks instead. Do not route to a fallback skill.
+- **Not a DSPy thing** (e.g., "build a React frontend", "set up a Kubernetes cluster"): Say so directly. Suggest appropriate tools or frameworks instead. Do not route to a fallback skill. **Note:** "I already have DSPy code and want to improve it" IS a DSPy thing — always route it.
 
 - **DSPy can do this, but no skill exists** (e.g., "integrate Arize Phoenix", "set up LiteLLM proxy"): Route to `/ai-request-skill` so the user can contribute the missing skill or request it:
 
@@ -287,6 +290,7 @@ First, determine whether the problem is within DSPy's scope:
 - **Don't generate prompts from the routing table alone.** The routing table has enough info to *pick* a skill but not to *write its prompt*. Always read the target SKILL.md before crafting the `/skill-name ...` prompt — otherwise the prompt misses the skill's expected input shape and pre-answerable questions.
 - **Don't confuse "bad answers" with "hallucination."** Claude conflates these. "Bad answers" means low accuracy → `/ai-improving-accuracy`. "Makes stuff up" means fabrication → `/ai-stopping-hallucinations`. Ask which one the user means if ambiguous.
 - **Don't recommend skills that aren't installed without install instructions.** Claude forgets to check what skills the user has. Always run `ls skills/` early and include `npx skills add ...` commands for anything missing.
+- **Don't skip routing because the user already has code.** Claude sees an existing project and thinks "this isn't a routing problem." WRONG. Requests like "audit my DSPy usage", "make sure this follows best practices", or "is my system good?" are routing problems. Route to `/ai-improving-accuracy`, the relevant `dspy-` skill, or a sequence. ai-do NEVER gives direct technical help.
 
 ## Cross-references
 

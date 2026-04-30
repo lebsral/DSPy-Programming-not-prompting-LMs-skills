@@ -7,6 +7,15 @@ description: Use VizPy as a drop-in prompt optimizer for DSPy. Use when you want
 
 Guide the user through integrating VizPy as a drop-in prompt optimizer alongside or instead of DSPy's native optimizers (GEPA, MIPROv2).
 
+## Step 1: Understand the optimization need
+
+Before recommending VizPy, clarify:
+
+1. **Classification or generation?** — ContraPromptOptimizer is for classification (fixed categories), PromptGradOptimizer is for generation (open-ended text). This determines which optimizer to use.
+2. **Already tried DSPy native optimizers?** — If not, start with GEPA or MIPROv2 first. VizPy is best as a comparison or when native optimizers plateau.
+3. **Data privacy constraints?** — VizPy is SaaS — training data is sent to their servers. If data cannot leave the network, use GEPA instead.
+4. **How many optimization runs do they need?** — Free tier allows 10 runs/month. Beyond that requires Pro ($20/mo).
+
 ## What is VizPy
 
 VizPy is a commercial SaaS prompt optimization service ([vizpy.vizops.ai](https://vizpy.vizops.ai)) that provides two optimizers for DSPy programs:
@@ -66,7 +75,7 @@ Best for tasks with a fixed set of output categories.
 import dspy
 import vizpy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 # 1. Define your classifier
 classify = dspy.ChainOfThought("text -> label")
@@ -106,7 +115,7 @@ Best for open-ended generation tasks where output quality is on a spectrum.
 import dspy
 import vizpy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 # 1. Define your generator
 summarize = dspy.ChainOfThought("article -> summary")
@@ -205,11 +214,46 @@ The optimized program is a standard DSPy program either way — `save()`, `load(
 
 4. **Free tier limits** — 10 optimization runs per month. Each `.compile()` call counts as one run.
 
+## Verifying the optimization
+
+After running `.compile()`, compare baseline vs optimized:
+
+```python
+from dspy.evaluate import Evaluate
+
+evaluator = Evaluate(devset=devset, metric=metric, num_threads=4)
+
+# Baseline
+baseline_score = evaluator(program)
+print(f"Baseline: {baseline_score}")
+
+# After VizPy optimization
+optimized_score = evaluator(optimized)
+print(f"Optimized: {optimized_score}")
+print(f"Improvement: {optimized_score - baseline_score:.1f}%")
+```
+
+If the optimized score is not higher, the instruction change may not help this task. Try a different optimizer (GEPA, MIPROv2) or add few-shot demos with MIPROv2.
+
+## Gotchas
+
+- **Claude uses VizPy for few-shot demo optimization.** VizPy only tunes the instruction string, not demos. If the user needs demos, use `dspy.BootstrapFewShot` or `dspy.MIPROv2` first, then layer VizPy on top for instruction tuning.
+- **Claude picks ContraPromptOptimizer for generation tasks.** ContraPrompt is designed for classification (fixed categories). For open-ended generation (summaries, articles, Q&A), use PromptGradOptimizer instead.
+- **Claude skips the evaluation step after VizPy optimization.** Without comparing baseline vs optimized scores on a held-out devset, there is no way to know if VizPy helped. Always run `dspy.Evaluate` before and after.
+- **Claude forgets `vizpy.api_key` or `VIZPY_API_KEY`.** VizPy is SaaS and requires authentication. Without the API key set, `.compile()` fails with a confusing auth error. Set it before any optimizer calls.
+- **Claude recommends VizPy without mentioning the data privacy implication.** Training data is sent to VizPy servers during optimization. Always ask about data sensitivity before recommending VizPy over the fully local GEPA alternative.
+
+## Additional resources
+
+- [VizPy docs](https://vizpy.vizops.ai)
+- [VizPy dashboard](https://vizpy.vizops.ai/dashboard)
+- For API details, see [reference.md](reference.md)
+- For worked examples comparing VizPy and GEPA side-by-side, see [examples.md](examples.md)
+
 ## Cross-references
 
 - **GEPA** (open-source instruction optimizer) — `/dspy-gepa`
 - **MIPROv2** (instructions + demos, best overall) — `/dspy-miprov2`
 - **Improving accuracy** (full optimizer comparison) — `/ai-improving-accuracy`
 - **Evaluating results** before and after — `/dspy-evaluate`
-- For worked examples comparing VizPy and GEPA side-by-side, see [examples.md](examples.md)
 - Not sure which skill to use next? Try `/ai-do` to get routed to the right one

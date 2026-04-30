@@ -1,0 +1,35 @@
+[
+  {
+    "prompt": "I want to switch my DSPy app from OpenAI GPT-4o to Anthropic Claude. How do I do it without losing quality?",
+    "expected_output": "Code showing model string swap, re-optimization with a fresh program, and before/after evaluation comparison",
+    "assertions": [
+      "mentions re-optimization is required (not just swapping the model string)",
+      "uses dspy.LM with anthropic/ prefix for the new model",
+      "shows evaluation with a metric before and after the switch",
+      "starts from a fresh uncompiled program for re-optimization, not the old optimized one",
+      "saves the new optimized program separately"
+    ]
+  },
+  {
+    "prompt": "Our GPT-4o costs are too high. Can we use a cheaper model and keep quality close?",
+    "expected_output": "Cost migration workflow: benchmark current model, try cheaper model, re-optimize, compare scores",
+    "assertions": [
+      "benchmarks the current expensive model first",
+      "demonstrates the quality drop when using old prompts on the new model",
+      "re-optimizes for the cheaper model",
+      "shows a comparison of scores between old and new model",
+      "mentions BootstrapFewShot or MIPROv2 for re-optimization"
+    ]
+  },
+  {
+    "prompt": "I need to compare 3-4 different models to pick the best one for my summarization task",
+    "expected_output": "Model shootout loop that optimizes each candidate independently and produces a comparison table",
+    "assertions": [
+      "optimizes each model independently before comparing",
+      "does not reuse one model's optimized prompts for another",
+      "uses a consistent metric and test set across all candidates",
+      "pins the judge model if using LLM-as-judge metric",
+      "produces a comparison table or ranking"
+    ]
+  }
+]

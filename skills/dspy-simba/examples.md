@@ -8,7 +8,7 @@ A support ticket classifier that already works at ~70% accuracy. SIMBA targets t
 import dspy
 from dspy.evaluate import Evaluate
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 
 # Define the classification signature
@@ -149,7 +149,7 @@ A production Q&A system that must improve without regressing on already-correct 
 import dspy
 from dspy.evaluate import Evaluate
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 
 # A multi-step Q&A pipeline already in production

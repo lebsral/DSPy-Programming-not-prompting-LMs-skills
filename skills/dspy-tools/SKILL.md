@@ -7,6 +7,16 @@ description: Use when you need to give DSPy agents tool-calling abilities — wr
 
 Guide the user through wrapping functions as DSPy tools, using `dspy.PythonInterpreter` for sandboxed code execution, and wiring tools into agents with `dspy.ReAct` and `dspy.CodeAct`.
 
+## Step 1: What kind of tool integration?
+
+Ask the user before diving in:
+
+1. **What does your tool do?** Search, calculate, call an API, query a database, execute code?
+2. **Which agent will use it?** ReAct (tool calling) or CodeAct (code generation)? If unsure, start with ReAct.
+3. **Do you need sandboxed execution?** If the agent generates and runs arbitrary code, use `PythonInterpreter`. Otherwise, plain tool functions are simpler.
+
+Then jump to the relevant section below.
+
 ## What is dspy.Tool
 
 `dspy.Tool` wraps a Python function so DSPy agents can call it. It automatically extracts the function's name, docstring, parameter types, and descriptions to build the tool schema that the LM sees.
@@ -416,6 +426,26 @@ def search(query: str) -> str:
         return f"Error: {str(e)}"
 ```
 
+## When NOT to use explicit tool wrapping
+
+- **Simple functions passed to ReAct/CodeAct** -- DSPy wraps them automatically. Use `dspy.Tool` only when you need to override the inferred name, description, or arg schema.
+- **PythonInterpreter for everything** -- if your agent only needs to call a few well-defined functions, plain tools with ReAct are simpler and more predictable than sandboxed code execution.
+- **Converting tools from other frameworks unnecessarily** -- if you can rewrite the tool as a plain Python function, that is simpler than using `from_langchain()` or `from_mcp_tool()`.
+
+## Gotchas
+
+1. **Missing type hints cause empty tool schemas.** Claude often writes tool functions without type annotations. DSPy infers the JSON schema from type hints — without them, the agent gets no parameter info and passes wrong types or missing arguments.
+2. **Returning complex objects instead of strings.** Claude returns dicts, dataclasses, or ORM objects from tools. The agent sees the `repr()` which is often unhelpful. Always return a formatted string or `json.dumps()` output.
+3. **Tools that import heavy libraries at call time.** Claude puts `import pandas` inside the tool function body. This works but adds latency on every call. Move imports to the top of the file — they run once, not per tool invocation.
+4. **Forgetting `await agent.aforward()` with MCP tools.** MCP tools are async, so the agent must be called with `aforward()`. Claude defaults to `agent()` which blocks or fails silently in async contexts.
+5. **CodeAct tools referencing global state.** Claude writes CodeAct tools that read from module-level variables or closures. CodeAct tools run in a sandbox and cannot access your process globals — they must be self-contained pure functions.
+
+## Additional resources
+
+- [dspy.Tool API docs](https://dspy.ai/api/primitives/Tool)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)
+
 ## Cross-references
 
 - **ReAct agents** -- see `/dspy-react`
@@ -423,5 +453,4 @@ def search(query: str) -> str:
 - **Action-taking AI** from a problem-first perspective -- see `/ai-taking-actions`
 - **Signatures** for defining agent inputs/outputs -- see `/dspy-signatures`
 - **Modules** for composing agents -- see `/dspy-modules`
-- For worked examples, see [examples.md](examples.md)
 - Not sure which skill to use next? Try `/ai-do` to get routed to the right one

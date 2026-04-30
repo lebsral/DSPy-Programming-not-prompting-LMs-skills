@@ -7,6 +7,15 @@ description: Use vLLM for high-throughput production serving of self-hosted mode
 
 Guide the user through serving self-hosted models with vLLM for production DSPy deployments. High concurrency, multi-GPU, OpenAI-compatible API.
 
+## Step 1: Understand the setup
+
+Before generating vLLM configuration, clarify:
+
+1. **What GPU hardware?** — Model (A100, H100, RTX 4090), count, and VRAM per GPU. This determines tensor parallelism and quantization needs.
+2. **Which model?** — Model name and size (7B, 13B, 70B). Determines VRAM requirements and whether quantization is needed.
+3. **Workload type?** — Production serving (concurrent users), batch processing (offline), or optimization (running MIPROv2/BootstrapFewShot)?
+4. **Already using Ollama locally?** — If yes, help them add vLLM for production while keeping Ollama for dev.
+
 ## What is vLLM
 
 [vLLM](https://github.com/vllm-project/vllm) is a high-throughput inference engine (74k+ GitHub stars) for LLMs. Key features:
@@ -241,12 +250,19 @@ CUDA_VISIBLE_DEVICES=1 vllm serve meta-llama/Llama-3.1-8B-Instruct --port 8002
 
 ## Gotchas
 
-1. **NVIDIA only** — vLLM requires CUDA. No Apple Silicon, no AMD (ROCm is experimental). Use Ollama for non-NVIDIA platforms.
-2. **`api_key` is required** — set it to any non-empty string (e.g., `"none"`). LiteLLM requires the parameter.
-3. **`dspy.HFClientVLLM` is deprecated** — use `dspy.LM("openai/...", api_base=...)` instead.
-4. **Model download on first start** — vLLM downloads the model from HuggingFace on first launch. Set `HF_TOKEN` for gated models (Llama, Mistral).
-5. **OOM errors** — reduce `--max-model-len`, lower `--gpu-memory-utilization`, or use a quantized model.
-6. **Prefix caching is off by default** — enable it for DSPy workloads where many requests share the same few-shot prefix.
+- **Claude uses the deprecated `dspy.HFClientVLLM` class.** This was removed in DSPy 2.5+. Always use `dspy.LM("openai/model-name", api_base="http://localhost:8000/v1", api_key="none")` instead.
+- **Claude omits `api_key` when connecting to vLLM.** LiteLLM (which DSPy uses under the hood) requires the `api_key` parameter even though vLLM does not authenticate. Set `api_key="none"` — any non-empty string works.
+- **Claude recommends vLLM for macOS or Apple Silicon users.** vLLM requires NVIDIA GPUs with CUDA. If the user mentions macOS, M1/M2/M3/M4, or no NVIDIA GPU, route to `/dspy-ollama` instead.
+- **Claude forgets `--enable-prefix-caching` for DSPy workloads.** DSPy optimized programs prepend the same few-shot demos to every request. Without prefix caching, vLLM recomputes the KV cache for those shared tokens on every call. Always recommend it for DSPy serving.
+- **Claude sets `--max-model-len` too high for available VRAM.** This causes OOM on startup. Calculate available VRAM minus ~20% for KV cache overhead. For a 70B FP16 model on 2x A100-80GB, cap at ~8192 tokens. Suggest `--gpu-memory-utilization 0.9` as the default and tell users to lower `--max-model-len` if they hit OOM.
+
+## Additional resources
+
+- [vLLM documentation](https://docs.vllm.ai/en/latest/)
+- [vLLM serve CLI reference](https://docs.vllm.ai/en/latest/cli/serve.html)
+- [vLLM GitHub](https://github.com/vllm-project/vllm)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)
 
 ## Cross-references
 
@@ -254,5 +270,4 @@ CUDA_VISIBLE_DEVICES=1 vllm serve meta-llama/Llama-3.1-8B-Instruct --port 8002
 - **Local development with Ollama** — `/dspy-ollama`
 - **Deploying as an API** (FastAPI wrapper around your DSPy program) — `/ai-serving-apis`
 - **Reducing costs** (model routing, caching) — `/ai-cutting-costs`
-- For worked examples, see [examples.md](examples.md)
 - Not sure which skill to use next? Try `/ai-do` to get routed to the right one

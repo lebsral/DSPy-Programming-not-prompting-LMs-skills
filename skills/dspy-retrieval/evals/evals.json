@@ -1,0 +1,36 @@
+[
+  {
+    "prompt": "I have about 500 help center articles as text files. I want to build a RAG system where users ask questions and get answers grounded in the articles. Use DSPy.",
+    "expected_output": "Code using dspy.Embedder + dspy.retrievers.Embeddings to index the corpus, then a RAG module with dspy.ChainOfThought that takes retrieved passages and generates an answer.",
+    "assertions": [
+      "uses dspy.Embedder with a model string in LiteLLM format",
+      "uses dspy.retrievers.Embeddings with corpus and embedder parameters",
+      "builds a dspy.Module subclass with forward() method",
+      "retriever returns .passages which are passed to the generation step",
+      "includes .with_inputs() when creating dspy.Example training data",
+      "does not hardcode a single LM provider without alternatives"
+    ]
+  },
+  {
+    "prompt": "I already have Pinecone set up with my documents indexed. How do I connect it to DSPy for a RAG pipeline?",
+    "expected_output": "Code subclassing dspy.Retrieve with a forward() method that queries Pinecone and returns dspy.Prediction(passages=[...]). Then use it in a RAG module.",
+    "assertions": [
+      "subclasses dspy.Retrieve",
+      "implements forward() method accepting query and optional k parameters",
+      "returns dspy.Prediction with a passages field (list of strings)",
+      "does not use dspy.retrievers.Embeddings (since Pinecone already handles indexing)",
+      "shows how to wire the custom retriever into a DSPy module"
+    ]
+  },
+  {
+    "prompt": "I need to answer questions that require combining info from multiple documents. For example: Who designed the building that houses the Mona Lisa? This needs two lookups.",
+    "expected_output": "Multi-hop RAG pattern with iterative retrieval steps. Each hop generates a new search query based on accumulated context, then a final generation step answers from all gathered passages.",
+    "assertions": [
+      "implements multi-hop retrieval with at least 2 hops",
+      "generates new search queries based on previously retrieved context",
+      "deduplicates passages across hops",
+      "uses dspy.ChainOfThought for query generation (reasoning about what is missing)",
+      "final answer step receives all accumulated context"
+    ]
+  }
+]

@@ -1,0 +1,23 @@
+[
+  {
+    "id": "dspy-utils-streaming",
+    "prompt": "I need to stream my DSPy chatbot responses to the browser in real time using FastAPI. How do I set that up?",
+    "should_contain": ["streamify", "StreamListener", "StreamingResponse"],
+    "should_not_contain": [],
+    "notes": "Must use streamify + StreamListener pattern with FastAPI StreamingResponse. Should create fresh listener per request."
+  },
+  {
+    "id": "dspy-utils-debug",
+    "prompt": "My DSPy program is giving wrong answers and I can't figure out why. How do I debug what's being sent to the model?",
+    "should_contain": ["inspect_history"],
+    "should_not_contain": [],
+    "notes": "Should recommend inspect_history(n=1) as first step, show debugging workflow, mention checking prompt and raw response."
+  },
+  {
+    "id": "dspy-utils-save-load",
+    "prompt": "I optimized my DSPy program with MIPROv2 and want to save it for production. How do I save and load it correctly?",
+    "should_contain": ["save", "load", "dspy.configure"],
+    "should_not_contain": [],
+    "notes": "Must show save after optimization, load in production with configure() BEFORE load(). Should mention class definition must exist at load time."
+  }
+]

@@ -1,11 +1,20 @@
 ---
 name: dspy-retrieval
-description: Use when you need to search over documents or build RAG pipelines — setting up retrievers, computing embeddings, or integrating vector databases with DSPy modules. Common scenarios: building RAG pipelines, connecting DSPy to a vector database, computing embeddings for semantic search, setting up ChromaDB or Pinecone with DSPy, retrieving relevant documents before generating answers, or building knowledge-grounded question answering. Related: ai-searching-docs, ai-stopping-hallucinations, dspy-modules. Also: dspy.Retrieve, dspy.ColBERTv2, RAG pipeline in DSPy, vector database integration, semantic search DSPy, ChromaDB with DSPy, Pinecone with DSPy, Weaviate with DSPy, embedding retrieval, document retrieval for QA, retrieval augmented generation setup, connect knowledge base to DSPy, search documents then answer, grounded generation with retrieval.
+description: DSPy retrieval modules (dspy.Retrieve, dspy.ColBERTv2, dspy.Embedder, dspy.retrievers.Embeddings) for searching documents, computing embeddings, and building RAG pipelines. Use when you need to search over documents, build a RAG pipeline, connect DSPy to a vector database, compute embeddings for semantic search, set up ChromaDB or Pinecone with DSPy, or build knowledge-grounded question answering. Also: RAG pipeline in DSPy, vector database integration, semantic search, embedding retrieval, retrieval augmented generation setup, connect knowledge base to DSPy, search documents then answer, grounded generation with retrieval.
 ---
 
 # Retrieval Modules in DSPy
 
 Guide the user through DSPy's retrieval modules for searching documents, computing embeddings, and building RAG (retrieval-augmented generation) pipelines.
+
+## Step 1: Gather context
+
+Before building retrieval into a DSPy program, clarify:
+
+1. **What are you searching over?** Your own documents, a knowledge base, an external corpus like Wikipedia?
+2. **How large is the corpus?** A few hundred docs (in-memory FAISS works) vs. millions (need a dedicated vector store like Pinecone, Qdrant, or Chroma)?
+3. **Do you already have a search backend?** If you have Elasticsearch, Pinecone, or another store, subclass `dspy.Retrieve` to wrap it. If not, use `dspy.retrievers.Embeddings` for a local solution.
+4. **Single-hop or multi-hop?** Simple questions need one retrieval step. Compositional questions (e.g., "Where was the designer of the Eiffel Tower born?") need chained retrieval.
 
 ## What retrieval modules are
 
@@ -31,6 +40,7 @@ import dspy
 
 # Configure a retrieval model globally
 colbert = dspy.ColBERTv2(url="http://your-server:8893/api/search")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm, rm=colbert)
 
 # Use dspy.Retrieve -- it delegates to the configured rm
@@ -118,20 +128,21 @@ embedder = dspy.Embedder(
 ```
 
 **Parameters:**
-- **model** (str) -- embedding model in LiteLLM format (e.g., `"openai/text-embedding-3-small"`, `"cohere/embed-english-v3.0"`)
-- **dimensions** (int, optional) -- output embedding dimensions (if the model supports it)
-- **batch_size** (int, optional) -- batch size for embedding multiple texts
+- **model** (str | Callable) -- embedding model in LiteLLM format (e.g., `"openai/text-embedding-3-small"`, `"cohere/embed-english-v3.0"`), or a callable for custom embedding functions
+- **batch_size** (int, default 200) -- batch size for embedding multiple texts
+- **caching** (bool, default True) -- whether to cache embedding responses for hosted models
+- **\*\*kwargs** -- additional model-specific arguments (e.g., `dimensions=512` for models that support it)
 
 ### Usage
 
 ```python
 # Embed a single text
 vector = embedder("What is DSPy?")
-# Returns a list of floats
+# Returns a 1D numpy array
 
 # Embed multiple texts
 vectors = embedder(["text one", "text two", "text three"])
-# Returns a list of lists of floats
+# Returns a 2D numpy array (shape: num_texts x embedding_dim)
 ```
 
 ### Supported providers
@@ -160,16 +171,30 @@ import dspy
 
 embedder = dspy.Embedder("openai/text-embedding-3-small", dimensions=512)
 search = dspy.retrievers.Embeddings(
+    corpus=corpus,      # list[str] of documents
     embedder=embedder,
-    corpus=corpus,     # list[str] of documents
-    k=5,               # number of results to return
+    k=5,                # number of results to return (default 5)
 )
 ```
 
 **Parameters:**
-- **`embedder`** -- a `dspy.Embedder` instance
 - **`corpus`** (list[str]) -- the documents to index and search over
-- **`k`** (int) -- default number of results to return
+- **`embedder`** -- a `dspy.Embedder` instance
+- **`k`** (int, default 5) -- default number of results to return
+- **`brute_force_threshold`** (int, default 20000) -- corpus size above which FAISS indexing kicks in (below this, brute-force search)
+- **`normalize`** (bool, default True) -- whether to normalize embeddings
+
+### Saving and loading embeddings
+
+Avoid re-embedding large corpora on every run:
+
+```python
+# Save after initial indexing
+search.save("./my_embeddings")
+
+# Load later without re-computing
+search = dspy.retrievers.Embeddings.from_saved("./my_embeddings", embedder=embedder)
+```
 
 ### Usage
 
@@ -332,22 +357,43 @@ search = dspy.retrievers.Embeddings(embedder=embedder, corpus=docs, k=3)
 
 ## Grounded generation with Citations
 
-`dspy.experimental.Citations` is a module that makes the LM cite specific source passages in its output. Use it in RAG pipelines where you need verifiable references back to source documents.
+`dspy.experimental.Citations` is a **type** (not a module) that you use as an `OutputField` to get structured source references from the LM. It works with Anthropic models that support native citations, or falls back to LM-generated citation extraction.
 
 ```python
-from dspy.experimental import Citations
+from dspy.experimental import Citations, Document
 
-# Citations wraps a generation step to produce cited output
-cite = Citations(generate_query_or_answer="context, question -> answer")
-result = cite(context=retrieved_passages, question=question)
-# result.answer contains inline citations referencing specific passages
+class AnswerWithSources(dspy.Signature):
+    """Answer the question and cite the source documents."""
+    documents: list[Document] = dspy.InputField()
+    question: str = dspy.InputField()
+    answer: str = dspy.OutputField()
+    citations: Citations = dspy.OutputField()
+
+lm = dspy.LM("anthropic/claude-sonnet-4-5-20250929")  # or "openai/gpt-4o", etc.
+predictor = dspy.Predict(AnswerWithSources)
+result = predictor(documents=docs, question="What is the refund policy?")
+# result.citations contains structured Citation objects with cited_text, document_index, etc.
 ```
 
-**When to use:** Any RAG pipeline where claims need to trace back to source documents — the module instructs the LM to ground its output in the provided passages and cite them.
+**When to use:** RAG pipelines where claims need to trace back to source documents with exact quoted text and document indices.
 
-**Note:** This is in `dspy.experimental` — the API may change in future releases. Check the [DSPy docs](https://dspy.ai/) for the latest usage.
+**Note:** This is in `dspy.experimental` — the API may change. For broader anti-hallucination patterns, see `/ai-stopping-hallucinations`.
 
-For broader anti-hallucination patterns beyond citations, see `/ai-stopping-hallucinations`.
+## Gotchas
+
+- **Using `dspy.Retrieve` without configuring `rm`.** Claude often writes `dspy.Retrieve(k=5)` without setting `dspy.configure(rm=...)` first. Without a configured retrieval model, calling `Retrieve` raises a confusing error. Either configure `rm` globally or pass a concrete retriever (like `dspy.retrievers.Embeddings`) directly to your module.
+- **Re-embedding the corpus on every run.** Claude builds `dspy.retrievers.Embeddings(corpus=docs, embedder=embedder)` in scripts without saving. For corpora over a few hundred docs, this wastes time and API calls. Use `search.save("./embeddings")` after initial indexing and `Embeddings.from_saved("./embeddings", embedder=embedder)` on subsequent runs.
+- **Forgetting `.with_inputs()` on RAG examples.** When building training data for RAG optimization, Claude creates `dspy.Example(question=q, answer=a)` without calling `.with_inputs("question")`. The optimizer silently treats all fields as inputs. Always chain `.with_inputs()` to mark which fields are inputs vs. expected outputs.
+- **Returning raw dicts instead of `dspy.Prediction` from custom retrievers.** When subclassing `dspy.Retrieve`, the `forward()` method must return `dspy.Prediction(passages=[...])` — not a list or dict. Returning the wrong type causes downstream modules to fail when they access `.passages`.
+- **Setting k too high for the context window.** Claude defaults to `k=10` or higher, which can stuff too many passages into the generation prompt and exceed the LM context or degrade answer quality. Start with `k=3` to `k=5` and increase based on evaluation results.
+
+## Additional resources
+
+- [dspy.Retrieve API docs](https://dspy.ai/api/retrieval/)
+- [dspy.ColBERTv2 API docs](https://dspy.ai/api/tools/ColBERTv2)
+- [dspy.Embedder API docs](https://dspy.ai/api/models/Embedder)
+- For API details, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)
 
 ## Cross-references
 
@@ -355,5 +401,4 @@ For broader anti-hallucination patterns beyond citations, see `/ai-stopping-hall
 - **Vector database setup** (Qdrant, Pinecone, ChromaDB, Weaviate) -- see `/dspy-qdrant`
 - **End-to-end document search** with vector stores and chunking -- see `/ai-searching-docs`
 - **Keeping answers grounded** and avoiding hallucination -- see `/ai-stopping-hallucinations`
-- For worked examples, see [examples.md](examples.md)
 - Not sure which skill to use next? Try `/ai-do` to get routed to the right one

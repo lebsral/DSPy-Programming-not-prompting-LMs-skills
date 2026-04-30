@@ -1,0 +1,23 @@
+[
+  {
+    "id": "dspy-simba-incremental-optimization",
+    "prompt": "My DSPy classifier works at about 75% accuracy after BootstrapFewShot. I want to push it higher without breaking what already works. How do I use SIMBA?",
+    "should_contain": ["dspy.SIMBA", "compile", "metric", "trainset"],
+    "should_not_contain": [],
+    "notes": "Should show SIMBA constructor with metric, compile call on the already-bootstrapped program. Should mention incremental improvement and evaluating before/after."
+  },
+  {
+    "id": "dspy-simba-production-safety",
+    "prompt": "I need to optimize my production DSPy pipeline but I cannot afford regressions. What is the safest optimizer to use?",
+    "should_contain": ["SIMBA", "conservative", "regression"],
+    "should_not_contain": [],
+    "notes": "Should recommend SIMBA for conservative optimization. Should show regression checking pattern — comparing old vs new predictions on a held-out set before deploying."
+  },
+  {
+    "id": "dspy-simba-vs-miprov2",
+    "prompt": "Should I use SIMBA or MIPROv2 to optimize my DSPy program? What are the tradeoffs?",
+    "should_contain": ["SIMBA", "MIPROv2", "incremental"],
+    "should_not_contain": [],
+    "notes": "Should present tradeoff comparison — SIMBA for conservative incremental improvement, MIPROv2 for maximum quality. Should mention layering: BootstrapFewShot -> SIMBA -> optionally MIPROv2."
+  }
+]
