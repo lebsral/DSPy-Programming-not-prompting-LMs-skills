@@ -1,0 +1,35 @@
+[
+  {
+    "prompt": "My DSPy Predict module keeps throwing AdapterParseError. The model responds with the right content but does not use the [[ ## field ## ]] format. How do I fix this?",
+    "expected_output": "Debugging steps: inspect_history to see what was sent/received, note that JSON fallback may already be handling it silently, and if not, switch to JSONAdapter for that module.",
+    "assertions": [
+      "Suggests dspy.inspect_history() to see the actual prompt and response",
+      "Explains that ChatAdapter falls back to JSONAdapter automatically by default",
+      "Shows how to switch to JSONAdapter as a fix if fallback also fails",
+      "Does not suggest instantiating ChatAdapter unnecessarily when it is already the default"
+    ]
+  },
+  {
+    "prompt": "I want to use native function calling with DSPy instead of the text-based field delimiters. How do I enable it?",
+    "expected_output": "Code showing ChatAdapter with use_native_function_calling=True, with a warning that not all providers support it.",
+    "assertions": [
+      "Creates ChatAdapter with use_native_function_calling=True",
+      "Passes the adapter to dspy.configure",
+      "Warns that not all providers support native function calling",
+      "Mentions native_response_types for limiting which types use native features",
+      "Uses provider-agnostic LM configuration with alternative comment"
+    ]
+  },
+  {
+    "prompt": "What is the difference between ChatAdapter and JSONAdapter in DSPy? When should I use each one?",
+    "expected_output": "Comparison explaining ChatAdapter uses field delimiters while JSONAdapter uses JSON output format, with guidance on when to switch.",
+    "assertions": [
+      "Explains ChatAdapter uses [[ ## field ## ]] delimiters",
+      "Explains JSONAdapter requests JSON output and uses json_repair for parsing",
+      "Notes JSONAdapter has use_native_function_calling=True by default while ChatAdapter has False",
+      "Recommends JSONAdapter for complex Pydantic types or when parse failures are costly",
+      "Notes ChatAdapter already falls back to JSONAdapter on failure",
+      "Mentions TwoStepAdapter as the option for reasoning models"
+    ]
+  }
+]

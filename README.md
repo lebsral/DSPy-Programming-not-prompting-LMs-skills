@@ -110,6 +110,7 @@ If you already know DSPy and think in its vocabulary, use these API-first skills
 | `dspy.LabeledFewShot` | [`/dspy-labeled-few-shot`](skills/dspy-labeled-few-shot/SKILL.md) | Hand-picked demonstrations |
 | `dspy.SIMBA` | [`/dspy-simba`](skills/dspy-simba/SKILL.md) | Small-step incremental optimization |
 | `ChatAdapter`, `JSONAdapter`, `TwoStepAdapter` | [`/dspy-adapters`](skills/dspy-adapters/SKILL.md) | Prompt formatting, structured output, reasoning models |
+| `dspy.ChatAdapter` (deep dive) | [`/dspy-chatadapter`](skills/dspy-chatadapter/SKILL.md) | Field delimiters, parse/format internals, JSON fallback, fine-tuning data |
 | `dspy.Tool`, `PythonInterpreter` | [`/dspy-tools`](skills/dspy-tools/SKILL.md) | Wrapping functions as tools, code execution |
 | `dspy.Retrieve`, `ColBERTv2`, `Embedder` | [`/dspy-retrieval`](skills/dspy-retrieval/SKILL.md) | Search, RAG pipelines, embeddings |
 | `dspy.Image`, `dspy.Audio`, `dspy.Code`, `dspy.History` | [`/dspy-primitives`](skills/dspy-primitives/SKILL.md) | Multimodal inputs, conversation history |
