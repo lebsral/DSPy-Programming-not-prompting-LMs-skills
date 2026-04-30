@@ -259,4 +259,8 @@ This is useful when you want to fine-tune a model on the exact prompt format DSP
 
 ## Additional resources
 
+- [dspy.ChatAdapter API docs](https://dspy.ai/api/adapters/ChatAdapter/)
+- [dspy.JSONAdapter API docs](https://dspy.ai/api/adapters/JSONAdapter/)
+- [dspy.TwoStepAdapter API docs](https://dspy.ai/api/adapters/TwoStepAdapter/)
+- [dspy.XMLAdapter API docs](https://dspy.ai/api/adapters/XMLAdapter/)
 - For worked examples, see [examples.md](examples.md)
