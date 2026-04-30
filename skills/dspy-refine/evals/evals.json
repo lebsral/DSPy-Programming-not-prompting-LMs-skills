@@ -1,0 +1,38 @@
+[
+  {
+    "prompt": "I have a DSPy ChainOfThought module that generates product descriptions, but sometimes they are too long or miss required keywords. I want it to automatically retry and improve until the description meets my quality bar. Show me how to use dspy.Refine for this.",
+    "expected_output": "A working dspy.Refine setup wrapping the ChainOfThought module with a graduated reward function that scores length and keyword presence, a threshold around 0.8, and N=3 to 5 attempts.",
+    "assertions": [
+      "Uses dspy.Refine with module, N, reward_fn, and threshold parameters",
+      "Reward function accepts (args, pred) and returns a float",
+      "Reward function uses graduated scoring (partial credit), not just 0 or 1",
+      "Threshold is set below 1.0 (e.g., 0.8) for a multi-criteria reward",
+      "LM configuration uses provider-agnostic format with alternative comment",
+      "Does not put LM calls inside the reward function"
+    ]
+  },
+  {
+    "prompt": "What is the difference between dspy.Refine and dspy.BestOfN? I want to generate multiple candidate answers and pick the best one.",
+    "expected_output": "A comparison explaining that Refine generates feedback from failures for sequential improvement while BestOfN runs independent attempts. Recommends Refine when feedback helps and BestOfN when attempts are independent.",
+    "assertions": [
+      "Explains that Refine generates feedback from failures and feeds it into subsequent attempts",
+      "Explains that BestOfN runs independent attempts with no cross-attempt learning",
+      "Notes that both support early stopping via threshold",
+      "Recommends Refine for tasks where feedback improves later attempts",
+      "Recommends BestOfN for sampling diversity or independent attempts",
+      "Does not incorrectly claim BestOfN always runs all N attempts"
+    ]
+  },
+  {
+    "prompt": "I want to use dspy.Refine to validate that my AI generates valid JSON. Build me a simple example.",
+    "expected_output": "A Refine wrapper with a reward function that parses JSON and returns 1.0 for valid JSON, 0.0 for invalid. Uses threshold=1.0 since JSON validity is binary.",
+    "assertions": [
+      "Uses dspy.Refine wrapping a Predict or ChainOfThought module",
+      "Reward function uses json.loads to validate",
+      "Returns 1.0 for valid JSON and 0.0 for invalid",
+      "Threshold is set to 1.0 since this is a binary criterion",
+      "N is set to a reasonable value (2-5)",
+      "Inner module is ChainOfThought rather than bare Predict when reasoning helps"
+    ]
+  }
+]

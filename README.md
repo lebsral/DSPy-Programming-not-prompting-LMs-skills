@@ -69,6 +69,7 @@ npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --all
 | W&B Weave | [`/dspy-weave`](skills/dspy-weave/SKILL.md) | Cloud experiment tracking and team dashboards via `@weave.op()` decorator |
 | MLflow | [`/dspy-mlflow`](skills/dspy-mlflow/SKILL.md) | Auto-tracing, experiment tracking, and model registry for DSPy |
 | LangWatch | [`/dspy-langwatch`](skills/dspy-langwatch/SKILL.md) | Auto-tracing + real-time optimizer progress dashboard |
+| Langfuse | [`/dspy-langfuse`](skills/dspy-langfuse/SKILL.md) | Tracing + scoring + annotation queues + experiment tracking |
 | Ragas | [`/dspy-ragas`](skills/dspy-ragas/SKILL.md) | Decomposed RAG evaluation: faithfulness, context precision/recall |
 | Qdrant | [`/dspy-qdrant`](skills/dspy-qdrant/SKILL.md) | Official vector DB integration + custom retriever pattern for any DB |
 | Ollama | [`/dspy-ollama`](skills/dspy-ollama/SKILL.md) | Run DSPy with local models, no API key needed |
@@ -119,6 +120,7 @@ If you already know DSPy and think in its vocabulary, use these API-first skills
 | W&B Weave (`@weave.op()`) | [`/dspy-weave`](skills/dspy-weave/SKILL.md) | Cloud experiment tracking and team dashboards |
 | MLflow (`mlflow.dspy.autolog()`) | [`/dspy-mlflow`](skills/dspy-mlflow/SKILL.md) | Auto-tracing, experiment tracking, model registry |
 | LangWatch (`langwatch.dspy.init`) | [`/dspy-langwatch`](skills/dspy-langwatch/SKILL.md) | Auto-tracing and real-time optimizer progress |
+| Langfuse (`DSPyInstrumentor`, `@observe`) | [`/dspy-langfuse`](skills/dspy-langfuse/SKILL.md) | Tracing + scoring + annotation queues + experiments |
 | Ragas (`ragas.evaluate`) | [`/dspy-ragas`](skills/dspy-ragas/SKILL.md) | Decomposed RAG evaluation with LLM-as-judge metrics |
 | Qdrant (`QdrantRM`) | [`/dspy-qdrant`](skills/dspy-qdrant/SKILL.md) | Vector DB retriever with hybrid search |
 | Ollama (`ollama_chat/`) | [`/dspy-ollama`](skills/dspy-ollama/SKILL.md) | Local model serving for development |

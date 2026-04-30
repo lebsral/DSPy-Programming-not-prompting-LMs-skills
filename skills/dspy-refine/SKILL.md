@@ -1,39 +1,33 @@
 ---
 name: dspy-refine
-description: Use when you want outputs to improve iteratively through self-critique — generating a draft, evaluating it against criteria, and revising until quality thresholds are met. Common scenarios: iteratively improving essay quality through self-critique, generating then evaluating and revising answers, tasks requiring multiple drafts, quality-sensitive content generation, or any task where a first draft can be systematically improved. Related: ai-writing-content, ai-improving-accuracy, dspy-best-of-n. Also: dspy.Refine, self-critique and revise, iterative improvement loop, generate then evaluate then fix, AI self-editing, multi-draft generation, quality through iteration, revise until good enough, critique-driven refinement, LLM improves its own output, reflective generation, edit loop for AI outputs, when first draft is not good enough, self-improving AI output.
+description: Iterative self-improvement with dspy.Refine -- wraps any module, scores each attempt with a reward function, generates feedback on failures, and retries until a quality threshold is met. Use when you want outputs to improve through self-critique, need iterative revision of drafts, or want the LM to learn from its own mistakes within a single request. Also: self-critique and revise, iterative improvement loop, generate then evaluate then fix, AI self-editing, multi-draft generation, revise until good enough, critique-driven refinement, when first draft is not good enough.
 ---
 
 # Iterative Self-Improvement with dspy.Refine
 
-Guide the user through using `dspy.Refine` to build pipelines that automatically retry and improve outputs until they meet a quality threshold.
+## Step 1: Understand the use case
 
-## What is dspy.Refine
+Before writing code, clarify:
 
-`dspy.Refine` is a DSPy module wrapper that runs another module up to N times, scoring each attempt with a reward function. It returns the first output that meets a threshold -- or the best output if none do. When an attempt fails to meet the threshold, Refine generates feedback that gets fed into the next attempt, enabling genuine iterative improvement rather than just random retries.
+1. **What module are you wrapping?** (ChainOfThought, Predict, ReAct, custom module?)
+2. **What makes a good output?** Can you express quality as a numeric score?
+3. **How many retries are acceptable?** (cost/latency budget)
+4. **Is feedback useful?** Would knowing why attempt 1 failed help attempt 2? If not, consider `dspy.BestOfN` instead.
 
-Key properties:
-
-- **Wraps any DSPy module** -- ChainOfThought, Predict, ReAct, or your custom modules
-- **Scores each attempt** with a reward function you define
-- **Generates feedback** when an attempt falls short, improving subsequent tries
-- **Returns early** as soon as an output meets the threshold (saves LM calls)
-- **Falls back gracefully** -- returns the best attempt even if none hit the threshold
-
-## When to use Refine
+## When to use Refine (and when not to)
 
 Use `dspy.Refine` when:
 
 - Outputs must meet measurable quality criteria (format, length, accuracy)
-- You can write a function that scores output quality as a number
-- You want the LM to learn from its mistakes within a single request
-- Quality is worth the extra LM calls (2-5x cost for N attempts)
+- The LM can improve with feedback -- writing, format compliance, multi-criteria quality
+- Quality is worth 2-5x cost for N attempts
 
 Do **not** use Refine when:
 
 - You have no clear way to score outputs -- use `dspy.ChainOfThought` instead
 - You need human-in-the-loop feedback -- build a custom module with `dspy.Suggest`
 - Speed matters more than quality -- use a single `dspy.Predict` call
-- You just want multiple independent attempts without feedback -- use `dspy.BestOfN` (see comparison below)
+- Attempts are independent and feedback would not help -- use `dspy.BestOfN`
 
 ## Basic usage
 
@@ -42,7 +36,7 @@ Three things are needed: a module to wrap, a reward function, and a threshold.
 ```python
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 # 1. Define the module to refine
 qa = dspy.ChainOfThought("question -> answer")
@@ -188,10 +182,10 @@ Both modules run a wrapped module multiple times and select the best output, but
 | Aspect | `dspy.Refine` | `dspy.BestOfN` |
 |--------|--------------|----------------|
 | **Feedback** | Generates feedback from failures, improving subsequent attempts | No feedback -- each attempt is independent |
-| **Attempts** | Sequential (each informed by previous) | Can be parallel (independent) |
-| **Early stopping** | Returns on first success meeting threshold | Runs all N, picks best |
+| **Attempts** | Sequential (each informed by previous) | Independent (can be parallel) |
+| **Early stopping** | Returns on first success meeting threshold | Also returns on first success meeting threshold |
 | **Best for** | Iterative improvement, complex quality criteria | Sampling diversity, simple pass/fail |
-| **Cost pattern** | Often fewer LM calls (stops early) | Always N calls |
+| **Cost pattern** | Often fewer calls (feedback improves later attempts) | All attempts independent, no learning between them |
 
 **Use Refine when** the LM can improve with feedback -- writing tasks, format compliance, multi-criteria quality.
 
@@ -238,18 +232,23 @@ result = refined_summarizer(article="Long article text here...")
 print(result.summary)
 ```
 
-## Tips
+## Gotchas
 
-- **Start with N=3** and increase only if outputs consistently miss the threshold
-- **Use graduated rewards** (0.0 to 1.0) rather than binary (0 or 1) so Refine can pick the best near-miss
-- **Keep reward functions fast** -- they run on every attempt, so avoid expensive operations like LM calls inside them
-- **Set threshold realistically** -- if your reward function rarely returns 1.0, set the threshold to 0.8 or similar
-- **Use `fail_count`** to limit retries on genuinely impossible inputs rather than burning through all N attempts
+- **Claude uses binary reward functions (0 or 1) instead of graduated scores.** Binary rewards mean Refine cannot distinguish between a near-miss and a total failure when no attempt hits the threshold. Use graduated floats (0.0 to 1.0) with partial credit for each criterion so Refine returns the best near-miss.
+- **Claude puts LM calls inside reward functions for "smarter" scoring.** The reward function runs on every attempt (up to N times), so an LM call inside it doubles or triples your cost. Use deterministic checks (regex, AST parsing, length checks) in reward functions. Reserve LM-as-judge for the final evaluation after Refine returns.
+- **Claude sets threshold=1.0 with multi-criteria reward functions.** If your reward function scores 4 weighted criteria, achieving a perfect 1.0 is unlikely. Refine then burns through all N attempts and returns a near-miss anyway. Set the threshold to 0.8 or the realistic "good enough" score for your criteria.
+- **Claude confuses Refine with BestOfN and uses them interchangeably.** The key difference is feedback: Refine generates feedback from failures and feeds it into subsequent attempts (sequential, improving). BestOfN runs independent attempts with no cross-attempt learning. Use Refine when later attempts can learn from earlier failures; use BestOfN when attempts are inherently independent.
+- **Claude wraps a Predict module with Refine for tasks that need reasoning.** Refine improves outputs through feedback, but `dspy.Predict` does not expose a `reasoning` field. Use `dspy.ChainOfThought` as the inner module so the feedback loop has reasoning to critique and improve.
 
 ## Cross-references
 
+- **BestOfN** for independent sampling without feedback -- see `/dspy-best-of-n`
 - **Chain of thought reasoning** as the inner module -- see `/dspy-chain-of-thought`
 - **Checking and validating outputs** with assertions -- see `/ai-checking-outputs`
 - **Improving accuracy** with optimization -- see `/ai-improving-accuracy`
-- For worked examples, see [examples.md](examples.md)
+- **Writing content** that benefits from iterative refinement -- see `/ai-writing-content`
 - Not sure which skill to use next? Try `/ai-do` to get routed to the right one
+
+## Additional resources
+
+- For worked examples, see [examples.md](examples.md)

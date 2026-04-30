@@ -7,7 +7,7 @@ A content writing pipeline that refines blog post introductions until they meet 
 ```python
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 # Define the writing module
 class WriteIntro(dspy.Module):
@@ -93,7 +93,7 @@ A code generation pipeline that writes a Python function and validates it by par
 import ast
 import dspy
 
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 # Signature with structured output expectations
 class GenerateFunction(dspy.Signature):

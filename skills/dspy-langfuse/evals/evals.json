@@ -1,0 +1,34 @@
+[
+  {
+    "prompt": "I want to add observability to my DSPy pipeline so I can see what prompts are being sent, token usage, and latency. I heard about Langfuse. Show me how to set it up.",
+    "expected_output": "A working Langfuse + DSPy setup with DSPyInstrumentor, environment variable configuration, and a simple traced DSPy call.",
+    "assertions": [
+      "Installs both langfuse and openinference-instrumentation-dspy packages",
+      "Sets LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, and LANGFUSE_BASE_URL environment variables",
+      "Calls DSPyInstrumentor().instrument() before any DSPy module execution",
+      "Configures DSPy LM with provider-agnostic format and alternative comment",
+      "Mentions langfuse.flush() for scripts or short-lived processes"
+    ]
+  },
+  {
+    "prompt": "I already have Langfuse tracing working with DSPy. Now I want to add user IDs and session IDs to my traces so I can filter by customer in the dashboard. How?",
+    "expected_output": "Code using @observe() decorator with propagate_attributes() to add user_id, session_id, tags, and metadata to auto-captured DSPy traces.",
+    "assertions": [
+      "Uses @observe() decorator from langfuse",
+      "Uses propagate_attributes() context manager with user_id and session_id",
+      "Shows that propagate_attributes wraps the DSPy module call, not the other way around",
+      "Does not create a new get_client() instance inside every function"
+    ]
+  },
+  {
+    "prompt": "Should I use Langfuse or Arize Phoenix for my DSPy project? I want tracing and evaluation, and my team needs to review AI outputs for quality.",
+    "expected_output": "A comparison recommending Langfuse for annotation queues and human review, Phoenix for local-first development, with a clear decision framework.",
+    "assertions": [
+      "Mentions that both use the same OpenInference DSPy plugin for auto-instrumentation",
+      "Highlights Langfuse annotation queues as a differentiator for human review",
+      "Highlights Phoenix local mode as a differentiator for no-cloud development",
+      "Does not dismiss either tool -- presents tradeoffs",
+      "Mentions other alternatives like Langtrace and Weave"
+    ]
+  }
+]
