@@ -1,0 +1,35 @@
+[
+  {
+    "prompt": "I have a DSPy classification program optimized with MIPROv2 at 82% accuracy and BootstrapFinetune at 85%. I have 1000 labeled examples. How can I get higher accuracy?",
+    "expected_output": "Code using dspy.BetterTogether to combine prompt and weight optimization for maximum quality",
+    "assertions": [
+      "Recommends dspy.BetterTogether as the next step after individual optimizers plateaued",
+      "Calls program.set_lm(lm) before compile",
+      "Uses optimizer.compile() with trainset and valset",
+      "Shows strategy parameter (default 'p -> w -> p' or custom)",
+      "Checks compiled.flag_compilation_error_occurred after compile",
+      "Evaluates on held-out test set and compares against individual optimizer baselines"
+    ]
+  },
+  {
+    "prompt": "I want to use BetterTogether but I only have 150 labeled examples. Is that enough?",
+    "expected_output": "Advises against BetterTogether with 150 examples and recommends simpler optimizers",
+    "assertions": [
+      "Identifies 150 examples as insufficient for BetterTogether (needs 500+)",
+      "Recommends MIPROv2 or BootstrapFewShot as alternatives for smaller datasets",
+      "Does NOT provide BetterTogether code for this scenario",
+      "Mentions that fine-tuning (the weight step) needs substantial data to be effective"
+    ]
+  },
+  {
+    "prompt": "My BetterTogether run completed but the final accuracy is lower than my MIPROv2-only baseline. What went wrong?",
+    "expected_output": "Debugging guidance for BetterTogether underperformance",
+    "assertions": [
+      "Suggests checking compiled.candidate_programs to see per-step scores",
+      "Suggests checking compiled.flag_compilation_error_occurred for silent failures",
+      "Mentions that the weight step may have failed (fine-tuning API issues)",
+      "Suggests verifying valset is held out and not overlapping with trainset",
+      "Suggests trying a simpler strategy like 'p -> w' instead of 'p -> w -> p'"
+    ]
+  }
+]

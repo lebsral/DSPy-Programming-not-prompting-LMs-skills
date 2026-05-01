@@ -1,0 +1,35 @@
+[
+  {
+    "prompt": "I have a DSPy program that extracts dates from text. Sometimes the LM returns dates in the wrong format (like 'January 5th' instead of '2024-01-05'). How can I force it to use YYYY-MM-DD format?",
+    "expected_output": "Code using dspy.Assert inside forward() to validate date format with regex and retry on failure",
+    "assertions": [
+      "Uses dspy.Assert (not dspy.Suggest) since format is a hard requirement",
+      "Assert is called inside a dspy.Module forward() method",
+      "Assertion message is specific and actionable (mentions the expected format)",
+      "Uses regex or string validation to check the date format",
+      "Does NOT use dspy.Refine for this pattern (inline field validation is the right fit)"
+    ]
+  },
+  {
+    "prompt": "My DSPy summarization module sometimes produces summaries that are too long. I want it to prefer short summaries but not crash if it goes over. How do I add that as a soft constraint?",
+    "expected_output": "Code using dspy.Suggest for soft length constraint",
+    "assertions": [
+      "Uses dspy.Suggest (not dspy.Assert) since length is a preference not a hard requirement",
+      "Suggest is called inside forward() with a boolean condition checking word count",
+      "Message describes what the ideal length should be",
+      "Explains that Suggest logs a warning but continues execution",
+      "Mentions that during optimization, suggestions guide the optimizer toward better prompts"
+    ]
+  },
+  {
+    "prompt": "I have multiple assertions in my DSPy program and they keep failing. The LM cannot satisfy all 6 constraints at once. What should I do?",
+    "expected_output": "Advice to reduce constraint count, convert secondary constraints to Suggest, and write more specific messages",
+    "assertions": [
+      "Identifies the problem: too many simultaneous hard constraints reduce joint success probability",
+      "Recommends converting non-critical constraints from Assert to Suggest",
+      "Recommends combining related checks into fewer assertions with clearer messages",
+      "Suggests making assertion messages more actionable so retries are more likely to succeed",
+      "Does NOT suggest removing all assertions — explains how to prioritize them"
+    ]
+  }
+]

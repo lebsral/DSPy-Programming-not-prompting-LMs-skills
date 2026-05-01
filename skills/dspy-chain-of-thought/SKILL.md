@@ -77,7 +77,7 @@ import dspy
 from pydantic import BaseModel
 from typing import Literal
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 class RiskAssessment(BaseModel):
@@ -110,7 +110,7 @@ ChainOfThought benefits significantly from optimization. When you run an optimiz
 import dspy
 from dspy.evaluate import Evaluate
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Your CoT module
@@ -193,10 +193,17 @@ Both sub-modules use CoT because code review and fix suggestion both benefit fro
 
 ## Gotchas
 
-1. **Don't add `reasoning` to your signature** -- DSPy injects it automatically. Declaring it yourself creates a duplicate field that confuses the prompt.
-2. **CoT adds ~100-300 tokens of overhead per call** -- measure whether the accuracy gain justifies the extra latency and cost for your task.
-3. **Reasoning quality degrades with very short `max_tokens`** -- leave room for the reasoning trace before the actual output fields.
-4. **Not all tasks benefit** -- classification with fewer than 5 clear categories often does better with plain `Predict`. CoT shines on tasks requiring multi-step deduction.
+- **Claude adds `reasoning` as an explicit output field in the signature.** DSPy injects it automatically — declaring it yourself creates a duplicate field that confuses the prompt. Just use `dspy.ChainOfThought("question -> answer")` and access `result.reasoning` on the output.
+- **Claude uses ChainOfThought for simple extraction tasks where Predict is sufficient.** CoT adds ~100-300 tokens of overhead per call. For tasks like pulling a name from structured text or simple lookups, use `dspy.Predict` instead — CoT adds cost without improving accuracy on straightforward tasks.
+- **Claude sets `max_tokens` too low, truncating reasoning before output fields.** The reasoning trace is generated before the actual output fields. If `max_tokens` is tight, the LM runs out of space mid-reasoning and never produces the output fields, causing parse failures. Leave headroom — at least 500 tokens beyond what you expect the output fields to need.
+- **Claude forgets that `reasoning` is available on the result object.** After calling a ChainOfThought module, the reasoning trace is always at `result.reasoning` even though the signature does not declare it. Claude sometimes re-derives reasoning or asks the LM to explain its answer in a separate call when the trace is already there.
+- **Claude uses `rationale_field` to rename the reasoning field but does not update downstream references.** `dspy.ChainOfThought(sig, rationale_field=dspy.OutputField(prefix="Thinking:"))` changes the prompt prefix, but the field is still accessed as `result.reasoning` on the output. Claude sometimes tries to access `result.thinking` or `result.rationale` after renaming, which fails silently (returns `None`).
+
+## Additional resources
+
+- [dspy.ChainOfThought API docs](https://dspy.ai/api/modules/ChainOfThought/)
+- [reference.md](reference.md) — constructor parameters, methods, rationale field customization
+- [examples.md](examples.md) — bug analysis, release decisions, classification with justification
 
 ## Cross-references
 

@@ -1,9 +1,11 @@
 ---
 name: dspy-assertions
-description: Use when you need to enforce constraints on LM outputs with dspy.Assert and dspy.Suggest — hard failures that trigger retries, soft suggestions that log warnings, backtracking behavior, and integrating assertions with optimizers. Common scenarios: ensuring extracted emails are valid, forcing output to be valid JSON, rejecting answers that do not cite sources, retrying when classification confidence is too low, enforcing length limits on summaries, or catching hallucinated entities. Related: ai-following-rules, ai-checking-outputs, ai-stopping-hallucinations. Also: dspy.Assert, dspy.Suggest, runtime validation for LLM output, retry on bad output, backtracking on constraint violation, LLM keeps ignoring my rules, output validation with automatic retry, how to make LLM follow constraints, assertion-driven development for AI, guard rails in DSPy, fail fast on bad LLM output.
+description: DEPRECATED -- use dspy.Refine instead (see /dspy-refine). Legacy documentation for dspy.Assert and dspy.Suggest — hard failures that trigger retries and soft suggestions that log warnings. For new code, prefer dspy.Refine for output validation with automatic retry. Also: dspy.Assert, dspy.Suggest, runtime validation for LLM output, retry on bad output, backtracking on constraint violation, guard rails in DSPy.
 ---
 
 # Enforce Constraints with dspy.Assert and dspy.Suggest
+
+> **Deprecated.** `dspy.Assert` and `dspy.Suggest` are deprecated and not supported in current DSPy. Use `dspy.Refine` instead (see `/dspy-refine`). This skill documents the legacy API for existing codebases. For new code, prefer `dspy.Refine` which provides reward-based output selection with automatic feedback.
 
 Guide the user through adding runtime constraints to DSPy programs. Assertions let you declare what valid output looks like — DSPy handles retrying, backtracking, and feeding error messages back to the LM automatically.
 
@@ -213,10 +215,37 @@ except DSPyAssertionError as e:
 
 **Rule of thumb:** If a bad output reaching users would be a bug, use `Assert`. If it would just be suboptimal, use `Suggest`.
 
+## Assertions vs dspy.Refine
+
+DSPy docs mark assertions as deprecated in favor of `dspy.Refine`. However, they serve different patterns:
+
+| | Assert/Suggest | dspy.Refine |
+|---|---|---|
+| **Pattern** | Inline constraint checks inside `forward()` | Module wrapper with reward-based selection |
+| **Scoring** | Boolean pass/fail per constraint | Scalar reward function scores full output |
+| **Control** | Fine-grained — check individual fields | Coarse-grained — evaluate complete prediction |
+| **Best for** | Format validation, safety checks, field-level rules | Output quality optimization, holistic scoring |
+
+Use Assert/Suggest when you need to check specific constraints on individual fields. Use `dspy.Refine` (see `/dspy-refine`) when you want to score and select the best overall output.
+
+## Gotchas
+
+- **Claude writes vague assertion messages like "Invalid output".** The message is injected back into the LM prompt on retry — it IS the feedback. Write actionable instructions: "Summary is {len(words)} words, must be under 50. Remove examples and keep only the key conclusion." The more specific, the more likely the retry succeeds.
+- **Claude puts assertions outside `forward()`.** `dspy.Assert` and `dspy.Suggest` only work inside a `dspy.Module.forward()` method because DSPy needs the module context for backtracking. Calling them at the top level or in a standalone function silently skips the retry mechanism.
+- **Claude uses `Assert` for style preferences.** Hard assertions that fail after all retries raise `DSPyAssertionError` and crash the program. Use `dspy.Suggest` for subjective quality preferences (tone, style, verbosity) and reserve `Assert` for objective constraints (format validity, safety, schema compliance).
+- **Claude does not handle `DSPyAssertionError` at the call site.** When all retry attempts are exhausted, `Assert` raises `DSPyAssertionError`. In production code, always wrap the program call in a try/except to handle validation failures gracefully with a fallback response.
+- **Claude chains too many assertions, making all retries fail.** Each assertion that fails triggers a retry with feedback, but stacking 5+ strict assertions means the LM must satisfy all constraints simultaneously. If the success rate per constraint is 80%, five independent constraints yield ~33% joint success. Group related checks into one assertion with a combined message, or relax secondary constraints to `Suggest`.
+
+## Additional resources
+
+- [DSPy assertions guide](https://dspy.ai/learn/programming/7-assertions/) — upstream documentation
+- [reference.md](reference.md) — Assert/Suggest signatures, parameters, backtracking behavior, deprecation notes
+
 ## Cross-references
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
+- **dspy.Refine** (recommended replacement) — see `/dspy-refine`
 - **Problem-first framing** with worked examples — see `/ai-checking-outputs`
 - **Stopping hallucinations** with grounding and citations — see `/ai-stopping-hallucinations`
 - **Enforcing business rules** and content policies — see `/ai-following-rules`

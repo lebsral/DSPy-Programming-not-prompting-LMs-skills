@@ -1,0 +1,36 @@
+[
+  {
+    "prompt": "I have a DSPy program that generates SQL queries. Sometimes the queries have syntax errors. I want to run it multiple times and pick the one that actually executes. How do I do that?",
+    "expected_output": "Code using dspy.BestOfN with a reward function that tests SQL execution",
+    "assertions": [
+      "Uses dspy.BestOfN (not manual retry logic)",
+      "Reward function takes (args, prediction) signature, NOT (example, prediction, trace)",
+      "Reward function tests SQL execution and returns 1.0 for success, 0.0 for failure",
+      "Sets threshold=1.0 for early stopping on first successful query",
+      "Sets N to a reasonable value (3-5)",
+      "Does NOT use dspy.Evaluate metric signature"
+    ]
+  },
+  {
+    "prompt": "What is the difference between BestOfN and MultiChainComparison? When should I use each?",
+    "expected_output": "Comparison explaining BestOfN uses a reward function while MultiChainComparison uses an LM to judge",
+    "assertions": [
+      "Explains BestOfN requires a programmatic reward function",
+      "Explains MultiChainComparison uses the LM itself to compare candidates",
+      "Recommends BestOfN when you have an automatable scoring criterion",
+      "Recommends MultiChainComparison when quality is subjective",
+      "Mentions cost tradeoffs (BestOfN = N module calls, MultiChainComparison = multiple chains + comparison)"
+    ]
+  },
+  {
+    "prompt": "I want to use BestOfN to improve my summarization quality. My reward function calls GPT-4o to judge each summary. N=10. Is this a good approach?",
+    "expected_output": "Warns about cost: N=10 with LM-based reward means 20 LM calls per input, suggests reducing N and using programmatic metrics",
+    "assertions": [
+      "Identifies the cost problem: N=10 with LM judge = 20 LM calls per input",
+      "Suggests reducing N (3-5 is usually sufficient)",
+      "Suggests using programmatic reward functions instead of LM judges where possible",
+      "Suggests setting a threshold for early stopping to reduce average cost",
+      "Does NOT just approve the approach without discussing cost"
+    ]
+  }
+]

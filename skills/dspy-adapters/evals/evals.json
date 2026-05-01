@@ -1,0 +1,33 @@
+[
+  {
+    "prompt": "My DSPy program extracts invoice data into a Pydantic model but sometimes the default adapter fails to parse the output correctly. How do I fix this?",
+    "expected_output": "Switch to JSONAdapter for more reliable structured output parsing",
+    "assertions": [
+      "Recommends dspy.JSONAdapter for reliable Pydantic/structured output",
+      "Shows how to configure it: dspy.configure(lm=lm, adapter=dspy.JSONAdapter())",
+      "Explains that ChatAdapter already falls back to JSONAdapter by default, so this makes it the primary parser",
+      "Does NOT recommend TwoStepAdapter for this use case (standard models do not need it)"
+    ]
+  },
+  {
+    "prompt": "I am using OpenAI o3-mini for a complex reasoning task but the model keeps breaking the output format. How do I get structured output from a reasoning model?",
+    "expected_output": "Use TwoStepAdapter with a cheap extraction model",
+    "assertions": [
+      "Recommends dspy.TwoStepAdapter for reasoning models",
+      "Shows extraction_model as a separate, cheaper LM (e.g., gpt-4o-mini)",
+      "Explains that reasoning models perform worse when forced to follow formatting constraints",
+      "Shows the two-step process: reasoning model thinks freely, extraction model parses",
+      "Sets temperature=1.0 and max_tokens appropriately for the reasoning model"
+    ]
+  },
+  {
+    "prompt": "I have a DSPy pipeline where one step does summarization and another extracts structured metadata. The summarization works fine with the default adapter but the metadata extraction needs more reliable JSON parsing. How do I use different adapters for different steps?",
+    "expected_output": "Use set_adapter() to assign JSONAdapter to just the extraction module",
+    "assertions": [
+      "Uses module.set_adapter(dspy.JSONAdapter()) for per-module override",
+      "Does NOT change the global adapter (summarization works fine with ChatAdapter)",
+      "Explains that set_adapter() overrides the global adapter for that module only",
+      "Alternatively mentions dspy.context(adapter=...) for temporary block-level overrides"
+    ]
+  }
+]

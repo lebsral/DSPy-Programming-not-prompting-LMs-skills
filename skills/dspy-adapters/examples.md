@@ -25,7 +25,7 @@ class AnalyzeReview(dspy.Signature):
 
 # --- Usage ---
 
-lm = dspy.LM("openai/gpt-4o-mini")  # or any LiteLLM-supported provider
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 adapter = dspy.JSONAdapter()
 dspy.configure(lm=lm, adapter=adapter)
 
@@ -99,10 +99,10 @@ class AnalyzeContract(dspy.Signature):
 # --- Usage ---
 
 # Reasoning model for deep analysis
-reasoning_lm = dspy.LM("openai/o3-mini", max_tokens=16000, temperature=1.0)
+reasoning_lm = dspy.LM("openai/o3-mini", max_tokens=16000, temperature=1.0)  # or another reasoning model
 
 # Cheap model just for extracting structure from the reasoning output
-extraction_lm = dspy.LM("openai/gpt-4o-mini")
+extraction_lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-haiku-3-5-20241022", etc.
 
 adapter = dspy.TwoStepAdapter(extraction_model=extraction_lm)
 dspy.configure(lm=reasoning_lm, adapter=adapter)
@@ -190,7 +190,7 @@ class ArticleProcessor(dspy.Module):
 
 # --- Usage ---
 
-lm = dspy.LM("openai/gpt-4o-mini")  # or any LiteLLM-supported provider
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 processor = ArticleProcessor()

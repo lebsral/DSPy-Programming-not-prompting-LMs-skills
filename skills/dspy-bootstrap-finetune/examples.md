@@ -46,7 +46,7 @@ evaluator = Evaluate(devset=devset, metric=metric, num_threads=4, display_progre
 
 # --- Step 1: Build and optimize the teacher ---
 
-teacher_lm = dspy.LM("openai/gpt-4o")
+teacher_lm = dspy.LM("openai/gpt-4o")  # or any strong model
 dspy.configure(lm=teacher_lm)
 
 teacher = dspy.ChainOfThought(SentimentClassify)
@@ -61,7 +61,7 @@ print(f"Teacher (GPT-4o, prompt-optimized): {teacher_score:.1f}%")
 
 # --- Step 2: Measure the untuned student baseline ---
 
-student_lm = dspy.LM("openai/gpt-4o-mini")
+student_lm = dspy.LM("openai/gpt-4o-mini")  # or any fine-tunable model
 dspy.configure(lm=student_lm)
 
 student_baseline = dspy.ChainOfThought(SentimentClassify)
@@ -128,7 +128,7 @@ class ExtractOrderInfo(dspy.Signature):
     urgency: str = dspy.OutputField(desc="low, medium, high")
 
 
-expensive_lm = dspy.LM("openai/gpt-4o")
+expensive_lm = dspy.LM("openai/gpt-4o")  # or any strong model
 dspy.configure(lm=expensive_lm)
 
 production_program = dspy.ChainOfThought(ExtractOrderInfo)
@@ -178,7 +178,7 @@ print(f"Current production (GPT-4o): {production_score:.1f}%")
 
 # --- Step 2: Check how much quality we lose with the cheap model ---
 
-cheap_lm = dspy.LM("openai/gpt-4o-mini")
+cheap_lm = dspy.LM("openai/gpt-4o-mini")  # or any fine-tunable model
 dspy.configure(lm=cheap_lm)
 
 cheap_baseline = dspy.ChainOfThought(ExtractOrderInfo)

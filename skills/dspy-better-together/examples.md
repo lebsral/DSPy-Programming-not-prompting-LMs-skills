@@ -12,7 +12,7 @@ Full workflow for a classification task, comparing BetterTogether against prompt
 import dspy
 from dspy.evaluate import Evaluate
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 class ClassifyIntent(dspy.Signature):
@@ -137,7 +137,7 @@ import dspy
 from dspy.evaluate import Evaluate
 from dspy.teleprompt import GEPA, BootstrapFinetune
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 class SummarizeReview(dspy.Signature):

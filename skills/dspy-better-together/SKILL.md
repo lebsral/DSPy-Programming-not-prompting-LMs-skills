@@ -48,7 +48,7 @@ Before starting, confirm:
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Define your program
@@ -161,6 +161,7 @@ You can use any DSPy Teleprompter as an optimizer. Common choices:
 | `teacher` | `Module` or `list[Module]` | `None` | Optional teacher program(s) for distillation |
 | `num_threads` | `int` | `None` | Parallel threads for evaluation |
 | `shuffle_trainset_between_steps` | `bool` | `True` | Shuffle trainset before each step |
+| `seed` | `int` | `None` | Random seed for reproducibility |
 | `optimizer_compile_args` | `dict` | `None` | Per-optimizer custom compile arguments |
 
 ### Return value
@@ -252,9 +253,24 @@ BetterTogether has built-in resilience. If any optimization step fails:
 
 Always check this flag in production workflows.
 
+## Gotchas
+
+- **Claude forgets `set_lm()` and relies on global `dspy.configure()`.** BetterTogether requires every predictor to have an explicit LM assignment via `program.set_lm(lm)`. Without it, the weight optimizer cannot identify which model to fine-tune and raises an error. Always call `set_lm()` on the program before `compile()`.
+- **Claude jumps straight to BetterTogether without trying simpler optimizers first.** BetterTogether costs 2-3x more than a single optimizer and takes hours. If you have not tried MIPROv2 or BootstrapFinetune individually first, start there — BetterTogether is only worth it when individual optimizers have plateaued.
+- **Claude omits the validation set.** Without a `valset` (or `valset_ratio > 0`), BetterTogether returns the latest program instead of the best-scoring one across all phases. Always provide a valset or leave `valset_ratio=0.1` so the optimizer can select the best candidate.
+- **Claude uses the same trainset for both training and validation.** If `valset` overlaps with `trainset`, the optimizer selects based on inflated scores. Use a held-out split or let BetterTogether auto-split via `valset_ratio`.
+- **Claude does not check `flag_compilation_error_occurred` after compile.** If a fine-tuning step fails silently (API timeout, quota exceeded), BetterTogether returns the best program found before the failure. Always check `compiled.flag_compilation_error_occurred` and inspect `compiled.candidate_programs` to verify which steps completed.
+
 ## Additional resources
 
-- For worked examples (combined optimization, two-phase strategy), see [examples.md](examples.md)
+- [dspy.BetterTogether API docs](https://dspy.ai/api/optimizers/BetterTogether/)
+- [reference.md](reference.md) — constructor parameters, compile() method, key behaviors
+- [examples.md](examples.md) — combined optimization workflow, two-phase strategy with custom optimizers
+
+## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - For the full fine-tuning workflow, see `/ai-fine-tuning`
 - For prompt optimization alone, see `/ai-improving-accuracy`
 - For evaluation and metrics, see `/dspy-evaluate`

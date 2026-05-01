@@ -43,7 +43,7 @@ Do **not** use it when:
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # 1. Define your program
@@ -82,7 +82,7 @@ The most powerful pattern: use an expensive, high-quality model (the teacher) to
 
 ```python
 # --- Teacher: expensive model, high quality ---
-teacher_lm = dspy.LM("openai/gpt-4o")
+teacher_lm = dspy.LM("openai/gpt-4o")  # or any strong model
 dspy.configure(lm=teacher_lm)
 
 teacher = dspy.ChainOfThought(Classify)
@@ -92,7 +92,7 @@ prompt_optimizer = dspy.MIPROv2(metric=metric, auto="medium")
 teacher_optimized = prompt_optimizer.compile(teacher, trainset=trainset)
 
 # --- Student: cheap model, fine-tuned on teacher's traces ---
-student_lm = dspy.LM("openai/gpt-4o-mini")
+student_lm = dspy.LM("openai/gpt-4o-mini")  # or any fine-tunable model
 dspy.configure(lm=student_lm)
 
 student = dspy.ChainOfThought(Classify)
@@ -120,12 +120,12 @@ BootstrapFinetune fine-tunes whatever LM is configured when you call `compile`. 
 
 ```python
 # Fine-tune GPT-4o-mini
-student_lm = dspy.LM("openai/gpt-4o-mini")
+student_lm = dspy.LM("openai/gpt-4o-mini")  # or any fine-tunable model
 dspy.configure(lm=student_lm)
 finetuned = optimizer.compile(student, trainset=trainset)
 
 # Fine-tune an open-source model via Together AI
-student_lm = dspy.LM("together_ai/meta-llama/Llama-3-70b-chat-hf")
+student_lm = dspy.LM("together_ai/meta-llama/Llama-3-70b-chat-hf")  # or any fine-tunable model
 dspy.configure(lm=student_lm)
 finetuned = optimizer.compile(student, trainset=trainset)
 ```
@@ -142,31 +142,37 @@ The model must support fine-tuning through its provider's API. Common options:
 
 ```python
 dspy.BootstrapFinetune(
-    metric,          # Scoring function: (example, prediction, trace) -> bool/float
-    num_threads=24,  # Parallel threads for bootstrapping traces
+    metric=None,            # Scoring function: (example, prediction, trace) -> bool/float
+    multitask=True,         # Share training data across predictors
+    train_kwargs=None,      # Fine-tuning hyperparams (e.g., {"n_epochs": 2})
+    exclude_demos=False,    # Clear few-shot demos after fine-tuning
+    num_threads=None,       # Parallel threads for bootstrapping
 )
 ```
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `metric` | `Callable` | Scores each trace during bootstrapping. Only passing traces become training data. Same signature as evaluation metrics: `(example, prediction, trace=None) -> bool or float` |
-| `num_threads` | `int` | Number of parallel threads for running the program on training examples. Higher = faster bootstrapping but more concurrent API calls. Default varies; 24 is a good starting point. |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `metric` | `Callable \| None` | `None` | Scores each trace during bootstrapping. Only passing traces become training data. |
+| `multitask` | `bool` | `True` | When `True`, shares training data across predictors. When `False`, each predictor gets its own fine-tuning data. |
+| `train_kwargs` | `dict \| None` | `None` | Fine-tuning hyperparameters passed to the provider (e.g., `{"n_epochs": 2}`). Can be LM-specific: `{lm: {"n_epochs": 3}}`. |
+| `exclude_demos` | `bool` | `False` | If `True`, clears few-shot demos after fine-tuning (the model has internalized them). |
+| `num_threads` | `int \| None` | `None` | Threads for bootstrapping. Must be >= the number of fine-tuning jobs. 24 is a good starting point. |
 
 The `compile` method accepts:
 
 ```python
 optimizer.compile(
-    program,         # Your dspy.Module to fine-tune
+    student,         # Your dspy.Module to fine-tune
     trainset,        # List of dspy.Example with labeled data
     teacher=None,    # Optional: a teacher program for distillation
 )
 ```
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `program` | `dspy.Module` | The program whose backing LM will be fine-tuned |
-| `trainset` | `list[dspy.Example]` | Labeled training data (500+ recommended) |
-| `teacher` | `dspy.Module or None` | If provided, the teacher generates traces instead of the student. Use for distillation. |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `student` | `dspy.Module` | required | The program whose backing LM will be fine-tuned |
+| `trainset` | `list[dspy.Example]` | required | Labeled training data (500+ recommended) |
+| `teacher` | `dspy.Module \| None` | `None` | If provided, the teacher generates traces instead of the student. Use for distillation. |
 
 ## Computational cost
 
@@ -259,6 +265,20 @@ If only a small fraction of training examples produce passing traces, the fine-t
 - Try `dspy.BetterTogether` to combine prompt and weight optimization
 - Confirm your metric correlates with actual quality
 - Try a different base model
+
+## Gotchas
+
+- **Claude skips prompt optimization and jumps straight to fine-tuning.** Fine-tuning is the heaviest, most expensive optimization in DSPy. Always try `BootstrapFewShot` and `MIPROv2` first — they are 10-100x cheaper and often close the gap enough. Fine-tune only when prompt optimization plateaus.
+- **Claude forgets to set `dspy.configure(lm=student_lm)` before calling `compile`.** BootstrapFinetune fine-tunes whatever LM is configured at compile time. If the teacher LM is still configured, the optimizer fine-tunes the expensive model instead of the cheap student. Always switch to the student LM before calling `compile`.
+- **Claude sets `num_threads` too low for multi-predictor programs.** `num_threads` must be >= the number of fine-tuning jobs (one per unique LM across all predictors). If a program has 3 predictors all using the same LM, that is 1 job. If each uses a different LM, that is 3 jobs. BootstrapFinetune raises a `ValueError` if threads are insufficient.
+- **Claude does not set `exclude_demos=True` after fine-tuning.** Once the model weights have internalized the reasoning patterns, few-shot demos in the prompt are redundant and waste tokens. Set `exclude_demos=True` to remove them automatically, reducing prompt length and inference cost.
+- **Claude uses BootstrapFinetune with fewer than 200 successful traces.** The optimizer only keeps traces where the metric passes. If your dataset is 500 examples but only 20% pass, you get ~100 traces — too few for effective fine-tuning. Check your metric pass rate first and use a stronger teacher or relax the metric to get 200+ passing traces.
+
+## Additional resources
+
+- [dspy.BootstrapFinetune API docs](https://dspy.ai/api/optimizers/BootstrapFinetune/)
+- [reference.md](reference.md) — constructor parameters, compile() method, fine-tuning hyperparameters
+- [examples.md](examples.md) — teacher-student distillation, production cost reduction workflow
 
 ## Cross-references
 

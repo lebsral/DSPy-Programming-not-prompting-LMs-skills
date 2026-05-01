@@ -1,35 +1,32 @@
 [
   {
-    "prompt": "My DSPy Predict module keeps throwing AdapterParseError. The model responds with the right content but does not use the [[ ## field ## ]] format. How do I fix this?",
-    "expected_output": "Debugging steps: inspect_history to see what was sent/received, note that JSON fallback may already be handling it silently, and if not, switch to JSONAdapter for that module.",
+    "prompt": "My DSPy program works with GPT-4o but fails to parse outputs with a different model. How do I debug what ChatAdapter is sending and receiving?",
+    "expected_output": "Uses dspy.inspect_history() to examine the formatted prompt and response, checks for delimiter compliance",
     "assertions": [
-      "Suggests dspy.inspect_history() to see the actual prompt and response",
-      "Explains that ChatAdapter falls back to JSONAdapter automatically by default",
-      "Shows how to switch to JSONAdapter as a fix if fallback also fails",
-      "Does not suggest instantiating ChatAdapter unnecessarily when it is already the default"
+      "Uses dspy.inspect_history(n=1) to inspect the exact messages sent",
+      "Checks whether the response contains [[ ## field ## ]] delimiters",
+      "Mentions that JSON fallback may have already self-healed the error",
+      "Suggests switching to JSONAdapter if ChatAdapter consistently fails with the model"
     ]
   },
   {
-    "prompt": "I want to use native function calling with DSPy instead of the text-based field delimiters. How do I enable it?",
-    "expected_output": "Code showing ChatAdapter with use_native_function_calling=True, with a warning that not all providers support it.",
+    "prompt": "I have a pipeline where one step needs reliable JSON output from a Pydantic model and another step just generates freeform text. Can I use different adapters for each?",
+    "expected_output": "Uses set_adapter() to assign JSONAdapter to the structured step while keeping ChatAdapter as default",
     "assertions": [
-      "Creates ChatAdapter with use_native_function_calling=True",
-      "Passes the adapter to dspy.configure",
-      "Warns that not all providers support native function calling",
-      "Mentions native_response_types for limiting which types use native features",
-      "Uses provider-agnostic LM configuration with alternative comment"
+      "Uses module.set_adapter(dspy.JSONAdapter()) for the structured output step",
+      "Keeps ChatAdapter as the global default for freeform text steps",
+      "Does NOT change the global adapter with dspy.configure for just one module",
+      "Explains that set_adapter overrides per-module without affecting other modules"
     ]
   },
   {
-    "prompt": "What is the difference between ChatAdapter and JSONAdapter in DSPy? When should I use each one?",
-    "expected_output": "Comparison explaining ChatAdapter uses field delimiters while JSONAdapter uses JSON output format, with guidance on when to switch.",
+    "prompt": "I want to fine-tune a model on the exact prompt format DSPy uses so it responds correctly. How do I generate the training data?",
+    "expected_output": "Uses ChatAdapter.format_finetune_data() to generate OpenAI-compatible JSONL training data",
     "assertions": [
-      "Explains ChatAdapter uses [[ ## field ## ]] delimiters",
-      "Explains JSONAdapter requests JSON output and uses json_repair for parsing",
-      "Notes JSONAdapter has use_native_function_calling=True by default while ChatAdapter has False",
-      "Recommends JSONAdapter for complex Pydantic types or when parse failures are costly",
-      "Notes ChatAdapter already falls back to JSONAdapter on failure",
-      "Mentions TwoStepAdapter as the option for reasoning models"
+      "Uses adapter.format_finetune_data(signature, demos, inputs, outputs)",
+      "Outputs JSONL format with {messages: [system, user, assistant]} records",
+      "Notes that the fine-tuned model will respond with [[ ## field ## ]] delimiters that ChatAdapter can parse natively",
+      "Does NOT manually construct the chat message format"
     ]
   }
 ]

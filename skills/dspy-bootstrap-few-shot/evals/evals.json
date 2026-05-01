@@ -1,0 +1,37 @@
+[
+  {
+    "prompt": "I have a DSPy ChainOfThought program for classifying support tickets. I have about 80 labeled examples. Help me optimize it with BootstrapFewShot.",
+    "expected_output": "Code using dspy.BootstrapFewShot with metric, compile, and evaluation comparing baseline vs optimized scores",
+    "assertions": [
+      "Uses dspy.BootstrapFewShot (not BootstrapFewShotWithRandomSearch or MIPROv2)",
+      "Defines a metric function with (example, prediction, trace=None) signature",
+      "Calls optimizer.compile(program, trainset=trainset)",
+      "Training examples use .with_inputs() to mark input fields",
+      "Evaluates baseline BEFORE optimization to establish comparison",
+      "Uses a held-out devset separate from trainset for evaluation",
+      "Sets max_bootstrapped_demos (typically 2-8)"
+    ]
+  },
+  {
+    "prompt": "I optimized my DSPy program with BootstrapFewShot but accuracy dropped. Only about 5% of my training examples pass the metric. What should I do?",
+    "expected_output": "Diagnosis of low metric pass rate causing insufficient bootstrapped demos, with actionable fixes",
+    "assertions": [
+      "Identifies the core issue: too few passing traces means too few bootstrapped demos",
+      "Suggests relaxing the metric (e.g., containment instead of exact match, or partial credit)",
+      "Suggests checking data quality and fixing labels",
+      "Suggests trying a stronger teacher model via teacher_settings",
+      "Does NOT suggest jumping to fine-tuning or heavier optimizers as the first fix"
+    ]
+  },
+  {
+    "prompt": "I want to optimize a multi-step DSPy pipeline that first generates a search query then answers a question. I have 60 examples. Should I use BootstrapFewShot or MIPROv2?",
+    "expected_output": "Recommends BootstrapFewShot as the first step given ~60 examples, with upgrade path to MIPROv2",
+    "assertions": [
+      "Recommends BootstrapFewShot as the starting point for ~60 examples",
+      "Explains that BootstrapFewShot optimizes all predictors in the pipeline",
+      "Mentions MIPROv2 as an upgrade if accuracy plateaus (typically needs 200+ examples)",
+      "Shows that each predictor (query generation and answer) gets its own demos",
+      "Includes evaluation code with baseline comparison"
+    ]
+  }
+]

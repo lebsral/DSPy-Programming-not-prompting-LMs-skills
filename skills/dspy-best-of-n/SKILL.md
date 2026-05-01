@@ -34,7 +34,7 @@ Do **not** use BestOfN when:
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # 1. Define your module
@@ -217,6 +217,20 @@ best_qa = dspy.BestOfN(
 
 This stacks two quality improvements: better prompts from the optimizer, and rejection sampling from BestOfN.
 
+## Gotchas
+
+- **Claude writes the reward function with `(example, prediction, trace=None)` signature.** BestOfN reward functions take `(args_dict, prediction)`, not the `(example, prediction, trace)` signature used by `dspy.Evaluate` metrics. The `args` dict contains only the inputs you passed to the call, not labeled examples with gold outputs.
+- **Claude sets N too high without considering cost.** Each attempt is a full LM call at temperature=1.0. N=10 means 10x the token cost. Start with N=3 and increase only if your metric shows improvement — diminishing returns kick in quickly above N=5.
+- **Claude uses BestOfN when the reward function is as expensive as the module itself.** If your reward function calls an LM (e.g., LM-as-judge), each BestOfN attempt costs 2x tokens (one for the module, one for the judge). For N=5, that is 10 LM calls total. Use programmatic reward functions (test execution, regex, length checks) whenever possible.
+- **Claude forgets to set `threshold` to enable early stopping.** Without a meaningful threshold, BestOfN always runs all N attempts even when the first one is perfect. Set threshold to a value that represents "good enough" (e.g., 1.0 for binary pass/fail, 0.9 for graded metrics) to save tokens on easy inputs.
+- **Claude wraps an already-optimized module but does not evaluate the incremental gain.** BestOfN on top of an optimized module costs N times more per call at inference time. Always measure the quality gain from BestOfN separately to confirm the extra cost is justified — if the optimized module already hits 95%+, BestOfN may not add enough to be worth it.
+
+## Additional resources
+
+- [dspy.BestOfN API docs](https://dspy.ai/api/modules/BestOfN/)
+- [reference.md](reference.md) — constructor parameters, forward() method, key behaviors
+- [examples.md](examples.md) — code generation with test-based selection, summarization with graded metric
+
 ## Cross-references
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
@@ -224,5 +238,4 @@ This stacks two quality improvements: better prompts from the optimizer, and rej
 - **MultiChainComparison** for LM-based candidate selection -- see `/dspy-multi-chain-comparison`
 - **Evaluate** for measuring quality with metrics and devsets -- see `/dspy-evaluate`
 - **Improving accuracy** for the full optimization workflow -- see `/ai-improving-accuracy`
-- For worked examples, see [examples.md](examples.md)
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

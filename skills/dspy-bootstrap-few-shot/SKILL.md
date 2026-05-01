@@ -35,7 +35,7 @@ optimized = optimizer.compile(my_program, trainset=trainset)
 import dspy
 from dspy.evaluate import Evaluate
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # 1. Define your program
@@ -75,11 +75,13 @@ print(f"Optimized: {improved:.1f}%")
 
 ```python
 optimizer = dspy.BootstrapFewShot(
-    metric=metric,                # Required. Scoring function(example, prediction, trace) -> bool/float
+    metric=metric,                # Scoring function(example, prediction, trace) -> bool/float
     max_bootstrapped_demos=4,     # Max bootstrapped (generated) demos per predictor. Default: 4
     max_labeled_demos=16,         # Max labeled (from trainset) demos per predictor. Default: 16
     max_rounds=1,                 # Number of bootstrap rounds. Default: 1
-    max_errors=5,                 # Max errors before stopping. Default: 5
+    max_errors=None,              # Error tolerance. Default: None (uses dspy.settings.max_errors)
+    metric_threshold=None,        # Numerical threshold for accepting bootstrap examples
+    teacher_settings=None,        # Config dict for the teacher model (e.g., {"lm": teacher_lm})
 )
 ```
 
@@ -91,7 +93,11 @@ optimizer = dspy.BootstrapFewShot(
 
 - **`max_rounds`** — Number of bootstrapping iterations. In each round, the optimizer runs the program (with any demos from previous rounds) and collects new passing traces. More rounds can find better demos but take longer. Usually 1 is sufficient.
 
-- **`max_errors`** — How many failed examples to tolerate before the optimizer stops. Increase if your task is noisy or the metric is strict.
+- **`max_errors`** — How many failed examples to tolerate before the optimizer stops. Defaults to `None` (uses `dspy.settings.max_errors`). Increase if your task is noisy or the metric is strict.
+
+- **`metric_threshold`** — Numerical threshold for accepting bootstrap examples. When set, only traces scoring above this threshold become demos. Useful when your metric returns floats rather than booleans.
+
+- **`teacher_settings`** — Configuration dict for a teacher model. Pass `{"lm": teacher_lm}` to use a stronger model for generating traces while the student uses a cheaper model.
 
 ## How bootstrapping works
 
@@ -222,6 +228,20 @@ A typical progression:
 - Reduce trainset size (50-100 examples is often enough)
 - Use a faster/cheaper LM for bootstrapping, then evaluate with the target LM
 - Reduce `max_rounds` to 1
+
+## Gotchas
+
+- **Claude sets `max_labeled_demos` too high, bloating the prompt.** The default is 16, which adds up to 16 raw input/output pairs from the trainset to the prompt. For tasks with long inputs, this can consume most of the context window. Start with `max_labeled_demos=4` and increase only if accuracy improves.
+- **Claude forgets `.with_inputs()` on training examples.** Every `dspy.Example` in the trainset must call `.with_inputs("field1", "field2")` to mark which fields are inputs vs labels. Without it, the optimizer cannot distinguish inputs from expected outputs and bootstrapping silently produces garbage demos.
+- **Claude overlaps trainset and devset.** If the devset contains examples also in the trainset, evaluation scores are inflated because the optimizer has already seen those examples. Always use a held-out devset with no overlap.
+- **Claude uses a strict exact-match metric that rejects most traces.** If fewer than ~10% of training examples pass the metric, barely any demos get bootstrapped. Check your metric pass rate on the trainset first. Relax the metric (e.g., use containment instead of exact match) or fix data quality before optimizing.
+- **Claude does not compare baseline vs optimized scores.** Without a baseline evaluation, there is no way to know if optimization helped or hurt. Always evaluate the unoptimized program on the devset first, then compare after optimization.
+
+## Additional resources
+
+- [dspy.BootstrapFewShot API docs](https://dspy.ai/api/optimizers/BootstrapFewShot/)
+- [reference.md](reference.md) — constructor parameters, compile() method, key behaviors
+- [examples.md](examples.md) — QA optimization, classification with trace-aware metrics
 
 ## Cross-references
 

@@ -121,7 +121,7 @@ class ReleaseDecision(dspy.Signature):
 
 # --- Usage ---
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 decider = dspy.ChainOfThought(ReleaseDecision)
@@ -221,7 +221,7 @@ class ClassifyTicket(dspy.Signature):
 
 # --- Usage ---
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 classifier = dspy.ChainOfThought(ClassifyTicket)

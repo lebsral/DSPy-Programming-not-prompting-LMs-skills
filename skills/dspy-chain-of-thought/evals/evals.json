@@ -1,0 +1,32 @@
+[
+  {
+    "prompt": "I want to classify support tickets into categories but the model keeps getting edge cases wrong. How can I make it think through the classification before deciding?",
+    "expected_output": "Uses dspy.ChainOfThought instead of dspy.Predict so the LM reasons before classifying",
+    "assertions": [
+      "Uses dspy.ChainOfThought (not dspy.Predict) for the classification task",
+      "Does NOT add a reasoning field to the signature — explains DSPy injects it automatically",
+      "Shows how to access result.reasoning on the output",
+      "Includes provider-agnostic dspy.LM() call with comment showing alternatives"
+    ]
+  },
+  {
+    "prompt": "What is the difference between dspy.Predict and dspy.ChainOfThought? When should I use each?",
+    "expected_output": "Explains ChainOfThought adds a reasoning step before output, with guidance on when each is better",
+    "assertions": [
+      "Explains ChainOfThought adds an automatic reasoning field before output fields",
+      "Recommends Predict for simple extraction, lookups, and straightforward tasks",
+      "Recommends ChainOfThought for multi-step logic, analysis, and complex classification",
+      "Mentions the latency and token cost tradeoff of CoT"
+    ]
+  },
+  {
+    "prompt": "I am using dspy.ChainOfThought but the output keeps getting truncated — I get the reasoning but the actual answer field is missing. What is going wrong?",
+    "expected_output": "Explains that max_tokens may be too low, cutting off the response before output fields are generated",
+    "assertions": [
+      "Identifies max_tokens as the likely cause — reasoning is generated first and consumes the token budget",
+      "Suggests increasing max_tokens to leave room for output fields after reasoning",
+      "Does NOT suggest adding reasoning as an explicit field in the signature",
+      "May suggest using dspy.inspect_history() to see the raw LM output"
+    ]
+  }
+]

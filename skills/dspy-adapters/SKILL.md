@@ -1,6 +1,6 @@
 ---
 name: dspy-adapters
-description: Use when you need to customize how DSPy formats prompts for a specific provider — switching from chat to completion format, forcing JSON output, or debugging prompt rendering issues. Common scenarios: debugging why your prompt looks wrong when sent to the model, switching from OpenAI to Anthropic and the formatting breaks, forcing the model to return valid JSON instead of markdown, working with completion-style models that do not support chat format, customizing system messages, or handling models that choke on structured output instructions. Related: ai-switching-models, ai-following-rules, ai-parsing-data. Also: prompt template rendering, how DSPy builds the prompt, custom system message in DSPy, JSON mode not working, model ignores format instructions, switch from chat to completion API, dspy.ChatAdapter, dspy.JSONAdapter, prompt formatting issues, debug what DSPy sends to the model.
+description: Use when you need to customize how DSPy formats prompts for a specific provider — switching from chat to completion format, forcing JSON output, or debugging prompt rendering issues. Common scenarios: debugging why your prompt looks wrong when sent to the model, switching from OpenAI to Anthropic and the formatting breaks, forcing the model to return valid JSON instead of markdown, working with completion-style models that do not support chat format, customizing system messages, or handling models that choke on structured output instructions. Related: ai-switching-models, ai-following-rules, ai-parsing-data. Also: prompt template rendering, how DSPy builds the prompt, custom system message in DSPy, JSON mode not working, model ignores format instructions, switch from chat to completion API, dspy.ChatAdapter, dspy.JSONAdapter, prompt formatting issues, debug what DSPy sends to the model, dspy.XMLAdapter, XML output format.
 ---
 
 # Control Prompt Formatting with DSPy Adapters
@@ -16,12 +16,13 @@ Every time a DSPy module calls an LM, an adapter handles two jobs:
 
 You never call adapters directly. You configure one globally or per-module, and DSPy uses it behind the scenes.
 
-## The three built-in adapters
+## The four built-in adapters
 
 | Adapter | How it formats | How it parses | Best for |
 |---------|---------------|---------------|----------|
 | `ChatAdapter` | Field markers like `[[ ## field_name ## ]]` | Splits on field headers | General use (default) |
 | `JSONAdapter` | Requests JSON output with field schema | `json_repair` + type casting | Reliable structured output |
+| `XMLAdapter` | XML tags like `<field_name>value</field_name>` | Regex on XML tags | Models that handle XML well |
 | `TwoStepAdapter` | Natural language prompt (no formatting constraints) | Sends raw response to a second LM for extraction | Reasoning models (o1, o3) |
 
 ## ChatAdapter (the default)
@@ -32,7 +33,7 @@ You never call adapters directly. You configure one globally or per-module, and 
 import dspy
 
 # ChatAdapter is used automatically -- no configuration needed
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 classify = dspy.ChainOfThought("text -> label")
@@ -77,7 +78,7 @@ dspy.configure(lm=lm, adapter=adapter)
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 adapter = dspy.JSONAdapter()
 dspy.configure(lm=lm, adapter=adapter)
 
@@ -126,7 +127,7 @@ class ExtractInvoice(dspy.Signature):
     document: str = dspy.InputField()
     invoice: Invoice = dspy.OutputField()
 
-lm = dspy.LM("openai/gpt-4o")
+lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 adapter = dspy.JSONAdapter()
 dspy.configure(lm=lm, adapter=adapter)
 
@@ -136,6 +137,43 @@ print(result.invoice.vendor)      # Acme Corp
 print(result.invoice.total)       # 1250.0
 print(result.invoice.line_items)  # [...]
 ```
+
+## XMLAdapter
+
+`XMLAdapter` extends `ChatAdapter` and wraps input/output fields in XML tags like `<field_name>value</field_name>` instead of `[[ ## field ## ]]` delimiters. Some models respond more reliably to XML-structured prompts.
+
+```python
+import dspy
+
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+adapter = dspy.XMLAdapter()
+dspy.configure(lm=lm, adapter=adapter)
+
+classify = dspy.Predict("text -> label: str, confidence: float")
+result = classify(text="Great product!")
+```
+
+### Constructor parameters
+
+```python
+dspy.XMLAdapter(
+    callbacks=None,  # Optional list of BaseCallback objects
+)
+```
+
+### Key behavior
+
+- Formats fields with XML tags: `<field_name>value</field_name>`.
+- Parses responses by matching XML tag patterns with regex.
+- Falls back to `JSONAdapter` on parse failure (like `ChatAdapter`).
+- Simpler constructor than ChatAdapter -- only takes `callbacks`.
+
+### When to use XMLAdapter
+
+Consider `XMLAdapter` when:
+
+- Your model handles XML-structured prompts better than field delimiters.
+- You want a lighter-weight alternative to JSONAdapter that does not require native structured output support.
 
 ## TwoStepAdapter
 
@@ -148,10 +186,10 @@ print(result.invoice.line_items)  # [...]
 import dspy
 
 # Main LM: a reasoning model that struggles with structured output
-main_lm = dspy.LM("openai/o3-mini", max_tokens=16000, temperature=1.0)
+main_lm = dspy.LM("openai/o3-mini", max_tokens=16000, temperature=1.0)  # or another reasoning model
 
 # Extraction model: a fast, cheap model for parsing
-extraction_lm = dspy.LM("openai/gpt-4o-mini")
+extraction_lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-haiku-3-5-20241022", etc.
 
 adapter = dspy.TwoStepAdapter(extraction_model=extraction_lm)
 dspy.configure(lm=main_lm, adapter=adapter)
@@ -166,7 +204,7 @@ print(result.answer)
 
 ```python
 dspy.TwoStepAdapter(
-    extraction_model=dspy.LM("openai/gpt-4o-mini"),  # Required: LM for structured extraction
+    extraction_model=dspy.LM("openai/gpt-4o-mini"),  # Required: cheap LM for extraction
 )
 ```
 
@@ -191,6 +229,7 @@ Use `TwoStepAdapter` when:
 | General use, most models | `ChatAdapter` (default) | Works out of the box, no config needed |
 | Need reliable JSON/Pydantic output | `JSONAdapter` | Stricter parsing, native structured output support |
 | Complex nested output types | `JSONAdapter` | Better at complex schemas than field-delimiter parsing |
+| Model responds better to XML structure | `XMLAdapter` | XML tags instead of field delimiters |
 | Using reasoning models (o1, o3) | `TwoStepAdapter` | Reasoning models perform worse with format constraints |
 | Parse failures in production | `JSONAdapter` | More resilient parsing with `json_repair` |
 | Fastest iteration, prototyping | `ChatAdapter` (default) | Zero config, good enough for most tasks |
@@ -204,7 +243,7 @@ Set the adapter for all modules at once:
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 adapter = dspy.JSONAdapter()
 dspy.configure(lm=lm, adapter=adapter)
 ```
@@ -244,6 +283,10 @@ pipeline = Pipeline()
 pipeline.extract.set_adapter(dspy.JSONAdapter())
 ```
 
+## Other adapters
+
+- **BamlAdapter** (`dspy.adapters.baml_adapter`) — exists in the DSPy source but is undocumented and likely experimental. It integrates with the [BAML](https://docs.boundaryml.com/) structured output framework. Do not use in production until it has official documentation.
+
 ## Custom adapters
 
 You can build your own adapter by subclassing the base `Adapter` class. This is advanced -- only needed if the built-in adapters do not fit your use case.
@@ -281,7 +324,7 @@ By default, `ChatAdapter` already falls back to `JSONAdapter` on parse failure. 
 
 ```python
 # This is the default behavior -- you get it for free
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 # ChatAdapter is used, with automatic JSONAdapter fallback on failure
 ```
@@ -297,8 +340,8 @@ dspy.configure(lm=lm, adapter=adapter)
 
 ```python
 # Full setup for reasoning models
-reasoning_lm = dspy.LM("openai/o3-mini", max_tokens=16000, temperature=1.0)
-extraction_lm = dspy.LM("openai/gpt-4o-mini")
+reasoning_lm = dspy.LM("openai/o3-mini", max_tokens=16000, temperature=1.0)  # or another reasoning model
+extraction_lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-haiku-3-5-20241022", etc.
 
 adapter = dspy.TwoStepAdapter(extraction_model=extraction_lm)
 dspy.configure(lm=reasoning_lm, adapter=adapter)
@@ -309,7 +352,7 @@ dspy.configure(lm=reasoning_lm, adapter=adapter)
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o")
+lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)  # default ChatAdapter
 
 class MixedPipeline(dspy.Module):
@@ -327,6 +370,24 @@ pipeline = MixedPipeline()
 # JSONAdapter for extraction (need reliable structured output)
 pipeline.extract.set_adapter(dspy.JSONAdapter())
 ```
+
+## Gotchas
+
+- **Claude switches to JSONAdapter for every task.** JSONAdapter is not always better — it adds JSON formatting constraints to the prompt that can degrade reasoning quality on open-ended tasks like summarization or creative writing. Use the default ChatAdapter for freeform text output and reserve JSONAdapter for tasks that need reliable structured output (Pydantic models, typed fields, API responses).
+- **Claude forgets that ChatAdapter already falls back to JSONAdapter.** By default, `ChatAdapter` automatically retries with `JSONAdapter` when parsing fails. If you are only switching to JSONAdapter to fix occasional parse errors, the default fallback may already handle it. Only switch globally when you need JSON for every call.
+- **Claude uses TwoStepAdapter with a cheap extraction model that is too weak.** The extraction model must be capable enough to reliably parse the reasoning model output into structured fields. GPT-4o-mini works well for most extraction; do not use a model weaker than that or you trade reasoning quality for parse failures.
+- **Claude configures TwoStepAdapter but does not set the main LM to a reasoning model.** TwoStepAdapter adds latency and cost (two LM calls per prediction). It only makes sense when the main LM is a reasoning model (o1, o3) that performs worse with formatting constraints. For standard models like GPT-4o or Claude, use ChatAdapter or JSONAdapter directly.
+- **Claude does not use `set_adapter()` for per-module overrides.** When a pipeline has steps that need different adapters (e.g., freeform summarization + structured extraction), Claude sets the adapter globally instead of per-module. Use `pipeline.extract.set_adapter(dspy.JSONAdapter())` to override only the modules that need it.
+
+## Additional resources
+
+- [dspy.ChatAdapter API docs](https://dspy.ai/api/adapters/ChatAdapter/)
+- [dspy.JSONAdapter API docs](https://dspy.ai/api/adapters/JSONAdapter/)
+- [dspy.XMLAdapter API docs](https://dspy.ai/api/adapters/XMLAdapter/)
+- [dspy.TwoStepAdapter API docs](https://dspy.ai/api/adapters/TwoStepAdapter/)
+- [Adapter base class API docs](https://dspy.ai/api/adapters/Adapter/)
+- [reference.md](reference.md) — constructor parameters, key methods, behavior details
+- [examples.md](examples.md) — JSONAdapter with Pydantic, TwoStepAdapter for reasoning models, per-module adapter switching
 
 ## Cross-references
 

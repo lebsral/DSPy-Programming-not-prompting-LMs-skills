@@ -1,0 +1,33 @@
+[
+  {
+    "prompt": "I have a classifier running on GPT-4o that costs too much in production. I have 800 labeled examples. How do I fine-tune GPT-4o-mini to get similar quality at lower cost?",
+    "expected_output": "Uses dspy.BootstrapFinetune with teacher-student distillation pattern",
+    "assertions": [
+      "Uses dspy.BootstrapFinetune (not BootstrapFewShot or MIPROv2)",
+      "Sets up a teacher model (GPT-4o) and student model (GPT-4o-mini)",
+      "Calls dspy.configure(lm=student_lm) before optimizer.compile()",
+      "Passes teacher to compile(): optimizer.compile(student, trainset=trainset, teacher=teacher)",
+      "Shows how to save the fine-tuned program for production use"
+    ]
+  },
+  {
+    "prompt": "Should I use BootstrapFinetune or MIPROv2? I have 150 labeled examples and want better accuracy.",
+    "expected_output": "Recommends MIPROv2 first since 150 examples is too few for fine-tuning",
+    "assertions": [
+      "Recommends MIPROv2 or BootstrapFewShot over BootstrapFinetune for 150 examples",
+      "Explains that BootstrapFinetune needs 500+ examples for effective fine-tuning",
+      "Suggests trying prompt optimization first since it is cheaper and faster",
+      "Does NOT set up BootstrapFinetune with only 150 examples"
+    ]
+  },
+  {
+    "prompt": "My BootstrapFinetune run only produced 50 successful traces from 600 examples. The fine-tuned model is barely better than baseline. What went wrong?",
+    "expected_output": "Diagnoses low trace pass rate and suggests fixes",
+    "assertions": [
+      "Identifies low metric pass rate as the problem — 50 traces is too few for effective fine-tuning",
+      "Suggests using a stronger teacher model to generate higher-quality traces",
+      "May suggest relaxing the metric temporarily during bootstrapping",
+      "May suggest adding more training data so even a low pass rate yields enough traces"
+    ]
+  }
+]
