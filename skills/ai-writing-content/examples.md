@@ -10,7 +10,7 @@ Generate SEO-friendly blog posts from a topic and target audience.
 import dspy
 from pydantic import BaseModel, Field
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 ```
 
@@ -131,23 +131,24 @@ class ProductWriter(dspy.Module):
             brand_voice=brand_voice,
         )
 
-        # Enforce constraints
-        dspy.Assert(
-            len(result.description.headline.split()) <= 10,
-            f"Headline is {len(result.description.headline.split())} words, must be under 10"
-        )
-        dspy.Suggest(
-            len(result.description.key_features) >= 3,
-            "Include at least 3 key features"
-        )
-
         return result
+
+
+def product_reward(args, prediction):
+    """Reward function for product description quality."""
+    score = 1.0
+    headline_words = len(prediction.description.headline.split())
+    if headline_words > 10:
+        score -= 0.4  # headline too long
+    if len(prediction.description.key_features) < 3:
+        score -= 0.2  # too few features
+    return max(score, 0.0)
 ```
 
 ### Usage
 
 ```python
-writer = ProductWriter()
+writer = dspy.Refine(module=ProductWriter(), N=3, reward_fn=product_reward, threshold=0.8)
 result = writer(
     product_name="CloudSync Pro Backpack",
     product_details="Water-resistant 600D polyester, 15.6 inch laptop compartment, USB charging port, 30L capacity, YKK zippers, padded shoulder straps, weight: 1.2kg",
@@ -168,7 +169,7 @@ products = [
     # ...
 ]
 
-writer = ProductWriter()
+writer = dspy.Refine(module=ProductWriter(), N=3, reward_fn=product_reward, threshold=0.8)
 for product in products:
     result = writer(**product, brand_voice="minimal and premium")
     save_to_catalog(product["product_name"], result.description)
@@ -200,33 +201,26 @@ class EmailComposer(dspy.Module):
         self.compose = dspy.ChainOfThought(ComposeEmail)
 
     def forward(self, brief, audience="customers", tone="friendly"):
-        result = self.compose(brief=brief, audience=audience, tone=tone)
+        return self.compose(brief=brief, audience=audience, tone=tone)
 
-        # Subject line constraints
-        dspy.Assert(
-            len(result.email.subject_line) <= 60,
-            f"Subject line is {len(result.email.subject_line)} chars, must be under 60"
-        )
-        dspy.Assert(
-            len(result.email.preview_text) <= 90,
-            f"Preview text is {len(result.email.preview_text)} chars, must be under 90"
-        )
 
-        # No spammy patterns
-        spam_words = ["free", "act now", "limited time", "click here"]
-        subject_lower = result.email.subject_line.lower()
-        dspy.Suggest(
-            not any(word in subject_lower for word in spam_words),
-            "Avoid spammy words in the subject line"
-        )
-
-        return result
+def email_reward_fn(args, prediction):
+    """Reward function for email quality constraints."""
+    score = 1.0
+    if len(prediction.email.subject_line) > 60:
+        score -= 0.3
+    if len(prediction.email.preview_text) > 90:
+        score -= 0.3
+    spam_words = ["free", "act now", "limited time", "click here"]
+    if any(w in prediction.email.subject_line.lower() for w in spam_words):
+        score -= 0.2
+    return max(score, 0.0)
 ```
 
 ### Usage
 
 ```python
-composer = EmailComposer()
+composer = dspy.Refine(module=EmailComposer(), N=3, reward_fn=email_reward_fn, threshold=0.8)
 result = composer(
     brief="Announce our new API v2 with breaking changes. Migration guide available. Deadline is March 1.",
     audience="developers using our API",
@@ -257,5 +251,7 @@ def email_metric(example, prediction, trace=None):
     return (result.covers_brief + result.clear_cta + result.appropriate_tone) / 3
 
 optimizer = dspy.BootstrapFewShot(metric=email_metric, max_bootstrapped_demos=4)
-optimized = optimizer.compile(EmailComposer(), trainset=trainset)
+optimized_base = optimizer.compile(EmailComposer(), trainset=trainset)
+# Wrap optimized module with Refine for runtime quality enforcement
+optimized = dspy.Refine(module=optimized_base, N=3, reward_fn=email_reward_fn, threshold=0.8)
 ```

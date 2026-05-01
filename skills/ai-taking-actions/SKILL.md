@@ -1,6 +1,6 @@
 ---
 name: ai-taking-actions
-description: Build AI that takes actions, calls APIs, and does things autonomously. Use when you need AI to call APIs, use tools, perform calculations, search the web and act on results, interact with databases, or do multi-step tasks. Powered by DSPy agents (ReAct, CodeAct)., AI that does things not just talks, tool-using AI agent, AI calls external APIs, function calling with DSPy, build AI that books appointments, AI workflow automation, agent that searches and acts on results, AI that updates databases, autonomous AI agent, AI performs multi-step tasks, give LLM access to tools, agentic AI workflow, AI agent for DevOps, build AI assistant that takes actions, MCP tool integration with AI, AI that can browse and click, LLM with tool access.
+description: Build AI that takes actions, calls APIs, and does things autonomously. Use when you need AI to call APIs, use tools, perform calculations, search the web and act on results, interact with databases, or do multi-step tasks. Also AI that does things not just talks, tool-using AI agent, AI calls external APIs, function calling with DSPy, build AI that books appointments, AI workflow automation, agent that searches and acts on results, AI that updates databases, autonomous AI agent, AI performs multi-step tasks, give LLM access to tools, agentic AI workflow, AI agent for DevOps, build AI assistant that takes actions, MCP tool integration with AI, AI that can browse and click, LLM with tool access.
 ---
 
 # Build AI That Takes Actions
@@ -41,6 +41,16 @@ def lookup_database(table: str, query: str) -> str:
 
 ## Step 3: Build the AI
 
+### Choose your agent module
+
+| | ReAct | CodeAct |
+|---|---|---|
+| **Best for** | General tool-calling (APIs, search, databases) | Tasks where writing code is more natural (math, data transforms) |
+| **How it works** | Alternates thinking and tool calls | Writes and executes Python code with tool access |
+| **Tool types** | Any callable, `dspy.Tool`, LangChain tools | Pure functions only (no callable objects or external deps) |
+| **Default max_iters** | 20 | 5 |
+| **Start here?** | Yes — most general-purpose | When the task is inherently code-centric |
+
 ### ReAct (Reasoning + Acting) — start here
 
 The standard choice. Alternates between thinking and acting:
@@ -48,10 +58,13 @@ The standard choice. Alternates between thinking and acting:
 ```python
 import dspy
 
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+dspy.configure(lm=lm)
+
 agent = dspy.ReAct(
     "question -> answer",
     tools=[search, calculate],
-    max_iters=5,  # max steps before stopping
+    max_iters=8,  # default is 20; lower for simple tasks to save cost
 )
 
 result = agent(question="What is the population of France divided by 3?")
@@ -60,13 +73,13 @@ print(result.answer)
 
 ### CodeAct — for code-heavy tasks
 
-For tasks where writing and executing code is more natural:
+Writes and executes Python code. Only accepts **pure functions** as tools — no callable objects or undeclared dependencies:
 
 ```python
 agent = dspy.CodeAct(
     "question -> answer",
-    tools=[search, calculate],
-    max_iters=5,
+    tools=[calculate],  # pure functions only
+    max_iters=5,  # default is 5
 )
 
 result = agent(question="Calculate the compound interest on $1000 at 5% for 10 years")
@@ -165,20 +178,32 @@ Install the tools you need:
 pip install langchain-community  # DuckDuckGo, Wikipedia, requests, etc.
 ```
 
-For the full LangChain/LangGraph API reference, see [`docs/langchain-langgraph-reference.md`](../../docs/langchain-langgraph-reference.md).
+For more LangChain tools, see the [LangChain community tools docs](https://python.langchain.com/docs/integrations/tools/).
 
-## Key patterns
+## When NOT to use agents
 
-- **Start with ReAct** — it's the most general-purpose action module
-- **Keep tools simple** — each tool should do one thing well
-- **Set `max_iters`** to prevent infinite loops (default is usually fine)
-- **Use descriptive docstrings** — the AI uses them to decide when to call each tool
-- **Test without optimization first** — action AI often works well zero-shot
-- **Add assertions** for safety — use `dspy.Assert` to prevent dangerous tool calls
+- **Single-step tasks** — if the AI just needs to answer a question or classify text, use `dspy.Predict` or `dspy.ChainOfThought` instead. Agents add overhead (multiple LM calls per request).
+- **Deterministic workflows** — if the steps are always the same, write the code yourself and use DSPy modules for the LM-powered steps only. Agents shine when the path depends on intermediate results.
+- **Cost-sensitive applications** — each ReAct iteration is a separate LM call. A 5-step agent costs roughly 5x a single Predict call. Consider whether the task justifies this.
+
+## Gotchas
+
+- **Claude sets `max_iters=5` for ReAct but the default is 20.** The API default of 20 is generous — for most tasks, 5-10 iterations suffice. Set it explicitly to control cost, but do not assume 5 is the framework default.
+- **CodeAct only accepts pure functions as tools.** Passing callable objects, class instances, or functions with undeclared dependencies will fail silently or error. If your tool has external deps, use ReAct instead.
+- **Claude forgets to call `dspy.configure(lm=lm)` before creating agents.** The agent will fail at runtime with confusing errors if no LM is configured. Always configure the LM before instantiating any module.
+- **Tool docstrings are the AI's only guidance on when to call each tool.** Vague docstrings like "do stuff" cause the agent to misroute. Write docstrings that describe what the tool does and when to use it, as if explaining to a colleague.
+- **Claude wraps tool return values in complex objects instead of strings.** DSPy agents expect tools to return strings (or values that convert cleanly to strings). Returning dicts, lists, or custom objects can cause the agent to misinterpret results.
+
+## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
+- **Multiple agents working together** — see `/ai-coordinating-agents`
+- **Measure and improve accuracy** — see `/ai-improving-accuracy`
+- **ReAct and CodeAct module details** — see `/dspy-react` or `/dspy-code-act` (if available)
+- **Signatures for defining agent I/O** — see `/dspy-signatures`
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources
 
 - For worked examples (calculator, search, APIs), see [examples.md](examples.md)
-- Need multiple agents working together (not just one)? Use `/ai-coordinating-agents`
-- Next: `/ai-improving-accuracy` to measure and improve your AI
-- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

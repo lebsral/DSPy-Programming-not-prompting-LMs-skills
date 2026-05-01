@@ -28,6 +28,8 @@ npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --all
 |-------------|-------|--------------|
 | "I want to build something with AI but not sure where to start" | [`/ai-do`](skills/ai-do/SKILL.md) | Describe your problem, get routed to the right skill with a ready-to-use prompt |
 | "I'm starting a new AI feature" / "DSPy quickstart" | [`/ai-kickoff`](skills/ai-kickoff/SKILL.md) | Scaffold a complete AI project with the right structure |
+| "I need a multi-phase plan for my AI feature" / "what order should I build this in" | [`/ai-planning`](skills/ai-planning/SKILL.md) | Create a phased roadmap before you start building |
+| "Which DSPy module should I use?" / "Predict vs ChainOfThought" | [`/ai-choosing-architecture`](skills/ai-choosing-architecture/SKILL.md) | Pick the right DSPy pattern and architecture for your task |
 | "I need to auto-sort/tag/categorize content" / "classification results are inconsistent" | [`/ai-sorting`](skills/ai-sorting/SKILL.md) | Build AI that sorts tickets, tags emails, detects sentiment |
 | "I need to search docs and answer questions" / "retrieval returns irrelevant results" / "RAG pipeline tutorial" | [`/ai-searching-docs`](skills/ai-searching-docs/SKILL.md) | Build AI-powered knowledge base, help center, or doc Q&A |
 | "I need AI to answer questions about our database" / "chat with your Postgres" | [`/ai-querying-databases`](skills/ai-querying-databases/SKILL.md) | Text-to-SQL: plain English questions over Postgres, MySQL, Snowflake |
@@ -40,6 +42,7 @@ npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --all
 | "I need to verify AI output before users see it" / "LLMs invent data points" | [`/ai-checking-outputs`](skills/ai-checking-outputs/SKILL.md) | Add guardrails, fact-checking, safety filters, and quality gates |
 | "My AI makes stuff up / hallucinates" / "LLM makes up facts" | [`/ai-stopping-hallucinations`](skills/ai-stopping-hallucinations/SKILL.md) | Ground AI in facts with citations, verification, and source checking |
 | "My AI doesn't follow our rules" / "LLM JSON output is unreliable" | [`/ai-following-rules`](skills/ai-following-rules/SKILL.md) | Enforce content policies, format rules, and business constraints |
+| "Review my DSPy code" / "is my AI code correct" / "best practices check" | [`/ai-auditing-code`](skills/ai-auditing-code/SKILL.md) | Audit DSPy code for correctness, anti-patterns, and best practices |
 | "My AI gives wrong answers" / "I spent hours tweaking prompts" | [`/ai-improving-accuracy`](skills/ai-improving-accuracy/SKILL.md) | Measure quality, then systematically improve it |
 | "My AI gives different answers every time" / "same prompt, different results every run" | [`/ai-making-consistent`](skills/ai-making-consistent/SKILL.md) | Lock down outputs so they're predictable and reliable |
 | "My AI is too expensive" / "LLM API costs too high" / "GPT-4 costs too much" | [`/ai-cutting-costs`](skills/ai-cutting-costs/SKILL.md) | Reduce API costs with smart routing, caching, fine-tuning |

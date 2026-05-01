@@ -1,0 +1,33 @@
+[
+  {
+    "prompt": "I need to build an AI that writes blog posts for our company. The posts should be around 1000 words, match our casual brand voice, and cover technical topics for developers.",
+    "expected_output": "Section-by-section content writer with outline generation and brand voice enforcement",
+    "assertions": [
+      "Generates an outline first (GenerateOutline signature or similar) before writing content",
+      "Writes section by section, NOT the whole article in one LM call",
+      "Passes previous sections for continuity when writing each new section",
+      "Uses dspy.Refine or a reward function for brand voice enforcement, NOT dspy.Assert/dspy.Suggest",
+      "Includes a quality metric (AI-as-judge or readability) for optimization"
+    ]
+  },
+  {
+    "prompt": "We have a product catalog with 500 items and need to generate consistent product descriptions for each. The descriptions need a headline under 10 words, 3-5 features, and a call to action.",
+    "expected_output": "Product description module with Pydantic output and batch processing",
+    "assertions": [
+      "Uses a Pydantic BaseModel for structured output (headline, description, features, CTA)",
+      "Uses dspy.Refine with a reward function to enforce constraints (headline length, feature count), NOT dspy.Assert",
+      "Shows batch processing pattern for multiple products",
+      "Uses ChainOfThought or Predict with a clear signature"
+    ]
+  },
+  {
+    "prompt": "Our AI-generated articles are too generic and bland. They read like AI wrote them. How do I make the content better and more engaging?",
+    "expected_output": "Add critique-improve loop, use optimization with quality metric",
+    "assertions": [
+      "Recommends a critique-improve feedback loop (generate, critique, revise)",
+      "Shows an AI-as-judge metric for scoring engagement, relevance, coherence",
+      "Suggests optimization with BootstrapFewShot using the quality metric",
+      "Does NOT just say to improve the prompt — shows a systematic pipeline approach"
+    ]
+  }
+]

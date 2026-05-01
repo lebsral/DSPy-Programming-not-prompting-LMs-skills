@@ -123,7 +123,6 @@ class ClassifyTicket(dspy.Signature):
     """Classify a support ticket into a category."""
     text: str = dspy.InputField(desc="Support ticket text")
     category: str = dspy.OutputField(desc="Category: billing, technical, account, other")
-    reasoning: str = dspy.OutputField(desc="Why this category")
 
 class Classifier(dspy.Module):
     def __init__(self):
@@ -137,7 +136,7 @@ class ClassifyRequest(BaseModel):
 
 class ClassifyResponse(BaseModel):
     category: str
-    reasoning: str
+    reasoning: str  # ChainOfThought auto-generates this field
 
 # --- FastAPI app ---
 @asynccontextmanager

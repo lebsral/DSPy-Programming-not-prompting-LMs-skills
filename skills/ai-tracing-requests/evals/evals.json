@@ -1,0 +1,37 @@
+[
+  {
+    "name": "debug_wrong_answer_with_inspect_history",
+    "prompt": "My RAG pipeline gave a wrong answer about our refund policy. The user asked 'Can I get a refund after 30 days?' and the AI said yes, but our policy has a 30-day limit. Help me trace what happened.",
+    "expected_output": "Code that uses dspy.inspect_history to debug the specific request and identify where the pipeline went wrong",
+    "assertions": [
+      "uses dspy.inspect_history",
+      "inspects retrieval results to check what passages were retrieved",
+      "identifies the root cause in the trace output",
+      "does not suggest building a custom tracing framework before trying inspect_history first"
+    ]
+  },
+  {
+    "name": "add_callback_tracing_to_pipeline",
+    "prompt": "I have a DSPy pipeline with classify, extract, and summarize steps. I need to add tracing so I can see what each step does in production. Show me how to set up structured tracing.",
+    "expected_output": "Code using DSPy BaseCallback system with on_module_start/end hooks, registered via dspy.configure(callbacks=[...])",
+    "assertions": [
+      "imports from dspy.utils.callback import BaseCallback",
+      "implements on_module_start and on_module_end hooks",
+      "registers callback with dspy.configure(callbacks=[...])",
+      "does not mutate inputs or outputs inside callback hooks",
+      "does not use only manual time.time() wrappers when callback system would suffice"
+    ]
+  },
+  {
+    "name": "connect_trace_viewer_for_team",
+    "prompt": "Our team needs to see AI traces visually. We want an open-source self-hosted solution. What are our options and how do we set one up?",
+    "expected_output": "Comparison of trace viewers with setup instructions for at least one self-hosted option",
+    "assertions": [
+      "mentions Arize Phoenix as open-source self-hosted option",
+      "mentions MLflow as another self-hosted option",
+      "provides working setup code for at least one option",
+      "includes a comparison table or list of tradeoffs between options",
+      "mentions DSPy auto-instrumentation capability of each tool"
+    ]
+  }
+]

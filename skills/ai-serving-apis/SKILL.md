@@ -15,6 +15,19 @@ Ask the user:
 3. **What endpoints do you need?** (single query, batch, health check, etc.)
 4. **Do you have an existing web framework?** (FastAPI, Flask, Django — default to FastAPI)
 
+### When NOT to serve via API
+
+- **Internal script or notebook only** — if only your team calls the AI from Python, skip the API layer. Import the module directly. An API adds latency, deployment complexity, and a failure surface for no benefit.
+- **Batch-only workloads** — if you process data on a schedule (nightly re-classification, weekly report generation), use a script or job runner (cron, Airflow). An HTTP API implies real-time request/response which is overkill for batch.
+- **Frontend can call the LM provider directly** — if your app is a thin wrapper around a single LM call with no optimization or custom logic, the frontend can call the provider API directly (with a proxy for auth). You only need a DSPy API when you have optimized prompts, multi-step pipelines, or retrieval logic worth encapsulating.
+
+| Deployment pattern | When to use |
+|-------------------|-------------|
+| FastAPI + Docker | Default for production microservices — most teams, most cases |
+| Flask/Django integration | When adding AI to an existing backend — avoid a second service |
+| Serverless (Lambda, Cloud Run) | Low-traffic or spiky workloads — pay per invocation, cold starts acceptable |
+| Direct import (no API) | Internal tooling, notebooks, scripts — skip HTTP entirely |
+
 ## Step 2: Project structure
 
 Recommended layout — keep DSPy logic separate from API code:
@@ -345,3 +358,4 @@ async def query(request: QueryRequest):
 ## Additional resources
 
 - For worked examples (RAG API, classification API, streaming), see [examples.md](examples.md)
+- For DSPy API details (LM, context, save/load), see [reference.md](reference.md)

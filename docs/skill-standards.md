@@ -197,3 +197,149 @@ For `ai-` skills, cross-reference both the related `ai-` skills and the underlyi
 ```
 
 This ensures users always have a path to install the router and makes `ai-do` the default workflow for future tasks.
+
+## Effectiveness standards
+
+A skill can pass every compliance check and still produce mediocre output. These standards separate great skills from merely correct ones.
+
+### Token efficiency
+
+Every paragraph must earn its place in the context window. The test: "If I removed this, would Claude make a mistake it would not otherwise make?" If no, cut it.
+
+What to cut:
+- Instructions Claude follows by default ("write clean code", "handle errors", "import modules")
+- Verbose explanations where a code example would suffice
+- Redundant restatements of the same point in different words
+
+What to keep:
+- DSPy API details (external users have no other reference)
+- Decision frameworks (when to use X vs Y)
+- Gotchas that prevent specific failures
+
+### Anti-pattern guidance
+
+Great skills tell Claude when NOT to use the approach, not just how to use it. Include 2-3 paragraphs on "do not use this if..." or "consider X instead when..." to prevent Claude from confidently recommending the wrong tool.
+
+Example: "Do not fine-tune if you have not optimized prompts first — prompt optimization with MIPROv2 gets 80% of the benefit at 1% of the cost."
+
+### Tradeoff tables over prose
+
+When presenting alternatives (Predict vs ChainOfThought, BootstrapFewShot vs MIPROv2), use a comparison table. A table with columns for latency, cost, accuracy, and when-to-use is worth 100 lines of prose.
+
+```markdown
+| Approach | Latency | Cost | Best when |
+|----------|---------|------|-----------|
+| `dspy.Predict` | Low | Low | Simple extraction, lookup |
+| `dspy.ChainOfThought` | Medium | Medium | Needs explanation or logic |
+| `dspy.ProgramOfThought` | High | Medium | Math, counting, dates |
+```
+
+### Real integration examples
+
+Show actual data sources — CSV loading, API responses, database queries, transcript parsing. Only toy examples like `"Hello world"` = weak. The `examples.md` file should demonstrate complete workflows with realistic data.
+
+### Before/after metrics
+
+Skills that recommend optimization should show baseline vs optimized results. Even approximate numbers help: "ChainOfThought alone: ~62% accuracy. After BootstrapFewShot with 4 demos: ~81%." This gives users realistic expectations and proves the approach works.
+
+### Verification steps
+
+Give Claude a way to check its own work. Include patterns like:
+- "Run `dspy.Evaluate(devset, metric)` to verify accuracy"
+- "Check that `result.reasoning` contains at least 2 steps"
+- "Validate the output matches this structure: ..."
+
+Skills that include verification dramatically outperform those that do not.
+
+### Freedom matches fragility
+
+Be rigid where mistakes are dangerous (data deletion, model deployment, API constraints) and flexible where judgment matters (architecture choices, parameter tuning). A skill that is all rigid produces cookie-cutter output. A skill that is all flexible provides no value.
+
+## Evals (required)
+
+Every skill must include evaluation scenarios that test whether the skill actually changes Claude's behavior.
+
+### File structure
+
+```
+skills/<skill-name>/
+├── SKILL.md
+├── examples.md
+├── reference.md
+└── evals/
+    └── evals.json
+```
+
+### Format
+
+```json
+{
+  "skill_name": "ai-sorting",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I need to sort support tickets into categories...",
+      "expected_output": "A DSPy module using dspy.Predict with Literal types...",
+      "files": [],
+      "assertions": [
+        {"name": "uses_literal_types", "description": "Uses Literal for categories, not free-text classification"},
+        {"name": "provider_agnostic", "description": "LM config uses generic provider with alternative comment"}
+      ]
+    }
+  ]
+}
+```
+
+### Requirements
+
+- 2+ eval scenarios with distinct use cases (not variations of the same task)
+- Each eval has `prompt`, `expected_output`, and `assertions`
+- Assertions test DSPy-specific behavior the skill teaches — not generic code quality
+- Prompts are realistic developer requests, not abstract ML tasks
+
+### What makes good assertions
+
+Good assertions verify the skill changed Claude's behavior:
+- "Uses `Literal[tuple(categories)]` not `Literal[list]`" — tests a specific gotcha
+- "Does not add a reasoning field to the signature" — tests a common mistake
+- "Includes a metric function" — tests methodology, not just code
+
+Bad assertions test things Claude does anyway:
+- "Code is syntactically valid" — Claude always produces valid code
+- "Includes imports" — Claude always includes imports
+- "Has comments" — not a skill-specific behavior
+
+## README integration
+
+Every skill must appear in the appropriate table in `README.md`:
+
+- `ai-` skills go in the problem catalog table
+- `dspy-` skills go in the DSPy concept table
+
+Each row must link to the correct `SKILL.md` path:
+
+```markdown
+| "I need to sort tickets" | [`/ai-sorting`](skills/ai-sorting/SKILL.md) | Classify items into categories |
+```
+
+## API accuracy
+
+Skills must reflect the current DSPy API. DSPy evolves rapidly — verify code examples against https://dspy.ai/api/ before publishing.
+
+Key things that drift:
+- Constructor parameter names and defaults (e.g., `max_iters` changed from 5 to 20 in ReAct)
+- New modules that should be mentioned as alternatives (BestOfN, Refine, SIMBA)
+- Deprecated methods or parameters
+- New methods added to existing modules (e.g., `batch()` on all modules)
+
+When a skill covers a DSPy category (modules, optimizers, adapters), it must cover ALL documented classes in that category — not just the ones the author originally knew about.
+
+## Link requirements
+
+All links in skills must:
+
+1. **Resolve** — no 404s or dead links
+2. **Be specific** — link to the exact doc page, not just the docs homepage
+3. **Use correct URL patterns** — `https://dspy.ai/api/<category>/<Name>/` for DSPy core
+
+When a link breaks (docs restructure frequently), find the new URL rather than removing the link or falling back to a generic homepage. Try path variations, check the site search, look for redirects.

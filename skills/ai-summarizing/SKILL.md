@@ -22,6 +22,9 @@ Ask the user:
 ```python
 import dspy
 
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+dspy.configure(lm=lm)
+
 class Summarize(dspy.Signature):
     """Summarize the text concisely while preserving key information."""
     text: str = dspy.InputField(desc="The text to summarize")

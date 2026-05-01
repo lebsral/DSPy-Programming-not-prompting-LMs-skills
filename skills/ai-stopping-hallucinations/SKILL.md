@@ -28,6 +28,9 @@ Force the AI to cite sources for every claim. Uses `dspy.Assert` to reject answe
 import dspy
 import re
 
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+dspy.configure(lm=lm)
+
 class CitedAnswer(dspy.Signature):
     """Answer the question using the provided sources. Cite every claim with [1], [2], etc."""
     context: list[str] = dspy.InputField(desc="Numbered source documents")

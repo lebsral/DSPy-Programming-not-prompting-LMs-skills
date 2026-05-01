@@ -289,7 +289,7 @@ print("SelfDiscovery:", evaluator(self_disc))
 
 ### BootstrapFewShot per stage
 
-For multi-stage reasoning (like Self-Discovery), optimize each stage:
+For multi-stage reasoning (like Self-Discovery), optimize each stage. Typical improvement: 15-30% on reasoning quality metrics (e.g., a ChainOfThought module going from 62% to 81% on a multi-step QA task after 4 bootstrapped demos):
 
 ```python
 optimizer = dspy.BootstrapFewShot(
@@ -326,6 +326,15 @@ optimized = optimizer.compile(SelfDiscoveryReasoner(), trainset=trainset)
 - **Evaluate the reasoning, not just the answer** — good reasoning produces reliably correct answers
 - **Structured traces** — JSON reasoning steps make debugging and optimization easier
 
+### Other reasoning-capable modules
+
+| Module | When to consider |
+|--------|-----------------|
+| `dspy.BestOfN` | Generate N completions, return the one scoring highest on a metric — simpler than MultiChainComparison when you have a good metric |
+| `dspy.Refine` | Iteratively improve an answer using feedback — good for tasks where a first draft is easy but polish is hard |
+| `dspy.RLM` | Reasoning Language Model — uses test-time compute scaling for verified reasoning (math proofs, code correctness) |
+| `dspy.Parallel` | Run multiple modules concurrently — combine with reasoning modules to parallelize sub-problems |
+
 ## Gotchas
 
 - **Adding a `reasoning` field to your signature when using ChainOfThought.** DSPy injects the reasoning field automatically. Adding your own creates a duplicate that confuses the LM and produces garbled output. Just define your task-specific input/output fields and let `dspy.ChainOfThought` handle the rest.
@@ -348,7 +357,12 @@ optimized = optimizer.compile(SelfDiscoveryReasoner(), trainset=trainset)
 - Need multi-step pipelines with predetermined stages? See `/ai-building-pipelines`
 - Measure and improve your reasoning system — see `/ai-improving-accuracy`
 - Not sure which skill to use? Try `/ai-do`
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources
 
+- [dspy.ChainOfThought API docs](https://dspy.ai/api/modules/ChainOfThought/)
+- [dspy.ProgramOfThought API docs](https://dspy.ai/api/modules/ProgramOfThought/)
+- [dspy.MultiChainComparison API docs](https://dspy.ai/api/modules/MultiChainComparison/)
 - For worked examples (complex questions, data analysis, planning), see [examples.md](examples.md)
+- For condensed API reference, see [reference.md](reference.md)

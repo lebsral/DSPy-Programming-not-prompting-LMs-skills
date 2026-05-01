@@ -1,0 +1,33 @@
+[
+  {
+    "prompt": "I need to build an AI that can search the web for information and answer questions based on what it finds.",
+    "expected_output": "A DSPy ReAct agent with a search tool that retrieves web results and reasons over them to produce answers.",
+    "assertions": [
+      "uses dspy.ReAct",
+      "defines a search tool function with type hints and docstring",
+      "configures dspy.LM before creating the agent",
+      "shows how to call the agent and access the answer"
+    ]
+  },
+  {
+    "prompt": "Build me an AI agent that can call our internal REST API to look up customer records and also do math calculations on the results.",
+    "expected_output": "A DSPy ReAct agent with two tools: one for API calls and one for calculations, with proper type hints and docstrings.",
+    "assertions": [
+      "uses dspy.ReAct with multiple tools",
+      "defines tools with type hints and docstrings",
+      "tools return strings or string-convertible values",
+      "sets max_iters explicitly",
+      "does not hardcode a single LM provider"
+    ]
+  },
+  {
+    "prompt": "I want an AI that writes and runs Python code to solve data analysis problems.",
+    "expected_output": "A DSPy CodeAct agent configured with pure function tools for code execution tasks.",
+    "assertions": [
+      "uses dspy.CodeAct (not ReAct)",
+      "explains that CodeAct only accepts pure functions",
+      "shows how to define tools as pure functions",
+      "configures dspy.LM before creating the agent"
+    ]
+  }
+]

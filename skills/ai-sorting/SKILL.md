@@ -17,6 +17,12 @@ Ask the user:
 
 The answers determine which pattern to use below.
 
+### When NOT to use AI sorting
+
+- **Categories are deterministic** — if you can write regex or keyword rules that cover 95%+ of cases, skip the LM. A `message.contains("invoice")` rule is faster, cheaper, and more predictable than an LM call.
+- **You need exact reproducibility** — LM outputs can vary between runs. If identical inputs must always produce identical outputs (e.g., for compliance), use rule-based logic or pin temperature=0 and accept minor model-version drift.
+- **Binary filtering with clear signal** — spam filters where a blocklist or Bayesian filter already works well do not need an LM.
+
 ## Step 2: Build the sorter
 
 ### Single category (most common)
@@ -384,3 +390,4 @@ sorter.load("ticket_sorter.json")
 ## Additional resources
 
 - For worked examples (sentiment, intent routing, topics, hierarchical), see [examples.md](examples.md)
+- For DSPy API details (constructors, parameters, methods), see [reference.md](reference.md)

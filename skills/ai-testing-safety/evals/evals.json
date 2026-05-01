@@ -1,0 +1,39 @@
+[
+  {
+    "name": "red_team_chatbot_before_launch",
+    "prompt": "We are launching a customer support chatbot next week. It answers questions about orders, refunds, and shipping. We need to make sure users cannot trick it into leaking our system prompt, bypassing refund policies, or giving medical/legal advice. Help me set up adversarial testing.",
+    "expected_output": "A RedTeamer DSPy module with attack-critique-refine layers, a JudgeAttack metric, test scenarios covering prompt injection, policy bypass, and harmful content, and evaluation with dspy.Evaluate",
+    "assertions": [
+      "defines a target_system wrapper function that takes a string and returns a string",
+      "creates attack scenarios using dspy.Example with .with_inputs('target_behavior')",
+      "includes test scenarios for at least 3 categories (prompt injection, policy bypass, harmful content)",
+      "uses an LM-as-judge metric to determine if attacks succeeded",
+      "runs evaluation with dspy.Evaluate against the test suite",
+      "suggests optimizing the attacker with MIPROv2 or BootstrapFewShot to find deeper vulnerabilities"
+    ]
+  },
+  {
+    "name": "regression_test_after_model_switch",
+    "prompt": "We switched our AI from GPT-4o to GPT-4o-mini to save costs. We need to verify the cheaper model is equally safe. We already have a saved red-teamer from our last audit.",
+    "expected_output": "Code that tests both models with the same attack suite and compares attack success rates",
+    "assertions": [
+      "configures both models using dspy.LM with provider-agnostic syntax",
+      "tests both models against the same test suite for fair comparison",
+      "compares attack success rates between the two models",
+      "suggests adding targeted defenses if the cheaper model is more vulnerable",
+      "recommends saving the optimized attacker for future regression testing"
+    ]
+  },
+  {
+    "name": "fix_and_retest_vulnerabilities",
+    "prompt": "Our safety audit found that 40% of attacks succeed against our chatbot. The main issues are prompt injection (system prompt leaks) and off-topic exploitation (users getting it to write code). Help me fix these and verify the fixes work.",
+    "expected_output": "Code adding dspy.Assert-based guardrails for the specific vulnerabilities found, then re-running the same attack suite to verify fixes",
+    "assertions": [
+      "adds dspy.Assert constraints targeting the specific vulnerabilities (prompt leak, off-topic)",
+      "wraps the hardened system in a try/except with a safe fallback response",
+      "re-runs the same evaluator with the same optimized attacker to verify fixes",
+      "shows before and after attack success rates",
+      "does not remove the original attack scenarios when adding fixes"
+    ]
+  }
+]

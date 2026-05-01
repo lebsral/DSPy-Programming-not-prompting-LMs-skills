@@ -34,6 +34,7 @@ Your goal is to build a complete picture so you route to the right skill with th
   > 4. Answer questions from documents
   > 5. Something else — describe it
 
+- **When the user picks a number, proceed immediately** — do not wait for them to restate the option. "2" means they picked option 2. Continue the conversation using that selection as context and move to the next question or to routing. Never require re-invocation of `/ai-do`.
 - **Check what's installed** early — run `ls skills/ 2>/dev/null` and `ls ~/.claude/skills/ 2>/dev/null` so you know what they have before recommending
 - **Ask follow-ups** based on answers — don't frontload every question. If they say "classify tickets," follow up on categories, data volume, and labeled examples
 - **Stop when you can confidently route** — you don't need every detail, just enough to pick the right skill(s) and write a good prompt
@@ -49,6 +50,8 @@ Many real-world problems need **a sequence of skills** — don't force everythin
 | Skill | Route here when... |
 |-------|-------------------|
 | `/ai-kickoff` | Starting from scratch. "set up a new DSPy project", "scaffold an AI feature", "I'm new to DSPy, where do I start?", "DSPy quickstart", "DSPy hello world" |
+| `/ai-planning` | Multi-phase project planning. "plan my AI feature", "what order should I build this in", "help me figure out how to execute this PRD", "break this into phases", "which skills do I need and in what order" |
+| `/ai-choosing-architecture` | Picking DSPy patterns. "which module should I use", "Predict vs ChainOfThought", "should I use ReAct or a pipeline", "architecture advice", "what DSPy pattern fits my use case" |
 | `/ai-sorting` | Categorizing, labeling, classifying, tagging, routing. "sort tickets into teams", "detect sentiment", "auto-tag content", "is this spam or not", "route messages", "triage incoming requests", "classify call transcripts by topic", "my classification results are inconsistent", "some categories are semantically close and overlap" |
 | `/ai-searching-docs` | Answering questions from a body of documents. "search our help center", "Q&A over our docs", "RAG", "chat with our knowledge base", "find answers in our documentation", "embedding search loses critical context", "retrieval returns irrelevant results", "the right document is buried at position 15" |
 | `/ai-querying-databases` | Asking questions about structured data. "text-to-SQL", "let non-technical users query our database", "natural language analytics", "ask questions about our data in plain English", "text-to-SQL that actually works", "chat with your Postgres" |
@@ -69,6 +72,7 @@ Many real-world problems need **a sequence of skills** — don't force everythin
 | Skill | Route here when... |
 |-------|-------------------|
 | `/ai-improving-accuracy` | Measuring or improving quality. "wrong answers", "how good is my AI", "evaluate performance", "need metrics", "accuracy is bad", "benchmark my AI", "I spent hours tweaking prompts", "trial and error writing prompts for days", "quality plateaued early", "manual prompt tuning is tedious", "stale prompts everywhere in your codebase" |
+| `/ai-auditing-code` | Reviewing DSPy code for correctness. "review my DSPy code", "is my code correct", "best practices check", "code quality audit", "am I using DSPy right", "sanity check my AI code" |
 | `/ai-making-consistent` | Outputs vary randomly. "different answer every time", "unpredictable", "need deterministic results", "inconsistent outputs", "identical prompts produce different outputs", "even tiny lexical shifts trigger disproportionate changes", "reordering examples shifts accuracy by 40%" |
 | `/ai-checking-outputs` | Verifying AI outputs before they reach users. "add guardrails", "validate output format", "safety filter", "fact-check before showing", "quality gate", "LLMs invent data points", "extraneous text with conversational fluff before the JSON", "97% reduction in malformed JSON after adding validation" |
 | `/ai-stopping-hallucinations` | AI invents information. "makes stuff up", "fabricates facts", "not grounded in real data", "need citations", "doesn't cite sources", "LLM generates responses that are factually incorrect or disconnected from the input", "how do I ground responses in source docs" |
@@ -162,7 +166,8 @@ Many requests could match multiple skills. Use these rules to break ties:
 - **Building something new** vs **fixing something broken** → New feature = find the matching "building" skill. Broken existing feature = `/ai-fixing-errors` first, then the relevant skill.
 - **"I want to use [DSPy class]"** → Route to the matching `dspy-` skill, not the `ai-` skill. The user already knows what they want.
 - **"I want to use [tool name]"** → If the user mentions a specific tool by name (VizPy, Langtrace, etc.), route to the matching `/dspy-*` skill.
-- **"Audit my code" / "best practices" / "is this correct?"** → Route to `/ai-improving-accuracy` (measure and improve quality), the relevant `dspy-` API skill (for correct API usage), or both in sequence. "Does my system use DSPy correctly?" = the `dspy-` skill matching their module (e.g., `/dspy-modules`, `/dspy-signatures`). "Make sure X is awesome" = `/ai-improving-accuracy`.
+- **"Audit my code" / "best practices" / "is this correct?"** → Route to `/ai-auditing-code` for code quality review. If they want to measure accuracy, not review code, use `/ai-improving-accuracy`. If they ask about a specific DSPy API, use the matching `dspy-` skill. "Review my DSPy code" = `/ai-auditing-code`. "Is my AI accurate?" = `/ai-improving-accuracy`. "Am I using dspy.Module correctly?" = `/dspy-modules`.
+- **"Which approach?" / "what pattern?" / "Predict or ChainOfThought?"** → Route to `/ai-choosing-architecture`. If they already know the pattern and want to build it, route to the matching `/dspy-*` or `/ai-building-pipelines` skill. "Which module should I use?" = architecture. "Build me a pipeline" = building skill.
 - **"Fix my DSPy code" / type issues / serialization / output handling** → This IS a DSPy problem even if it looks like "just Python." If the code involves DSPy outputs (Predictions, Pydantic models from signatures, module composition), route to the relevant `dspy-` skills. Common matches: `/dspy-signatures` (typed outputs, Pydantic models), `/dspy-modules` (module composition, forward()), `/dspy-primitives` (DSPy type system), `/dspy-predict` (Prediction objects), `/dspy-utils` (inspect_history, save/load). When multiple skills could help, suggest 2-3 candidates with a sentence explaining what each covers.
 
 ## Step 2.5: Read the candidate skill
@@ -215,7 +220,7 @@ If the skill is not installed, add:
 
 > **Install first:**
 > ```bash
-> npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skills <name>
+> npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>
 > ```
 
 **Run this:**
@@ -245,7 +250,7 @@ If any skills in the sequence are not installed, show a single install command f
 
 > **Install the skills you need:**
 > ```bash
-> npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skills ai-sorting,ai-improving-accuracy,ai-serving-apis
+> npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-sorting,ai-improving-accuracy,ai-serving-apis
 > ```
 
 Then show the first step prompt:

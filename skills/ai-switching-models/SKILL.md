@@ -18,16 +18,20 @@ DSPy makes switching safe because:
 
 **The workflow:** keep your program the same, swap the model, re-optimize. Done.
 
-## When to switch models
+## Step 1: Understand the situation
 
+Ask the user:
+1. **What model are you using now, and what do you want to switch to?** (e.g., GPT-4o to Claude, cloud to local)
+2. **Why are you switching?** (cost, vendor diversification, performance regression, privacy)
+3. **Do you have evaluation metrics and test data?** (needed to measure if the switch works — if not, start with `/ai-improving-accuracy`)
+
+Common scenarios:
 - **Cost reduction** — "GPT-4o is too expensive, can we use something cheaper?"
-- **New model release** — "A better model just came out, let's try it"
 - **Vendor diversification** — "We can't depend on one provider"
-- **Data privacy / compliance** — "We need to run models on our own infrastructure"
 - **Performance regression** — "The provider updated their model and our outputs got worse"
-- **Capability needs** — "We need better code generation / longer context / faster responses"
+- **Data privacy / compliance** — "We need to run models on our own infrastructure"
 
-## Step 1: Configure any provider
+## Step 2: Configure any provider
 
 DSPy uses [LiteLLM](https://docs.litellm.ai/docs/providers) under the hood, so you can use any supported provider with a simple string:
 
@@ -75,7 +79,7 @@ AZURE_API_BASE=https://your-resource.openai.azure.com/
 
 See [LiteLLM provider docs](https://docs.litellm.ai/docs/providers) for the full list of 100+ supported providers.
 
-## Step 2: Benchmark your current model
+## Step 3: Benchmark your current model
 
 Before changing anything, measure your baseline. You need a metric and test data.
 
@@ -103,7 +107,7 @@ print(f"Current model baseline: {baseline_score:.1f}%")
 
 If you don't have a metric or test data yet, use `/ai-improving-accuracy` to set them up first.
 
-## Step 3: Try the new model (quick test)
+## Step 4: Try the new model (quick test)
 
 Swap the model and run your evaluation *without* re-optimizing. This demonstrates the problem — your old prompts don't transfer.
 
@@ -120,7 +124,7 @@ print(f"Drop: {baseline_score - naive_score:.1f}%")
 
 You'll typically see a quality drop — this is expected. The optimized prompts were tuned for the old model.
 
-## Step 4: Re-optimize for the new model
+## Step 5: Re-optimize for the new model
 
 Now re-optimize your program for the new model. Use the same signatures and modules — only the compiled prompts change.
 
@@ -162,7 +166,7 @@ quick_optimized = optimizer.compile(fresh_program, trainset=trainset)
 quick_score = evaluator(quick_optimized)
 ```
 
-## Step 5: Compare models systematically
+## Step 6: Compare models systematically
 
 Loop over candidate models, optimize each, and build a comparison table:
 
@@ -203,7 +207,7 @@ for r in sorted(results, key=lambda x: x["score"], reverse=True):
 
 For a more thorough comparison with MIPROv2 and cost/latency tracking, see [examples.md](examples.md).
 
-## Step 6: Mix models in one pipeline
+## Step 7: Mix models in one pipeline
 
 You don't have to use one model for everything. Assign different models to different steps — cheap for simple tasks, expensive for hard ones.
 
@@ -239,7 +243,7 @@ pipeline.generate.set_lm(expensive_lm)
 
 See `/ai-cutting-costs` for more cost optimization patterns with per-module LM assignment.
 
-## Step 7: Save and deploy
+## Step 8: Save and deploy
 
 Save a separate optimized program for each model you might use in production:
 
@@ -290,16 +294,6 @@ When a provider updates their model (e.g., GPT-4o version bump):
 2. Re-optimize against the updated model
 3. Save the new optimized program
 4. This is why having evaluation + optimization in your workflow matters — version updates become routine, not emergencies
-
-## Checklist
-
-1. Set up evaluation and metric *before* switching (use `/ai-improving-accuracy`)
-2. Benchmark your current model
-3. Try the new model with old prompts (expect a drop)
-4. Re-optimize for the new model
-5. Compare scores — decide if the trade-off is acceptable
-6. Save per-model optimized programs
-7. Deploy with model selection via environment variable
 
 ## When NOT to switch models
 

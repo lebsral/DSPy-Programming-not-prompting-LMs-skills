@@ -11,6 +11,8 @@ For users who describe what they need in plain language.
 | Skill | What it does |
 |-------|-------------|
 | `/ai-kickoff` | Scaffold a new AI feature powered by DSPy |
+| `/ai-planning` | Plan a multi-phase AI feature before building it |
+| `/ai-choosing-architecture` | Pick the right DSPy module and architecture for your AI feature |
 | `/ai-sorting` | Auto-sort, categorize, or label content using AI |
 | `/ai-searching-docs` | Build AI that searches your documents and answers questions |
 | `/ai-querying-databases` | Build AI that answers questions about your database |
@@ -30,6 +32,7 @@ For users who describe what they need in plain language.
 
 | Skill | What it does |
 |-------|-------------|
+| `/ai-auditing-code` | Review DSPy code for correctness and best practices |
 | `/ai-improving-accuracy` | Measure and improve how well your AI works |
 | `/ai-making-consistent` | Make your AI give the same answer every time |
 | `/ai-checking-outputs` | Verify and validate AI output before it reaches users |

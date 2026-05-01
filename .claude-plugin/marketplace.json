@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Build reliable AI features with DSPy — programming not prompting",
-    "version": "1.12.6"
+    "version": "1.12.7"
   },
   "plugins": [
     {
@@ -30,7 +30,9 @@
         "./skills/ai-scoring",
         "./skills/ai-moderating-content",
         "./skills/ai-serving-apis",
-        "./skills/ai-request-skill"
+        "./skills/ai-request-skill",
+        "./skills/ai-planning",
+        "./skills/ai-choosing-architecture"
       ]
     },
     {
@@ -46,7 +48,8 @@
         "./skills/ai-making-consistent",
         "./skills/ai-decomposing-tasks",
         "./skills/ai-generating-data",
-        "./skills/ai-fine-tuning"
+        "./skills/ai-fine-tuning",
+        "./skills/ai-auditing-code"
       ]
     },
     {

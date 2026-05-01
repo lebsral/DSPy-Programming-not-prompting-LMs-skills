@@ -1,6 +1,6 @@
 ---
 name: ai-scoring
-description: Score, grade, or evaluate things using AI against a rubric. Use when grading essays, scoring code reviews, rating candidate responses, auditing support quality, evaluating compliance, building a quality rubric, running QA checks against criteria, assessing performance, rating content quality, or any task where you need numeric scores with justifications — not just categories., LLM as a judge, automated grading system, AI rubric scoring, evaluate candidate answers with AI, code review scoring automation, quality assessment automation, compliance scoring, rate customer support quality, NPS analysis with AI, essay grading AI, performance review scoring, AI evaluation rubric, score and rank with explanations, build a rating system with AI, automated QA scoring, judge AI outputs programmatically.
+description: Score, grade, or evaluate things using AI against a rubric. Use when grading essays, scoring code reviews, rating candidate responses, auditing support quality, evaluating compliance, building a quality rubric, running QA checks against criteria, assessing performance, rating content quality, or any task where you need numeric scores with justifications. Also use when building an LLM as a judge, automated grading system, AI rubric scoring, code review scoring automation, quality assessment automation, compliance scoring, NPS analysis with AI, performance review scoring, score and rank with explanations, build a rating system with AI, automated QA scoring, or judge AI outputs programmatically.
 ---
 
 # Build an AI Scorer
@@ -12,7 +12,7 @@ Guide the user through building AI that scores, grades, or evaluates work agains
 Ask the user:
 1. **What are you scoring?** (essays, code, support responses, applications, etc.)
 2. **What criteria matter?** (clarity, accuracy, completeness, tone, security, etc.)
-3. **What's the scale?** (1-5, 1-10, pass/fail, letter grade)
+3. **What scale?** (1-5, 1-10, pass/fail, letter grade)
 4. **Are criteria weighted equally?** (e.g., accuracy 50%, clarity 30%, formatting 20%)
 
 A good rubric has:
@@ -306,9 +306,27 @@ optimizer = dspy.MIPROv2(metric=scoring_metric, auto="medium")
 optimized_scorer = optimizer.compile(scorer, trainset=trainset)
 
 optimized_score = evaluator(optimized_scorer)
-print(f"Baseline MAE: {baseline:.1f}%")
-print(f"Optimized MAE: {optimized_score:.1f}%")
+print(f"Baseline agreement: {baseline:.1f}%")
+print(f"Optimized agreement: {optimized_score:.1f}%")
+# Typical improvement: 50-65% agreement -> 75-90% after MIPROv2 with 30+ gold examples
 ```
+
+## When NOT to use scoring
+
+- **You need discrete categories, not numbers** — if the output is "spam / not spam" or "bug / feature / question", use `/ai-sorting` instead. Scoring adds complexity when you just need buckets.
+- **There is no rubric and you cannot define one** — scoring without criteria produces arbitrary numbers. If you cannot articulate what a "3" vs a "5" means, start with qualitative analysis first.
+- **You need deterministic, auditable grading** — if regulatory or legal requirements demand exact reproducibility, rule-based scoring (point deductions for specific violations) is more defensible than LM-based judgment.
+- **The evaluation is purely objective** — if "correct" has one answer (e.g., math problems, factual lookups), use exact-match or programmatic checks. AI scoring is for subjective or multi-dimensional evaluation.
+
+## Scoring approach comparison
+
+| Approach | Best for | Tradeoffs |
+|----------|----------|-----------|
+| Single rater + `Predict` | Low-stakes, high-volume screening | Fast and cheap, but less calibrated |
+| Single rater + `ChainOfThought` | Most scoring tasks | Better calibration, ~2x cost of Predict |
+| Calibrated rater (with anchors) | Tasks with established standards | Best single-rater quality, requires anchor examples |
+| Multi-rater ensemble (3 raters) | High-stakes decisions (hiring, compliance) | 3x cost, but catches ambiguous cases |
+| `BestOfN` with scoring metric | When you have a reward function | Picks best of N attempts, not multi-perspective |
 
 ## Key patterns
 
@@ -320,13 +338,25 @@ print(f"Optimized MAE: {optimized_score:.1f}%")
 - **Validate consistency** — overall score should match weighted criterion scores
 - **Pydantic for structure** — `Field(ge=1, le=5)` enforces valid score ranges automatically
 
-## Additional resources
+## Gotchas
 
-- For worked examples (essay grading, code review, support QA), see [examples.md](examples.md)
+- **Claude defaults to generous scoring (central tendency bias).** Without anchors, Claude clusters scores around 3-4 on a 1-5 scale and rarely gives 1s or 5s. Provide anchor examples at the extremes to calibrate the full range — explicitly show what a "1" and a "5" look like.
+- **Scoring all criteria in one call causes halo effect.** Claude lets a strong first impression bleed across all criteria. Always score each criterion in a separate `ChainOfThought` call, even though it costs more.
+- **Claude invents justifications that sound plausible but cite nothing specific.** Without `dspy.Assert(len(result.justification) > 20, ...)`, Claude produces vague justifications like "the writing is clear." Assert on justification length and specificity.
+- **`result.score` can be a string instead of int depending on adapter.** Always use `int(result.score)` or Pydantic `Field(ge=1, le=5)` to enforce the type. Comparing string "3" > int 2 silently passes in some contexts.
+- **Ensemble scorers with identical prompts produce correlated scores, not independent judgments.** For true multi-rater benefit, vary the temperature or use different prompt configurations for each rater. Three identical calls add cost without adding much signal.
+
+## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - Need discrete categories instead of scores? Use `/ai-sorting`
 - Need to validate AI output (not score human work)? Use `/ai-checking-outputs`
-- Need to improve scorer accuracy? Use `/ai-improving-accuracy`
-- Next: `/ai-improving-accuracy` to measure and optimize your scorer
+- Measure and improve scorer accuracy — see `/ai-improving-accuracy`
 - **ChainOfThought** for reasoning before scoring — see `/dspy-chain-of-thought`
 - **Assertions** for enforcing score ranges and justification quality — see `/dspy-assertions`
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+
+## Additional resources
+
+- For worked examples (essay grading, code review, support QA), see [examples.md](examples.md)

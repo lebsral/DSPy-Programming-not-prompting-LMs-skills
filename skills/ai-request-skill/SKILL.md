@@ -1,6 +1,6 @@
 ---
 name: ai-request-skill
-description: Request or contribute a new AI skill that does not exist yet. Use when DSPy supports something but there is no skill for it — helps you build the skill and submit a PR, or file an issue requesting it. Also use when the user says there should be a skill for this, can we make a skill, I want to contribute a skill, or none of the ai- skills cover my use case.
+description: Request or contribute a new AI skill that does not exist yet. Use when DSPy supports something but there is no skill for it — helps you build the skill and submit a PR, or file an issue requesting it. Also use when the user says there should be a skill for this, can we make a skill, I want to contribute a skill, none of the ai- skills cover my use case, how do I add a new skill, submit a skill, or open a PR for a missing skill.
 argument-hint: "[describe the missing capability]"
 ---
 
@@ -41,86 +41,43 @@ Ask the user:
 
 Check whether the `/skill-creator` skill is available (it's from the [anthropics/skills](https://github.com/anthropics/skills/tree/main/skills/skill-creator) repo). If available, delegate to it — it handles the full create-test-iterate workflow including evaluation, benchmarking, and description optimization.
 
-When delegating to `/skill-creator`, provide this DSPy-specific context:
+When delegating to `/skill-creator`, first read the repo standards so the skill matches conventions:
 
-> **Repo conventions for this skill:**
-> - Dual naming: `ai-<problem>` prefix for problem-first skills (e.g., `ai-observability`), `dspy-<concept>` prefix for API-first skills (e.g., `dspy-signatures`)
-> - Web developer language in descriptions — use phrases developers actually say ("monitor AI quality", "search docs"), not ML jargon
-> - Provider-agnostic: don't hardcode specific LM providers, use `dspy.LM("openai/gpt-4o-mini")` as default examples
-> - SKILL.md under 500 lines; overflow goes to `examples.md` or `reference.md`
-> - Reference `docs/dspy-reference.md` for correct DSPy API usage
-> - Test prompts should be realistic developer requests, not abstract ML tasks
->
-> **DSPy patterns to include (based on what the skill covers):**
-> - Data loading: CSV, JSON, transcripts (VTT, LiveKit, Recall), Langfuse traces
-> - Signatures: class-based with typed fields, Pydantic models for structured output
-> - Modules: dspy.Predict, ChainOfThought, ReAct — with guidance on when to use each
-> - Validation: dspy.Assert (hard) vs dspy.Suggest (soft) integrated in forward()
-> - Evaluation: dspy.Evaluate with custom metrics
-> - Optimization: BootstrapFewShot for quick start, MIPROv2 for production
-> - Save/load: `program.save()` / `program.load()` for deployment
->
-> **Skill structure:**
-> ```
-> skills/ai-<problem>/
-> ├── SKILL.md        # Main instructions (required)
-> ├── examples.md     # 2-3 worked examples (recommended)
-> └── reference.md    # Deep reference material (if needed)
-> ```
->
-> **SKILL.md body pattern** (follow what other skills in this repo do):
-> 1. Step to gather requirements (ask 2-4 questions about the user's specific needs)
-> 2. Implementation steps with DSPy code examples
-> 3. Data loading patterns relevant to the problem domain
-> 4. Evaluation and optimization step
-> 5. Save/load and deployment
-> 6. Next steps pointing to related skills (e.g., `/ai-improving-accuracy`, `/ai-serving-apis`)
+1. Read `docs/skill-standards.md` — the full authoring checklist (naming, descriptions, gotchas, cross-refs, progressive disclosure, provider-agnostic code)
+2. Read `docs/skills-spec.md` — the Claude Code skills format (frontmatter fields, file structure, supporting files)
+3. Read `CLAUDE.md` — repo-level conventions (dual naming, web-developer language, 500-line limit)
+
+Pass the contents of these files as context to `/skill-creator` so it generates a skill that matches repo standards on the first pass.
 
 Then let skill-creator run its workflow: draft → test → review → iterate → package.
 
 ### If skill-creator is NOT available
 
-Build the skill manually following the conventions above. Install skill-creator for future use:
+Build the skill manually. First read the standards:
+
+1. Read `docs/skill-standards.md` for the full authoring checklist
+2. Read `docs/skills-spec.md` for the Claude Code skills format
+3. Read 2-3 existing skills in `skills/` to match tone and structure
+
+Install skill-creator for future use:
 
 ```bash
 npx skills add anthropics/skills/skill-creator
 ```
 
-Or from GitHub:
-```bash
-# Clone and copy
-git clone https://github.com/anthropics/skills.git /tmp/anthropic-skills
-cp -r /tmp/anthropic-skills/skills/skill-creator ~/.claude/skills/
-```
-
 #### Write the SKILL.md
 
-```yaml
----
-name: ai-<problem-name>
-description: "<What problem it solves>. Use when <trigger phrases the user would say>."
----
-```
+Follow the structure in `docs/skill-standards.md`. Key points:
 
-Read 2-3 existing skills in `skills/` to match the tone and structure. Key things to get right:
-
-**Description field** — This is how Claude decides whether to use the skill. Be specific about trigger phrases. Include both what the skill does AND when to use it. Err on the side of being "pushy" — Claude tends to under-trigger skills, so include edge cases:
-
-```yaml
-# Bad: too vague
-description: "Help with AI observability"
-
-# Good: specific triggers, covers edge cases
-description: "Monitor your AIs quality, latency, and cost in production. Use when you need to track AI accuracy over time, detect model degradation, set up alerts for quality drops, log predictions, measure production performance, or answer is our AI still working well?'"
-```
-
-**Code examples** — Every code block should be copy-pasteable. Include imports, LM configuration, and a usage example at the bottom. Use `docs/dspy-reference.md` for correct API patterns.
-
-**examples.md** — Create 2-3 realistic end-to-end examples. Each should show a complete working program, not just fragments. Include data loading, the DSPy module, evaluation, and a usage section.
+- **Description**: `<WHAT>. Use when <triggers>. Also: <more triggers>.` — plain YAML scalar, no quotes
+- **Body**: Step 1 gathers context (2-4 questions) → Steps 2-4 core work → Gotchas (3-5) → Cross-references → Additional resources
+- **Code**: provider-agnostic with `# or ...` comment, copy-pasteable with imports
+- **Standalone**: every skill must be self-contained — include a `reference.md` for `dspy-` skills or `ai-` skills that heavily reference DSPy APIs
+- **Verify API usage** against https://dspy.ai/api/ for correct patterns
 
 #### Test the skill
 
-Create 2-3 test prompts — realistic requests a developer would make. Run them with the skill active and verify the outputs make sense. If you have access to subagents, run with-skill and without-skill baselines to measure impact.
+Create 2-3 test prompts — realistic requests a developer would make. Run them with the skill active and verify the outputs make sense.
 
 ### Submit the PR
 
@@ -181,16 +138,29 @@ Return the issue URL to the user when done.
 
 ## Quality checklist
 
-Before submitting a new skill (via PR or skill-creator), verify:
+Validate against `docs/skill-standards.md` (the authoritative checklist). Key items:
 
-- [ ] Name follows `ai-<problem>` convention (problem-first, not DSPy-concept-first)
-- [ ] Description includes specific trigger phrases a developer would actually say
-- [ ] SKILL.md is under 500 lines
-- [ ] Code examples are provider-agnostic (no hardcoded API keys or specific providers)
-- [ ] Code examples include imports, LM config, and are copy-pasteable
-- [ ] Includes data loading patterns relevant to the problem domain
-- [ ] Has evaluation/optimization step (not just "build it and hope")
-- [ ] Points to related skills in "next steps" (e.g., `/ai-improving-accuracy`)
+- [ ] Description: plain YAML scalar, trigger phrases users would actually say
+- [ ] SKILL.md under 500 lines with progressive disclosure structure
+- [ ] Gotchas section with 3-5 Claude/DSPy-specific failure modes
+- [ ] Cross-references with install hint blockquote and `/ai-do` back-link
+- [ ] Code examples provider-agnostic with `# or ...` comment
+- [ ] `reference.md` for `dspy-` skills (or `ai-` skills that heavily use DSPy APIs)
 - [ ] README.md catalog table updated with new row
-- [ ] ai-do https://github.com/lebsral/DSPy-Programming-not-prompting-LMs-skills/blob/main/skills/ai-do/SKILL.md updated with new row in PR or gh issue
+- [ ] `/ai-do` catalog updated with new routing entry
+
+## Gotchas
+
+- **Writing descriptions wrapped in quotes.** YAML descriptions must be plain scalars — no double quotes, no apostrophes. Claude defaults to quoting strings but this causes parse failures or ambiguity. Write `description: Monitor AI quality...` not `description: "Monitor AI quality..."`.
+- **Forgetting to update `/ai-do` routing table.** New skills are invisible if `/ai-do` cannot route to them. Every PR adding a skill must also add a row to the ai-do catalog so the routing skill knows the new skill exists.
+- **Building a `dspy-` skill when the user describes a problem.** If the user says "I need AI that monitors quality," build an `ai-observability` skill (problem-first), not `dspy-langfuse` (tool-first). The `dspy-` prefix is only for users who already know which DSPy concept they want.
+- **Submitting a skill without testing trigger phrases.** The description determines whether Claude ever loads the skill. After writing the description, mentally simulate 3-5 ways a user might describe this need and verify at least 3 would match keywords in the description.
+- **Delegating to `/skill-creator` without passing DSPy context.** If skill-creator is available, it does not know DSPy conventions by default. Always pass the DSPy-specific context block (dual naming, provider-agnostic code, reference.md pattern) or the resulting skill will not match repo standards.
+
+## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
+- **Route to existing skills first** — see `/ai-do`
+- **Skill format and conventions** — see repo `docs/skill-standards.md`
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

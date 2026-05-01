@@ -7,6 +7,12 @@ description: Track which optimization experiment was best. Use when you have run
 
 Guide the user through logging, comparing, and managing optimization experiments. The pattern: run experiments systematically, log everything, compare results, promote the winner to production.
 
+## When you do NOT need this
+
+- **You have run only 1-2 experiments** — just compare outputs directly, no tracking infrastructure needed
+- **You are still iterating on the program itself** — stabilize your module and metric first, then track experiments
+- **You just want to optimize once and deploy** — use `/ai-improving-accuracy` instead
+
 ## When you need this
 
 - You've run 5+ optimization experiments and lost track of which was best
@@ -60,7 +66,7 @@ run = {
     "name": "mipro-medium-gpt4o-mini",       # Human-readable name
     "optimizer": "MIPROv2",                    # Which optimizer
     "optimizer_config": {"auto": "medium"},    # Optimizer settings
-    "model": "openai/gpt-4o-mini",            # Which LM
+    "model": "openai/gpt-4o-mini",            # or "anthropic/claude-sonnet-4-5-20250929", etc.
     "trainset_size": 200,                      # Training examples used
     "devset_size": 50,                         # Evaluation examples
     "metric": "answer_quality",                # Which metric
@@ -92,7 +98,7 @@ def run_experiment(
     trainset,
     devset,
     metric,
-    model="openai/gpt-4o-mini",
+    model="openai/gpt-4o-mini",  # or "anthropic/claude-sonnet-4-5-20250929", etc.
     artifact_dir="artifacts",
 ):
     """Run one optimization experiment and log results."""
@@ -100,7 +106,7 @@ def run_experiment(
     os.makedirs(artifact_dir, exist_ok=True)
 
     # Configure
-    lm = dspy.LM(model)
+    lm = dspy.LM(model)  # or "anthropic/claude-sonnet-4-5-20250929", etc.
     dspy.configure(lm=lm)
     program = program_class()
 
@@ -111,10 +117,7 @@ def run_experiment(
     # Optimize
     start = time.time()
     optimizer = optimizer_class(**optimizer_kwargs)
-    if optimizer_class == dspy.GEPA:
-        optimized = optimizer.compile(program, trainset=trainset, metric=metric)
-    else:
-        optimized = optimizer.compile(program, trainset=trainset)
+    optimized = optimizer.compile(program, trainset=trainset)
     duration = (time.time() - start) / 60
 
     # Evaluate optimized
@@ -342,6 +345,14 @@ optimized = optimizer.compile(program, trainset=trainset)
 
 For the full LangWatch guide (auto-tracing, optimizer dashboard, self-hosted), see `/dspy-langwatch`.
 
+## Gotchas
+
+- **GEPA takes metric in the constructor, not compile().** Unlike BootstrapFewShot and MIPROv2, GEPA accepts `metric` only as a constructor parameter. Passing `metric=metric` to `compile()` raises a TypeError. Always pass metric when instantiating: `dspy.GEPA(metric=metric, auto="light")`.
+- **Comparing scores across different devsets is meaningless.** Claude sometimes generates experiments that evaluate on different subsets. All experiments being compared must use the exact same devset, loaded once and passed to every run. If devset changes, scores are not comparable.
+- **Forgetting to save the artifact path makes experiments irreproducible.** Claude logs the score but skips `optimized.save()`. Without the saved .json artifact, you cannot reload or deploy the winning experiment. Always call `optimized.save(path)` and log the path.
+- **MIPROv2 auto default is "light", not "medium".** Claude often writes `dspy.MIPROv2(metric=metric)` assuming medium optimization. The default `auto="light"` runs fewer trials. Explicitly set `auto="medium"` or `auto="heavy"` when you want more thorough optimization.
+- **Logging cost requires manual tracking — DSPy does not auto-report it.** Claude sometimes writes `run["cost"] = optimizer.cost` as if DSPy tracks API costs. It does not. Track cost via your LM provider dashboard or by wrapping calls with a cost-tracking callback.
+
 ## Key patterns
 
 - **Log from day one**: even if you only have 2 experiments now, you'll have 20 next month
@@ -351,14 +362,21 @@ For the full LangWatch guide (auto-tracing, optimizer dashboard, self-hosted), s
 - **Promote explicitly**: don't just copy files — log which experiment is in production
 - **Start file-based, upgrade later**: JSONL tracking works fine until you have a team
 
+## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
+- **Run optimization passes** — see `/ai-improving-accuracy`
+- **Compare the same optimizer across models** — see `/ai-switching-models`
+- **Reduce experiment costs** — see `/ai-cutting-costs`
+- **Monitor promoted experiments in production** — see `/ai-monitoring`
+- **W&B Weave setup** (team dashboards, run comparison) — see `/dspy-weave`
+- **MLflow setup** (experiment tracking, model registry) — see `/dspy-mlflow`
+- **LangWatch setup** (real-time optimizer progress) — see `/dspy-langwatch`
+- **MIPROv2 optimizer** — see `/dspy-miprov2`
+- **BootstrapFewShot optimizer** — see `/dspy-bootstrap-few-shot`
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+
 ## Additional resources
 
 - For worked examples, see [examples.md](examples.md)
-- Use `/ai-improving-accuracy` to run individual optimization passes
-- Use `/ai-switching-models` when comparing the same optimizer across different models
-- Use `/ai-cutting-costs` when experiment costs are a concern
-- Use `/ai-monitoring` to track how the promoted experiment performs in production
-- Use `/dspy-weave` for in-depth W&B Weave setup (team dashboards, run comparison)
-- Use `/dspy-mlflow` for in-depth MLflow setup (experiment tracking, model registry)
-- Use `/dspy-langwatch` for in-depth LangWatch setup (real-time optimizer progress, auto-tracing)
-- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

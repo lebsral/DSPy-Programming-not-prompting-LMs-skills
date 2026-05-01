@@ -1,0 +1,30 @@
+{
+  "skill_name": "ai-request-skill",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I need a skill for building AI-powered search that uses DSPy retrievers and rerankers. None of the existing skills cover this. Can you help me create one?",
+      "expected_output": "Confirms the gap exists, checks for close matches like ai-searching-docs, then asks whether to build or request the skill. If building, creates SKILL.md with proper frontmatter (no quoted description), ai- prefix naming, and submits a PR via gh pr create.",
+      "files": [],
+      "assertions": [
+        {"name": "checks_existing_skills", "description": "Verifies whether an existing skill already covers the use case before proceeding"},
+        {"name": "offers_build_or_request", "description": "Presents the two paths (build via PR or request via issue) for the user to choose"},
+        {"name": "uses_ai_prefix", "description": "Names the new skill with ai- prefix (problem-first) not dspy- prefix"},
+        {"name": "plain_yaml_description", "description": "The generated SKILL.md description uses plain YAML scalars — no quotes wrapping the value"},
+        {"name": "submits_to_github", "description": "Actually runs gh pr create or gh issue create — does not just describe what to do"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "There should be a skill for AI-powered code review with DSPy. I don't have time to build it myself — can you just file an issue?",
+      "expected_output": "Files a GitHub issue on lebsral/DSPy-Programming-not-prompting-LMs-skills with a structured body including the problem description, relevant DSPy capabilities, example use case, and suggested trigger phrases. Returns the issue URL.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_gh_issue_create", "description": "Runs gh issue create command rather than just drafting the issue"},
+        {"name": "targets_correct_repo", "description": "Creates issue on lebsral/DSPy-Programming-not-prompting-LMs-skills"},
+        {"name": "includes_trigger_phrases", "description": "Issue body includes suggested trigger phrases for the skill description"},
+        {"name": "assigns_to_lebsral", "description": "Assigns the issue to lebsral"}
+      ]
+    }
+  ]
+}

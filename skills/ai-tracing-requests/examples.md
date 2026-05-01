@@ -174,8 +174,8 @@ result = pipeline(text="Long article text here...")
 ### Fix: use a cheaper model for the bottleneck
 
 ```python
-expensive_lm = dspy.LM("openai/gpt-4o")
-cheap_lm = dspy.LM("openai/gpt-4o-mini")
+expensive_lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+cheap_lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-haiku-4-5-20251001", etc.
 
 pipeline = ProfiledPipeline()
 

@@ -126,10 +126,10 @@ class WriteSectionWithSources(dspy.Signature):
     section_text: str = dspy.OutputField(desc="Section text with claims grounded in sources")
 
 class ResearchedWriter(dspy.Module):
-    def __init__(self):
+    def __init__(self, retriever_fn):
         self.outline = dspy.ChainOfThought(GenerateOutline)
         self.research = dspy.ChainOfThought(ResearchTopic)
-        self.retrieve = dspy.Retrieve(k=3)
+        self.retriever_fn = retriever_fn  # any function: query -> list[str]
         self.write = dspy.ChainOfThought(WriteSectionWithSources)
 
     def forward(self, topic, content_type="blog post", audience="general", tone="professional"):
@@ -146,7 +146,7 @@ class ResearchedWriter(dspy.Module):
 
             sources = []
             for query in queries:
-                sources.extend(self.retrieve(query).passages)
+                sources.extend(self.retriever_fn(query))
 
             # Write with sources
             result = self.write(
@@ -217,49 +217,40 @@ class QualityWriter(dspy.Module):
 
 ## Step 6: Voice and style enforcement
 
-Enforce brand voice and style rules:
+Use `dspy.Refine` to enforce brand voice and style rules with automatic retry:
 
 ```python
-class StyledWriter(dspy.Module):
-    def __init__(self, brand_rules=None):
-        self.writer = ContentWriter()
-        self.brand_rules = brand_rules or []
+def brand_reward(args, prediction):
+    """Score content against brand rules. Returns 0.0-1.0."""
+    article = prediction.article.lower()
+    score = 1.0
 
-    def forward(self, topic, content_type="blog post", audience="general", tone="professional"):
-        result = self.writer(topic=topic, content_type=content_type, audience=audience, tone=tone)
+    # Penalize forbidden words
+    forbidden = {"utilize": "use", "leverage": "use", "synergy": "collaboration"}
+    for word in forbidden:
+        if word in article:
+            score -= 0.2
 
-        # Enforce brand rules
-        article_lower = result.article.lower()
+    # Require conclusion section
+    if "conclusion" not in article:
+        score -= 0.3
 
-        for rule in self.brand_rules:
-            if rule.get("type") == "forbidden_word":
-                dspy.Assert(
-                    rule["word"].lower() not in article_lower,
-                    f"Content must not use the word '{rule['word']}'. "
-                    f"Use '{rule.get('alternative', 'a different word')}' instead."
-                )
-            elif rule.get("type") == "required_section":
-                dspy.Assert(
-                    rule["heading"].lower() in article_lower,
-                    f"Content must include a '{rule['heading']}' section."
-                )
+    # Penalize long sentences
+    sentences = prediction.article.split(".")
+    avg_len = sum(len(s.split()) for s in sentences) / max(len(sentences), 1)
+    if avg_len > 25:
+        score -= 0.2
 
-        # General style checks
-        sentences = result.article.split(".")
-        avg_sentence_len = sum(len(s.split()) for s in sentences) / max(len(sentences), 1)
-        dspy.Suggest(
-            avg_sentence_len < 25,
-            "Sentences are too long on average. Aim for shorter, punchier sentences."
-        )
+    return max(score, 0.0)
 
-        return result
-
-# Usage
-writer = StyledWriter(brand_rules=[
-    {"type": "forbidden_word", "word": "utilize", "alternative": "use"},
-    {"type": "forbidden_word", "word": "leverage", "alternative": "use"},
-    {"type": "required_section", "heading": "Conclusion"},
-])
+# Wrap the writer with Refine for automatic retry on low-quality output
+writer = ContentWriter()
+refined_writer = dspy.Refine(
+    module=writer,
+    N=3,
+    reward_fn=brand_reward,
+    threshold=0.8,
+)
 ```
 
 ## Step 7: Test and optimize
@@ -316,13 +307,30 @@ optimized = optimizer.compile(QualityWriter(), trainset=trainset)
 - **Section-by-section generation** — writing one section at a time produces better quality than generating the whole article at once
 - **Retrieve for factual grounding** — pull in sources to back up claims
 - **Critique-improve loop** — generate, critique, improve catches issues a single pass misses
-- **Assert for brand rules** — DSPy retries when forbidden words or missing sections are detected
+- **Refine for brand rules** — `dspy.Refine` with a reward function scores output and retries when quality is low
 - **AI-as-judge for quality** — use a judge signature to score relevance, coherence, engagement
+
+## Gotchas
+
+- **Claude generates the entire article in one LM call.** Single-call generation produces rambling, repetitive content that loses focus after ~500 words. Always use section-by-section generation with an outline — write one section at a time, passing previous sections for continuity.
+- **Claude skips the outline step.** Without an outline, the writer has no plan and produces disjointed sections that repeat points or miss key topics. Always generate an outline first, then use it to drive section-by-section writing.
+- **Claude uses `dspy.Assert`/`dspy.Suggest` for style enforcement.** These are deprecated. Use `dspy.Refine` with a reward function instead — it scores the full output and retries automatically, which works better for holistic quality checks like brand voice.
+- **Claude uses `dspy.Retrieve` for research grounding.** `dspy.Retrieve` is no longer in the DSPy API. Pass a retriever function (any `query -> list[str]` callable) to your module instead, so it works with any retrieval backend (vector DB, search API, local embeddings).
+- **Claude generates content without a quality loop.** A single generation pass rarely produces publishable content. Add a critique-improve loop (`CritiqueContent` → `ImproveContent`) with 1-2 revision rounds to catch issues a single pass misses.
 
 ## Additional resources
 
 - For worked examples (blog posts, product descriptions, newsletters), see [examples.md](examples.md)
-- Need to summarize content instead of generating it? Use `/ai-summarizing`
-- Need multi-step pipelines beyond content? Use `/ai-building-pipelines`
-- Next: `/ai-improving-accuracy` to measure and improve your content writer
+
+## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
+- **`/ai-summarizing`** -- Summarize content instead of generating it
+- **`/ai-building-pipelines`** -- Multi-step pipelines beyond content
+- **`/ai-improving-accuracy`** -- Measure and improve your content writer
+- **`/ai-stopping-hallucinations`** -- Ground content in sources to prevent fabrication
+- **`/dspy-chain-of-thought`** -- The reasoning module used in outline and section generation
+- **`/dspy-refine`** -- Reward-based retry for enforcing quality and brand rules
+- **`/dspy-modules`** -- All DSPy modules (Predict, ChainOfThought, etc.)
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

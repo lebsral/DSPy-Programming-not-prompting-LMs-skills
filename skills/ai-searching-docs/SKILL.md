@@ -74,7 +74,7 @@ results = retriever.invoke("How do refunds work?")
 
 Other stores follow the same pattern: `Pinecone.from_documents(...)`, `FAISS.from_documents(...)`.
 
-Once your data is loaded and chunked, wire it into a DSPy retriever (Step 3 below) or use ChromaDB directly. For the full LangChain/LangGraph API reference, see [`docs/langchain-langgraph-reference.md`](../../docs/langchain-langgraph-reference.md).
+Once your data is loaded and chunked, wire it into a DSPy retriever (Step 3 below) or use ChromaDB directly. For the full LangChain/LangGraph API, see the [LangChain docs](https://python.langchain.com/docs/integrations/document_loaders/).
 
 ## Step 1: Understand the setup
 
@@ -130,7 +130,17 @@ class MySearchBackend(dspy.Retrieve):
 
 ## Step 3: Set up a vector store
 
-If you don't have a search backend yet, set one up. ChromaDB is the simplest option for getting started:
+If you do not have a search backend yet, set one up. For prototyping, use `dspy.Embeddings` (built-in, no external DB needed) or ChromaDB:
+
+### DSPy built-in retriever (simplest option)
+
+```python
+embedder = dspy.Embedder("openai/text-embedding-3-small")  # or any supported model
+retriever = dspy.Embeddings(corpus=corpus_texts, embedder=embedder, k=5)
+# Uses FAISS for large corpora (>20K docs), brute-force for smaller ones
+# Use retriever("query") to search — returns dspy.Prediction(passages=..., indices=...)
+dspy.configure(lm=lm, rm=retriever)
+```
 
 ### ChromaDB setup
 
@@ -385,20 +395,32 @@ def judge_metric(example, prediction, trace=None):
 ```python
 optimizer = dspy.BootstrapFewShot(metric=search_metric, max_bootstrapped_demos=4)
 optimized = optimizer.compile(DocSearch(), trainset=trainset)
+
+# Typical improvement: 45-60% exact match -> 65-80% after optimization
+# For further gains, upgrade to MIPROv2:
+# optimizer = dspy.MIPROv2(metric=search_metric, auto="medium")
 ```
+
+## When NOT to use RAG
+
+- **Data fits in context** — if all your documents fit within the LM context window (under ~100K tokens), pass them directly as context instead of building a retrieval pipeline. RAG adds complexity for no benefit.
+- **Questions are always about the same document** — if every query targets one known document, skip retrieval and just include it.
+- **You need exact keyword search** — if users search by ID, SKU, or exact phrases, a database query or full-text search (Elasticsearch, Postgres `tsvector`) outperforms embedding search. Use RAG only when queries are semantic.
+- **Real-time data** — if the answer changes every minute (stock prices, live dashboards), a retrieval index will be stale. Query the source directly.
 
 ## Key patterns
 
 - **Prefer `ChainOfThought`** for the answer step — reasoning typically helps ground answers in the documents. Use `Predict` if latency matters more than accuracy
 - **Include context in the signature** so the AI knows to use the retrieved passages
-- **Multi-step search for complex questions** — if one search isn't enough, chain search queries
+- **Multi-step search for complex questions** — if one search is not enough, chain search queries
 - **Use `dspy.Assert`** to ensure answers actually cite the documents
 - **Separate search from answer generation** — optimize each independently
+- **Consider `dspy.Embeddings`** as a built-in retriever — it handles embedding, FAISS indexing, and search in one class without needing a separate vector store (see reference.md for API details)
 
 ## Gotchas
 
 - **Chunk size matters more than retriever choice** — most RAG failures trace to bad chunking, not bad embeddings. Start with 512 tokens with 50-token overlap and tune from there.
-- **Don't skip the reranking step** — embedding similarity retrieves candidates; a reranker (or LM-based reranker) filters them. Without reranking, irrelevant passages dilute the context.
+- **Do not skip the reranking step** — embedding similarity retrieves candidates; a reranker (or LM-based reranker) filters them. Without reranking, irrelevant passages dilute the context.
 - **k=3 is not always right** — the default `k` (number of retrieved passages) is a critical hyperparameter. Too few and you miss relevant context; too many and you overwhelm the LM. Tune it against your dev set.
 - **Test with questions that require combining information** — single-hop retrieval fails when the answer spans multiple chunks. Use `dspy.ChainOfThought` with multi-step retrieval for these cases.
 - **Embedding models and chunk sizes must match at index and query time** — if you re-chunk or switch embedding models, you must rebuild the vector index. Stale indexes silently return bad results.
@@ -417,4 +439,5 @@ optimized = optimizer.compile(DocSearch(), trainset=trainset)
 
 ## Additional resources
 
+- For DSPy retrieval API details (Embeddings, Retrieve, ColBERTv2, Embedder), see [reference.md](reference.md)
 - For worked examples, see [examples.md](examples.md)

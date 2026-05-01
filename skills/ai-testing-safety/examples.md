@@ -9,7 +9,7 @@ A customer support chatbot for an e-commerce company. Before launch, the team ne
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-haiku-4-5-20251001", etc.
 dspy.configure(lm=lm)
 
 class SupportBot(dspy.Module):
@@ -222,10 +222,10 @@ An internal knowledge base assistant runs on GPT-4o. The team wants to switch to
 import dspy
 
 # Original model
-original_lm = dspy.LM("openai/gpt-4o")
+original_lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 # Candidate model
-candidate_lm = dspy.LM("openai/gpt-4o-mini")
+candidate_lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-haiku-4-5-20251001", etc.
 
 class KnowledgeAssistant(dspy.Module):
     def __init__(self):

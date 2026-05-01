@@ -7,15 +7,7 @@ description: See exactly what your AI did on a specific request. Use when you ne
 
 Guide the user through tracing and debugging individual AI requests. The goal: for any request, see every LM call, retrieval step, intermediate result, token count, and latency.
 
-## When you need this
-
-- A customer reports a wrong answer — you need to see exactly what happened
-- Your pipeline is slow — you need to find which step is the bottleneck
-- Compliance requires audit trails of every AI decision
-- QA wants to inspect AI behavior before launch
-- You're debugging why an agent took unexpected actions
-
-## How it's different from monitoring
+## How tracing differs from monitoring
 
 | | Monitoring (`/ai-monitoring`) | Tracing (this skill) |
 |---|---|---|
@@ -24,25 +16,22 @@ Guide the user through tracing and debugging individual AI requests. The goal: f
 | Output | Scores, trends, alerts | Call traces, intermediate results, latencies |
 | Timing | Periodic batch evaluation | Per-request, real-time |
 
-## Step 1: Understand the need
+## Step 1: Understand the situation
 
-Quick decision tree:
+Ask the user:
+1. **What happened?** A specific wrong answer, slow response, or unexpected behavior?
+2. **What does your pipeline look like?** Single module or multi-step pipeline? Which DSPy modules?
+3. **Where is this running?** Local development, staging, or production?
 
-```
-What are you debugging?
-|
-+- A specific wrong answer right now?
-|  -> Step 2: Quick debugging with dspy.inspect_history
-|
-+- Need to trace requests in a running app?
-|  -> Step 3-4: Add per-step tracing
-|
-+- Need a visual trace viewer for your team?
-|  -> Step 5: Connect Langtrace, Phoenix, or Jaeger
-|
-+- Need to find patterns across many traces?
-   -> Step 6: Search and filter traces
-```
+Then decide the approach:
+
+| Situation | Approach |
+|---|---|
+| Debugging a specific wrong answer right now | Step 2: Quick debugging with `dspy.inspect_history` |
+| Need structured tracing in a running app | Step 3: DSPy callback system |
+| Need per-step timing in pipelines | Step 4: Per-step tracing |
+| Need a visual trace viewer for your team | Step 5: Connect Langtrace, Phoenix, or MLflow |
+| Need to find patterns across many traces | Step 6: Search and filter traces |
 
 ## Step 2: Quick debugging (no extra tools needed)
 
@@ -58,6 +47,9 @@ result = my_program(question="What is our refund policy?")
 
 # See the last 5 LM calls — shows full prompts and responses
 dspy.inspect_history(n=5)
+
+# Save history to a file for later analysis (DSPy 3.2+)
+dspy.inspect_history(n=10, file_path="debug_trace.txt")
 ```
 
 This shows:
@@ -125,7 +117,48 @@ traced = TracedProgram(my_program)
 result = traced(question="How do refunds work?")
 ```
 
-## Step 3: Per-step tracing in pipelines
+## Step 3: DSPy callback system (recommended for structured tracing)
+
+DSPy has a built-in callback system that hooks into every module, LM call, tool call, and adapter operation. This is the official observability API — use it instead of manual wrappers when possible.
+
+```python
+from dspy.utils.callback import BaseCallback
+
+class TracingCallback(BaseCallback):
+    def on_module_start(self, call_id, instance, inputs):
+        print(f"[{call_id}] Module {instance.__class__.__name__} started")
+        print(f"  Inputs: {inputs}")
+
+    def on_module_end(self, call_id, outputs, exception):
+        if exception:
+            print(f"[{call_id}] FAILED: {exception}")
+        else:
+            print(f"[{call_id}] Outputs: {outputs}")
+
+    def on_lm_start(self, call_id, instance, inputs):
+        print(f"[{call_id}] LM call started")
+
+    def on_lm_end(self, call_id, outputs, exception):
+        print(f"[{call_id}] LM call finished")
+
+    def on_tool_start(self, call_id, instance, inputs):
+        print(f"[{call_id}] Tool {instance.name} called")
+
+    def on_tool_end(self, call_id, outputs, exception):
+        print(f"[{call_id}] Tool finished")
+
+# Register the callback globally
+dspy.configure(callbacks=[TracingCallback()])
+
+# All DSPy calls now trigger the callback hooks automatically
+result = my_program(question="test")
+```
+
+Available callback hooks: `on_module_start/end`, `on_lm_start/end`, `on_adapter_format_start/end`, `on_adapter_parse_start/end`, `on_tool_start/end`, `on_evaluate_start/end`.
+
+Do not mutate input/output data inside callbacks — this can cause subtle bugs in the pipeline.
+
+## Step 4: Manual per-step tracing in pipelines
 
 For multi-step pipelines, trace each stage separately to see exactly where things go wrong:
 
@@ -219,7 +252,7 @@ def find_failed_steps(traces):
     ]
 ```
 
-## Step 4: OpenTelemetry instrumentation
+## Step 4b: OpenTelemetry instrumentation
 
 For production tracing with any backend (Jaeger, Zipkin, Datadog, etc.):
 
@@ -277,7 +310,7 @@ class OTelTracedRAG(dspy.Module):
             return answer
 ```
 
-## Step 5: Connect a trace viewer
+## Step 5: Connect a trace viewer or MLflow
 
 ### Option A: Langtrace (best DSPy integration)
 
@@ -333,89 +366,62 @@ provider.add_span_processor(BatchSpanProcessor(exporter))
 # View traces at http://localhost:16686
 ```
 
+### Option D: MLflow Tracing (comprehensive, self-hosted)
+
+```bash
+pip install -U mlflow>=2.18.0
+mlflow server --backend-store-uri sqlite:///mydb.sqlite
+```
+
+```python
+import mlflow
+
+mlflow.set_tracking_uri("http://127.0.0.1:5000")
+mlflow.set_experiment("DSPy")
+
+# Auto-trace all DSPy calls (LMs, retrievers, tools, modules)
+mlflow.dspy.autolog()
+
+result = my_program(question="test")
+# View traces at http://127.0.0.1:5000
+```
+
+MLflow captures the full call tree including LM calls, retrievers, tools, and custom modules — more comprehensive than `inspect_history`.
+
 ### Comparison
 
-| Feature | Langtrace | Arize Phoenix | Jaeger |
-|---------|-----------|---------------|--------|
-| DSPy auto-instrumentation | Yes (built-in) | Yes (plugin) | Manual |
-| Setup effort | One line | Two lines + Docker | Docker + manual spans |
-| Self-hosted option | Yes | Yes | Yes |
-| Cloud option | Yes | Yes | No |
-| LM call details | Prompts, tokens, cost | Prompts, tokens | Custom attributes |
-| Best for | DSPy-first teams | Teams wanting open-source + UI | Teams already using Jaeger |
+| Feature | Langtrace | Arize Phoenix | MLflow | Jaeger |
+|---------|-----------|---------------|--------|--------|
+| DSPy auto-instrumentation | Yes (built-in) | Yes (plugin) | Yes (autolog) | Manual |
+| Setup effort | One line | Two lines + Docker | pip + server | Docker + manual spans |
+| Self-hosted option | Yes | Yes | Yes | Yes |
+| Cloud option | Yes | Yes | Databricks | No |
+| LM call details | Prompts, tokens, cost | Prompts, tokens | Full call tree | Custom attributes |
+| Best for | DSPy-first teams | Open-source + local UI | ML teams, experiment tracking | Teams already using Jaeger |
 
-For in-depth guides: `/dspy-langtrace`, `/dspy-phoenix`.
+For in-depth guides: `/dspy-langtrace`, `/dspy-phoenix`, `/dspy-mlflow`.
 
-## Step 6: Search and filter traces
-
-### Find traces by criteria
-
-```python
-def search_traces(traces, **filters):
-    """Search traces by user, time range, latency, or content."""
-    results = traces
-
-    if "min_latency_ms" in filters:
-        results = [t for t in results if t["total_latency_ms"] >= filters["min_latency_ms"]]
-
-    if "after" in filters:
-        results = [t for t in results if t["timestamp"] >= filters["after"]]
-
-    if "before" in filters:
-        results = [t for t in results if t["timestamp"] <= filters["before"]]
-
-    if "contains" in filters:
-        keyword = filters["contains"].lower()
-        results = [
-            t for t in results
-            if keyword in json.dumps(t).lower()
-        ]
-
-    return results
-
-# Find slow requests from today
-slow = search_traces(
-    load_traces(),
-    min_latency_ms=3000,
-    after="2025-01-15T00:00:00",
-)
-```
-
-### Aggregate trace statistics
-
-```python
-def trace_stats(traces):
-    """Summary statistics across traces."""
-    latencies = [t["total_latency_ms"] for t in traces]
-    if not latencies:
-        return "No traces found"
-
-    latencies.sort()
-    return {
-        "count": len(latencies),
-        "p50_ms": latencies[len(latencies) // 2],
-        "p95_ms": latencies[int(len(latencies) * 0.95)],
-        "p99_ms": latencies[int(len(latencies) * 0.99)],
-        "max_ms": latencies[-1],
-    }
-```
-
-## Step 7: Use traces to improve your AI
-
-Traces aren't just for debugging — they're a source of improvement.
+## Step 6: Use traces to improve your AI
 
 ### Find patterns in wrong answers
 
 ```python
-# Load traces where the answer was marked wrong by a user or metric
-wrong_traces = search_traces(load_traces(), contains='"is_correct": false')
+# Load JSONL traces and find failures
+import json
+
+def load_traces(path="traces.jsonl"):
+    with open(path) as f:
+        return [json.loads(line) for line in f]
+
+wrong_traces = [t for t in load_traces() if "error" in json.dumps(t).lower()]
 
 # Check which step is most often the bottleneck
 from collections import Counter
 slow_steps = Counter()
 for t in wrong_traces:
-    slowest = max(t["steps"], key=lambda s: s["latency_ms"])
-    slow_steps[slowest["step"]] += 1
+    if t.get("steps"):
+        slowest = max(t["steps"], key=lambda s: s["latency_ms"])
+        slow_steps[slowest["step"]] += 1
 
 print(slow_steps)
 # Counter({"retrieve": 23, "answer": 7})
@@ -425,7 +431,6 @@ print(slow_steps)
 ### Build training data from failures
 
 ```python
-# Extract failed examples for re-optimization
 failed_examples = []
 for t in wrong_traces:
     ex = dspy.Example(
@@ -437,22 +442,29 @@ for t in wrong_traces:
 # See /ai-improving-accuracy
 ```
 
-## Key patterns
+## Gotchas
 
-- **Start with `dspy.inspect_history`** — it's free and solves most debugging needs
-- **Add JSONL tracing before you need it** — you can't debug traces you didn't log
-- **Trace at the step level**, not just the request level — per-step latency reveals bottlenecks
-- **Use OpenTelemetry for production** — it's the standard, works with any backend
-- **Langtrace is easiest for DSPy** — one-line setup with automatic instrumentation
-- **Traces feed optimization** — patterns in wrong answers tell you what to fix
+1. **Building custom tracing wrappers instead of using DSPy callbacks.** Claude defaults to writing manual `time.time()` wrappers around each step. DSPy has a built-in callback system (`BaseCallback` with `on_module_start/end`, `on_lm_start/end`, etc.) that hooks into every operation automatically. Use it instead of reinventing tracing infrastructure.
+
+2. **Using `inspect_history` in production.** `inspect_history` prints to stdout and only logs LM calls — it misses retriever, tool, and module-level data. For production, use the callback system or an external trace viewer (Langtrace, Phoenix, MLflow). Reserve `inspect_history` for local debugging.
+
+3. **Tracing the whole request instead of individual steps.** Claude wraps the entire pipeline in one timing block, which shows total latency but not which step is slow. Always trace at the step level — either with per-step callbacks or by wrapping individual modules in the `forward()` method.
+
+4. **Forgetting to save traces before they are needed.** Claude often adds tracing after a bug is reported, but the problematic request is already gone. Add JSONL trace logging or connect a trace viewer before you need it — you cannot debug traces you did not log.
+
+5. **Mutating inputs or outputs inside callback hooks.** The callback system passes live references to module inputs and outputs. Modifying them in place (e.g., truncating a field for logging) silently corrupts the pipeline data. Always copy before modifying: `inputs_copy = dict(inputs)`.
 
 ## Additional resources
 
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - For worked examples, see [examples.md](examples.md)
+- For DSPy tracing API details, see [reference.md](reference.md)
 - Use `/ai-monitoring` for aggregate health checks across all requests
 - Use `/ai-fixing-errors` for code-level debugging (crashes, config issues)
 - Use `/ai-building-pipelines` to structure pipelines that are easy to trace
 - Use `/ai-improving-accuracy` to optimize based on patterns found in traces
 - Use `/dspy-langtrace` for in-depth Langtrace setup (auto-instrumentation, self-hosted)
 - Use `/dspy-phoenix` for in-depth Phoenix setup (local UI, evals)
+- Use `/dspy-mlflow` for MLflow tracing and experiment tracking
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

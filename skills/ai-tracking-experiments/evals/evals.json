@@ -1,0 +1,36 @@
+[
+  {
+    "prompt": "I ran 6 different optimization experiments with MIPROv2 and BootstrapFewShot. I need to figure out which one was the best and deploy it.",
+    "expected_output": "Code that logs experiments to a JSONL file, compares them in a table sorted by score, and promotes the winner to a production path using optimized.save() and shutil.copy2.",
+    "assertions": [
+      "Uses JSONL or structured logging for experiment records",
+      "Logs at minimum: name, optimizer, score, artifact_path",
+      "Includes a comparison function that sorts by score",
+      "Includes a promote/deploy step that copies the artifact",
+      "Uses optimized.save() to persist the winning program",
+      "Does not pass metric to GEPA compile() if GEPA is used"
+    ]
+  },
+  {
+    "prompt": "Our team runs experiments on different machines. We need a shared experiment tracking setup so everyone can see results.",
+    "expected_output": "Code that integrates with W&B Weave or MLflow for shared experiment tracking, with @weave.op() or mlflow.dspy.autolog() decorating optimization runs.",
+    "assertions": [
+      "Recommends W&B Weave, MLflow, or LangWatch for team use",
+      "Shows actual integration code, not just file-based tracking",
+      "Includes initialization (weave.init or mlflow setup)",
+      "Cross-references /dspy-weave, /dspy-mlflow, or /dspy-langwatch for details",
+      "All experiments use the same devset for comparable scores"
+    ]
+  },
+  {
+    "prompt": "I want to compare how GPT-4o-mini, GPT-4o, and Claude Sonnet perform with MIPROv2 optimization on my classification task.",
+    "expected_output": "Code that runs the same optimizer across multiple models, logs each run, and produces a comparison table showing score, cost, and cost-per-point of improvement.",
+    "assertions": [
+      "Uses dspy.LM() with provider-agnostic model strings",
+      "Runs the same optimizer config across all models",
+      "Evaluates all models on the same devset",
+      "Includes cost tracking or notes that cost must be tracked manually",
+      "Produces a comparison table or summary"
+    ]
+  }
+]

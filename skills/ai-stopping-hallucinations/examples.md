@@ -8,7 +8,7 @@ A support chatbot that only answers from your help center — refuses to specula
 import dspy
 import re
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 class CitedSupportAnswer(dspy.Signature):
@@ -76,7 +76,7 @@ Verify claims made in a meeting summary against the actual transcript.
 import dspy
 import re
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # --- Load transcript ---
@@ -173,7 +173,7 @@ High-stakes domain: combine citation enforcement + faithfulness verification + c
 import dspy
 import re
 
-lm = dspy.LM("openai/gpt-4o")
+lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 class MedicalAnswer(dspy.Signature):
@@ -199,7 +199,7 @@ class SafeMedicalQA(dspy.Module):
         self.threshold = confidence_threshold
 
         # Use cheaper model for verification
-        self.verify.set_lm(dspy.LM("openai/gpt-4o-mini"))
+        self.verify.set_lm(dspy.LM("openai/gpt-4o-mini"))  # cheaper model for verification
 
     def forward(self, guidelines, question):
         result = self.answer(guidelines=guidelines, question=question)
