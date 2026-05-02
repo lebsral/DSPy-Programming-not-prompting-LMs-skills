@@ -206,33 +206,58 @@ ls skills/ 2>/dev/null || ls ~/.claude/skills/ 2>/dev/null || echo "Could not fi
 
 If the recommended skill is **not installed**, include install instructions in your recommendation (see Step 4). The user may only have `ai-do` installed — that's fine, just tell them how to get what they need.
 
-## Step 4: Recommend and generate prompt
+## Step 4: Recommend, generate prompt, and save to file
 
 Generate prompts using what you read in Step 2.5 — the SKILL.md content, not just the routing table.
 
-Present your recommendation like this:
+### Always save prompts to a file
+
+**Every prompt you generate must be written to a file.** Users who need to install skills must restart Claude Code, which loses this conversation. Even when skills are already installed, saving the prompt preserves context for future reference.
+
+Write prompts to `ai-do-prompt.md` in the current working directory. If the file already exists, append with a separator.
+
+### Make prompts self-contained
+
+The saved prompt will be used in a fresh session with no conversation history. It must include all the context ai-do gathered — the user's problem, domain details, data format, constraints, and what was discussed. Do not write a terse one-liner that only made sense in this conversation.
+
+Structure each saved prompt as:
+
+```markdown
+## AI Task: <short description>
+
+**Run this:**
+\`\`\`
+/ai-<name> <full prompt with all context>
+\`\`\`
+
+<if skills need installing>
+**Install first, then restart Claude Code:**
+\`\`\`bash
+npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>
+\`\`\`
+After installing, restart Claude Code (exit and reopen) for the skill to be available.
+Then open this file and run the prompt above.
+</if>
+```
+
+The crafted prompt should:
+- Include the user's domain, data format, constraints, and any decisions made during the conversation so the target skill can skip its own discovery questions
+- Be self-contained — a reader with no context should understand the task
+- Reference relevant files or directories by path if discussed
 
 ### Single skill recommendation
 
 **Skill:** `/ai-<name>` — one sentence explaining why this fits.
 
-If the skill is not installed, add:
-
-> **Install first:**
-> ```bash
-> npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>
-> ```
+If the skill is not installed, add install and restart instructions.
 
 **Run this:**
 
 ```
-/ai-<name> <crafted prompt with the user's specific details>
+/ai-<name> <crafted prompt with full context>
 ```
 
-The crafted prompt should:
-- Include the user's domain, data format, and constraints so the target skill can skip its own discovery questions
-- Be specific enough to be immediately actionable
-- Be a single line (the skill's `$ARGUMENTS`)
+Then write the prompt to `ai-do-prompt.md` using the Write tool.
 
 ### Multi-skill sequences
 
@@ -246,38 +271,35 @@ Present it like this:
 > 2. **`/ai-improving-accuracy`** — Measure and optimize it
 > 3. **`/ai-serving-apis`** — Deploy it as an endpoint
 
-If any skills in the sequence are not installed, show a single install command for all of them:
+Write **all step prompts** to `ai-do-prompt.md` — not just step 1. Each prompt must be self-contained with full context. The user may run them in a different session, days apart.
 
-> **Install the skills you need:**
+If any skills in the sequence are not installed, show a single install command:
+
+> **Install the skills you need, then restart Claude Code:**
 > ```bash
 > npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-sorting,ai-improving-accuracy,ai-serving-apis
 > ```
+> After installing, restart Claude Code (exit and reopen). Then open `ai-do-prompt.md` and run the prompts in order.
 
-Then show the first step prompt:
-
-> **Start with step 1:**
-> ```
-> /ai-sorting <crafted prompt>
-> ```
-> Run step 2 after step 1 is working. I'll generate the next prompt when you're ready.
-
-Generate the prompt for step 1 only. Mention that you'll generate the next prompt when they're ready.
+Generate the prompt for step 1 only in the conversation. Save all steps to the file so they survive the restart.
 
 ## Example crafted prompts
 
+These are self-contained — they include enough context to work in a fresh session after a restart.
+
 ```
-/ai-sorting I have support tickets in a Postgres database (columns: id, message, created_at) and need to auto-route them to billing, technical, account, or security teams. About 200 already labeled. Using GPT-4o-mini.
+/ai-sorting I have support tickets in a Postgres database (columns: id, message, created_at) and need to auto-route them to billing, technical, account, or security teams. About 200 already labeled in a CSV (tickets_labeled.csv with columns message, team). Using GPT-4o-mini. The app is a FastAPI backend in src/api/.
 ```
 
 ```
-/ai-parsing-data I get VTT transcript files from our LiveKit voice agent and need to extract: caller_name, issue_summary, resolution, and follow_up_needed (bool) from each call. Output as JSON.
+/ai-parsing-data I get VTT transcript files from our LiveKit voice agent (saved to recordings/*.vtt) and need to extract: caller_name, issue_summary, resolution, and follow_up_needed (bool) from each call. Output as JSON. Transcripts are 5-30 minutes long, English only. Using Claude Sonnet.
 ```
 
 ```
-/ai-improving-accuracy My ticket classifier is getting about 70% accuracy and I need it above 90%. Already using BootstrapFewShot with 50 examples. Categories are billing, technical, account, security.
+/ai-improving-accuracy My ticket classifier (src/classifier.py) is getting about 70% accuracy and I need it above 90%. Already using BootstrapFewShot with 50 examples in data/labeled.csv. Categories are billing, technical, account, security. The main confusion is between billing and account tickets.
 ```
 
-For multi-skill sequence examples (e.g., "build an AI-powered help center", "auto-process invoices", "replace expensive GPT-4"), see [catalog.md](catalog.md).
+For multi-skill sequence examples, see [catalog.md](catalog.md).
 
 ### If nothing fits
 
@@ -297,7 +319,8 @@ First, determine whether the problem is within DSPy's scope:
 - **Don't ignore the multi-skill case.** Most real problems need 2-3 skills in sequence (build → measure → deploy). Claude defaults to recommending a single skill. If the user describes an end-to-end workflow, recommend a numbered sequence.
 - **Don't generate prompts from the routing table alone.** The routing table has enough info to *pick* a skill but not to *write its prompt*. Always read the target SKILL.md before crafting the `/skill-name ...` prompt — otherwise the prompt misses the skill's expected input shape and pre-answerable questions.
 - **Don't confuse "bad answers" with "hallucination."** Claude conflates these. "Bad answers" means low accuracy → `/ai-improving-accuracy`. "Makes stuff up" means fabrication → `/ai-stopping-hallucinations`. Ask which one the user means if ambiguous.
-- **Don't recommend skills that aren't installed without install instructions.** Claude forgets to check what skills the user has. Always run `ls skills/` early and include `npx skills add ...` commands for anything missing.
+- **Don't recommend skills that aren't installed without install instructions.** Claude forgets to check what skills the user has. Always run `ls skills/` early and include `npx skills add ...` commands for anything missing. Always mention that Claude Code must be restarted after installing.
+- **Don't skip writing the prompt to a file.** Every prompt must be saved to `ai-do-prompt.md`. Installing a skill requires restarting Claude Code, which kills this session. If the prompt only exists in chat, it's gone. Even when skills are already installed, saving preserves context for later.
 - **Don't skip routing because the user already has code.** Claude sees an existing project and thinks "this isn't a routing problem." WRONG. Requests like "audit my DSPy usage", "make sure this follows best practices", or "is my system good?" are routing problems. Route to `/ai-improving-accuracy`, the relevant `dspy-` skill, or a sequence. ai-do NEVER gives direct technical help.
 - **Don't refuse to route because the problem "isn't AI."** Claude sees code issues involving DSPy outputs (type errors, serialization, Pydantic model handling) and says "this isn't a DSPy/AI problem, it's just Python." WRONG. If the code touches DSPy types, modules, or outputs, relevant `dspy-` skills exist. Route to `/dspy-signatures` (typed outputs), `/dspy-modules` (composition), `/dspy-primitives` (type system), `/dspy-predict` (Prediction handling), or `/dspy-utils` (debugging). When uncertain, suggest 2-3 candidates and let the user pick — never refuse.
 
