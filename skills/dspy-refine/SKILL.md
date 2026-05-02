@@ -1,6 +1,6 @@
 ---
 name: dspy-refine
-description: Iterative self-improvement with dspy.Refine -- wraps any module, scores each attempt with a reward function, generates feedback on failures, and retries until a quality threshold is met. Use when you want outputs to improve through self-critique, need iterative revision of drafts, or want the LM to learn from its own mistakes within a single request. Also: self-critique and revise, iterative improvement loop, generate then evaluate then fix, AI self-editing, multi-draft generation, revise until good enough, critique-driven refinement, when first draft is not good enough.
+description: Iterative self-improvement with dspy.Refine -- wraps any module, scores each attempt with a reward function, generates feedback on failures, and retries until a quality threshold is met. Use when you want outputs to improve through self-critique, need iterative revision of drafts, or want the LM to learn from its own mistakes within a single request. Also used for self-critique and revise, iterative improvement loop, generate then evaluate then fix, AI self-editing, multi-draft generation, revise until good enough, critique-driven refinement, when first draft is not good enough.
 ---
 
 # Iterative Self-Improvement with dspy.Refine

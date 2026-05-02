@@ -10,7 +10,7 @@ A community forum needs to auto-moderate user comments. Categories: safe, spam, 
 import dspy
 from typing import Literal
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 class ModerateComment(dspy.Signature):
@@ -187,7 +187,7 @@ import dspy
 import re
 from typing import Literal
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 LISTING_VIOLATIONS = [

@@ -1,6 +1,6 @@
 ---
 name: dspy-rlm
-description: Recursive Language Model (dspy.RLM) that explores large contexts via a sandboxed Python REPL -- the LM writes code, queries sub-LMs, and iterates until it produces a final answer. Use when your input is too large for the context window, the model needs to explore data iteratively, you need recursive self-refinement with code execution, or you have research-style tasks requiring programmatic investigation. Also: recursive language model, iterative exploration with LLM, model explores data in REPL, agent that keeps digging until it finds the answer, REPL-based reasoning, explore then answer pattern, deep research agent, when one pass is not enough.
+description: Recursive Language Model (dspy.RLM) that explores large contexts via a sandboxed Python REPL -- the LM writes code, queries sub-LMs, and iterates until it produces a final answer. Use when your input is too large for the context window, the model needs to explore data iteratively, you need recursive self-refinement with code execution, or you have research-style tasks requiring programmatic investigation. Also used for recursive language model, iterative exploration with LLM, model explores data in REPL, agent that keeps digging until it finds the answer, REPL-based reasoning, explore then answer pattern, deep research agent, when one pass is not enough.
 ---
 
 # Iterative Self-Refinement with dspy.RLM

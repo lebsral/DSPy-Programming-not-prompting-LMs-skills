@@ -1,6 +1,6 @@
 ---
 name: dspy-phoenix
-description: Use Arize Phoenix for DSPy tracing and evaluation. Use when you want to set up Phoenix, arize-phoenix, openinference, DSPyInstrumentor, open-source trace viewer, localhost:6006, or LLM evals. Also: phoenix setup, arize phoenix, pip install arize-phoenix, phoenix local UI, phoenix evaluations, DSPy trace viewer, open-source LLM observability, phoenix vs langtrace, openinference-instrumentation-dspy, phoenix.otel register.
+description: Use Arize Phoenix for DSPy tracing and evaluation. Use when you want to set up Phoenix, arize-phoenix, openinference, DSPyInstrumentor, open-source trace viewer, localhost:6006, or LLM evals. Also used for phoenix setup, arize phoenix, pip install arize-phoenix, phoenix local UI, phoenix evaluations, DSPy trace viewer, open-source LLM observability, phoenix vs langtrace, openinference-instrumentation-dspy, phoenix.otel register.
 ---
 
 # Arize Phoenix — Open-Source LLM Observability for DSPy

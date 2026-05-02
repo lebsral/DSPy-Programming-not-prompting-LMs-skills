@@ -1,6 +1,6 @@
 ---
 name: dspy-primitives
-description: DSPy typed wrappers (dspy.Image, dspy.Audio, dspy.Code, dspy.History) for multimodal data in signatures. Use when working with non-text inputs like images, audio, or code, building multimodal AI pipelines, processing images alongside text, handling audio transcription inputs, working with code files as typed inputs, or managing conversation history in multi-turn chatbots. Also: multimodal DSPy, image input in DSPy signature, process images with DSPy, audio input in DSPy, typed fields in signatures, non-text data in DSPy, vision model with DSPy, Claude vision with DSPy, multimodal pipeline, image classification with DSPy, pass images to language model, conversation history type, structured types beyond strings.
+description: DSPy typed wrappers (dspy.Image, dspy.Audio, dspy.Code, dspy.History) for multimodal data in signatures. Use when working with non-text inputs like images, audio, or code, building multimodal AI pipelines, processing images alongside text, handling audio transcription inputs, working with code files as typed inputs, or managing conversation history in multi-turn chatbots. Also used for multimodal DSPy, image input in DSPy signature, process images with DSPy, audio input in DSPy, typed fields in signatures, non-text data in DSPy, vision model with DSPy, Claude vision with DSPy, multimodal pipeline, image classification with DSPy, pass images to language model, conversation history type, structured types beyond strings.
 ---
 
 # DSPy Primitives

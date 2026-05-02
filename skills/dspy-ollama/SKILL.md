@@ -1,6 +1,6 @@
 ---
 name: dspy-ollama
-description: Run DSPy with local models using Ollama — no API key needed. Use when you want to run DSPy locally, use Ollama, set up a local LLM, run offline, or configure local model parameters. Also: ollama, local model, run LLM locally, llama local, self-hosted LLM, ollama serve, ollama_chat, local inference, run DSPy offline, no API key needed, ollama pull, ollama list, ollama rm, num_ctx, ollama context window, ollama GPU, OLLAMA_NUM_GPU, OLLAMA_HOST, ollama remote, ollama embeddings, nomic-embed-text, dspy.Embedder ollama, which local model, best model for ollama, ollama too slow, ollama vs vllm, develop locally deploy remotely, ollama environment variables, ollama systemd, ollama background service.
+description: Run DSPy with local models using Ollama — no API key needed. Use when you want to run DSPy locally, use Ollama, set up a local LLM, run offline, or configure local model parameters. Also used for ollama, local model, run LLM locally, llama local, self-hosted LLM, ollama serve, ollama_chat, local inference, run DSPy offline, no API key needed, ollama pull, ollama list, ollama rm, num_ctx, ollama context window, ollama GPU, OLLAMA_NUM_GPU, OLLAMA_HOST, ollama remote, ollama embeddings, nomic-embed-text, dspy.Embedder ollama, which local model, best model for ollama, ollama too slow, ollama vs vllm, develop locally deploy remotely, ollama environment variables, ollama systemd, ollama background service.
 ---
 
 # Ollama — Run DSPy with Local Models

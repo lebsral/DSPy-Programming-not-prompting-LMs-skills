@@ -1,6 +1,6 @@
 ---
 name: ai-cutting-costs
-description: Reduce your AI API bill. Use when AI costs are too high, API calls are too expensive, you want to use cheaper models, optimize token usage, reduce LLM spending, route easy questions to cheap models, or make your AI feature more cost-effective. Also: GPT-4 costs too much for production, AI bill keeps growing, how to reduce OpenAI costs, optimize LLM token usage, smart model routing saves money, prompt is too long and expensive, cheaper than GPT-4 with same quality.
+description: Reduce your AI API bill. Use when AI costs are too high, API calls are too expensive, you want to use cheaper models, optimize token usage, reduce LLM spending, route easy questions to cheap models, or make your AI feature more cost-effective. Also used for GPT-4 costs too much for production, AI bill keeps growing, how to reduce OpenAI costs, optimize LLM token usage, smart model routing saves money, prompt is too long and expensive, cheaper than GPT-4 with same quality.
 ---
 
 # Cut Your AI Costs

@@ -1,6 +1,6 @@
 ---
 name: dspy-langfuse
-description: LLM observability for DSPy with Langfuse -- auto-trace every LM call, attach scores and evaluations, run annotation queues for human review, and track experiments across prompt versions. Use when you want to set up Langfuse, langfuse.com, openinference-instrumentation-dspy, trace DSPy calls, LLM observability with scores, annotation queues, or experiment tracking. Also: langfuse setup, pip install langfuse, DSPy trace viewer, langfuse vs phoenix, langfuse vs langtrace, observe decorator with DSPy, self-hosted tracing with evaluation, production LLM monitoring with scoring.
+description: LLM observability for DSPy with Langfuse -- auto-trace every LM call, attach scores and evaluations, run annotation queues for human review, and track experiments across prompt versions. Use when you want to set up Langfuse, langfuse.com, openinference-instrumentation-dspy, trace DSPy calls, LLM observability with scores, annotation queues, or experiment tracking. Also used for langfuse setup, pip install langfuse, DSPy trace viewer, langfuse vs phoenix, langfuse vs langtrace, observe decorator with DSPy, self-hosted tracing with evaluation, production LLM monitoring with scoring.
 ---
 
 # Langfuse -- LLM Observability and Evaluation for DSPy

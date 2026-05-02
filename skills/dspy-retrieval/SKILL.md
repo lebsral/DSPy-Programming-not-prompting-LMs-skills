@@ -1,6 +1,6 @@
 ---
 name: dspy-retrieval
-description: DSPy retrieval modules (dspy.Retrieve, dspy.ColBERTv2, dspy.Embedder, dspy.retrievers.Embeddings) for searching documents, computing embeddings, and building RAG pipelines. Use when you need to search over documents, build a RAG pipeline, connect DSPy to a vector database, compute embeddings for semantic search, set up ChromaDB or Pinecone with DSPy, or build knowledge-grounded question answering. Also: RAG pipeline in DSPy, vector database integration, semantic search, embedding retrieval, retrieval augmented generation setup, connect knowledge base to DSPy, search documents then answer, grounded generation with retrieval.
+description: DSPy retrieval modules (dspy.Retrieve, dspy.ColBERTv2, dspy.Embedder, dspy.retrievers.Embeddings) for searching documents, computing embeddings, and building RAG pipelines. Use when you need to search over documents, build a RAG pipeline, connect DSPy to a vector database, compute embeddings for semantic search, set up ChromaDB or Pinecone with DSPy, or build knowledge-grounded question answering. Also used for RAG pipeline in DSPy, vector database integration, semantic search, embedding retrieval, retrieval augmented generation setup, connect knowledge base to DSPy, search documents then answer, grounded generation with retrieval.
 ---
 
 # Retrieval Modules in DSPy

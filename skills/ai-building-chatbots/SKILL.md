@@ -1,6 +1,6 @@
 ---
 name: ai-building-chatbots
-description: Build a conversational AI assistant with memory and state. Use when you need a customer support chatbot, helpdesk bot, onboarding assistant, sales qualification bot, FAQ assistant, or any multi-turn conversational AI. Also: chatbot remember previous messages, conversational AI keeps forgetting context, build a helpdesk bot that actually works, chatbot drops context after a few turns, Intercom bot alternative, Zendesk AI alternative, build WhatsApp bot, Slack bot with AI, chatbot escalation to human agent, LangChain chatbot but simpler, chatbot for SaaS onboarding flow.
+description: Build a conversational AI assistant with memory and state. Use when you need a customer support chatbot, helpdesk bot, onboarding assistant, sales qualification bot, FAQ assistant, or any multi-turn conversational AI. Also used for chatbot remember previous messages, conversational AI keeps forgetting context, build a helpdesk bot that actually works, chatbot drops context after a few turns, Intercom bot alternative, Zendesk AI alternative, build WhatsApp bot, Slack bot with AI, chatbot escalation to human agent, LangChain chatbot but simpler, chatbot for SaaS onboarding flow.
 ---
 
 # Build a Conversational AI Chatbot

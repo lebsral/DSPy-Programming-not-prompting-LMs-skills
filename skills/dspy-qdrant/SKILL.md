@@ -1,6 +1,6 @@
 ---
 name: dspy-qdrant
-description: Use Qdrant as a vector database with DSPy, or connect any vector DB (Pinecone, ChromaDB, Weaviate) with custom retrievers. Use when you want to set up Qdrant, QdrantRM, dspy-qdrant, vector database for DSPy, vector search, hybrid search, or build custom retrievers for Pinecone, ChromaDB, or Weaviate. Also: qdrant, dspy-qdrant, QdrantRM, vector database, vector search, pinecone DSPy, chromadb DSPy, weaviate DSPy, vector DB for DSPy, pip install dspy-qdrant, qdrant docker, qdrant cloud, hybrid search DSPy, sparse dense vectors, custom dspy.Retrieve, which vector DB for DSPy, DSPy 3.0 retriever removed.
+description: Use Qdrant as a vector database with DSPy, or connect any vector DB (Pinecone, ChromaDB, Weaviate) with custom retrievers. Use when you want to set up Qdrant, QdrantRM, dspy-qdrant, vector database for DSPy, vector search, hybrid search, or build custom retrievers for Pinecone, ChromaDB, or Weaviate. Also used for qdrant, dspy-qdrant, QdrantRM, vector database, vector search, pinecone DSPy, chromadb DSPy, weaviate DSPy, vector DB for DSPy, pip install dspy-qdrant, qdrant docker, qdrant cloud, hybrid search DSPy, sparse dense vectors, custom dspy.Retrieve, which vector DB for DSPy, DSPy 3.0 retriever removed.
 ---
 
 # Qdrant — Vector Database Integration for DSPy

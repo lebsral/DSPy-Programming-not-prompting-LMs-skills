@@ -31,7 +31,7 @@ Good trigger phrases use words web/SaaS developers actually say:
 
 `dspy-` skills should additionally include the DSPy API name (e.g., `dspy.ChainOfThought`, `BootstrapFewShot`).
 
-**YAML quoting**: Use plain YAML scalars (no quotes) for descriptions. Do not use double quotes, single quotes, or escape sequences. Expand contractions to avoid apostrophes (write "do not" instead of "don't", "it is" instead of "it's"). Drop possessive apostrophes where the meaning stays clear ("the model weights" instead of "the model's weights"). If you avoid all quotes and special YAML characters (`:` at line start, `#` after space), plain scalars just work.
+**YAML quoting**: Use plain YAML scalars (no quotes) for descriptions. Do not use double quotes, single quotes, or escape sequences. Expand contractions to avoid apostrophes (write "do not" instead of "don't", "it is" instead of "it's"). Drop possessive apostrophes where the meaning stays clear ("the model weights" instead of "the model's weights"). **Never use `: ` (colon-space) anywhere in descriptions** — the `yaml` npm package (used by `npx skills`) interprets it as a nested mapping key, which silently breaks skill discovery. Use ` - ` (space-dash-space) instead. Write "Also used for" not "Also:", "Common scenarios -" not "Common scenarios:", "Related -" not "Related:". If you avoid all quotes and special YAML characters (`: ` anywhere, `#` after space), plain scalars just work.
 
 ### Body pattern (progressive disclosure)
 

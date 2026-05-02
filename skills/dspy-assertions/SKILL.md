@@ -1,6 +1,6 @@
 ---
 name: dspy-assertions
-description: DEPRECATED -- use dspy.Refine instead (see /dspy-refine). Legacy documentation for dspy.Assert and dspy.Suggest — hard failures that trigger retries and soft suggestions that log warnings. For new code, prefer dspy.Refine for output validation with automatic retry. Also: dspy.Assert, dspy.Suggest, runtime validation for LLM output, retry on bad output, backtracking on constraint violation, guard rails in DSPy.
+description: DEPRECATED -- use dspy.Refine instead (see /dspy-refine). Legacy documentation for dspy.Assert and dspy.Suggest — hard failures that trigger retries and soft suggestions that log warnings. For new code, prefer dspy.Refine for output validation with automatic retry. Also used for dspy.Assert, dspy.Suggest, runtime validation for LLM output, retry on bad output, backtracking on constraint violation, guard rails in DSPy.
 ---
 
 # Enforce Constraints with dspy.Assert and dspy.Suggest
