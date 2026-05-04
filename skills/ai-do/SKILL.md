@@ -210,18 +210,21 @@ Then read every file: `SKILL.md`, `examples.md`, `reference.md`, and any other s
 
 **3. If the skill is NOT installed locally, fetch from GitHub:**
 
-Fetch the skill directory listing first, then each file:
-
-```
-https://raw.githubusercontent.com/lebsral/DSPy-Programming-not-prompting-LMs-skills/main/skills/<skill-name>/SKILL.md
-```
-
-Also fetch supporting files — check the directory listing at:
+First fetch the directory listing to see all files in the skill:
 ```
 https://github.com/lebsral/DSPy-Programming-not-prompting-LMs-skills/tree/main/skills/<skill-name>
 ```
 
-Then fetch each file found (examples.md, reference.md, etc.) using the same `raw.githubusercontent.com` pattern.
+Example: `https://github.com/lebsral/DSPy-Programming-not-prompting-LMs-skills/tree/main/skills/ai-fixing-errors`
+
+Then fetch each file using the raw URL pattern:
+```
+https://raw.githubusercontent.com/lebsral/DSPy-Programming-not-prompting-LMs-skills/main/skills/<skill-name>/SKILL.md
+https://raw.githubusercontent.com/lebsral/DSPy-Programming-not-prompting-LMs-skills/main/skills/<skill-name>/examples.md
+https://raw.githubusercontent.com/lebsral/DSPy-Programming-not-prompting-LMs-skills/main/skills/<skill-name>/reference.md
+```
+
+Fetch SKILL.md first (always exists), then every other file shown in the directory listing.
 
 **4. What to extract when reading:**
 
@@ -364,7 +367,7 @@ First, determine whether the problem is within DSPy's scope:
 
 - **Don't route on the first keyword match.** Claude tends to hear "classify" and immediately route to `/ai-sorting` without confirming the task. The user might mean "classify then extract details" which is really `/ai-decomposing-tasks` or `/ai-building-pipelines`. Ask at least one follow-up before routing.
 - **Don't ignore the multi-skill case.** Most real problems need 2-3 skills in sequence (build → measure → deploy). Claude defaults to recommending a single skill. If the user describes an end-to-end workflow, recommend a numbered sequence.
-- **Don't generate prompts from the routing table alone.** The routing table and catalog have enough info to *pick* a skill but not to *write its prompt*. Always read the target SKILL.md AND its supporting files (examples.md, reference.md) before crafting the `/skill-name ...` prompt. If the skill is not installed locally, fetch from GitHub: `https://raw.githubusercontent.com/lebsral/DSPy-Programming-not-prompting-LMs-skills/main/skills/<skill-name>/SKILL.md` (and same pattern for examples.md, reference.md). A prompt that pre-answers the skill's Step 1 questions saves the user an entire round of back-and-forth.
+- **Don't generate prompts from the routing table alone.** The routing table and catalog have enough info to *pick* a skill but not to *write its prompt*. Always read the target SKILL.md AND its supporting files (examples.md, reference.md) before crafting the `/skill-name ...` prompt. If the skill is not installed locally, fetch from GitHub: start with the directory at `https://github.com/lebsral/DSPy-Programming-not-prompting-LMs-skills/tree/main/skills/<skill-name>` to see all files, then fetch each via `https://raw.githubusercontent.com/lebsral/DSPy-Programming-not-prompting-LMs-skills/main/skills/<skill-name>/SKILL.md` (and same pattern for examples.md, reference.md). A prompt that pre-answers the skill's Step 1 questions saves the user an entire round of back-and-forth.
 - **Don't confuse "bad answers" with "hallucination."** Claude conflates these. "Bad answers" means low accuracy → `/ai-improving-accuracy`. "Makes stuff up" means fabrication → `/ai-stopping-hallucinations`. Ask which one the user means if ambiguous.
 - **Don't recommend skills that aren't installed without install instructions.** Claude forgets to check what skills the user has. Always run `ls skills/` early and include `npx skills add ...` commands for anything missing. Always mention that Claude Code must be restarted after installing.
 - **Don't skip writing the prompt to a file.** Every prompt must be saved to `ai-do-prompt.md`. Installing a skill requires restarting Claude Code, which kills this session. If the prompt only exists in chat, it's gone. Even when skills are already installed, saving preserves context for later.
