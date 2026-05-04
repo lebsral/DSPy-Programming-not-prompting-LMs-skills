@@ -170,23 +170,66 @@ Many requests could match multiple skills. Use these rules to break ties:
 - **"Which approach?" / "what pattern?" / "Predict or ChainOfThought?"** → Route to `/ai-choosing-architecture`. If they already know the pattern and want to build it, route to the matching `/dspy-*` or `/ai-building-pipelines` skill. "Which module should I use?" = architecture. "Build me a pipeline" = building skill.
 - **"Fix my DSPy code" / type issues / serialization / output handling** → This IS a DSPy problem even if it looks like "just Python." If the code involves DSPy outputs (Predictions, Pydantic models from signatures, module composition), route to the relevant `dspy-` skills. Common matches: `/dspy-signatures` (typed outputs, Pydantic models), `/dspy-modules` (module composition, forward()), `/dspy-primitives` (DSPy type system), `/dspy-predict` (Prediction objects), `/dspy-utils` (inspect_history, save/load). When multiple skills could help, suggest 2-3 candidates with a sentence explaining what each covers.
 
-## Step 2.5: Read the candidate skill
+## Step 2.5: Read the FULL candidate skill before writing any prompt
 
-Before generating any `/skill-name ...` prompt in Step 3, read the actual `SKILL.md` of each recommended skill. The routing table is enough to *find* a candidate — it is not enough to *write the prompt that invokes it*.
+**This is the most important step.** The routing table and catalog are enough to *pick* a skill — they are NOT enough to *write the prompt*. You MUST read the actual SKILL.md and all supporting files (examples.md, reference.md) of every skill you recommend before crafting a prompt for it.
 
 Reading the skill grounds the prompt in:
 - The skill's real argument-hint and expected input shape
 - Its Step 1 questions (so you can pre-answer them in the crafted prompt)
+- Its examples (so you can match the prompt style that works best)
+- Its gotchas and anti-patterns (so you can steer the user away from pitfalls)
 - Any "Do NOT use for..." negatives that might disqualify the match
 
 ### When to read
 
 | Situation | Read? |
 |---|---|
-| Single confident match | **Yes** — read that `SKILL.md` |
-| 2 borderline contenders | **Yes** — read both, then decide |
+| Single confident match | **Yes** — read SKILL.md + all supporting files |
+| 2 borderline contenders | **Yes** — read both fully, then decide |
 | Multi-skill sequence (3+) | **Yes** — read all before writing any prompt |
 | Routing to `/ai-request-skill` (no match) | **No** — nothing to read |
+
+### How to read: local first, then GitHub
+
+**1. Check what is installed locally:**
+
+```bash
+# Check both possible locations
+ls skills/ 2>/dev/null; ls ~/.claude/skills/ 2>/dev/null
+```
+
+**2. If the skill is installed locally, read all its files:**
+
+```bash
+# Read the skill directory to see all files
+ls skills/<skill-name>/ 2>/dev/null || ls ~/.claude/skills/<skill-name>/ 2>/dev/null
+```
+
+Then read every file: `SKILL.md`, `examples.md`, `reference.md`, and any other supporting files. Read them ALL — the examples and reference material are critical for crafting a good prompt.
+
+**3. If the skill is NOT installed locally, fetch from GitHub:**
+
+Fetch the skill directory listing first, then each file:
+
+```
+https://raw.githubusercontent.com/lebsral/DSPy-Programming-not-prompting-LMs-skills/main/skills/<skill-name>/SKILL.md
+```
+
+Also fetch supporting files — check the directory listing at:
+```
+https://github.com/lebsral/DSPy-Programming-not-prompting-LMs-skills/tree/main/skills/<skill-name>
+```
+
+Then fetch each file found (examples.md, reference.md, etc.) using the same `raw.githubusercontent.com` pattern.
+
+**4. What to extract when reading:**
+
+| From this file | Extract |
+|---|---|
+| `SKILL.md` | argument-hint, Step 1 questions, methodology steps, gotchas, anti-patterns, cross-references |
+| `examples.md` | Real prompt examples, expected output patterns, domain-specific use cases |
+| `reference.md` | API signatures, parameter tables, method names — use these to make the prompt technically precise |
 
 ### Re-routing
 
@@ -196,7 +239,11 @@ After reading, check:
 
 If the candidate is a poor fit, swap in a better skill from the catalog and re-read. Cap at 2 re-routes per slot — after that, ask the user to clarify.
 
-## Step 3: Check which skills are installed
+### Why this matters
+
+A prompt like `/ai-sorting classify my tickets` wastes the user's time — the skill will ask 5 follow-up questions. A prompt like `/ai-sorting I have support tickets in Postgres (id, message, created_at), need to route to billing/technical/account/security teams, have 200 labeled examples in tickets_labeled.csv, using GPT-4o-mini, FastAPI backend in src/api/` lets the skill skip straight to building. The only way to write the second kind of prompt is to have read the skill's Step 1 questions and examples.
+
+## Step 3: Install check and instructions
 
 If you didn't already check in Step 1, check now:
 
@@ -317,7 +364,7 @@ First, determine whether the problem is within DSPy's scope:
 
 - **Don't route on the first keyword match.** Claude tends to hear "classify" and immediately route to `/ai-sorting` without confirming the task. The user might mean "classify then extract details" which is really `/ai-decomposing-tasks` or `/ai-building-pipelines`. Ask at least one follow-up before routing.
 - **Don't ignore the multi-skill case.** Most real problems need 2-3 skills in sequence (build → measure → deploy). Claude defaults to recommending a single skill. If the user describes an end-to-end workflow, recommend a numbered sequence.
-- **Don't generate prompts from the routing table alone.** The routing table has enough info to *pick* a skill but not to *write its prompt*. Always read the target SKILL.md before crafting the `/skill-name ...` prompt — otherwise the prompt misses the skill's expected input shape and pre-answerable questions.
+- **Don't generate prompts from the routing table alone.** The routing table and catalog have enough info to *pick* a skill but not to *write its prompt*. Always read the target SKILL.md AND its supporting files (examples.md, reference.md) before crafting the `/skill-name ...` prompt. If the skill is not installed locally, fetch it from GitHub using `raw.githubusercontent.com`. A prompt that pre-answers the skill's Step 1 questions saves the user an entire round of back-and-forth.
 - **Don't confuse "bad answers" with "hallucination."** Claude conflates these. "Bad answers" means low accuracy → `/ai-improving-accuracy`. "Makes stuff up" means fabrication → `/ai-stopping-hallucinations`. Ask which one the user means if ambiguous.
 - **Don't recommend skills that aren't installed without install instructions.** Claude forgets to check what skills the user has. Always run `ls skills/` early and include `npx skills add ...` commands for anything missing. Always mention that Claude Code must be restarted after installing.
 - **Don't skip writing the prompt to a file.** Every prompt must be saved to `ai-do-prompt.md`. Installing a skill requires restarting Claude Code, which kills this session. If the prompt only exists in chat, it's gone. Even when skills are already installed, saving preserves context for later.
