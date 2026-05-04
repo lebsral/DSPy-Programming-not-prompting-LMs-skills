@@ -88,9 +88,9 @@ What does **not** get saved:
 - Model weights (unless you used `BootstrapFinetune`)
 - The LM configuration -- you must call `dspy.configure()` before loading
 
-## Assertions in modules
+## Validated outputs with Refine
 
-Use `dspy.Assert` and `dspy.Suggest` inside `forward()` to enforce constraints on outputs:
+Use `dspy.Refine` to enforce quality constraints on outputs through a reward function. This replaces the older `dspy.Assert`/`dspy.Suggest` pattern:
 
 ```python
 class SafeQA(dspy.Module):
@@ -98,27 +98,38 @@ class SafeQA(dspy.Module):
         self.generate = dspy.ChainOfThought("question -> answer")
 
     def forward(self, question):
-        result = self.generate(question=question)
+        return self.generate(question=question)
 
-        # Hard constraint -- raises an error and triggers retry
-        dspy.Assert(
-            result.answer != "I don't know",
-            "Must provide a substantive answer",
-        )
 
-        # Soft constraint -- suggests improvement but doesn't fail
-        dspy.Suggest(
-            len(result.answer.split()) >= 10,
-            "Answer should be at least 10 words for completeness",
-        )
+def answer_reward(args, pred):
+    """Score answer quality. Returns float between 0.0 and 1.0."""
+    score = 0.0
 
-        return result
+    # Hard requirement -- must provide a substantive answer
+    if pred.answer.strip() and pred.answer != "I don't know":
+        score += 0.6
+
+    # Quality preference -- at least 10 words
+    if len(pred.answer.split()) >= 10:
+        score += 0.4
+
+    return score
+
+
+# Wrap with Refine to retry until quality threshold is met
+validated_qa = dspy.Refine(
+    module=SafeQA(),
+    N=3,
+    reward_fn=answer_reward,
+    threshold=0.6,  # must at least pass the hard requirement
+)
 ```
 
-- **`dspy.Assert(condition, message)`** -- hard constraint. If the condition is `False`, DSPy retries the prediction (up to a limit). Use for requirements that must be met.
-- **`dspy.Suggest(condition, message)`** -- soft constraint. Adds feedback to the prompt on retry but won't raise an error. Use for quality preferences.
+- **`dspy.Refine`** -- wraps a module, scores each attempt with a reward function, and retries until the threshold is met (up to N attempts). Use for requirements that must be met.
+- **Graduated scores** -- return partial scores (0.0 to 1.0) to let Refine pick the best near-miss when no attempt fully succeeds.
+- **`dspy.BestOfN`** -- similar to Refine but without cross-attempt feedback; use when attempts are independent.
 
-Assertions work with optimizers -- the optimizer learns to avoid triggering them.
+For detailed Refine patterns and examples, see **`/dspy-refine`** and **`/dspy-best-of-n`**.
 
 ## Common patterns
 

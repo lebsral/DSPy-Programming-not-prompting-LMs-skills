@@ -1,0 +1,41 @@
+{
+  "skill_name": "ai-making-consistent",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "My AI classifier gives different labels for the same support ticket every time I run it. Sometimes it says 'billing', sometimes 'Billing', sometimes 'payment issue'. How do I make it consistent?",
+      "expected_output": "A DSPy signature using Literal types for the label field to lock down exact category values, with temperature=0 on the LM configuration.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_literal_type", "description": "Uses Literal type for the classification output field, not free-text str"},
+        {"name": "sets_temperature_zero", "description": "Sets temperature=0 on the dspy.LM configuration"},
+        {"name": "provider_agnostic", "description": "LM config uses generic provider with alternative comment"},
+        {"name": "no_manual_reasoning_field", "description": "Does not add a reasoning output field to signatures used with ChainOfThought"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "I need my AI to return structured JSON consistently. Sometimes it returns extra fields, sometimes the confidence score is a string instead of a float, and the format keeps changing between runs.",
+      "expected_output": "A DSPy signature using a Pydantic BaseModel for the output field, with Field validators for numeric ranges and type constraints, optionally wrapped with dspy.Refine for additional format validation.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_pydantic_model", "description": "Defines a Pydantic BaseModel for structured output with typed fields"},
+        {"name": "uses_field_validators", "description": "Uses Pydantic Field with constraints like ge/le for numeric bounds"},
+        {"name": "uses_refine_or_pydantic", "description": "Uses Pydantic validation or dspy.Refine with a reward function for additional output constraints"},
+        {"name": "sets_temperature_zero", "description": "Sets temperature=0 on the LM"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "My production AI pipeline gives slightly different answers each time for the same customer query. I need it to be rock-solid consistent for compliance reasons. How do I measure and fix this?",
+      "expected_output": "A consistency measurement approach that runs the same inputs multiple times to calculate consistency rate, followed by applying temperature=0, Literal types, assertions, and BootstrapFewShot optimization with a metric that penalizes inconsistency.",
+      "files": [],
+      "assertions": [
+        {"name": "measures_consistency", "description": "Includes code to run the same input multiple times and measure output stability"},
+        {"name": "uses_optimization", "description": "Applies BootstrapFewShot or MIPROv2 to lock in consistent patterns"},
+        {"name": "consistency_metric", "description": "Defines a metric that penalizes inconsistent formatting or hedging language"},
+        {"name": "mentions_caching", "description": "Mentions DSPy caching and warns about it masking inconsistency during testing"}
+      ]
+    }
+  ]
+}

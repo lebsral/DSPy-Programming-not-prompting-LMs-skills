@@ -74,15 +74,6 @@ class RubricScorer(dspy.Module):
                 criterion=criterion,
             )
 
-            dspy.Assert(
-                1 <= result.score <= 5,
-                f"Score must be 1-5, got {result.score}"
-            )
-            dspy.Assert(
-                len(result.justification) > 20,
-                "Justification must cite specific evidence from the submission"
-            )
-
             criterion_scores.append(CriterionScore(
                 criterion=criterion.split(":")[0],
                 score=result.score,
@@ -144,8 +135,6 @@ class CalibratedScorer(dspy.Module):
                 anchors=self.anchors.get(criterion_name, "No anchors provided."),
             )
 
-            dspy.Assert(1 <= result.score <= 5, f"Score must be 1-5, got {result.score}")
-
             criterion_scores.append(CriterionScore(
                 criterion=criterion_name,
                 score=result.score,
@@ -170,10 +159,10 @@ The overall score should be consistent with per-criterion scores:
 ```python
 def validate_scores(criterion_scores, weights, overall_score):
     expected = sum(cs.score * w for cs, w in zip(criterion_scores, weights))
-    dspy.Assert(
-        abs(expected - overall_score) < 0.1,
-        f"Overall score {overall_score} doesn't match weighted criteria ({expected:.2f})"
-    )
+    if abs(expected - overall_score) >= 0.1:
+        raise ValueError(
+            f"Overall score {overall_score} doesn't match weighted criteria ({expected:.2f})"
+        )
 ```
 
 ### Handle "not applicable" criteria
@@ -342,7 +331,7 @@ print(f"Optimized agreement: {optimized_score:.1f}%")
 
 - **Claude defaults to generous scoring (central tendency bias).** Without anchors, Claude clusters scores around 3-4 on a 1-5 scale and rarely gives 1s or 5s. Provide anchor examples at the extremes to calibrate the full range — explicitly show what a "1" and a "5" look like.
 - **Scoring all criteria in one call causes halo effect.** Claude lets a strong first impression bleed across all criteria. Always score each criterion in a separate `ChainOfThought` call, even though it costs more.
-- **Claude invents justifications that sound plausible but cite nothing specific.** Without `dspy.Assert(len(result.justification) > 20, ...)`, Claude produces vague justifications like "the writing is clear." Assert on justification length and specificity.
+- **Claude invents justifications that sound plausible but cite nothing specific.** Use Pydantic `Field(min_length=20)` on the justification field, or wrap the scorer with `dspy.Refine` and a reward function that penalizes vague justifications.
 - **`result.score` can be a string instead of int depending on adapter.** Always use `int(result.score)` or Pydantic `Field(ge=1, le=5)` to enforce the type. Comparing string "3" > int 2 silently passes in some contexts.
 - **Ensemble scorers with identical prompts produce correlated scores, not independent judgments.** For true multi-rater benefit, vary the temperature or use different prompt configurations for each rater. Three identical calls add cost without adding much signal.
 
@@ -354,7 +343,7 @@ print(f"Optimized agreement: {optimized_score:.1f}%")
 - Need to validate AI output (not score human work)? Use `/ai-checking-outputs`
 - Measure and improve scorer accuracy — see `/ai-improving-accuracy`
 - **ChainOfThought** for reasoning before scoring — see `/dspy-chain-of-thought`
-- **Assertions** for enforcing score ranges and justification quality — see `/dspy-assertions`
+- **Refine** for enforcing score ranges and justification quality — see `/dspy-refine`
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources

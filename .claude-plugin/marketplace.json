@@ -5,12 +5,12 @@
   },
   "metadata": {
     "description": "Build reliable AI features with DSPy — programming not prompting",
-    "version": "1.12.7"
+    "version": "1.13.0"
   },
   "plugins": [
     {
       "name": "dspy-build-skills",
-      "description": "Skills for building AI features: routing, classification, search, database Q&A, summarization, parsing, tool use, content generation, chatbots, agents, scoring, moderation, API serving, and skill discovery",
+      "description": "Skills for building AI features: routing, classification, search, database Q&A, summarization, parsing, tool use, content generation, translation, recommendations, redaction, record matching, data cleaning, anomaly detection, notifications, image understanding, text rewriting, chatbots, agents, scoring, moderation, API serving, and skill discovery",
       "source": "./",
       "strict": false,
       "skills": [
@@ -32,7 +32,16 @@
         "./skills/ai-serving-apis",
         "./skills/ai-request-skill",
         "./skills/ai-planning",
-        "./skills/ai-choosing-architecture"
+        "./skills/ai-choosing-architecture",
+        "./skills/ai-translating-content",
+        "./skills/ai-recommending",
+        "./skills/ai-redacting-data",
+        "./skills/ai-matching-records",
+        "./skills/ai-cleaning-data",
+        "./skills/ai-detecting-anomalies",
+        "./skills/ai-generating-notifications",
+        "./skills/ai-understanding-images",
+        "./skills/ai-rewriting-text"
       ]
     },
     {
@@ -105,7 +114,12 @@
         "./skills/dspy-tools",
         "./skills/dspy-retrieval",
         "./skills/dspy-primitives",
-        "./skills/dspy-utils"
+        "./skills/dspy-utils",
+        "./skills/dspy-streaming",
+        "./skills/dspy-mcp",
+        "./skills/dspy-citations",
+        "./skills/dspy-two-step-adapter",
+        "./skills/dspy-async"
       ]
     },
     {

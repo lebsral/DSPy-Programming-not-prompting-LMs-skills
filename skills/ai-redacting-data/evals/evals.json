@@ -1,0 +1,38 @@
+[
+  {
+    "id": "redact-email-phone-name",
+    "description": "Redact name, email, and phone from a customer support message",
+    "input": {
+      "text": "Hi, I'm Alex Turner and I need help with my order. Please call me at 212-555-0147 or email me at alex.turner@example.com."
+    },
+    "expected": {
+      "redacted_text_must_not_contain": ["Alex Turner", "212-555-0147", "alex.turner@example.com"],
+      "redacted_text_must_contain": ["[PERSON_NAME", "[PHONE", "[EMAIL"]
+    },
+    "evaluation_notes": "All three PII types must be replaced. Original sentence structure must be preserved. Same entity should map to the same placeholder if it appears more than once."
+  },
+  {
+    "id": "redact-hipaa-clinical-note",
+    "description": "De-identify a clinical note containing HIPAA PHI",
+    "input": {
+      "text": "Patient Maria Flores, DOB: 07/22/1978, MRN: 4491203, was seen by Dr. Kevin Holt on March 10, 2025. Contact: mflores@gmail.com, (505) 555-3389."
+    },
+    "expected": {
+      "phi_removed_min": 5,
+      "redacted_text_must_not_contain": ["Maria Flores", "07/22/1978", "4491203", "Kevin Holt", "mflores@gmail.com", "555-3389"]
+    },
+    "evaluation_notes": "Must redact patient name, DOB, MRN, provider name, email, and phone. PHI count should be at least 5. Placeholders should clearly indicate the category of PHI removed."
+  },
+  {
+    "id": "consistent-entity-references",
+    "description": "Same entity appearing multiple times must get the same placeholder throughout",
+    "input": {
+      "text": "Sarah Kim called at 9am. Sarah Kim said her account was locked. Please follow up with Sarah Kim by EOD."
+    },
+    "expected": {
+      "all_occurrences_same_placeholder": true,
+      "placeholder_pattern": "[PERSON_NAME_1]"
+    },
+    "evaluation_notes": "All three occurrences of 'Sarah Kim' must be replaced with the same placeholder token, not three different ones. This tests the deduplication / seen-map logic."
+  }
+]

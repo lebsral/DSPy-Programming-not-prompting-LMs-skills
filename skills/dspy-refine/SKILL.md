@@ -25,7 +25,7 @@ Use `dspy.Refine` when:
 Do **not** use Refine when:
 
 - You have no clear way to score outputs -- use `dspy.ChainOfThought` instead
-- You need human-in-the-loop feedback -- build a custom module with `dspy.Suggest`
+- You need human-in-the-loop feedback -- build a custom module with a human review step
 - Speed matters more than quality -- use a single `dspy.Predict` call
 - Attempts are independent and feedback would not help -- use `dspy.BestOfN`
 

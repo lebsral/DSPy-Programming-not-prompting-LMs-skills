@@ -35,26 +35,26 @@ class MeetingProcessor(dspy.Module):
         self.process = dspy.ChainOfThought(ProcessMeeting)
 
     def forward(self, transcript):
-        result = self.process(transcript=transcript)
+        return self.process(transcript=transcript)
 
-        # Ensure we captured at least something
-        dspy.Suggest(
-            len(result.output.action_items) > 0,
-            "Most meetings have at least one action item — look again"
-        )
-        dspy.Suggest(
-            len(result.output.decisions) > 0,
-            "Check if any decisions were made, even implicit ones"
-        )
 
-        return result
+def meeting_completeness_reward(args, pred):
+    """Soft reward encouraging action items and decisions to be extracted."""
+    score = 1.0
+    if len(pred.output.action_items) == 0:
+        score -= 0.2  # soft: most meetings have at least one action item
+    if len(pred.output.decisions) == 0:
+        score -= 0.2  # soft: look for implicit decisions too
+    return score
+
+processor = dspy.Refine(
+    module=MeetingProcessor(), N=3, reward_fn=meeting_completeness_reward, threshold=0.8
+)
 ```
 
 ### Usage
 
 ```python
-processor = MeetingProcessor()
-
 result = processor(transcript="""
 Alice: Let's discuss the Q3 roadmap. We need to decide on the pricing change.
 Bob: I think we should go with the 15% increase for enterprise tier.
@@ -103,7 +103,7 @@ def meeting_metric(example, prediction, trace=None):
     return score
 
 optimizer = dspy.BootstrapFewShot(metric=meeting_metric, max_bootstrapped_demos=4)
-optimized = optimizer.compile(MeetingProcessor(), trainset=trainset)
+optimized = optimizer.compile(processor, trainset=trainset)
 ```
 
 ---
@@ -131,25 +131,26 @@ class SupportSummarizer(dspy.Module):
         self.summarize = dspy.ChainOfThought(SummarizeThread)
 
     def forward(self, thread):
-        result = self.summarize(thread=thread)
+        return self.summarize(thread=thread)
 
-        dspy.Assert(
-            result.summary.status in ["resolved", "pending", "escalated"],
-            "Status must be one of: resolved, pending, escalated"
-        )
-        dspy.Suggest(
-            len(result.summary.steps_taken) > 0,
-            "There should be at least one step taken in the conversation"
-        )
 
-        return result
+def support_summary_reward(args, pred):
+    """Reward enforcing valid status and encouraging step extraction."""
+    score = 1.0
+    if pred.summary.status not in ["resolved", "pending", "escalated"]:
+        return 0.0  # hard: status must be from the allowed set
+    if len(pred.summary.steps_taken) == 0:
+        score -= 0.1  # soft: there should be at least one step taken
+    return score
+
+summarizer = dspy.Refine(
+    module=SupportSummarizer(), N=3, reward_fn=support_summary_reward, threshold=0.9
+)
 ```
 
 ### Usage
 
 ```python
-summarizer = SupportSummarizer()
-
 result = summarizer(thread="""
 Customer: My invoice #4521 shows the wrong amount. It says $500 but should be $350.
 Agent (Sara): I can see invoice #4521. Let me check the billing records.
@@ -208,23 +209,29 @@ class DocumentCondenser(dspy.Module):
             doc_word_count=len(document.split()),
         )
 
-        dspy.Suggest(
-            len(merged.key_takeaways) >= 3,
-            "Include at least 3 key takeaways"
-        )
-
         return merged
 
     def _chunk(self, text):
         words = text.split()
         return [" ".join(words[i:i+self.words_per_chunk])
                 for i in range(0, len(words), self.words_per_chunk)]
+
+
+def condenser_reward(args, pred):
+    """Soft reward encouraging at least 3 key takeaways."""
+    score = 1.0
+    if len(pred.key_takeaways) < 3:
+        score -= 0.2  # soft: aim for at least 3 takeaways
+    return score
+
+condenser = dspy.Refine(
+    module=DocumentCondenser(words_per_chunk=2000), N=3, reward_fn=condenser_reward, threshold=0.8
+)
 ```
 
 ### Usage
 
 ```python
-condenser = DocumentCondenser(words_per_chunk=2000)
 
 # Works for documents of any length
 result = condenser(document=long_report_text)

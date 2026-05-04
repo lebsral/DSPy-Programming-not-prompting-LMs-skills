@@ -1,0 +1,66 @@
+[
+  {
+    "id": "technical-to-plain-english",
+    "description": "Rewrite technical API documentation to plain English for a non-technical audience",
+    "inputs": {
+      "source_text": "To authenticate API requests, include your Bearer token in the Authorization header. Tokens expire after 3600 seconds and must be refreshed using the /oauth/token endpoint with your client_id and client_secret.",
+      "target_tone": "friendly, non-technical",
+      "target_audience": "small business owner with no coding experience"
+    },
+    "evaluation": {
+      "method": "dual-judge",
+      "fidelity_threshold": 0.8,
+      "style_threshold": 0.75,
+      "composite_threshold": 0.65,
+      "checks": [
+        "rewritten_text does not contain 'Bearer token', 'Authorization header', 'endpoint', or 'client_id'",
+        "rewritten_text mentions that the access key/password expires",
+        "rewritten_text mentions needing to get a new key/password after expiry",
+        "rewritten_text length is within 50% of source_text length"
+      ]
+    }
+  },
+  {
+    "id": "formal-to-casual-with-fidelity",
+    "description": "Convert a formal business report excerpt to a casual blog post tone while preserving all figures",
+    "inputs": {
+      "source_text": "Revenue for the fiscal quarter increased by 23% year-over-year, reaching $4.2M. This growth was primarily attributable to expansion within the mid-market segment and a 15% improvement in net revenue retention.",
+      "target_tone": "casual, conversational, founder blog post",
+      "target_audience": "startup founders and operators"
+    },
+    "evaluation": {
+      "method": "dual-judge",
+      "fidelity_threshold": 0.9,
+      "style_threshold": 0.75,
+      "composite_threshold": 0.7,
+      "checks": [
+        "rewritten_text contains '23%' or 'twenty-three percent'",
+        "rewritten_text contains '$4.2M' or '4.2 million'",
+        "rewritten_text contains '15%' or 'fifteen percent'",
+        "rewritten_text does not use 'fiscal quarter', 'year-over-year', or 'attributable'",
+        "rewritten_text uses at least one contraction or informal phrase"
+      ]
+    }
+  },
+  {
+    "id": "reading-level-reduction",
+    "description": "Reduce a college-level science passage to 8th grade reading level while preserving the core concept",
+    "inputs": {
+      "source_text": "The mitochondria, often referred to as the powerhouse of the cell, are double-membrane-bound organelles responsible for the production of adenosine triphosphate (ATP) through oxidative phosphorylation, a process integral to cellular respiration and energy metabolism.",
+      "target_reading_level": "8th grade"
+    },
+    "evaluation": {
+      "method": "reading-level-check",
+      "target_flesch_kincaid_grade": 8.0,
+      "tolerance": 2.0,
+      "fidelity_threshold": 0.8,
+      "checks": [
+        "rewritten_text mentions mitochondria",
+        "rewritten_text conveys that mitochondria produce energy",
+        "rewritten_text does not contain 'oxidative phosphorylation' without explanation",
+        "rewritten_text does not contain 'double-membrane-bound organelles' without simplification",
+        "rewritten_text length is within 50% of source_text length"
+      ]
+    }
+  }
+]

@@ -32,26 +32,30 @@ class GroundedSupportBot(dspy.Module):
 
     def forward(self, help_docs, question):
         result = self.answer(help_docs=help_docs, question=question)
-
-        # Enforce citations exist
-        sentences = [s.strip() for s in result.answer.split(".") if s.strip()]
-        cited = [bool(re.search(r"\[\d+\]", s)) for s in sentences]
-        coverage = sum(cited) / max(len(sentences), 1)
-        dspy.Assert(
-            coverage >= 0.5 or "don't have info" in result.answer.lower(),
-            f"Only {coverage:.0%} of sentences cite sources. "
-            "Cite with [1], [2], or say you don't have info."
-        )
-
-        # Verify faithfulness
         check = self.verify(help_docs=help_docs, answer=result.answer)
-        dspy.Assert(
-            check.is_supported,
-            f"Unsupported claims: {check.unsupported_claims}. "
-            "Only state what the help docs say."
-        )
+        return dspy.Prediction(answer=result.answer, is_supported=check.is_supported,
+                               unsupported_claims=check.unsupported_claims)
 
-        return result
+
+def grounded_bot_reward(args, pred):
+    """Reward function enforcing citations and faithfulness."""
+    score = 1.0
+    answer = pred.answer
+
+    # Enforce citations
+    sentences = [s.strip() for s in answer.split(".") if s.strip()]
+    cited = [bool(re.search(r"\[\d+\]", s)) for s in sentences]
+    coverage = sum(cited) / max(len(sentences), 1)
+    if coverage < 0.5 and "don't have info" not in answer.lower():
+        return 0.0  # hard: must cite sources
+
+    # Enforce faithfulness
+    if not pred.is_supported:
+        return 0.0  # hard: no hallucinated claims
+
+    return score
+
+bot = dspy.Refine(module=GroundedSupportBot(), N=3, reward_fn=grounded_bot_reward, threshold=1.0)
 
 # Usage
 docs = [
@@ -63,6 +67,7 @@ docs = [
 
 bot = GroundedSupportBot()
 result = bot(help_docs=docs, question="How do I cancel and get a refund?")
+# bot is a Refine wrapper — it retries up to 3 times if citations or faithfulness check fails
 print(result.answer)
 # "To cancel your plan, go to Settings > Billing > Cancel Plan [4].
 #  Refunds are available within 14 days of purchase [3]."
@@ -203,23 +208,7 @@ class SafeMedicalQA(dspy.Module):
 
     def forward(self, guidelines, question):
         result = self.answer(guidelines=guidelines, question=question)
-
-        # Layer 1: Citation enforcement
-        cited_nums = set(int(n) for n in re.findall(r"\[(\d+)\]", result.answer))
-        valid_nums = set(range(1, len(guidelines) + 1))
-        dspy.Assert(
-            cited_nums.issubset(valid_nums),
-            f"Invalid citations: {cited_nums - valid_nums}. "
-            f"Only use [1] to [{len(guidelines)}]."
-        )
-
-        # Layer 2: Faithfulness verification
         check = self.verify(guidelines=guidelines, answer=result.answer)
-        dspy.Assert(
-            check.is_faithful,
-            f"MEDICAL SAFETY: Unsupported claims detected: {check.unsupported_claims}. "
-            "In medical contexts, only state what the guidelines explicitly say."
-        )
 
         # Layer 3: Confidence gating
         needs_review = (
@@ -232,10 +221,29 @@ class SafeMedicalQA(dspy.Module):
             confidence=result.confidence,
             needs_review=needs_review,
             risk_level=check.risk_level,
+            is_faithful=check.is_faithful,
+            unsupported_claims=check.unsupported_claims,
+            cited_nums=set(int(n) for n in re.findall(r"\[(\d+)\]", result.answer)),
+            valid_nums=set(range(1, len(guidelines) + 1)),
         )
 
+
+def medical_qa_reward(args, pred):
+    """Reward enforcing citation validity and medical faithfulness."""
+    # Layer 1: Citation enforcement — hard constraint
+    if not pred.cited_nums.issubset(pred.valid_nums):
+        return 0.0
+
+    # Layer 2: Faithfulness — hard constraint for medical safety
+    if not pred.is_faithful:
+        return 0.0
+
+    return 1.0
+
+qa_module = SafeMedicalQA(confidence_threshold=0.8)
+qa = dspy.Refine(module=qa_module, N=3, reward_fn=medical_qa_reward, threshold=1.0)
+
 # Usage
-qa = SafeMedicalQA(confidence_threshold=0.8)
 guidelines = [
     "[1] Standard adult ibuprofen dose: 200-400mg every 4-6 hours.",
     "[2] Maximum daily dose without supervision: 1200mg.",

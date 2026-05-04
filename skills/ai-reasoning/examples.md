@@ -233,28 +233,29 @@ class PlanningAssistant(dspy.Module):
         ).selected
 
         # Create the plan
-        result = self.plan(
+        return self.plan(
             scenario=scenario,
             strategies=selected,
         )
 
-        dspy.Suggest(
-            len(result.tasks) >= 3,
-            "A real plan should have at least 3 tasks"
-        )
-        dspy.Suggest(
-            len(result.risks) >= 1,
-            "Every plan has at least one risk — identify it"
-        )
 
-        return result
+def planning_completeness_reward(args, pred):
+    """Soft reward encouraging realistic, risk-aware plans."""
+    score = 1.0
+    if len(pred.tasks) < 3:
+        score -= 0.2  # soft: a real plan should have at least 3 tasks
+    if len(pred.risks) < 1:
+        score -= 0.2  # soft: every plan has at least one risk
+    return score
+
+planner = dspy.Refine(
+    module=PlanningAssistant(), N=3, reward_fn=planning_completeness_reward, threshold=0.8
+)
 ```
 
 ### Usage
 
 ```python
-planner = PlanningAssistant()
-
 result = planner(scenario="""
 We need to migrate our database from PostgreSQL to a new managed service.
 Constraints: zero downtime for the API, 3 engineers available, must complete
@@ -292,5 +293,5 @@ def planning_metric(example, prediction, trace=None):
     return (result.addresses_constraints + result.dependencies_make_sense + result.is_actionable) / 3
 
 optimizer = dspy.BootstrapFewShot(metric=planning_metric, max_bootstrapped_demos=4)
-optimized = optimizer.compile(PlanningAssistant(), trainset=trainset)
+optimized = optimizer.compile(planner, trainset=trainset)
 ```

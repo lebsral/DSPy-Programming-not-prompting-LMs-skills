@@ -73,18 +73,30 @@ class QualityGuidedAnalysis(dspy.Module):
             top_complaints=result.top_complaints,
         )
 
-        dspy.Suggest(
-            float(evaluation.quality_score) >= 0.7,
-            f"Quality too low ({evaluation.quality_score}): {evaluation.feedback}",
-        )
-
         return dspy.Prediction(
             summary=result.summary,
             top_complaints=result.top_complaints,
             quality_score=evaluation.quality_score,
         )
 
-qa = QualityGuidedAnalysis()
+def quality_reward(args, pred):
+    """Reward analysis that meets a minimum quality threshold."""
+    judge = dspy.ChainOfThought(
+        "query, summary, top_complaints -> quality_score: float, feedback"
+    )
+    evaluation = judge(
+        query=args["query"],
+        summary=pred.summary,
+        top_complaints=pred.top_complaints,
+    )
+    return float(evaluation.quality_score)
+
+qa = dspy.Refine(
+    module=QualityGuidedAnalysis(),
+    N=3,
+    reward_fn=quality_reward,
+    threshold=0.7,
+)
 result = qa(reviews=reviews_text, query="Summarize customer feedback")
 ```
 
@@ -132,7 +144,7 @@ print("Root cause:", result.root_cause)
 
 ### Wrapping with constraints for production use
 
-Combine RLM with assertions to enforce output requirements:
+Combine RLM with a reward function to enforce output requirements:
 
 ```python
 class ConstrainedLogAnalysis(dspy.Module):
@@ -144,23 +156,29 @@ class ConstrainedLogAnalysis(dspy.Module):
         )
 
     def forward(self, logs, query):
-        result = self.analyze(logs=logs, query=query)
+        return self.analyze(logs=logs, query=query)
 
-        # Enforce constraints on the output
-        dspy.Assert(
-            len(result.error_patterns) > 0,
-            "Must identify at least one error pattern",
-        )
-        dspy.Assert(
-            len(result.root_cause) >= 20,
-            "Root cause analysis must be substantive (at least 20 chars)",
-        )
-        dspy.Suggest(
-            len(result.error_patterns) <= 10,
-            "Keep error patterns focused -- list at most 10",
-        )
 
-        return result
+def log_analysis_reward(args, pred):
+    """Hard constraints return 0.0 on failure; soft constraints subtract a small penalty."""
+    # Hard constraints - must have patterns and substantive root cause
+    if len(pred.error_patterns) == 0:
+        return 0.0
+    if len(pred.root_cause) < 20:
+        return 0.0
+    # Soft constraint - prefer focused pattern lists
+    score = 1.0
+    if len(pred.error_patterns) > 10:
+        score -= 0.1
+    return score
+
+
+analyzer = dspy.Refine(
+    module=ConstrainedLogAnalysis(),
+    N=3,
+    reward_fn=log_analysis_reward,
+    threshold=0.9,
+)
 
 
 # Use with evaluation
@@ -172,7 +190,6 @@ def completeness_metric(example, pred, trace=None):
     return (has_patterns + has_timeline + has_root_cause) / 3.0
 
 
-analyzer = ConstrainedLogAnalysis()
 result = analyzer(
     logs=logs,
     query="Find error patterns and root causes from the last 24 hours",

@@ -217,40 +217,47 @@ def filter_schema(full_schema, table_names):
 
 ## Step 4: Validate SQL before execution
 
-Never run AI-generated SQL without validation. Use `dspy.Assert` for hard constraints and `dspy.Suggest` for style guidance:
+Never run AI-generated SQL without validation. Use a reward function with `dspy.Refine` to enforce hard safety constraints and penalize style issues:
 
 ```python
 import sqlparse
 
-def validate_sql(sql):
-    """Validate AI-generated SQL is safe and well-formed."""
-    sql_upper = sql.strip().upper()
+def sql_safety_reward(args, pred):
+    """Reward function for SQL safety and correctness. Returns 0.0-1.0."""
+    sql = pred.sql.strip().rstrip(";") if hasattr(pred, "sql") else ""
+    sql_upper = sql.upper()
+    score = 1.0
 
-    # Hard safety constraints
-    dspy.Assert(
-        sql_upper.startswith("SELECT"),
-        "Only SELECT queries are allowed. Do not generate INSERT, UPDATE, DELETE, DROP, or ALTER."
-    )
+    # Hard safety constraints -- fail immediately if violated
+    if not sql_upper.startswith("SELECT"):
+        return 0.0
 
     dangerous = ["INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "TRUNCATE", "EXEC"]
     for keyword in dangerous:
-        dspy.Assert(
-            keyword not in sql_upper.split("SELECT", 1)[0],
-            f"Query contains forbidden keyword: {keyword}"
-        )
+        if keyword in sql_upper.split("SELECT", 1)[0]:
+            return 0.0
 
     # Syntax check
     parsed = sqlparse.parse(sql)
-    dspy.Assert(len(parsed) == 1, "Generate exactly one SQL statement")
-    dspy.Assert(
-        parsed[0].get_type() == "SELECT",
-        "Only SELECT statements are allowed"
-    )
+    if len(parsed) != 1 or parsed[0].get_type() != "SELECT":
+        return 0.0
 
-    # Style suggestions (soft constraints — AI will retry if possible)
-    dspy.Suggest(
-        "JOIN" not in sql_upper or "ON" in sql_upper,
-        "Use explicit JOIN ... ON syntax instead of implicit joins in WHERE"
+    # Style penalty (soft) -- prefer explicit JOIN ... ON syntax
+    if "JOIN" in sql_upper and "ON" not in sql_upper:
+        score -= 0.1
+
+    return score
+
+
+# Wrap the SQL generation step with Refine
+def make_validated_sql_module(engine, schema):
+    generate_sql = dspy.ChainOfThought(GenerateSQL)
+
+    return dspy.Refine(
+        module=generate_sql,
+        N=3,
+        reward_fn=sql_safety_reward,
+        threshold=0.9,
     )
 ```
 
@@ -415,7 +422,7 @@ optimized.save("optimized_db_qa.json")
 | Query timeout | `execution_options(timeout=30)` in SQLAlchemy |
 | Row limit | Always append `LIMIT` to queries |
 | Table allowlist | Only include permitted tables in the schema |
-| SQL validation | `dspy.Assert` for SELECT-only, no dangerous keywords |
+| SQL validation | `dspy.Refine` with a safety reward function for SELECT-only, no dangerous keywords |
 | Audit logging | Log every question, generated SQL, and results |
 | No raw credentials | Use environment variables or secrets manager |
 

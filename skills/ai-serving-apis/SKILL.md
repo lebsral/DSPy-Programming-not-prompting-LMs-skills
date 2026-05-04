@@ -167,8 +167,6 @@ async def query_batch(requests: list[QueryRequest]):
 Map DSPy errors to appropriate HTTP status codes:
 
 ```python
-from dspy.primitives.assertions import DSPyAssertionError
-
 @app.post("/query", response_model=QueryResponse)
 async def query(request: QueryRequest):
     program = app.state.program
@@ -184,11 +182,11 @@ async def query(request: QueryRequest):
             result = program(query=request.query)
         return QueryResponse(answer=result.answer)
 
-    except DSPyAssertionError as e:
-        # AI output failed validation (from dspy.Assert)
-        raise HTTPException(status_code=422, detail=f"Output validation failed: {e}")
     except Exception as e:
         error_msg = str(e).lower()
+        # dspy.Refine raises when fail_count is exhausted -- treat as validation failure
+        if "refine" in error_msg or "reward" in error_msg or "fail_count" in error_msg:
+            raise HTTPException(status_code=422, detail=f"Output validation failed: {e}")
         if "rate limit" in error_msg or "429" in error_msg:
             raise HTTPException(status_code=429, detail="Rate limited by AI provider")
         if "timeout" in error_msg:
@@ -291,7 +289,7 @@ open http://localhost:8000/docs
 - **Load once, serve many.** Load the program and LM at startup via lifespan, not per request.
 - **`dspy.context()` for per-request overrides.** Isolates model/temperature changes without affecting other concurrent requests — critical because `dspy.configure()` sets global state.
 - **Separate DSPy from API code.** Keep `program.py` independent — the same module runs in scripts, tests, and the API.
-- **Map DSPy errors to HTTP codes.** `DSPyAssertionError` → 422, rate limits → 429, timeouts → 504.
+- **Map DSPy errors to HTTP codes.** `dspy.Refine` exhaustion → 422, rate limits → 429, timeouts → 504.
 
 ## DSPy-specific production patterns
 

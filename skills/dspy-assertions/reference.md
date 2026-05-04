@@ -2,7 +2,7 @@
 
 # dspy.Assert and dspy.Suggest — API Reference
 
-> **Deprecation note:** The DSPy docs mark assertions as deprecated in favor of `dspy.Refine`. However, Assert/Suggest still work and remain useful for inline constraint checking inside `forward()`. `dspy.Refine` is a different pattern — it wraps a module with reward-based selection (like BestOfN with feedback). Choose based on your pattern: inline constraints → Assert/Suggest; module-level retry with scoring → Refine.
+> **REMOVED IN DSPy 3.x.** `dspy.Assert` and `dspy.Suggest` have been removed from the DSPy codebase — no `assertions.py` file, no imports in any `__init__.py`, `retry.py` is entirely commented out, and the docs page is gone. This reference is kept for maintaining legacy codebases only. **For new code, use `dspy.Refine` or `dspy.BestOfN`** — see `/dspy-refine` and `/dspy-best-of-n`.
 
 ## dspy.Assert
 

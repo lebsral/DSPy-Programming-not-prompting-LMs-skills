@@ -1,0 +1,32 @@
+[
+  {
+    "prompt": "I'm building a FastAPI endpoint that calls a DSPy ChainOfThought module. How do I make it non-blocking so it doesn't hold up other requests?",
+    "expected_output": "Use await module.aforward() in the async endpoint handler instead of calling the module synchronously.",
+    "assertions": [
+      "Uses aforward() or acall() with await",
+      "Shows an async def endpoint handler",
+      "Does not call module() synchronously inside the async function",
+      "Does not use asyncio.run() inside the endpoint"
+    ]
+  },
+  {
+    "prompt": "I need to process 500 texts through a DSPy classifier as fast as possible. How do I run them concurrently without hitting rate limits?",
+    "expected_output": "Use asyncio.gather with a semaphore to limit concurrent calls to a safe number (10-20).",
+    "assertions": [
+      "Uses asyncio.gather for concurrent execution",
+      "Implements asyncio.Semaphore for rate limiting",
+      "Uses aforward() for each call",
+      "Does not suggest sequential processing"
+    ]
+  },
+  {
+    "prompt": "How do I write a custom DSPy module that works with await? My pipeline has two steps that need to run async.",
+    "expected_output": "Implement an aforward() method on your Module subclass that awaits each sub-module with aforward().",
+    "assertions": [
+      "Defines async def aforward(self, ...) on the module class",
+      "Awaits sub-modules with aforward()",
+      "Returns a dspy.Prediction",
+      "Does not implement only forward() for async use"
+    ]
+  }
+]

@@ -92,17 +92,18 @@ class RAGPipeline(dspy.Module):
         # Stage 2: Generate grounded answer
         result = self.generate(context=passages, question=question)
 
-        # Soft constraint: answer should reference the context
-        dspy.Suggest(
-            result.confidence != "low",
-            "If confidence is low, try to find a partial answer from the context",
-        )
-
         return dspy.Prediction(
             answer=result.answer,
             confidence=result.confidence,
             passages=passages,
         )
+
+
+def rag_confidence_reward(args, pred):
+    """Prefer answers with high or medium confidence."""
+    if pred.confidence == "low":
+        return 0.5
+    return 1.0
 
 
 # --- Usage ---
@@ -112,7 +113,7 @@ dspy.configure(lm=lm)
 
 # Note: dspy.Retrieve requires a retrieval model to be configured.
 # See DSPy docs for ColBERTv2 or custom retriever setup.
-rag = RAGPipeline(k=5)
+rag = dspy.Refine(module=RAGPipeline(k=5), N=3, reward_fn=rag_confidence_reward, threshold=1.0)
 result = rag(question="How does DSPy optimize prompts?")
 print(result.answer)
 print(f"Confidence: {result.confidence}")
@@ -122,7 +123,7 @@ print(f"Sources: {len(result.passages)} passages retrieved")
 Key points:
 - Each stage has a clear signature with typed fields
 - `forward()` handles edge cases (no passages) with plain Python
-- `dspy.Suggest` adds a soft quality constraint without hard-failing
+- `dspy.Refine` wraps the module and retries when confidence is low, without hard-failing
 - The module returns a `Prediction` that bundles the answer, confidence, and source passages
 
 

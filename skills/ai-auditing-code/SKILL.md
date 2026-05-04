@@ -138,12 +138,20 @@ If yes, make the fixes. Do not silently apply fixes during the audit itself.
 
 ---
 
-## Cross-references
+## Additional resources
 
 - Full 7-category checklist with code examples: [reference.md](reference.md)
 - Worked audit examples (ticket classifier, RAG pipeline, content generator): [examples.md](examples.md)
-- Code is crashing? Fix it first with `/ai-fixing-errors`
-- Need to measure accuracy after fixing? Use `/ai-improving-accuracy`
-- Want to plan your AI feature? Use `/ai-planning`
-- Not sure which DSPy pattern fits your problem? Use `/ai-choosing-architecture`
+
+## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
+- **Code is crashing?** Fix it first with `/ai-fixing-errors`
+- **Measure accuracy after fixing** — see `/ai-improving-accuracy`
+- **Plan your AI feature** — see `/ai-planning`
+- **Pick the right DSPy pattern** — see `/ai-choosing-architecture`
+- **Signature design patterns** — see `/dspy-signatures`
+- **Module composition** — see `/dspy-modules`
+- **Optimizer selection** — see `/dspy-optimizers`
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

@@ -1,0 +1,44 @@
+{
+  "skill_name": "ai-auditing-code",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Can you review this DSPy code?\n\n```python\nimport dspy\n\nlm = dspy.LM(\"openai/gpt-4o\")\ndspy.configure(lm=lm)\n\nclass Classify(dspy.Signature):\n    input: str = dspy.InputField()\n    output: str = dspy.OutputField()\n\nclass MyClassifier(dspy.Module):\n    def forward(self, text):\n        result = dspy.Predict(Classify)(input=text)\n        return result.output\n\nexamples = [\n    dspy.Example(input=\"card charged twice\", output=\"billing\"),\n    dspy.Example(input=\"app crashes on login\", output=\"technical\"),\n]\n\ndef metric(example, prediction):\n    return prediction.output == example.output\n\noptimizer = dspy.MIPROv2(metric=metric, auto=\"medium\")\ncompiled = optimizer.compile(MyClassifier(), trainset=examples)\n```",
+      "expected_output": "A structured audit report with severity-rated findings covering: missing with_inputs() on examples (CRITICAL), generic field names 'input'/'output' (WARNING), Predict created inside forward() instead of __init__ (INFO/WARNING), metric missing trace parameter (CRITICAL), MIPROv2 with only 2 examples (CRITICAL), and optimized program not saved (CRITICAL).",
+      "files": [],
+      "assertions": [
+        {"name": "flags_missing_with_inputs", "description": "Identifies that examples are missing .with_inputs() calls and rates it as CRITICAL"},
+        {"name": "flags_generic_field_names", "description": "Identifies that 'input' and 'output' are generic field names that reduce accuracy"},
+        {"name": "flags_metric_missing_trace", "description": "Identifies that the metric function is missing the trace=None parameter"},
+        {"name": "flags_optimizer_too_few_examples", "description": "Identifies that MIPROv2 with 2 examples is insufficient, recommends BootstrapFewShot"},
+        {"name": "uses_severity_levels", "description": "Uses CRITICAL/WARNING/INFO severity ratings, not a flat list"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Please audit our RAG pipeline code for production readiness.\n\n```python\nimport dspy\nimport openai\n\nlm = dspy.LM(\"openai/gpt-4o\")\ndspy.configure(lm=lm)\n\nSYSTEM_PROMPT = \"You are a helpful assistant that answers questions from documents.\"\n\nclass RAG(dspy.Module):\n    def __init__(self):\n        self.retrieve = dspy.Retrieve(k=5)\n\n    def forward(self, question):\n        docs = self.retrieve(question)\n        context = \"\"\n        for d in docs.passages:\n            context += d + \" \"\n        # use raw openai for better control\n        client = openai.OpenAI()\n        response = client.chat.completions.create(\n            model=\"gpt-4o\",\n            messages=[\n                {\"role\": \"system\", \"content\": SYSTEM_PROMPT},\n                {\"role\": \"user\", \"content\": f\"Context: {context}\\nQuestion: {question}\"}\n            ]\n        )\n        return response.choices[0].message.content\n```",
+      "expected_output": "An audit report identifying: raw openai.chat.completions.create() call inside a DSPy module (CRITICAL anti-pattern), hardcoded SYSTEM_PROMPT alongside DSPy (CRITICAL anti-pattern), f-string prompt construction (CRITICAL anti-pattern), string concatenation for context (WARNING), no error handling (WARNING), module returns raw string instead of dspy.Prediction (WARNING).",
+      "files": [],
+      "assertions": [
+        {"name": "flags_raw_openai_call", "description": "Identifies the raw openai API call as an anti-pattern that bypasses DSPy optimization"},
+        {"name": "flags_hardcoded_system_prompt", "description": "Identifies SYSTEM_PROMPT as conflicting with DSPy signature system"},
+        {"name": "flags_fstring_prompt", "description": "Identifies f-string prompt construction as bypassing the signature system"},
+        {"name": "suggests_dspy_signature_replacement", "description": "Recommends replacing raw API calls with proper DSPy signatures and modules"},
+        {"name": "structured_report_format", "description": "Produces a structured report with categories, severity, file references, and fix suggestions"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I just finished building this content pipeline. Can you do a quick code review before I deploy it?\n\n```python\nimport dspy\n\nlm = dspy.LM(\"openai/gpt-4o\", timeout=30)\ndspy.configure(lm=lm)\n\nclass CreateOutline(dspy.Signature):\n    \"\"\"Create a structured outline for a blog post.\"\"\"\n    topic: str = dspy.InputField()\n    audience: str = dspy.InputField(desc=\"target reader persona\")\n    outline: str = dspy.OutputField(desc=\"numbered outline with 3-5 sections\")\n\nclass WriteDraft(dspy.Signature):\n    \"\"\"Write a blog post from an outline.\"\"\"\n    topic: str = dspy.InputField()\n    audience: str = dspy.InputField(desc=\"target reader persona\")\n    outline: str = dspy.InputField()\n    article: str = dspy.OutputField(desc=\"complete blog post\")\n\nclass ContentPipeline(dspy.Module):\n    def __init__(self):\n        self.outline = dspy.ChainOfThought(CreateOutline)\n        self.draft = dspy.ChainOfThought(WriteDraft)\n\n    def forward(self, topic, audience):\n        outline_result = self.outline(topic=topic, audience=audience)\n        return self.draft(topic=topic, audience=audience, outline=outline_result.outline)\n\nexamples = [\n    dspy.Example(topic=\"async Python\", audience=\"intermediate devs\", article=\"...\").with_inputs(\"topic\", \"audience\"),\n    dspy.Example(topic=\"Docker basics\", audience=\"beginners\", article=\"...\").with_inputs(\"topic\", \"audience\"),\n]\n\ndef quality_metric(example, prediction, trace=None):\n    if not prediction.article:\n        return 0.0\n    score = 1.0\n    if len(prediction.article.split()) < 200:\n        score -= 0.3\n    return score\n\noptimizer = dspy.BootstrapFewShot(metric=quality_metric, max_bootstrapped_demos=2)\ncompiled = optimizer.compile(ContentPipeline(), trainset=examples)\ncompiled.save(\"content_pipeline.json\")\n```",
+      "expected_output": "A mostly positive audit recognizing good practices (sub-modules in __init__, with_inputs(), trace parameter, program saved, timeout set) while noting minor improvements: only 2 training examples is thin even for BootstrapFewShot (WARNING), no error handling in forward() for production (WARNING), metric could check outline quality too (INFO).",
+      "files": [],
+      "assertions": [
+        {"name": "recognizes_good_patterns", "description": "Acknowledges correct patterns like with_inputs(), trace param, save(), timeout, modules in __init__"},
+        {"name": "does_not_over_criticize", "description": "Does not rate everything CRITICAL — uses appropriate severity for a mostly-correct codebase"},
+        {"name": "flags_small_trainset", "description": "Notes that 2 examples is thin even for BootstrapFewShot"},
+        {"name": "suggests_error_handling", "description": "Recommends error handling for production deployment"},
+        {"name": "overall_positive_assessment", "description": "Overall assessment is positive (Ready or Near-ready) since the code follows DSPy conventions"}
+      ]
+    }
+  ]
+}

@@ -158,19 +158,24 @@ class SupportAgent(dspy.Module):
             "check_order for order questions, "
             "and search for general questions."
         )
-        result = self.agent(question=question, context=context)
+        return self.agent(question=question, context=context)
 
-        dspy.Suggest(
-            len(result.answer) > 20,
-            "Provide a detailed, helpful response",
-        )
+def support_reward(args, pred):
+    if len(pred.answer) > 20:
+        return 1.0
+    return 0.0  # Response too short — not detailed enough
 
-        return result
+validated_support = dspy.Refine(
+    module=SupportAgent(),
+    N=3,
+    reward_fn=support_reward,
+    threshold=1.0,
+)
 ```
 
 This pattern lets you:
 - Pass extra context or instructions to the agent
-- Add assertions and quality constraints
+- Add reward-based quality constraints with `dspy.Refine`
 - Optimize the agent with DSPy optimizers (they tune the inner ReAct module)
 - Save and load the optimized state
 

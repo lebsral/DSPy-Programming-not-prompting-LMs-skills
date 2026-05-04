@@ -229,7 +229,7 @@ Pick a simpler alternative when:
 | Needs reasoning but latency matters | `dspy.ChainOfThought` |
 | Math or computation tasks | `dspy.ProgramOfThought` |
 | Need tool use or API calls | `dspy.ReAct` |
-| Want retries with self-correction | `dspy.Assert` + `ChainOfThought` |
+| Want retries with self-correction | `dspy.Refine` + `ChainOfThought` |
 
 MultiChainComparison is most valuable when the problem genuinely benefits from diverse perspectives -- not when there is a single clearly correct approach.
 

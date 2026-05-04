@@ -11,7 +11,7 @@
 | CodeAct | Tasks that require writing and running code as part of the answer. | 3-10x | 3-10x | Stronger than ReAct for coding-heavy workflows. |
 | MultiChainComparison | When you need the single best answer and can afford 3-5x cost. | 3-5x | 3-5x | Runs N chains and picks the best. |
 | BestOfN | When you have a reward/scoring function and want to sample the best output. | Nx | Nx | Good for tasks with verifiable correctness. |
-| Refine | Iterative improvement. When a single pass is not enough and you want the model to self-edit. | 2-4x | 2-4x | Each refinement pass is a full LM call. |
+| Refine | Sampling with feedback. Runs module up to N times at temperature 1.0 and picks the best output above a reward threshold. | 2-4x | 2-4x | Similar to BestOfN but with reward-guided selection. |
 | RLM | RL-style reward-driven generation. Experimental use cases. | Varies | Varies | Less common; check DSPy docs for current API. |
 | Parallel | Running multiple independent sub-tasks simultaneously. | 1x wall clock | Nx total | Good for fan-out patterns where sub-tasks are independent. |
 
@@ -29,9 +29,9 @@
 
 **MultiChainComparison** — Use when single-pass accuracy is measurably insufficient and cost is not the primary constraint. Runs N independent reasoning chains and selects the most consistent answer. Effective for high-stakes single answers (medical triage, legal classification).
 
-**BestOfN** — Use when you have a reliable scoring function (a reward model, a unit test, a regex check). Samples N outputs, scores each, and returns the best. Requires a good scorer; without one, it is just random selection.
+**BestOfN** — Use when you have a reliable scoring function (a reward model, a unit test, a regex check). Runs the module up to N times at temperature 1.0, returns the first output exceeding `threshold` or the highest-scoring output. Requires `module`, `N`, `reward_fn`, and `threshold` parameters.
 
-**Refine** — Use when you want the model to iteratively improve an initial draft. Effective for writing tasks where a first pass is good but a second pass makes it excellent. Each refinement is a full LM call.
+**Refine** — Use when you want sampling with reward-guided selection. Runs the module up to N times at temperature 1.0, selects the first output exceeding a reward threshold or the highest-scoring output overall. Similar to BestOfN but integrated with DSPy's refinement tracking. Requires `module`, `N`, `reward_fn`, and `threshold` parameters.
 
 **Parallel** — Use for fan-out patterns: summarizing many documents independently, classifying a batch of items, running the same task over multiple inputs simultaneously. Reduces wall-clock time when the sub-tasks are independent.
 
@@ -44,7 +44,7 @@
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 class ClassifyTicket(dspy.Signature):
@@ -75,7 +75,7 @@ optimized = optimizer.compile(classifier, trainset=trainset)
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o")
+lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 class AnswerQuestion(dspy.Signature):
@@ -105,7 +105,7 @@ optimized = optimizer.compile(answerer, trainset=trainset, valset=valset)
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o")
+lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Define tools as plain Python functions with docstrings
@@ -145,7 +145,7 @@ optimized = optimizer.compile(agent, trainset=trainset)
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 class ClassifyIntent(dspy.Signature):
@@ -182,7 +182,7 @@ print(result.reply)
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o")
+lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Configure your retriever (colbert, faiss, weaviate, etc.)

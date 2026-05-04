@@ -1,0 +1,33 @@
+[
+  {
+    "prompt": "I have an MCP server for my PostgreSQL database. Show me how to connect a DSPy ReAct agent to it so I can ask questions in natural language.",
+    "expected_output": "An async setup connecting to a Postgres MCP server via StdioServerParameters and stdio_client, discovering tools, converting with Tool.from_mcp_tool, and calling the agent with acall().",
+    "assertions": [
+      "Uses StdioServerParameters to configure the server",
+      "Uses stdio_client and ClientSession context managers",
+      "Calls session.initialize() before listing tools",
+      "Uses session.list_tools() for discovery",
+      "Converts tools with dspy.Tool.from_mcp_tool(session, tool)",
+      "Uses await agent.acall() not agent()"
+    ]
+  },
+  {
+    "prompt": "How do I combine MCP tools from an external server with my own Python functions in a single DSPy agent?",
+    "expected_output": "Shows how to convert MCP tools with from_mcp_tool and concatenate them with locally-defined Python functions in the tools list.",
+    "assertions": [
+      "Converts MCP tools with dspy.Tool.from_mcp_tool",
+      "Defines local Python functions with type hints and docstrings",
+      "Combines both in a single tools list passed to ReAct",
+      "Uses acall() since MCP tools are async"
+    ]
+  },
+  {
+    "prompt": "My DSPy MCP agent fails with a session closed error. The tools were discovered fine but break when the agent calls them.",
+    "expected_output": "The agent must run inside the async with block where the session is active. Moving the agent call outside the context manager causes session closed errors.",
+    "assertions": [
+      "Identifies the issue as running agent outside the session context",
+      "Shows the correct pattern with agent.acall() inside the async with block",
+      "Does not suggest reconnecting or creating multiple sessions"
+    ]
+  }
+]

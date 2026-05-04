@@ -1,6 +1,6 @@
 ---
 name: ai-improving-accuracy
-description: Measure and improve how well your AI works. Use when AI gives wrong answers, accuracy is bad, responses are unreliable, you need to test AI quality, evaluate your AI, write metrics, benchmark performance, optimize prompts, improve results, or systematically make your AI better. Also use when you spent hours tweaking prompts, trial and error prompt engineering is not working, quality plateaued early, or you have stale prompts everywhere in your codebase. Covers DSPy evaluation, metrics, and optimization., my AI is only 60% accurate, how to measure AI quality, AI evaluation framework, benchmark my LLM, prompt optimization not working, systematic way to improve AI, AI accuracy plateaued, DSPy optimizer tutorial, MIPROv2 optimization, how to go from 70% to 90% accuracy.
+description: Measure and improve how well your AI works. Use when AI gives wrong answers, accuracy is bad, responses are unreliable, you need to test AI quality, evaluate your AI, write metrics, benchmark performance, optimize prompts, improve results, or systematically make your AI better. Also used for spent hours tweaking prompts, trial and error prompt engineering is not working, quality plateaued early, stale prompts everywhere in your codebase, my AI is only 60% accurate, how to measure AI quality, AI evaluation framework, benchmark my LLM, prompt optimization not working, systematic way to improve AI, AI accuracy plateaued, DSPy optimizer tutorial, MIPROv2 optimization, how to go from 70% to 90% accuracy.
 ---
 
 # Measure and Improve Your AI
@@ -15,9 +15,19 @@ Guide the user through measuring how well their AI works, then systematically im
 4. **Verify** — re-evaluate to confirm improvement
 5. **Iterate or ship**
 
-## Step 1: Define what "good" means (write a metric)
+## Step 1: Understand the problem
 
-A metric takes an expected answer and the AI's answer, and returns a score.
+Ask the user:
+1. **What does your AI get wrong?** (wrong answers, wrong format, inconsistent, too slow?)
+2. **Do you have labeled examples?** (how many? what format?)
+3. **How do you know when an answer is good?** (exact match, partial credit, human judgment?)
+4. **Have you tried optimization before?** (if yes, what and what happened?)
+
+If the user does not have labeled data, point them to `/ai-generating-data` first.
+
+## Step 2: Define what "good" means (write a metric)
+
+A metric takes an expected answer and the AI answer, and returns a score.
 
 ### Exact match (simplest)
 
@@ -82,16 +92,6 @@ def metric(example, prediction, trace=None):
     return result.is_correct
 ```
 
-### Composite metric (multiple criteria)
-
-```python
-def metric(example, prediction, trace=None):
-    correct = float(prediction.answer.lower() == example.answer.lower())
-    concise = float(len(prediction.answer.split()) < 50)
-    has_reasoning = float(len(getattr(prediction, 'reasoning', '')) > 20)
-    return 0.7 * correct + 0.2 * concise + 0.1 * has_reasoning
-```
-
 ### Training-aware metric
 
 The `trace` parameter is not `None` during optimization. Use it for stricter requirements during training:
@@ -106,40 +106,16 @@ def metric(example, prediction, trace=None):
     return correct
 ```
 
-## Step 2: Measure current quality (run evaluation)
-
-### Prepare test data
-
-If you don't have enough examples, use `/ai-generating-data` to generate synthetic training data.
+## Step 3: Measure current quality (run evaluation)
 
 ```python
 import dspy
+from dspy.evaluate import Evaluate
 
-# Manual creation
 devset = [
     dspy.Example(question="What is DSPy?", answer="A framework for LM programs").with_inputs("question"),
-    # 20-100+ examples for reliable evaluation
+    # 50-200+ examples for reliable evaluation
 ]
-
-# From CSV/JSON
-import json
-with open("test_data.json") as f:
-    data = json.load(f)
-devset = [dspy.Example(**x).with_inputs("question") for x in data]
-
-# From HuggingFace
-from datasets import load_dataset
-dataset = load_dataset("squad", split="validation[:100]")
-devset = [
-    dspy.Example(question=x["question"], answer=x["answers"]["text"][0]).with_inputs("question")
-    for x in dataset
-]
-```
-
-### Run evaluation
-
-```python
-from dspy.evaluate import Evaluate
 
 evaluator = Evaluate(
     devset=devset,
@@ -153,43 +129,17 @@ baseline_score = evaluator(my_program)
 print(f"Baseline: {baseline_score}")
 ```
 
-## Step 3: Improve (choose an optimizer)
+## Step 4: Improve (choose an optimizer)
 
-### Quick guide: which optimizer?
+| Training examples | Recommended optimizer | Expected improvement |
+|------------------|-----------------------|---------------------|
+| <20 | GEPA (instruction tuning) | 5-15% |
+| 20-50 | BootstrapFewShot | 5-20% |
+| 50-200 | BootstrapFewShot, then MIPROv2 | 15-35% |
+| 200-500 | MIPROv2 (auto="medium") | 20-40% |
+| 500+ | MIPROv2 (auto="heavy") or BootstrapFinetune | 25-50% |
 
-| Training examples | Recommended optimizer | Expected improvement | Typical cost |
-|------------------|-----------------------|---------------------|-------------|
-| <20 | GEPA (instruction tuning) | 5-15% | ~$0.50 |
-| 20-50 | BootstrapFewShot | 5-20% | ~$0.50-2 |
-| 50-200 | BootstrapFewShot, then MIPROv2 | 15-35% | ~$2-10 |
-| 200-500 | MIPROv2 (auto="medium") | 20-40% | ~$5-15 |
-| 50+ | VizPy ContraPrompt / PromptGrad | 5-18% | ~$0 (free tier) |
-| 500+ | MIPROv2 (auto="heavy") or BootstrapFinetune | 25-50% | ~$15-50+ |
-
-```
-Start here
-|
-+- Just getting started (<50 examples)? -> BootstrapFewShot
-|   Quick, cheap, usually gives a solid boost.
-|
-+- Want better prompts (50+ examples)? -> MIPROv2
-|   Optimizes both instructions and examples.
-|   Best general-purpose prompt optimizer.
-|
-+- Want to tune instructions only (<50 examples)? -> GEPA
-|   Good when you have few examples.
-|
-+- Need maximum quality (500+ examples)? -> BootstrapFinetune
-|   Fine-tunes the model weights.
-|   Best for production with smaller/cheaper models.
-|
-+- Want to combine approaches? -> BetterTogether
-    Jointly optimizes prompts and weights.
-```
-
-**Stacking tip:** Run BootstrapFewShot first, then MIPROv2 on the result. This often beats either alone — bootstrap finds good examples, then MIPRO refines the instructions.
-
-Optimized prompts are model-specific. If you change models, re-run your optimizer. See `/ai-switching-models`.
+**Stacking tip:** Run BootstrapFewShot first, then MIPROv2 on the result. Bootstrap finds good examples, then MIPRO refines the instructions.
 
 ### BootstrapFewShot (start here)
 
@@ -199,12 +149,10 @@ Fast, cheap. Finds good examples by running your program and keeping successful 
 optimizer = dspy.BootstrapFewShot(
     metric=metric,
     max_bootstrapped_demos=4,
-    max_labeled_demos=4,
+    max_labeled_demos=4,   # default is 16 — lower for small datasets
 )
 optimized = optimizer.compile(my_program, trainset=trainset)
 ```
-
-**Cost:** Minimal (one pass through trainset). **Expected improvement:** 5-20%.
 
 ### MIPROv2 (recommended for most cases)
 
@@ -213,67 +161,42 @@ Optimizes both instructions and examples. Best general-purpose optimizer.
 ```python
 optimizer = dspy.MIPROv2(
     metric=metric,
-    auto="medium",    # "light", "medium", "heavy"
+    auto="medium",    # "light" (default), "medium", "heavy"
 )
 optimized = optimizer.compile(my_program, trainset=trainset)
 ```
 
-- `"light"`: Quick, ~$1-2
-- `"medium"`: Balanced, ~$5-10
-- `"heavy"`: Thorough, ~$15-30
-
-**Expected improvement:** 15-35%.
-
-### GEPA (instruction tuning)
-
-Good with few examples or when you want to focus on instruction quality:
-
-```python
-optimizer = dspy.GEPA()
-optimized = optimizer.compile(my_program, trainset=trainset, metric=metric)
-```
-
-### VizPy (third-party alternative)
-
-VizPy is a commercial prompt optimizer that offers ContraPromptOptimizer (classification) and PromptGradOptimizer (generation). Like GEPA, it optimizes instructions only — not few-shot demos or Pydantic field descriptions. Free tier includes 10 optimization runs/month.
-
-For setup, usage, and a comparison with GEPA/MIPROv2, see `/dspy-vizpy`.
-
 ### BootstrapFinetune (maximum quality)
 
-Fine-tunes model weights for the biggest accuracy gains. Requires 500+ examples and a fine-tunable model:
+Fine-tunes model weights. Requires 500+ examples and a fine-tunable model:
 
 ```python
 optimizer = dspy.BootstrapFinetune(metric=metric, num_threads=24)
 optimized = optimizer.compile(my_program, trainset=trainset)
 ```
 
-For the full fine-tuning workflow (decision framework, prerequisites, model distillation, BetterTogether), see `/ai-fine-tuning`.
+For the full fine-tuning workflow, see `/ai-fine-tuning`.
 
 ### When optimization plateaus
 
-If your score stops improving, check these common causes:
-
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
-| Score stuck at 60-70% despite optimization | Task too complex for single step | `/ai-decomposing-tasks` — break into subtasks |
-| Optimizer overfits (train score high, dev score flat) | Too little training data | `/ai-generating-data` — generate more examples |
+| Score stuck at 60-70% | Task too complex for single step | Break into subtasks — see `/ai-reasoning` |
+| Optimizer overfits (train high, dev flat) | Too little training data | Generate more examples — see `/ai-generating-data` |
 | Score varies wildly between runs | Non-deterministic metric or small devset | Increase devset to 100+, set temperature=0 |
-| Diminishing returns from more demos | Prompt is maxed out; model is the limit | `/ai-switching-models` — try a more capable model |
-| Score high but real users complain | Metric doesn't match real quality | Rewrite metric based on actual failure patterns |
+| Score high but users complain | Metric does not match real quality | Rewrite metric based on actual failure patterns |
 
-## Step 4: Verify improvement
+Optimized prompts are model-specific. If you change models, re-run your optimizer.
+
+## Step 5: Verify and ship
 
 ```python
 optimized_score = evaluator(optimized)
 print(f"Baseline: {baseline_score:.1f}%")
 print(f"Optimized: {optimized_score:.1f}%")
 print(f"Improvement: {optimized_score - baseline_score:.1f}%")
-```
 
-## Step 5: Save and ship
-
-```python
+# Save
 optimized.save("optimized_program.json")
 
 # Load later
@@ -281,21 +204,27 @@ my_program = MyProgram()
 my_program.load("optimized_program.json")
 ```
 
-## Key patterns
+## Gotchas
 
-- **Start simple**: exact match metric + BootstrapFewShot, then upgrade if needed
-- **Validate your metric**: manually check 10-20 examples to make sure the metric scores correctly
-- **More data helps**: optimizers work better with more training examples
-- **Never evaluate on trainset**: always use a held-out devset
-- **Use `display_table`**: looking at actual predictions reveals metric bugs
-- **Iterate**: run optimization, check results, improve metric, re-optimize
+- **Claude writes metrics that return strings instead of floats or bools.** DSPy metrics must return a numeric score (float 0.0-1.0) or a boolean. Returning a string like "correct" silently breaks evaluation — the score will be 0 for every example.
+- **Claude forgets `.with_inputs()` on evaluation Examples.** Every `dspy.Example` must call `.with_inputs("field1", ...)` to mark input fields. Without this, the evaluator passes all fields (including the expected output) to the program, inflating scores because the model sees the answer.
+- **Claude uses the same data for training and evaluation.** Always split into trainset and devset. Evaluating on training data gives misleadingly high scores — the optimizer may have memorized those exact examples.
+- **AI-as-judge metrics are slow and expensive during optimization.** Each training example triggers a separate LM call for the judge. For a 200-example trainset with MIPROv2 auto="medium", this can add thousands of extra LM calls. Use exact-match or F1 metrics during optimization, then validate with AI-as-judge on the final result.
+- **`display_table` reveals metric bugs that the score hides.** A 75% score looks reasonable, but `display_table=10` might show the metric gives credit for completely wrong answers that happen to match on whitespace. Always inspect individual predictions before trusting aggregate scores.
+
+## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
+- **Cost reduction** once quality is good -- see `/ai-cutting-costs`
+- **Production monitoring** to track quality after deployment -- see `/ai-monitoring`
+- **Experiment tracking** to log and compare optimization runs -- see `/ai-tracking-experiments`
+- **Generating data** when you need more training examples -- see `/ai-generating-data`
+- **Fixing errors** when the AI crashes or throws exceptions -- see `/ai-fixing-errors`
+- **Signatures** for defining typed input/output contracts -- see `/dspy-signatures`
+- **Optimizers** for detailed API on MIPROv2 and BootstrapFewShot -- see `/dspy-optimizers`
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources
 
-- For optimizer comparison table and metric patterns, see [reference.md](reference.md)
-- Once quality is good, use `/ai-cutting-costs` to reduce your AI bill
-- Use `/ai-monitoring` to track quality in production after deployment
-- Use `/ai-tracking-experiments` to log, compare, and manage multiple optimization runs
-- Accuracy plateaued despite optimization? Try `/ai-decomposing-tasks` to restructure your task
-- If things are broken, use `/ai-fixing-errors` to diagnose
-- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+- For optimizer details and metric patterns, see [reference.md](reference.md)

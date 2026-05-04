@@ -31,12 +31,12 @@
     {
       "id": 2,
       "prompt": "I want to build an AI planning assistant that helps project managers create migration plans. The AI needs to figure out task dependencies, estimate timelines, and flag risks. Simple prompting gives generic plans that miss constraints. Can you make it actually think through the problem?",
-      "expected_output": "A DSPy module using a Self-Discovery or multi-stage reasoning approach that selects relevant planning strategies, creates structured task plans with dependencies, and uses dspy.Suggest to enforce plan quality constraints.",
+      "expected_output": "A DSPy module using a Self-Discovery or multi-stage reasoning approach that selects relevant planning strategies, creates structured task plans with dependencies, and optionally uses dspy.Refine to enforce plan quality constraints.",
       "files": [],
       "assertions": [
         {"name": "multi_stage_reasoning", "description": "Uses a multi-stage pipeline (select strategies, plan, execute) rather than a single reasoning call"},
         {"name": "structured_output", "description": "Produces structured task items with dependencies, durations, and assignments — not just text"},
-        {"name": "uses_suggest_or_assert", "description": "Uses dspy.Suggest or dspy.Assert to enforce quality constraints on the plan"},
+        {"name": "uses_refine_or_reward", "description": "Uses dspy.Refine with a reward function, Pydantic validation, or programmatic checks for plan quality constraints"},
         {"name": "includes_risk_identification", "description": "Identifies risks or failure modes as part of the planning output"},
         {"name": "includes_evaluation", "description": "Shows how to evaluate plan quality with a DSPy metric"}
       ]

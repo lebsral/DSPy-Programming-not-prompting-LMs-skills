@@ -1,0 +1,41 @@
+{
+  "skill_name": "ai-following-rules",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I have a customer support bot that sometimes mentions competitor products and occasionally writes responses over 200 words. I need to enforce these rules strictly.",
+      "expected_output": "A DSPy module wrapped with dspy.Refine using a reward function that checks word count and competitor mentions, with graduated scoring that penalizes each violation.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_refine_or_bestn", "description": "Uses dspy.Refine or dspy.BestOfN (not deprecated dspy.Assert) for constraint enforcement"},
+        {"name": "has_reward_function", "description": "Defines a reward function with (args, pred) signature returning a float"},
+        {"name": "checks_word_count_in_reward", "description": "Reward function checks word count and penalizes violations"},
+        {"name": "provider_agnostic", "description": "No hardcoded LM provider without alternative comment"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "My quiz generator sometimes produces questions where the correct answer is not in the options list, and sometimes options are duplicated. How do I enforce this?",
+      "expected_output": "A DSPy module combining Pydantic for structural validation with dspy.Refine and a reward function for logic constraints (correct_answer in options, unique options).",
+      "files": [],
+      "assertions": [
+        {"name": "pydantic_plus_refine", "description": "Uses both Pydantic model for structure and dspy.Refine with reward function for logic constraints"},
+        {"name": "checks_answer_in_options", "description": "Reward function checks that correct_answer is one of the options"},
+        {"name": "checks_unique_options", "description": "Reward function checks all options are unique"},
+        {"name": "has_reward_function", "description": "Defines a reward function with (args, pred) signature returning a float"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I want my AI to follow brand voice guidelines - no slang, end with a sign-off, keep it professional. But I don't want it to hard-fail on the sign-off if it's otherwise good.",
+      "expected_output": "A DSPy module using dspy.Refine with a graduated reward function where hard rules (no slang) have heavy penalties and soft preferences (sign-off) have light penalties.",
+      "files": [],
+      "assertions": [
+        {"name": "graduated_reward", "description": "Reward function uses graduated scoring with different weights for hard vs soft rules"},
+        {"name": "hard_rules_heavy_penalty", "description": "Hard constraints like no slang have large score penalties (e.g., -0.3)"},
+        {"name": "soft_rules_light_penalty", "description": "Soft preferences like sign-off have small score penalties (e.g., -0.1)"},
+        {"name": "uses_refine_or_bestn", "description": "Uses dspy.Refine or dspy.BestOfN (not deprecated dspy.Assert/Suggest)"}
+      ]
+    }
+  ]
+}

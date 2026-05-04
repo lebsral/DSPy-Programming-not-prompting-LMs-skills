@@ -129,13 +129,12 @@ This shows:
 **Cause:** Retriever not configured or wrong endpoint.
 **Fix:**
 ```python
-# Check retriever config
-print(dspy.settings.rm)
-
 # Test retriever directly
 rm = dspy.ColBERTv2(url="http://...")
 results = rm("test query", k=3)
 print(results)
+
+# Or if using a custom retriever function, call it directly to verify
 ```
 
 ### Optimizer makes things worse
@@ -146,12 +145,13 @@ print(results)
 - Reduce `max_bootstrapped_demos`
 - Use a validation set to check for overfitting
 
-### `dspy.Assert` / `dspy.Suggest` failures
-**Cause:** AI output doesn't meet constraints.
+### `dspy.Refine` not meeting threshold / exhausting attempts
+**Cause:** Reward function threshold is too strict, or the module cannot produce outputs that score high enough.
 **Fix:**
-- Check if constraints are reasonable (not too strict)
-- Make constraint messages more descriptive
-- Ensure the AI can reasonably satisfy the constraints
+- Check if the threshold is realistic for your graduated reward function (e.g., `0.8` rather than `1.0` for multi-criteria scoring)
+- Make the reward function more descriptive by returning partial scores rather than binary 0/1
+- Ensure the module can reasonably produce outputs that satisfy the reward criteria
+- Increase `N` to give more retry attempts, or use `dspy.BestOfN` for independent sampling
 
 ## Advanced Debugging
 
@@ -223,6 +223,12 @@ dspy.inspect_history(n=1)
 - **Adding `try/except` around DSPy calls to swallow errors.** This hides the real problem. DSPy errors (especially `ValueError` from parsing) are diagnostic — they tell you exactly what the LM returned vs what was expected. Fix the root cause instead of catching and retrying.
 - **Forgetting that optimized programs load stale demos.** When a program worked before but breaks after changes, Claude often misses that `.load()` restores old few-shot demos that no longer match the current signature. Re-optimize or clear the saved state after signature changes.
 
+## When NOT to use this skill
+
+- **No errors, just low accuracy** — use `/ai-improving-accuracy` instead. This skill fixes crashes and parse failures, not quality problems.
+- **Need to set up a new AI feature from scratch** — use `/ai-do` to get routed to the right building skill. This skill assumes you already have code that is broken.
+- **Performance or cost issues without errors** — use `/ai-cutting-costs` or `/ai-making-consistent` depending on the problem.
+
 ## Cross-references
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
@@ -230,11 +236,11 @@ dspy.inspect_history(n=1)
 - Measure and improve accuracy after fixing errors — see `/ai-improving-accuracy`
 - Trace a specific request end-to-end (every LM call, retrieval, latency) — see `/ai-tracing-requests`
 - Monitor AI in production to catch errors early — see `/ai-monitoring`
+- Understand DSPy modules (Predict, ChainOfThought, ReAct) — see `/dspy-modules`
+- Iterative output refinement with feedback — see `/dspy-refine`
+- Sample N outputs and pick the best — see `/dspy-best-of-n`
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources
 
 - For complete error index, see [reference.md](reference.md)
-- To measure and improve accuracy, use `/ai-improving-accuracy`
-- Use `/ai-tracing-requests` to trace a specific request end-to-end (every LM call, retrieval, latency)
-- For DSPy API details, see `docs/dspy-reference.md`

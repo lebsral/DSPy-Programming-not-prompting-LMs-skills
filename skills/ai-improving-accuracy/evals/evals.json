@@ -1,0 +1,43 @@
+{
+  "skill_name": "ai-improving-accuracy",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "My AI answers customer questions but it is only about 60% accurate. I have 100 labeled question-answer pairs in a JSON file. How do I measure the current quality and improve it?",
+      "expected_output": "A metric function, data loading with .with_inputs(), Evaluate for baseline measurement, and optimization with BootstrapFewShot or MIPROv2, followed by re-evaluation to verify improvement.",
+      "files": [],
+      "assertions": [
+        {"name": "defines_metric", "description": "Defines a metric function that takes (example, prediction, trace=None) and returns a score"},
+        {"name": "with_inputs_on_examples", "description": "Calls .with_inputs() on dspy.Example objects to mark input fields"},
+        {"name": "uses_evaluate", "description": "Uses dspy.Evaluate to measure baseline before optimization"},
+        {"name": "uses_optimizer", "description": "Applies BootstrapFewShot or MIPROv2 to optimize the program"},
+        {"name": "verifies_improvement", "description": "Re-runs evaluation after optimization to compare baseline vs optimized scores"},
+        {"name": "separate_train_dev", "description": "Splits data into training and development sets, does not evaluate on training data"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "I need to evaluate my AI that extracts structured data from invoices - it pulls out vendor name, date, amount, and line items. How do I write a good metric for this?",
+      "expected_output": "A partial-credit metric that scores each extracted field independently and returns a weighted average, handling normalization for string comparison and type differences.",
+      "files": [],
+      "assertions": [
+        {"name": "partial_credit_metric", "description": "Returns partial credit (float 0-1) rather than binary pass/fail for multi-field extraction"},
+        {"name": "field_level_scoring", "description": "Scores individual fields independently rather than requiring all fields to match"},
+        {"name": "handles_normalization", "description": "Normalizes strings (strip, lower) before comparison to handle formatting differences"},
+        {"name": "metric_returns_numeric", "description": "Metric returns a float or bool, not a string"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I optimized my AI with BootstrapFewShot but the score is stuck at 75%. What should I try next?",
+      "expected_output": "Escalation path: try MIPROv2 for instruction optimization, check if the metric matches real quality, consider increasing training data, or decompose the task if it is too complex for a single step.",
+      "files": [],
+      "assertions": [
+        {"name": "suggests_miprov2", "description": "Recommends MIPROv2 as the next optimizer to try after BootstrapFewShot"},
+        {"name": "checks_metric_quality", "description": "Suggests validating the metric against manual scores to ensure it measures the right thing"},
+        {"name": "considers_data_quantity", "description": "Mentions that more training data may help optimization"},
+        {"name": "considers_task_decomposition", "description": "Suggests breaking complex tasks into subtasks if single-step optimization plateaus"}
+      ]
+    }
+  ]
+}

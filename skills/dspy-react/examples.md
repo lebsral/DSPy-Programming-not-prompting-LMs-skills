@@ -128,15 +128,17 @@ class SupportAgent(dspy.Module):
             "and search_faq for general help topics. "
             "Be friendly and specific in your answers."
         )
-        result = self.agent(question=question, context=context)
+        return self.agent(question=question, context=context)
 
-        # Ensure the response is helpful
-        dspy.Suggest(
-            len(result.answer.strip()) > 30,
-            "Provide a detailed, helpful response with specific information",
-        )
 
-        return result
+def support_quality_reward(args, pred):
+    """Reward detailed, helpful responses."""
+    if len(pred.answer.strip()) <= 30:
+        return 0.5
+    return 1.0
+
+
+support = dspy.Refine(module=SupportAgent(), N=3, reward_fn=support_quality_reward, threshold=1.0)
 
 
 # --- Usage ---
@@ -144,7 +146,7 @@ class SupportAgent(dspy.Module):
 lm = dspy.LM("openai/gpt-4o-mini")
 dspy.configure(lm=lm)
 
-support = SupportAgent()
+# support is defined above as dspy.Refine(module=SupportAgent(), ...)
 
 # Test with different question types
 questions = [
@@ -193,7 +195,7 @@ Key points:
 - Three tools covering different domains -- the agent picks the right one based on the question
 - The agent can chain tools: look up a user, then check their orders
 - Context string guides the agent on when to use each tool
-- `dspy.Suggest` enforces minimum response quality
+- `dspy.Refine` with a reward function enforces minimum response quality by retrying if the answer is too short
 - The metric checks for expected keywords rather than exact match, which works well for open-ended agent responses
 
 
@@ -308,15 +310,14 @@ class OSSResearcher(dspy.Module):
         )
 
     def forward(self, question: str):
-        result = self.agent(question=question)
+        return self.agent(question=question)
 
-        # Ensure we got real data, not just a guess
-        dspy.Suggest(
-            result.confidence != "low",
-            "If confidence is low, try calling another tool for more information",
-        )
 
-        return result
+def research_confidence_reward(args, pred):
+    """Reward high-confidence answers backed by real tool data."""
+    if pred.confidence == "low":
+        return 0.5
+    return 1.0
 
 
 # --- Usage ---
@@ -324,7 +325,12 @@ class OSSResearcher(dspy.Module):
 lm = dspy.LM("openai/gpt-4o-mini")
 dspy.configure(lm=lm)
 
-researcher = OSSResearcher()
+researcher = dspy.Refine(
+    module=OSSResearcher(),
+    N=3,
+    reward_fn=research_confidence_reward,
+    threshold=1.0,
+)
 
 questions = [
     "How many stars does stanfordnlp/dspy have and what is the latest PyPI version?",
@@ -360,5 +366,5 @@ Key points:
 - **Real API calls** with proper error handling -- every tool catches timeouts and HTTP errors, returning a useful message instead of crashing
 - **Class-based signature** with typed output (`confidence: Literal[...]`) gives structured results
 - The agent chains tools naturally: fetch repo info from GitHub, then check PyPI for the package version
-- `dspy.Suggest` nudges the agent to gather more data when confidence is low
+- `dspy.Refine` retries when confidence is low, nudging the agent to gather more data before answering
 - `MIPROv2` is a good optimizer choice for agents because it tunes the reasoning instructions

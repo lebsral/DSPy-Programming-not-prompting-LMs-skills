@@ -50,7 +50,7 @@ Does it need tools?
 | ReAct | Varies | 3-10x | 3-10x | Tasks requiring external information or actions |
 | CodeAct | Varies | 3-10x | 3-10x | Tasks requiring code generation and execution |
 | MultiChainComparison | +5-15% | 3-5x | 3-5x | When you need the best possible single answer |
-| BestOfN | +5-10% | Nx | Nx | When you have a good reward function |
+| BestOfN | +5-10% | Nx | Nx | When you have a reward function and acceptance threshold |
 
 For the full module list including Refine, RLM, and Parallel, see [reference.md](reference.md).
 
@@ -70,6 +70,8 @@ Use this table to decide whether one module is enough or a pipeline is warranted
 | Need to combine retrieval + generation | -- | Yes |
 
 **Rule of thumb:** start with a single module. Add pipeline stages only when you have measured a quality gap that a single module cannot close.
+
+**Verification:** After implementing the chosen architecture, run `dspy.Evaluate(devset, metric=your_metric)` on 20-50 examples to confirm the module choice was correct before optimizing.
 
 ---
 
@@ -237,6 +239,8 @@ class RAGPipeline(dspy.Module):
 ---
 
 ## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
 - For full module comparison tables and complete code templates, see [reference.md](reference.md)
 - For worked architecture decisions with real examples, see [examples.md](examples.md)

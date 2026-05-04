@@ -1,0 +1,96 @@
+[
+  {
+    "id": "phone-normalization",
+    "description": "Normalize US phone numbers in various formats to E.164-style +1 (NNN) NNN-NNNN",
+    "input": {
+      "values": [
+        "(415)555-1234",
+        "415.555.5678",
+        "+14155559012",
+        "415 555 3456",
+        "4155550000",
+        "1-415-555-7777"
+      ],
+      "field_type": "US phone number",
+      "target_format": "+1 (415) 555-1234"
+    },
+    "expected": {
+      "cleaned_values": [
+        "+1 (415) 555-1234",
+        "+1 (415) 555-5678",
+        "+1 (415) 555-9012",
+        "+1 (415) 555-3456",
+        "+1 (415) 555-0000",
+        "+1 (415) 555-7777"
+      ],
+      "all_high_confidence": true,
+      "min_confidence": 0.90
+    },
+    "metric": "exact_match_all",
+    "notes": "All inputs have deterministic resolutions. Regex should handle all 6 without LM calls."
+  },
+  {
+    "id": "company-name-resolution",
+    "description": "Resolve company name variants to canonical brand names",
+    "input": {
+      "variants": [
+        "IBM Corp.",
+        "I.B.M.",
+        "International Business Machines",
+        "MSFT",
+        "Amazn",
+        "Google LLC",
+        "Alphabet Inc.",
+        "XYZ Unknown Partners LLC"
+      ]
+    },
+    "expected": {
+      "resolved": {
+        "IBM Corp.": "IBM",
+        "I.B.M.": "IBM",
+        "International Business Machines": "IBM",
+        "MSFT": "Microsoft",
+        "Amazn": "Amazon",
+        "Google LLC": "Google",
+        "Alphabet Inc.": "Alphabet"
+      },
+      "unrecognized": ["XYZ Unknown Partners LLC"],
+      "unrecognized_returned_unchanged": true
+    },
+    "metric": "exact_match_recognized_variants",
+    "notes": "Unknown companies must be returned unchanged, not hallucinated to a known company."
+  },
+  {
+    "id": "date-format-normalization",
+    "description": "Convert mixed date formats to ISO 8601 YYYY-MM-DD",
+    "input": {
+      "raw_dates": [
+        "05/04/2026",
+        "May 4th 2026",
+        "4-May-26",
+        "20260504",
+        "2026/05/04",
+        "May 4, 2026"
+      ],
+      "ambiguous_dates": [
+        "01/02/03"
+      ]
+    },
+    "expected": {
+      "iso_dates": {
+        "05/04/2026": "2026-05-04",
+        "May 4th 2026": "2026-05-04",
+        "4-May-26": "2026-05-04",
+        "20260504": "2026-05-04",
+        "2026/05/04": "2026-05-04",
+        "May 4, 2026": "2026-05-04"
+      },
+      "ambiguous_flagged": {
+        "01/02/03": true
+      },
+      "min_confidence": 0.88
+    },
+    "metric": "exact_match_unambiguous_dates",
+    "notes": "Ambiguous dates like 01/02/03 must be flagged with is_ambiguous=True rather than silently picking an interpretation."
+  }
+]

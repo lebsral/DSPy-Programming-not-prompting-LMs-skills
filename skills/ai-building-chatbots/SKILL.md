@@ -294,37 +294,52 @@ See `/ai-searching-docs` for setting up retrievers and vector stores, including 
 
 ## Step 6: Add guardrails
 
-### Response quality with DSPy assertions
+### Response quality with dspy.Refine
+
+Use `dspy.Refine` with a reward function to enforce guardrails on chatbot responses:
 
 ```python
-class GuardedChatBot(dspy.Module):
+class GroundedChatBotInner(dspy.Module):
     def __init__(self, retriever):
         self.retriever = retriever
         self.respond = dspy.ChainOfThought(DocGroundedResponse)
 
     def forward(self, conversation_history, user_message):
         docs = self.retriever(user_message).passages
-        result = self.respond(
+        return self.respond(
             conversation_history=conversation_history,
             docs=docs,
             user_message=user_message,
         )
 
-        # Guardrails
-        dspy.Suggest(
-            len(result.response.split()) < 200,
-            "Keep responses concise — under 200 words",
-        )
-        dspy.Suggest(
-            not any(word in result.response.lower() for word in ["obviously", "clearly", "simply"]),
-            "Avoid condescending language",
-        )
-        dspy.Assert(
-            "I am an AI" not in result.response,
-            "Don't break character with meta-statements",
-        )
 
-        return result
+def chatbot_response_reward(args, pred):
+    """Score chatbot response quality. Returns 0.0-1.0."""
+    response = pred.response
+    score = 1.0
+
+    # Hard constraint -- don't break character
+    if "I am an AI" in response:
+        return 0.0
+
+    # Soft penalties
+    if len(response.split()) >= 200:
+        score -= 0.2  # prefer concise responses
+
+    condescending = ["obviously", "clearly", "simply"]
+    if any(word in response.lower() for word in condescending):
+        score -= 0.1  # avoid condescending language
+
+    return max(score, 0.0)
+
+
+def make_guarded_chatbot(retriever):
+    return dspy.Refine(
+        module=GroundedChatBotInner(retriever),
+        N=3,
+        reward_fn=chatbot_response_reward,
+        threshold=0.8,
+    )
 ```
 
 ### Human-in-the-loop for sensitive actions
@@ -417,9 +432,17 @@ optimized_bot.save("chatbot_optimized.json")
 ## Additional resources
 
 - For worked examples (support bot, FAQ assistant), see [examples.md](examples.md)
-- For the LangChain/LangGraph API reference, see [`docs/langchain-langgraph-reference.md`](../../docs/langchain-langgraph-reference.md)
-- Need to search docs for grounding? Use `/ai-searching-docs`
-- Need the bot to take actions (call APIs, tools)? Use `/ai-taking-actions`
-- Building multiple bots that work together? Use `/ai-coordinating-agents`
-- Next: `/ai-improving-accuracy` to measure and improve your chatbot
+
+## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
+- **Search docs for grounding** — see `/ai-searching-docs`
+- **Bot takes actions (APIs, tools)** — see `/ai-taking-actions`
+- **Multiple bots working together** — see `/ai-coordinating-agents`
+- **Measure and improve chatbot accuracy** — see `/ai-improving-accuracy`
+- **Multi-step AI pipeline design** — see `/ai-building-pipelines`
+- **Composing DSPy modules** — see `/dspy-modules`
+- **Iterative refinement with reward functions** — see `/dspy-refine`
+- **ReAct for tool-using chatbots** — see `/dspy-react`
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

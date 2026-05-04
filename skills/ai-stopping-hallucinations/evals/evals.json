@@ -1,9 +1,9 @@
 [
   {
     "prompt": "My RAG chatbot keeps making up facts that aren't in the source documents. How do I stop it from hallucinating?",
-    "expected_output": "A DSPy module with citation enforcement using dspy.Assert to verify claims against source passages",
+    "expected_output": "A DSPy module with citation enforcement wrapped with dspy.Refine using a citation reward function that scores citation coverage and validity",
     "assertions": [
-      "output contains 'dspy.Assert' or 'dspy.Suggest'",
+      "output uses dspy.Refine or dspy.BestOfN with a reward function (not deprecated dspy.Assert/Suggest)",
       "output contains a Signature class with context/sources as an InputField",
       "output includes citation validation logic (regex for [1], [2] style citations)",
       "output does not hardcode a single LM provider without alternatives"
@@ -11,9 +11,9 @@
   },
   {
     "prompt": "I need to build a medical Q&A system that only answers from clinical guidelines and flags anything it's not confident about for human review",
-    "expected_output": "A layered verification pipeline combining citation enforcement, faithfulness checking, and confidence gating",
+    "expected_output": "A layered verification pipeline combining dspy.Refine with a faithfulness reward function, confidence gating, and a cheaper verification model",
     "assertions": [
-      "output uses dspy.Assert for critical safety checks (not just dspy.Suggest)",
+      "output uses dspy.Refine with a reward function for faithfulness checking (not deprecated dspy.Assert)",
       "output includes a confidence threshold with human review routing",
       "output includes a faithfulness verification step (second LM call or self-check)",
       "output suggests using a cheaper model for the verification step"

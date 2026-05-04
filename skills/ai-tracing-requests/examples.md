@@ -77,7 +77,7 @@ result = bot(question="Can I get a refund after 30 days?")
 
 ### Step 3: Fix the issue
 
-The fix: reduce k to 2 to get more focused context, and add a constraint:
+The fix: reduce k to 2 to get more focused context, and add a reward-guided refinement step:
 
 ```python
 class FixedHelpBot(dspy.Module):
@@ -88,15 +88,19 @@ class FixedHelpBot(dspy.Module):
     def forward(self, question):
         retrieval = self.retrieve(query=question)
         answer = self.answer(context=retrieval.passages, question=question)
-
-        # Ensure the answer references the actual policy
-        dspy.Suggest(
-            any(p[:50] in answer.answer for p in retrieval.passages)
-            or len(answer.answer) > 20,
-            "Answer should reference specific information from the documents"
-        )
-
         return answer
+
+def grounded_answer_reward(args, pred):
+    """Reward answers that reference specific information from the retrieved passages."""
+    # Store passages alongside the question so the reward fn can check grounding
+    passages = args.get("passages", [])
+    score = 1.0
+    if not (any(p[:50] in pred.answer for p in passages) or len(pred.answer) > 20):
+        score -= 0.5
+    return score
+
+bot_base = FixedHelpBot()
+bot = dspy.Refine(module=bot_base, N=3, reward_fn=grounded_answer_reward, threshold=0.5)
 ```
 
 ## Example 2: Profiling a slow multi-step pipeline

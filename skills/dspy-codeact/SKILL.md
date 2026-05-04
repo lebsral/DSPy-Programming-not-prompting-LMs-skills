@@ -151,7 +151,7 @@ The sandbox provides security boundaries, but your tool functions themselves run
 
 2. **Set `max_iters` appropriately.** A runaway agent burns tokens. Start with `max_iters=5` and increase only if you see the agent running out of steps on legitimate tasks.
 
-3. **Validate outputs.** Use `dspy.Assert` or `dspy.Suggest` in a wrapper module to check that the agent's answer meets your requirements.
+3. **Validate outputs.** Use `dspy.Refine` as a wrapper to check that the agent's answer meets your requirements via a reward function.
 
 4. **Don't expose dangerous operations as tools.** If you pass a tool that deletes files or sends emails, the agent can and will call it. Only expose tools you're comfortable with the agent using autonomously.
 
@@ -165,12 +165,19 @@ class SafeCodeAgent(dspy.Module):
         )
 
     def forward(self, task):
-        result = self.agent(task=task)
-        dspy.Assert(
-            len(result.result.strip()) > 0,
-            "Agent must produce a non-empty result",
-        )
-        return result
+        return self.agent(task=task)
+
+def non_empty_reward(args, pred):
+    if len(pred.result.strip()) > 0:
+        return 1.0
+    return 0.0  # Agent must produce a non-empty result
+
+validated_agent = dspy.Refine(
+    module=SafeCodeAgent(tools=[]),
+    N=3,
+    reward_fn=non_empty_reward,
+    threshold=1.0,
+)
 ```
 
 ## Using CodeAct inside a custom module

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "product-recommender-basic",
+    "prompt": "I have an e-commerce site. Users have purchase history and I want to show them 5 product recommendations with explanations. I already have product embeddings. How do I build this with DSPy?",
+    "assertions": [
+      "uses two-stage pipeline - embedding retrieval for candidates then LM re-ranking",
+      "defines a DSPy Signature with user_profile and candidate_items as InputFields",
+      "outputs ranked_items and explanations as OutputFields",
+      "retrieves 15-30 candidates before passing to LM re-ranker, not the full catalog",
+      "builds user profile from anonymized purchase history, not raw PII",
+      "uses dspy.Predict or dspy.ChainOfThought for the re-ranking step",
+      "does not use dspy.Assert or dspy.Suggest for ranking constraints"
+    ]
+  },
+  {
+    "id": "cold-start-handling",
+    "prompt": "My recommendation system works great for returning users but new users have no history. What should I do for cold-start users in DSPy?",
+    "assertions": [
+      "provides a fallback strategy for users with no history",
+      "mentions popularity-based fallback as an option for cold-start",
+      "mentions content-based fallback using item metadata when no user history exists",
+      "shows how to detect no-history case and branch to fallback",
+      "does not suggest the LM can invent user preferences from nothing"
+    ]
+  },
+  {
+    "id": "optimize-with-labels",
+    "prompt": "I have labeled data - for 200 users I know which products they clicked after seeing recommendations. How do I use this to improve my DSPy recommender?",
+    "assertions": [
+      "uses BootstrapFewShot or MIPROv2 from dspy.teleprompt",
+      "defines a metric function that measures precision@k or similar ranking quality",
+      "constructs dspy.Example objects with user_profile and relevant_item_ids",
+      "calls optimizer.compile() with the pipeline and trainset",
+      "saves the optimized pipeline with pipeline.save()",
+      "does not hardcode few-shot examples manually without using the optimizer"
+    ]
+  }
+]

@@ -1,0 +1,43 @@
+{
+  "skill_name": "ai-kickoff",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "/ai-kickoff email-classifier\nI want to build an AI that classifies incoming customer emails into categories like billing, support, feature-request, and spam. I have a CSV of 500 labeled emails.",
+      "expected_output": "A scaffolded project with adapted field names (email/category instead of input_field/output_field), Literal types for the categories, a CSV-loading data.py, and a weighted metric function.",
+      "files": [],
+      "assertions": [
+        {"name": "adapts_field_names", "description": "Uses task-specific field names like email and category, not generic input_field/output_field"},
+        {"name": "uses_literal_for_categories", "description": "Uses Literal type for the category output field"},
+        {"name": "with_inputs_on_examples", "description": "Calls .with_inputs() on all dspy.Example objects in data.py"},
+        {"name": "provider_agnostic", "description": "LM config uses generic provider with alternative comment"},
+        {"name": "includes_metric", "description": "Generates a metrics.py with a task-specific metric function"},
+        {"name": "csv_data_loading", "description": "data.py includes CSV loading logic since the user mentioned a CSV file"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "/ai-kickoff qa-bot\nI want to create a question-answering system. Users ask questions about our product docs and the AI answers. I do not have training data yet. I want it served as a REST API.",
+      "expected_output": "A scaffolded project with Q&A fields, ChainOfThought module, server.py with FastAPI endpoints, and guidance to use /ai-generating-data for synthetic training data.",
+      "files": [],
+      "assertions": [
+        {"name": "includes_server", "description": "Generates server.py with FastAPI routes since user wants a REST API"},
+        {"name": "uses_chain_of_thought", "description": "Uses ChainOfThought for Q&A which benefits from reasoning"},
+        {"name": "mentions_data_generation", "description": "References /ai-generating-data since user has no training data"},
+        {"name": "adapts_fields_for_qa", "description": "Uses question/answer or similar Q&A field names, not generic placeholders"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "/ai-kickoff sentiment-checker\nI need a simple yes/no check - is this customer review positive or negative? No API needed, just a script.",
+      "expected_output": "A minimal scaffolded project using dspy.Predict (not ChainOfThought) since it is a simple binary task, with bool or Literal output type.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_predict_not_cot", "description": "Uses dspy.Predict instead of ChainOfThought for this simple binary classification"},
+        {"name": "uses_constrained_output", "description": "Uses bool or Literal for the binary positive/negative output"},
+        {"name": "no_server_file", "description": "Does not generate server.py since user said no API needed"},
+        {"name": "simple_structure", "description": "Generates the basic project structure without API-serving extras"}
+      ]
+    }
+  ]
+}

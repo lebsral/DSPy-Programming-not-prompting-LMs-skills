@@ -251,7 +251,7 @@ print(result.answer)
 
 ### RAG with source grounding
 
-Use assertions to enforce that answers stay grounded in the retrieved context:
+Use `dspy.Refine` to enforce that answers stay grounded in the retrieved context:
 
 ```python
 class GroundedRAG(dspy.Module):
@@ -264,17 +264,19 @@ class GroundedRAG(dspy.Module):
     def forward(self, question):
         passages = self.retrieve(question).passages
         result = self.generate(context=passages, question=question)
-
-        dspy.Suggest(
-            len(result.cited_sources) > 0,
-            "Answer should cite at least one source passage by index",
-        )
-
         return dspy.Prediction(
             answer=result.answer,
             cited_sources=result.cited_sources,
             passages=passages,
         )
+
+def grounding_reward(args, pred):
+    score = 1.0
+    if not pred.cited_sources or len(pred.cited_sources) == 0:
+        score -= 0.3  # soft penalty for missing citations
+    return score
+
+grounded_rag = dspy.Refine(module=GroundedRAG(retriever=search), N=3, reward_fn=grounding_reward, threshold=0.8)
 ```
 
 ### Multi-hop RAG

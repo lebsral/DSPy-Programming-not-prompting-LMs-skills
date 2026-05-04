@@ -1,11 +1,20 @@
 ---
 name: dspy-assertions
-description: DEPRECATED -- use dspy.Refine instead (see /dspy-refine). Legacy documentation for dspy.Assert and dspy.Suggest — hard failures that trigger retries and soft suggestions that log warnings. For new code, prefer dspy.Refine for output validation with automatic retry. Also used for dspy.Assert, dspy.Suggest, runtime validation for LLM output, retry on bad output, backtracking on constraint violation, guard rails in DSPy.
+description: REMOVED IN DSPy 3.x -- use dspy.Refine or dspy.BestOfN instead (see /dspy-refine, /dspy-best-of-n). Legacy documentation for dspy.Assert and dspy.Suggest kept for existing codebases only. For new code, use dspy.Refine (iterative improvement with feedback) or dspy.BestOfN (sampling, pick best). Also used for dspy.Assert, dspy.Suggest, runtime validation for LLM output, retry on bad output, backtracking on constraint violation, guard rails in DSPy.
 ---
 
 # Enforce Constraints with dspy.Assert and dspy.Suggest
 
-> **Deprecated.** `dspy.Assert` and `dspy.Suggest` are deprecated and not supported in current DSPy. Use `dspy.Refine` instead (see `/dspy-refine`). This skill documents the legacy API for existing codebases. For new code, prefer `dspy.Refine` which provides reward-based output selection with automatic feedback.
+> **REMOVED IN DSPy 3.x.** `dspy.Assert` and `dspy.Suggest` have been removed from the DSPy codebase (no `assertions.py`, no imports in `__init__.py`, `retry.py` commented out, no docs page). **Use `dspy.Refine` or `dspy.BestOfN` instead** — see `/dspy-refine` and `/dspy-best-of-n`. This skill documents the legacy API for maintaining existing codebases only.
+>
+> **Migration guide:**
+> | Old pattern | New equivalent |
+> |-------------|---------------|
+> | `dspy.Assert(condition, msg)` (hard rule, retry) | `dspy.Refine(module, N=3, reward_fn=..., threshold=0.8)` |
+> | `dspy.Suggest(condition, msg)` (soft rule, continue) | Lower weight in reward function (penalize but don't block) |
+> | `max_backtrack_attempts=2` | `N=3` in Refine/BestOfN |
+> | `DSPyAssertionError` on exhaustion | `fail_count` parameter in Refine/BestOfN |
+> | Error message as feedback | Refine auto-generates feedback from reward scores |
 
 Guide the user through adding runtime constraints to DSPy programs. Assertions let you declare what valid output looks like — DSPy handles retrying, backtracking, and feeding error messages back to the LM automatically.
 
@@ -215,18 +224,30 @@ except DSPyAssertionError as e:
 
 **Rule of thumb:** If a bad output reaching users would be a bug, use `Assert`. If it would just be suboptimal, use `Suggest`.
 
-## Assertions vs dspy.Refine
+## Migration to dspy.Refine / dspy.BestOfN
 
-DSPy docs mark assertions as deprecated in favor of `dspy.Refine`. However, they serve different patterns:
+Assert/Suggest have been **removed** from DSPy 3.x. All constraint enforcement should use `dspy.Refine` (iterative with feedback) or `dspy.BestOfN` (independent sampling).
 
-| | Assert/Suggest | dspy.Refine |
-|---|---|---|
-| **Pattern** | Inline constraint checks inside `forward()` | Module wrapper with reward-based selection |
-| **Scoring** | Boolean pass/fail per constraint | Scalar reward function scores full output |
-| **Control** | Fine-grained — check individual fields | Coarse-grained — evaluate complete prediction |
-| **Best for** | Format validation, safety checks, field-level rules | Output quality optimization, holistic scoring |
+The key shift is from inline boolean checks to **reward functions** that score the full output:
 
-Use Assert/Suggest when you need to check specific constraints on individual fields. Use `dspy.Refine` (see `/dspy-refine`) when you want to score and select the best overall output.
+```python
+# OLD (removed in DSPy 3.x)
+dspy.Assert(len(result.answer.split()) <= 50, "Too long")
+dspy.Suggest("however" not in result.answer, "Avoid hedging")
+
+# NEW — reward function + Refine
+def quality_reward(args, pred):
+    score = 1.0
+    if len(pred.answer.split()) > 50:      # hard rule
+        score -= 0.4
+    if "however" in pred.answer.lower():    # soft rule
+        score -= 0.1
+    return max(score, 0.0)
+
+refined = dspy.Refine(module=my_module, N=3, reward_fn=quality_reward, threshold=0.8)
+```
+
+For full migration patterns, see `/dspy-refine` and `/dspy-best-of-n`.
 
 ## Gotchas
 

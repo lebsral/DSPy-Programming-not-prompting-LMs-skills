@@ -384,7 +384,7 @@ sorter.load("ticket_sorter.json")
 - Define input/output contracts for signatures — see `/dspy-signatures`
 - Add reasoning before classification — see `/dspy-chain-of-thought`
 - Simple classification without reasoning — see `/dspy-predict`
-- Constrain output quality with assertions — see `/dspy-assertions`
+- Constrain output quality with reward functions — see `/dspy-refine`
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources

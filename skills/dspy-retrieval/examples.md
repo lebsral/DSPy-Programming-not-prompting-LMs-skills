@@ -38,17 +38,18 @@ class ColBERTRAG(dspy.Module):
         # Generate a grounded answer
         result = self.generate(context=passages, question=question)
 
-        # Soft constraint: prefer high-confidence answers
-        dspy.Suggest(
-            result.confidence != "low",
-            "Try to find a partial answer from the context if full answer is unavailable",
-        )
-
         return dspy.Prediction(
             answer=result.answer,
             confidence=result.confidence,
             passages=passages,
         )
+
+
+def rag_confidence_reward(args, pred):
+    """Prefer high- or medium-confidence answers; penalize low confidence."""
+    if pred.confidence == "low":
+        return 0.5
+    return 1.0
 
 
 # --- Setup ---
@@ -59,7 +60,7 @@ dspy.configure(lm=lm, rm=colbert)
 
 # --- Usage ---
 
-rag = ColBERTRAG(k=5)
+rag = dspy.Refine(module=ColBERTRAG(k=5), N=3, reward_fn=rag_confidence_reward, threshold=1.0)
 result = rag(question="What is the capital of France?")
 print(f"Answer: {result.answer}")
 print(f"Confidence: {result.confidence}")
@@ -96,7 +97,7 @@ Key points:
 - `dspy.ColBERTv2` is set as the global retrieval model via `dspy.configure(rm=colbert)`
 - `dspy.Retrieve(k=5)` delegates to ColBERTv2 automatically
 - The module handles the empty-results edge case before calling the LM
-- `dspy.Suggest` nudges the model toward higher-quality answers without hard-failing
+- `dspy.Refine` retries generation when confidence is low, nudging the model toward higher-quality answers
 - Optimization tunes the answer generation prompt while leaving retrieval unchanged
 
 
@@ -217,11 +218,6 @@ class MultiHopRAG(dspy.Module):
         # Generate final answer from all gathered context
         result = self.answer(context=context, question=question)
 
-        dspy.Suggest(
-            len(context) >= 2,
-            "Multi-hop should gather passages from at least 2 search steps",
-        )
-
         return dspy.Prediction(
             answer=result.answer,
             reasoning=result.reasoning,
@@ -249,9 +245,22 @@ corpus = [
 embedder = dspy.Embedder("openai/text-embedding-3-small", dimensions=512)
 search = dspy.retrievers.Embeddings(embedder=embedder, corpus=corpus, k=3)
 
+
+def multihop_context_reward(args, pred):
+    """Reward multi-hop results that gathered passages from multiple search steps."""
+    if len(pred.context) < 2:
+        return 0.5
+    return 1.0
+
+
 # --- Usage ---
 
-multihop = MultiHopRAG(retriever=search, hops=2, passages_per_hop=3)
+multihop = dspy.Refine(
+    module=MultiHopRAG(retriever=search, hops=2, passages_per_hop=3),
+    N=3,
+    reward_fn=multihop_context_reward,
+    threshold=1.0,
+)
 result = multihop(question="Where was the designer of the Eiffel Tower born?")
 
 print(f"Answer: {result.answer}")

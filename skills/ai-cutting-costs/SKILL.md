@@ -240,9 +240,22 @@ Test with `/ai-improving-accuracy` to make sure quality doesn't drop.
 - **Don't forget to measure before and after every cost change.** Claude often applies multiple cost optimizations at once without baselining. Run `dspy.evaluate` before each change so you can attribute quality drops to the specific optimization that caused them.
 - **Don't cache non-deterministic calls and expect reproducibility.** If `temperature > 0`, cached results lock in one sample. Set `temperature=0` for deterministic caching, or disable caching for calls where you want diversity.
 
-## Additional resources
+## When NOT to optimize costs
 
-- Use `/ai-building-pipelines` to design multi-step systems with per-stage model assignment
-- Use `/ai-improving-accuracy` to make sure quality holds after cost cuts
-- Use `/ai-fixing-errors` if things break during cost optimization
+Do not cut costs if you have not baselined quality first. Optimizing costs on a system that already underperforms just locks in bad results at a lower price. Fix accuracy first with `/ai-improving-accuracy`, then reduce costs.
+
+Do not route to cheap models if your traffic is uniformly complex. The routing pattern (Step 4) saves money when most inputs are easy — if 90% of your inputs genuinely need the expensive model, routing adds latency and complexity for minimal savings.
+
+Do not fine-tune to save money if your use case changes frequently. Fine-tuned models are frozen in time — if your categories, policies, or domain shift monthly, the retraining cost and lag outweigh the per-call savings. Use prompt optimization instead.
+
+## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
+- **Multi-step pipelines** with per-stage model assignment — see `/ai-building-pipelines`
+- **Measure quality** before and after cost cuts — see `/ai-improving-accuracy`
+- **Debug breakage** from cost optimization — see `/ai-fixing-errors`
+- **Switch models** without breaking prompts — see `/ai-switching-models`
+- **DSPy modules** (Predict vs ChainOfThought tradeoffs) — see `/dspy-modules`
+- **Fine-tuning** workflow and decision framework — see `/ai-fine-tuning`
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

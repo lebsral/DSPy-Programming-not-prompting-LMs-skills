@@ -54,12 +54,17 @@ class Writer(dspy.Module):
         self.write = dspy.ChainOfThought(WriteReport)
 
     def forward(self, topic, insights):
-        result = self.write(topic=topic, insights=insights)
-        dspy.Suggest(
-            len(result.report.split()) > 200,
-            "Report should be substantive — at least 200 words",
-        )
-        return result
+        return self.write(topic=topic, insights=insights)
+
+
+def writer_reward(args, pred):
+    """Soft reward encouraging substantive reports."""
+    score = 1.0
+    if len(pred.report.split()) <= 200:
+        score -= 0.2  # soft: report should be at least 200 words
+    return score
+
+writer = dspy.Refine(module=Writer(), N=3, reward_fn=writer_reward, threshold=0.8)
 ```
 
 ### Supervisor and graph
@@ -86,7 +91,7 @@ class PlanNextStep(dspy.Signature):
 planner = dspy.ChainOfThought(PlanNextStep)
 researcher = WebResearcher()
 analyst = Analyst()
-writer = Writer()
+# writer is defined above as dspy.Refine(module=Writer(), ...)
 
 def supervisor_node(state: ResearchState) -> dict:
     completed = "\n".join(f"- {k}: done" for k in state["results"])
@@ -194,13 +199,17 @@ class L1Classifier(dspy.Module):
         self.triage = dspy.ChainOfThought(TriageTicket)
 
     def forward(self, ticket, customer_tier):
-        result = self.triage(ticket=ticket, customer_tier=customer_tier)
-        # Enterprise customers with critical issues always escalate to human
-        dspy.Assert(
-            not (customer_tier == "enterprise" and result.priority == "critical"),
-            "Enterprise critical issues go directly to human support",
-        )
-        return result
+        return self.triage(ticket=ticket, customer_tier=customer_tier)
+
+
+def l1_classifier_reward(args, pred):
+    """Hard constraint: enterprise critical issues must not be auto-classified — force escalation."""
+    customer_tier = args.get("customer_tier", "")
+    if customer_tier == "enterprise" and pred.priority == "critical":
+        return 0.0  # hard: enterprise critical issues go directly to human support
+    return 1.0
+
+classifier = dspy.Refine(module=L1Classifier(), N=3, reward_fn=l1_classifier_reward, threshold=1.0)
 ```
 
 ### L2 specialist agents
@@ -249,7 +258,7 @@ class SupportState(TypedDict):
     action_needed: str
     escalated_to_human: bool
 
-classifier = L1Classifier()
+# classifier is defined above as dspy.Refine(module=L1Classifier(), ...)
 billing_agent = BillingAgent()
 tech_agent = TechAgent(retriever=tech_docs_retriever)
 

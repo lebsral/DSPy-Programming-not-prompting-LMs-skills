@@ -27,9 +27,9 @@
   {
     "name": "fix_and_retest_vulnerabilities",
     "prompt": "Our safety audit found that 40% of attacks succeed against our chatbot. The main issues are prompt injection (system prompt leaks) and off-topic exploitation (users getting it to write code). Help me fix these and verify the fixes work.",
-    "expected_output": "Code adding dspy.Assert-based guardrails for the specific vulnerabilities found, then re-running the same attack suite to verify fixes",
+    "expected_output": "Code adding guardrails (dspy.Refine with safety reward functions, regex checks, or Pydantic validation) for the specific vulnerabilities found, then re-running the same attack suite to verify fixes",
     "assertions": [
-      "adds dspy.Assert constraints targeting the specific vulnerabilities (prompt leak, off-topic)",
+      "adds guardrails targeting the specific vulnerabilities (prompt leak, off-topic) using dspy.Refine with reward functions, regex checks, or validation logic",
       "wraps the hardened system in a try/except with a safe fallback response",
       "re-runs the same evaluator with the same optimized attacker to verify fixes",
       "shows before and after attack success rates",

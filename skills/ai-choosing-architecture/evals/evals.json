@@ -1,0 +1,41 @@
+{
+  "skill_name": "ai-choosing-architecture",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I need to classify incoming support tickets into billing, technical, or account categories. What DSPy module should I use?",
+      "expected_output": "Recommend dspy.Predict since it is a simple fixed-label classification where reasoning adds noise. Include a skeleton with a Signature using OutputField for category, and suggest BootstrapFewShot for optimization.",
+      "files": [],
+      "assertions": [
+        {"name": "recommends_predict", "description": "Recommends dspy.Predict (not ChainOfThought) for simple classification"},
+        {"name": "explains_why_not_cot", "description": "Explains that reasoning adds noise for fixed-label tasks"},
+        {"name": "includes_optimizer_path", "description": "Suggests an optimizer path starting with BootstrapFewShot"},
+        {"name": "provides_skeleton_code", "description": "Includes a code skeleton with a Signature and module instantiation"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "I want to build a chatbot that answers questions about our product docs. The docs are too big to fit in context. What architecture should I use?",
+      "expected_output": "Recommend a RAG pipeline (Retrieve + ChainOfThought) rather than ReAct, because the retrieval pattern is fixed and known upfront. Include a pipeline skeleton with dspy.Module subclass.",
+      "files": [],
+      "assertions": [
+        {"name": "recommends_pipeline_over_react", "description": "Recommends a pipeline over ReAct since retrieval steps are predetermined"},
+        {"name": "uses_retrieve_plus_cot", "description": "Uses dspy.Retrieve combined with dspy.ChainOfThought in a pipeline"},
+        {"name": "explains_pipeline_advantage", "description": "Explains that pipelines are cheaper, faster, and easier to optimize than ReAct for fixed-step patterns"},
+        {"name": "includes_module_subclass", "description": "Shows a dspy.Module subclass with forward method combining the stages"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I need an AI research assistant that can search the web, look up financial data, and pull news depending on the question. Which module fits?",
+      "expected_output": "Recommend dspy.ReAct because the tool selection is dynamic and varies per question. Include tools list and max_iters configuration.",
+      "files": [],
+      "assertions": [
+        {"name": "recommends_react", "description": "Recommends dspy.ReAct for dynamic tool selection tasks"},
+        {"name": "explains_dynamic_tool_need", "description": "Explains that ReAct is appropriate because which tools to call depends on runtime context"},
+        {"name": "shows_tools_parameter", "description": "Demonstrates passing a tools list to dspy.ReAct"},
+        {"name": "mentions_cost_implications", "description": "Notes that ReAct costs scale with number of tool calls (3-10x single Predict)"}
+      ]
+    }
+  ]
+}

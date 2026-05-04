@@ -1,0 +1,33 @@
+[
+  {
+    "prompt": "I want my RAG pipeline to return structured citations showing which document each claim came from. Show me how to set this up with DSPy.",
+    "expected_output": "A signature with Citations output field, Document setup, and a module that retrieves context and generates cited answers.",
+    "assertions": [
+      "Imports Citations from dspy.experimental",
+      "Creates a signature with Citations as an output field type",
+      "Provides context documents as input to the module",
+      "Shows how to iterate over citations and access cited_text and document_index",
+      "Does not fabricate citations without source documents"
+    ]
+  },
+  {
+    "prompt": "How do I use Anthropic's native Citations API with DSPy for higher accuracy citations?",
+    "expected_output": "Configure ChatAdapter with adapt_to_native_lm_feature=['citations'] and use an Anthropic model.",
+    "assertions": [
+      "Uses adapt_to_native_lm_feature=['citations'] in ChatAdapter",
+      "Specifies an Anthropic model (claude-sonnet or similar)",
+      "Explains that native mode gives character-level accuracy",
+      "Notes this only works with Anthropic models"
+    ]
+  },
+  {
+    "prompt": "How can I validate that my AI's citations actually reference real text in the source documents?",
+    "expected_output": "A validation function that checks each citation's cited_text exists in the source document at the given document_index.",
+    "assertions": [
+      "Iterates over citations",
+      "Uses document_index to look up the source document",
+      "Checks if cited_text is present in the source text",
+      "Handles out-of-range document_index"
+    ]
+  }
+]

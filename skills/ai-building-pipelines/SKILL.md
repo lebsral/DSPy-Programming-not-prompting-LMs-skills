@@ -293,21 +293,26 @@ graph.add_edge("generate", END)
 app = graph.compile()
 ```
 
-This gives you LangGraph's state management and routing with DSPy's optimizable prompts. For more, see `/ai-building-chatbots` (stateful conversations) and `/ai-coordinating-agents` (multi-agent systems). For the full LangGraph API reference, see [`docs/langchain-langgraph-reference.md`](../../docs/langchain-langgraph-reference.md).
-
-## Additional resources
-
-- Use `/ai-checking-outputs` to add verification and guardrails between stages
-- Use `/ai-cutting-costs` to assign different models per stage
-- Not sure what stages your pipeline needs? Use `/ai-decomposing-tasks` to identify where to split
-- For content generation pipelines, see `/ai-writing-content`. For complex reasoning, see `/ai-reasoning`
-- Next: `/ai-improving-accuracy` to measure and improve your pipeline
+This gives you LangGraph's state management and routing with DSPy's optimizable prompts. For more, see `/ai-building-chatbots` (stateful conversations) and `/ai-coordinating-agents` (multi-agent systems).
 
 ## Gotchas
 
-- **Optimize the full pipeline, not individual modules** — optimizing modules in isolation then composing them gives worse results than optimizing the whole pipeline end-to-end with `dspy.BootstrapFewShot` or `dspy.MIPROv2`.
-- **Error propagation is silent** — if an early module returns garbage, later modules process it without complaint. Add `dspy.Assert` or `dspy.Suggest` between stages to catch bad intermediate outputs.
-- **Don't overuse ChainOfThought** — not every module in a pipeline needs reasoning. Use `dspy.Predict` for simple steps (extraction, formatting) and reserve `ChainOfThought` for steps that actually benefit from reasoning. Unnecessary reasoning adds latency and cost.
+- **Optimize the full pipeline, not individual modules** — optimizing modules in isolation then composing them gives worse results than optimizing the whole pipeline end-to-end with `dspy.BootstrapFewShot` or `dspy.MIPROv2`. A single `MIPROv2(auto="medium")` call on the full pipeline typically improves accuracy 15-25% over unoptimized baselines.
+- **Error propagation is silent** — if an early module returns garbage, later modules process it without complaint. Use `dspy.Refine` around key stages to catch bad intermediate outputs with a reward function.
+- **Do not overuse ChainOfThought** — not every module in a pipeline needs reasoning. Use `dspy.Predict` for simple steps (extraction, formatting) and reserve `ChainOfThought` for steps that actually benefit from reasoning. Unnecessary reasoning adds latency and cost.
 - **Pipeline order affects optimization** — DSPy optimizers trace through your `forward()` method. If module A's output feeds module B, the optimizer sees this dependency. Reordering modules or adding conditional logic changes what the optimizer can learn.
 - **Test intermediate outputs, not just final output** — add metrics that check each stage's output independently. A pipeline can produce correct final output for wrong reasons, which breaks when inputs change.
+
+## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
+- **Verification between stages** — see `/ai-checking-outputs`
+- **Assign different models per stage** — see `/ai-cutting-costs`
+- **Identify where to split your task** — see `/ai-decomposing-tasks`
+- **Content generation pipelines** — see `/ai-writing-content`
+- **Complex reasoning patterns** — see `/ai-reasoning`
+- **Measure and improve pipeline accuracy** — see `/ai-improving-accuracy`
+- **Composing DSPy modules** — see `/dspy-modules`
+- **Iterative refinement with feedback** — see `/dspy-refine`
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

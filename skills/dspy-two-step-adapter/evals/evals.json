@@ -1,0 +1,33 @@
+[
+  {
+    "prompt": "I'm trying to use o3-mini with DSPy but it ignores my output format and just dumps raw reasoning. How do I get structured output?",
+    "expected_output": "Use dspy.TwoStepAdapter with o3-mini as main_lm and a fast model like gpt-4o-mini as extraction_lm.",
+    "assertions": [
+      "Recommends TwoStepAdapter (not ChatAdapter or JSONAdapter)",
+      "Sets main_lm to the reasoning model (o3-mini)",
+      "Sets extraction_lm to a fast cheap model (gpt-4o-mini or similar)",
+      "Calls dspy.configure with both lm and adapter",
+      "Does not suggest prompt engineering to fix formatting"
+    ]
+  },
+  {
+    "prompt": "I only need reasoning for one step in my pipeline. The rest is simple classification. How do I use TwoStepAdapter for just one module?",
+    "expected_output": "Assign both .lm and .adapter on the specific module that needs reasoning, while leaving the global config with ChatAdapter for other modules.",
+    "assertions": [
+      "Shows per-module assignment with module.lm and module.adapter",
+      "Keeps global config with a fast model for other modules",
+      "Sets both lm AND adapter on the target module",
+      "Does not configure TwoStepAdapter globally for all modules"
+    ]
+  },
+  {
+    "prompt": "What is the difference between TwoStepAdapter and ChatAdapter? When should I switch?",
+    "expected_output": "ChatAdapter formats prompts with field delimiters and expects the model to follow them. TwoStepAdapter lets the model generate freely then uses a second model to extract structure. Switch when using reasoning models that ignore formatting.",
+    "assertions": [
+      "Explains ChatAdapter expects model to follow format directly",
+      "Explains TwoStepAdapter uses two phases (generate then extract)",
+      "Lists reasoning models that need TwoStepAdapter (o1, o3, R1)",
+      "States standard models (GPT-4o, Claude) work fine with ChatAdapter"
+    ]
+  }
+]

@@ -1,6 +1,6 @@
 ---
 name: ai-fine-tuning
-description: Fine-tune models on your data to maximize quality and cut costs. Use when prompt optimization hit a ceiling, you need domain specialization, you want cheaper models to match expensive ones, you heard fine-tuning will make us AI-native, you have 500+ training examples, or you need to train on proprietary data. Also use when you have spent weeks of manual iteration with no systematic improvement path, or manual prompt tuning got you to a working system but quality plateaued. Covers DSPy BootstrapFinetune, BetterTogether, model distillation, and when to fine-tune vs optimize prompts., LoRA vs full fine-tune, when to fine-tune vs few-shot, distill GPT-4 into a smaller model, teacher-student model training, custom model training with DSPy, model distillation, make a cheap model as good as GPT-4.
+description: Fine-tune models on your data to maximize quality and cut costs. Use when prompt optimization hit a ceiling, you need domain specialization, you want cheaper models to match expensive ones, you heard fine-tuning will make us AI-native, you have 500+ training examples, or you need to train on proprietary data. Also use when you have spent weeks of manual iteration with no systematic improvement path, or manual prompt tuning got you to a working system but quality plateaued. Covers DSPy BootstrapFinetune, BetterTogether, model distillation, and when to fine-tune vs optimize prompts, LoRA vs full fine-tune, when to fine-tune vs few-shot, distill GPT-4 into a smaller model, teacher-student model training, custom model training with DSPy, model distillation, make a cheap model as good as GPT-4.
 ---
 
 # Fine-Tune Models on Your Data
@@ -176,10 +176,10 @@ BetterTogether alternates between prompt optimization and weight optimization, g
 ```python
 optimizer = dspy.BetterTogether(
     metric=metric,
-    prompt_optimizer=dspy.MIPROv2,
-    weight_optimizer=dspy.BootstrapFinetune,
+    p=dspy.MIPROv2(metric=metric),
+    w=dspy.BootstrapFinetune(metric=metric),
 )
-best = optimizer.compile(program, trainset=trainset)
+best = optimizer.compile(program, trainset=trainset, strategy="p -> w -> p")
 
 best_score = evaluator(best)
 print(f"Prompt-only:    {prompt_score:.1f}%")
@@ -189,10 +189,14 @@ print(f"BetterTogether: {best_score:.1f}%")
 
 ### How it works
 
-1. **Round 1**: Optimize prompts (instructions + few-shot examples)
-2. **Round 2**: Fine-tune weights using the optimized prompts
-3. **Round 3**: Re-optimize prompts for the fine-tuned model
+The strategy string `"p -> w -> p"` controls the sequence — `p` maps to MIPROv2 (prompt optimizer) and `w` maps to BootstrapFinetune (weight optimizer):
+
+1. **Round 1 (p)**: Optimize prompts (instructions + few-shot examples)
+2. **Round 2 (w)**: Fine-tune weights using the optimized prompts
+3. **Round 3 (p)**: Re-optimize prompts for the fine-tuned model
 4. Each round builds on the previous, creating synergy between prompt and weight optimization
+
+If you omit the optimizer kwargs, BetterTogether defaults to `p=BootstrapFewShotWithRandomSearch` and `w=BootstrapFinetune`.
 
 ### When to use BetterTogether
 
@@ -309,3 +313,4 @@ AWS SageMaker, Google Cloud, Lambda Labs, or Together AI for training:
 ## Additional resources
 
 - For worked examples (classification, distillation, BetterTogether), see [examples.md](examples.md)
+- For BootstrapFinetune, BetterTogether, and MIPROv2 API details, see [reference.md](reference.md)

@@ -1,0 +1,49 @@
+{
+  "skill_name": "ai-detecting-anomalies",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I have a Postgres table called `transactions` with columns: user_id, amount, merchant, country, device_fingerprint, created_at. I want to flag fraudulent transactions in real time. I have 90 days of historical data I can use to build a baseline. Transactions over $5,000 from a new device in a new country at 3am should definitely be critical. Normal everyday purchases should pass through. Can you build a DSPy fraud scorer with severity levels and explanations?",
+      "expected_output": "A Python script that builds a baseline summary from historical transaction data, defines a DSPy signature with event + baseline_summary inputs and severity (Literal with normal/low/medium/high/critical), explanation, and anomaly_score outputs, uses ChainOfThought, and includes routing logic that maps severity to actions (dismiss, log, alert, block).",
+      "files": [],
+      "assertions": [
+        {"name": "uses_dspy_signature", "description": "Defines a dspy.Signature class for anomaly scoring"},
+        {"name": "includes_baseline_input", "description": "Signature has a baseline_summary input field"},
+        {"name": "uses_literal_severity", "description": "Uses Literal type with graduated severity levels (at minimum normal, medium, high, critical)"},
+        {"name": "includes_explanation_output", "description": "Signature outputs an explanation field"},
+        {"name": "includes_anomaly_score", "description": "Signature outputs a numeric anomaly score (float)"},
+        {"name": "has_routing_logic", "description": "Includes severity-to-action routing (different actions for different severity levels)"},
+        {"name": "uses_chain_of_thought", "description": "Uses ChainOfThought module for reasoning before scoring"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "We run a SaaS app and need to detect account takeovers. The pattern is usually: login from new country, then immediately change password and email, then export data. Individual events look OK but the session pattern is the giveaway. Can you build something that scores a sequence of user session events against that users normal behavior profile?",
+      "expected_output": "A Python script with a DSPy signature that takes session_events (JSON array of chronological events) and user_baseline as inputs, outputs severity, explanation, and anomaly_score. Should use ChainOfThought and explicitly mention that session-level context matters more than individual events. Should include an example of what a suspicious vs normal session looks like.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_session_events_input", "description": "Signature takes a session_events input (array or JSON of multiple events)"},
+        {"name": "uses_baseline_input", "description": "Signature takes a user_baseline or baseline_summary input"},
+        {"name": "outputs_severity", "description": "Signature outputs a severity field with graduated levels"},
+        {"name": "outputs_explanation", "description": "Signature outputs an explanation field"},
+        {"name": "explains_session_context", "description": "Code or comments explain why session-level batching matters for detecting multi-step attacks"},
+        {"name": "includes_example_session", "description": "Includes at least one example of a suspicious session with multiple events"},
+        {"name": "uses_chain_of_thought", "description": "Uses ChainOfThought for reasoning"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I have server logs coming in as JSON lines. I want to flag security anomalies — things like SQL injection attempts, scanning for .env files, credential stuffing (many 401s from one IP), and unusual 500 error spikes. Normal traffic is mostly GET requests to /api/v1/* with a 0.3% error rate. I want to process them in 5-minute windows and only alert on medium severity or above.",
+      "expected_output": "A Python script that processes log entries in batches/windows, defines a DSPy signature with log_batch and baseline_summary inputs and severity + explanation + anomaly_score outputs, includes filtering to only alert on medium/high/critical severity, and optionally lists the specific anomalous log entries identified.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_dspy_signature", "description": "Defines a dspy.Signature for log anomaly scoring"},
+        {"name": "processes_in_batches", "description": "Groups log entries into windows or batches rather than scoring one line at a time"},
+        {"name": "includes_baseline", "description": "Uses a baseline_summary input to establish normal log patterns"},
+        {"name": "filters_by_severity", "description": "Only generates alerts for medium severity or above, suppresses normal and low"},
+        {"name": "outputs_explanation", "description": "Outputs a specific explanation citing paths, IPs, or error patterns from the logs"},
+        {"name": "handles_json_logs", "description": "Processes log entries as JSON objects"}
+      ]
+    }
+  ]
+}

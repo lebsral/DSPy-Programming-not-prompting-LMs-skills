@@ -1,0 +1,77 @@
+{
+  "skill_name": "ai-translating-content",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I need to translate our app's UI strings from English to Spanish (Mexico). We have brand terms like 'Dashboard', 'Workspaces', and 'Pro' that must not be translated. Show me a DSPy signature that enforces glossary terms and returns the translated text along with which glossary terms were preserved.",
+      "expected_output": "A DSPy signature with source_text, target_language, and glossary as inputs, and a Pydantic output model containing translated_text and glossary_terms_used. The signature docstring must instruct the model not to translate glossary terms. An example call translating a string like 'Upgrade to Pro' to Spanish (Mexico) with ['Pro', 'Dashboard', 'Workspaces'] as the glossary, showing that 'Pro' appears verbatim in the output.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "has_glossary_input_field",
+          "description": "The signature includes a 'glossary' InputField (list of strings)"
+        },
+        {
+          "name": "has_pydantic_output_with_glossary_terms_used",
+          "description": "The output uses a Pydantic model with both translated_text and glossary_terms_used fields"
+        },
+        {
+          "name": "docstring_instructs_verbatim",
+          "description": "The signature docstring explicitly states glossary terms must appear verbatim or must not be translated"
+        },
+        {
+          "name": "glossary_terms_preserved_in_example",
+          "description": "The example output shows brand terms (e.g., 'Pro', 'Dashboard') unchanged in the Spanish translation"
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Write a function that translates every value in an en.json i18n file to French (France) using DSPy, preserving {placeholder} interpolation tokens exactly. The file looks like: {\"greeting\": \"Hello, {name}!\", \"count_msg\": \"You have {count} new messages.\", \"logout\": \"Log out\"}. Translate each string individually.",
+      "expected_output": "A function that opens the JSON file, iterates over each key-value pair, and calls a DSPy Predict module individually per string. The signature docstring instructs the model to preserve {placeholder} patterns verbatim. The output JSON for the sample input should have all three keys translated to French with {name} and {count} unchanged. The code must NOT concatenate all strings into a single LM call.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "iterates_per_string",
+          "description": "The function loops over each key individually and calls the translator once per string, not once for all strings combined"
+        },
+        {
+          "name": "placeholder_preservation_instructed",
+          "description": "The signature docstring or InputField desc mentions preserving {placeholder} or interpolation tokens verbatim"
+        },
+        {
+          "name": "correct_french_output",
+          "description": "The example output shows correct French translations: 'Bonjour, {name}!' and 'Vous avez {count} nouveaux messages.' with placeholders intact"
+        },
+        {
+          "name": "writes_output_json",
+          "description": "The function writes the translated dict to a JSON output file with ensure_ascii=False"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I want to translate incoming support tickets (written in any language) to English, and automatically flag messages that contain idioms, sarcasm, or ambiguous phrasing for human review. Show me a DSPy module with a confidence score output and a needs_review boolean.",
+      "expected_output": "A DSPy signature using ChainOfThought (not just Predict) that takes ticket_text as input and returns a Pydantic output model with: translated_text (str), detected_source_language (str), confidence (float 0-1), needs_review (bool), and review_reason (str). The docstring explains that confidence < ~0.75 or ambiguous intent should set needs_review=True. An example with a sarcastic German ticket like 'Das ist ja wohl ein Witz!' shows needs_review=True and a review_reason explaining the idiom.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "uses_chain_of_thought",
+          "description": "The module uses dspy.ChainOfThought rather than dspy.Predict, since sarcasm and idiom detection benefits from reasoning"
+        },
+        {
+          "name": "pydantic_output_has_all_fields",
+          "description": "The Pydantic output model includes translated_text, detected_source_language, confidence (float), needs_review (bool), and review_reason (str)"
+        },
+        {
+          "name": "sarcasm_example_flagged",
+          "description": "The worked example for the sarcastic German input shows needs_review=True with a review_reason that mentions sarcasm, idiom, or tone"
+        },
+        {
+          "name": "no_deprecated_assert_suggest",
+          "description": "The code does not use dspy.Assert or dspy.Suggest for enforcement — uses dspy.Refine or metric-based checking instead"
+        }
+      ]
+    }
+  ]
+}

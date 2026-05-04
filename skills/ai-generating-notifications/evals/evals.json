@@ -1,0 +1,35 @@
+[
+  {
+    "prompt": "I need to send push notifications to iOS and Android users when someone comments on their post. The title has to be under 50 characters and the body under 100. How do I build this with DSPy and enforce the length limits?",
+    "expected_output": "A DSPy module that generates push notification copy with title and body fields, wrapped in dspy.Refine with a programmatic character-count reward function that hard-fails when limits are exceeded",
+    "assertions": [
+      "output includes a Pydantic BaseModel or typed OutputField with separate title and body fields",
+      "output enforces title <= 50 chars and body <= 100 chars with a reward function that reads len(pred.notification.title)",
+      "output uses dspy.Refine (not dspy.Assert or dspy.Suggest) to retry when limits are exceeded",
+      "output does not hardcode a single LM provider without alternatives",
+      "output passes recipient context (name or profile) as an input field for personalization"
+    ]
+  },
+  {
+    "prompt": "My app generates dozens of events per day per user. Instead of sending one notification per event I want to batch them into a single weekly digest email. How do I build this with DSPy?",
+    "expected_output": "A two-step DSPy module that first groups events by type then writes a digest email, with separate GroupEvents and WriteDigest signatures",
+    "assertions": [
+      "output has a GroupEvents step before writing the digest — not a single pass over raw events",
+      "output includes a digest structure with subject line, grouped event sections, and a call to action",
+      "output uses dspy.ChainOfThought for both grouping and writing steps",
+      "output includes a reward function that checks subject line length and minimum number of sections",
+      "output does not hardcode a single LM provider without alternatives"
+    ]
+  },
+  {
+    "prompt": "I want to send Slack alerts to our on-call channel when system errors happen. The alert should include severity, what happened, who is impacted, and what the engineer should do right now. How do I set this up with DSPy?",
+    "expected_output": "A DSPy module using a structured output (Pydantic model) with severity, summary, impact, and suggested_action fields, plus a Slack markdown formatter",
+    "assertions": [
+      "output includes severity as a Literal type with values like info, warning, error, critical",
+      "output includes summary, impact, and suggested_action as required output fields",
+      "output includes a Slack block formatter method or function",
+      "output uses dspy.Refine with a reward function that hard-fails when summary or suggested_action is empty",
+      "output does not hardcode a single LM provider without alternatives"
+    ]
+  }
+]

@@ -1,0 +1,44 @@
+{
+  "skill_name": "ai-moderating-content",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I need to build a content moderation system for our community forum. Users post comments and we need to catch hate speech, spam, and harassment. Uncertain cases should go to human reviewers.",
+      "expected_output": "A DSPy module using ChainOfThought with a Signature that has violation_type as a Literal output field, severity scoring, confidence-based routing to human review, and a moderation metric function.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_literal_for_violations", "description": "Uses Literal type for violation categories, not free-text classification"},
+        {"name": "has_severity_scoring", "description": "Includes a severity output field with Literal levels (none/low/medium/high or similar)"},
+        {"name": "routes_to_human_review", "description": "Implements routing logic that sends uncertain or medium-severity cases to human review"},
+        {"name": "provider_agnostic", "description": "LM config uses generic provider with alternative comment"},
+        {"name": "includes_metric", "description": "Defines a moderation metric function for evaluation and optimization"},
+        {"name": "no_manual_reasoning_field", "description": "Does not add a reasoning output field to signatures used with ChainOfThought"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "We run a marketplace and need to moderate product listings. Listings can violate multiple policies at once (counterfeit goods AND misleading claims). We also need to instantly block any listing that contains personal information like SSNs or credit card numbers.",
+      "expected_output": "A multi-label DSPy moderator using list[str] for violations, regex-based PII blocking (raising or returning before LM call), and validation that returned violations are from the allowed set.",
+      "files": [],
+      "assertions": [
+        {"name": "multi_label_output", "description": "Uses list[str] for violations output field to support multiple simultaneous violations"},
+        {"name": "regex_hard_blocks", "description": "Uses regex patterns for PII detection (SSN, credit card, email, phone) as hard blocks before or after LM assessment"},
+        {"name": "validates_violation_set", "description": "Validates returned violations are from the allowed set (via Pydantic Literal, reward function, or programmatic check)"},
+        {"name": "pattern_before_lm", "description": "Pattern-based hard blocks run before the LM call, not after"},
+        {"name": "handles_pii_detection", "description": "Shows handling of PII detection results (immediate block, flag for review, or reward function penalty)"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Our moderation system is live but accuracy is inconsistent. How do I measure and improve it? We care more about catching hate speech than catching spam.",
+      "expected_output": "Per-category metrics with weighted scoring, evaluation using dspy.Evaluate, and optimization with MIPROv2. Hate speech metric weighted higher than spam.",
+      "files": [],
+      "assertions": [
+        {"name": "per_category_metrics", "description": "Creates separate metrics per violation category rather than only using overall accuracy"},
+        {"name": "weighted_metric", "description": "Weights violation type correctness higher than severity correctness in the metric"},
+        {"name": "uses_evaluate", "description": "Uses dspy.Evaluate or Evaluate from dspy.evaluate to measure baseline performance"},
+        {"name": "uses_optimizer", "description": "Applies MIPROv2 or another DSPy optimizer to improve the moderator"}
+      ]
+    }
+  ]
+}

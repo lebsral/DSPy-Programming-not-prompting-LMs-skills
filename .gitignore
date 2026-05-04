@@ -1,5 +1,8 @@
-# Claude Code local settings
-.claude/settings.local.json
+# Claude Code local state (settings, installed skills, transcripts)
+.claude/
+
+# npx skills lock file (local install artifact)
+skills-lock.json
 
 # Python
 __pycache__/

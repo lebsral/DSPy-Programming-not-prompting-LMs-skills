@@ -203,7 +203,7 @@ for trace in traces:
 
 ## Step 4: Handle messy data
 
-Real-world text is messy. Use assertions to catch bad extractions and retry:
+Real-world text is messy. Use a reward function with `dspy.Refine` to catch bad extractions and retry:
 
 ```python
 class ValidatedParser(dspy.Module):
@@ -211,19 +211,26 @@ class ValidatedParser(dspy.Module):
         self.parse = dspy.ChainOfThought(ParseContact)
 
     def forward(self, text):
-        result = self.parse(text=text)
-        dspy.Suggest(
-            "@" in result.email,
-            "Email should contain @"
-        )
-        dspy.Suggest(
-            len(result.phone.replace("-", "").replace(" ", "")) >= 10,
-            "Phone number should have at least 10 digits"
-        )
-        return result
+        return self.parse(text=text)
+
+def contact_reward(args, pred):
+    score = 1.0
+    if not pred.email or "@" not in pred.email:
+        score -= 0.4  # Email should contain @
+    phone_digits = pred.phone.replace("-", "").replace(" ", "") if pred.phone else ""
+    if len(phone_digits) < 10:
+        score -= 0.3  # Phone number should have at least 10 digits
+    return max(score, 0.0)
+
+validated_parser = dspy.Refine(
+    module=ValidatedParser(),
+    N=3,
+    reward_fn=contact_reward,
+    threshold=0.7,
+)
 ```
 
-`dspy.Suggest` is a soft constraint — if the check fails, DSPy retries the extraction with the suggestion as feedback. Use `dspy.Assert` for hard constraints that should raise an error if they can't be satisfied.
+`dspy.Refine` retries the extraction up to N times, keeping the attempt with the highest reward score. Penalize each failed constraint proportionally to its importance.
 
 ### Handling missing fields
 

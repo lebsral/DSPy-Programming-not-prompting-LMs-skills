@@ -21,12 +21,12 @@
   },
   {
     "prompt": "My AI summarizer keeps making the summaries too long. Users want 3-5 bullet points max but they get 10-15. How do I enforce length limits?",
-    "expected_output": "A summarization module with dspy.Assert to enforce word or bullet count limits",
+    "expected_output": "A summarization module wrapped with dspy.Refine to enforce word or bullet count limits via a reward function",
     "assertions": [
-      "output uses dspy.Assert or dspy.Suggest for length enforcement",
-      "output includes a programmatic length check (word count or bullet count)",
-      "output shows the assertion error message includes the actual vs expected count",
-      "output explains that DSPy retries with the error feedback on assertion failure"
+      "output uses dspy.Refine or dspy.BestOfN with a reward function for length enforcement",
+      "output includes a programmatic length check (word count or bullet count) in the reward function",
+      "output shows the reward function returns graduated scores based on how close to the limit",
+      "output explains that Refine retries with feedback when the reward score is below threshold"
     ]
   }
 ]

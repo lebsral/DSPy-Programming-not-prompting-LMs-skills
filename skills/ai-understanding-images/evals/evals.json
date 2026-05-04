@@ -1,0 +1,53 @@
+[
+  {
+    "id": "basic-image-signature",
+    "description": "dspy.Image used as InputField in a signature for basic image analysis",
+    "prompt": "Build a DSPy module that takes an image and a question, then returns an answer describing what the image shows.",
+    "expected_patterns": [
+      "dspy.Image",
+      "dspy.InputField",
+      "dspy.OutputField",
+      "dspy.Predict",
+      "from_url\\|from_file\\|from_base64"
+    ],
+    "must_not_contain": [
+      "dspy.Assert",
+      "dspy.Suggest"
+    ],
+    "notes": "Must use dspy.Image type on the InputField, not a raw string. Must use dspy.Predict for direct Q&A extraction."
+  },
+  {
+    "id": "structured-ocr-extraction",
+    "description": "Receipt OCR with typed Pydantic output fields",
+    "prompt": "Write a DSPy program to extract line items and totals from a receipt photo. Output should be structured with line items as a list and separate float fields for subtotal, tax, and total.",
+    "expected_patterns": [
+      "dspy.Image",
+      "List\\[",
+      "BaseModel\\|TypedDict",
+      "dspy.OutputField",
+      "float"
+    ],
+    "must_not_contain": [
+      "dspy.Assert",
+      "dspy.Suggest",
+      "raw string.*image"
+    ],
+    "notes": "Line items must be a typed list, not a free-text string. Must not use dspy.Assert for validation."
+  },
+  {
+    "id": "image-preprocessing-resize",
+    "description": "Image preprocessing before passing to vision LLM",
+    "prompt": "Show how to resize a large local image to a maximum of 1024px on the longest side before passing it to a DSPy vision module.",
+    "expected_patterns": [
+      "PIL\\|Pillow\\|Image\\.open",
+      "resize\\|LANCZOS\\|ANTIALIAS",
+      "1024",
+      "dspy.Image.from_base64\\|from_file",
+      "JPEG\\|quality"
+    ],
+    "must_not_contain": [
+      "from_url.*local"
+    ],
+    "notes": "Should demonstrate PIL resize and then wrap in dspy.Image. Should not try to pass a local file path to from_url."
+  }
+]

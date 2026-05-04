@@ -22,7 +22,7 @@ Ask the user:
 
 ## Step 2: Citation enforcement
 
-Force the AI to cite sources for every claim. Uses `dspy.Assert` to reject answers without citations.
+Force the AI to cite sources for every claim. Uses `dspy.Refine` to retry generation until citation quality meets the threshold.
 
 ```python
 import dspy
@@ -37,40 +37,36 @@ class CitedAnswer(dspy.Signature):
     question: str = dspy.InputField()
     answer: str = dspy.OutputField(desc="Answer with inline citations like [1], [2]")
 
-class CitationEnforcer(dspy.Module):
-    def __init__(self):
-        self.answer = dspy.ChainOfThought(CitedAnswer)
+def citation_reward(args: dict, pred: dspy.Prediction) -> float:
+    answer = pred.answer
+    context = args["context"]
 
-    def forward(self, context, question):
-        result = self.answer(context=context, question=question)
+    # Check citation ratio — at least half of sentences must have citations
+    sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', answer) if s.strip()]
+    citations_found = [bool(re.search(r"\[\d+\]", s)) for s in sentences]
+    ratio = sum(citations_found) / max(len(sentences), 1)
 
-        # Every 1-2 sentences must have a citation
-        sentences = [s.strip() for s in result.answer.split(".") if s.strip()]
-        citations_found = [bool(re.search(r"\[\d+\]", s)) for s in sentences]
+    # Check all cited numbers exist in context
+    cited_nums = set(int(n) for n in re.findall(r"\[(\d+)\]", answer))
+    valid_nums = set(range(1, len(context) + 1))
+    all_valid = cited_nums.issubset(valid_nums)
 
-        # Check that at least half the sentences have citations
-        citation_ratio = sum(citations_found) / max(len(sentences), 1)
-        dspy.Assert(
-            citation_ratio >= 0.5,
-            "Answer must cite sources. Use [1], [2], etc. after claims. "
-            f"Only {citation_ratio:.0%} of sentences have citations."
-        )
+    if not all_valid:
+        return 0.0
+    return ratio  # 0.0 to 1.0
 
-        # Check that cited numbers actually exist in the context
-        cited_nums = set(int(n) for n in re.findall(r"\[(\d+)\]", result.answer))
-        valid_nums = set(range(1, len(context) + 1))
-        invalid = cited_nums - valid_nums
-        dspy.Assert(
-            len(invalid) == 0,
-            f"Citations {invalid} don't match any source. Valid sources: [1] to [{len(context)}]."
-        )
+answerer = dspy.ChainOfThought(CitedAnswer)
+citation_enforcer = dspy.Refine(answerer, N=3, reward_fn=citation_reward, threshold=0.5)
 
-        return result
+# Usage
+result = citation_enforcer(context=context, question=question)
 ```
+
+`dspy.Refine` retries up to `N` times, passing the reward score back as feedback so the model can improve its citations on each attempt.
 
 ## Step 3: Faithfulness verification
 
-After generating an answer, use a second LM call to check if it's actually supported by the sources.
+After generating an answer, use a second LM call to check if it's actually supported by the sources. Wraps the answerer with `dspy.Refine` so unfaithful answers are retried.
 
 ```python
 class CheckFaithfulness(dspy.Signature):
@@ -80,90 +76,105 @@ class CheckFaithfulness(dspy.Signature):
     is_faithful: bool = dspy.OutputField(desc="Is every claim supported by the context?")
     unsupported_claims: list[str] = dspy.OutputField(desc="Claims not found in context")
 
-class FaithfulResponder(dspy.Module):
+class FaithfulAnswerer(dspy.Module):
     def __init__(self):
-        self.retrieve = dspy.Retrieve(k=5)
         self.answer = dspy.ChainOfThought(CitedAnswer)
         self.verify = dspy.Predict(CheckFaithfulness)
 
-    def forward(self, question):
-        context = self.retrieve(question).passages
+    def forward(self, context, question):
         result = self.answer(context=context, question=question)
-
         check = self.verify(context=context, answer=result.answer)
-        dspy.Assert(
-            check.is_faithful,
-            f"Answer contains unsupported claims: {check.unsupported_claims}. "
-            "Rewrite using only information from the provided sources."
+        # Expose faithfulness on the prediction so reward_fn can read it
+        return dspy.Prediction(
+            answer=result.answer,
+            is_faithful=check.is_faithful,
+            unsupported_claims=check.unsupported_claims,
         )
 
-        return result
-```
+def faithfulness_reward(args: dict, pred: dspy.Prediction) -> float:
+    return 1.0 if pred.is_faithful else 0.0
 
-When `dspy.Assert` fails, DSPy automatically retries the LM call, feeding back the error message so the model can self-correct. This retry loop (called backtracking) runs up to `max_backtrack_attempts` times (default: 2).
+faithful_responder = dspy.Refine(
+    FaithfulAnswerer(), N=3, reward_fn=faithfulness_reward, threshold=1.0
+)
+
+# Usage
+result = faithful_responder(context=context, question=question)
+```
 
 ## Step 4: Self-check pattern
 
-Generate an answer, then ask the model to verify its own claims against the sources. Lightweight and good for most cases.
+Generate an answer, then ask the model to verify its own claims against the sources. Uses a reward function that gives partial credit for faithfulness — good for cases where you want the best available answer rather than a hard block.
 
 ```python
-class SelfCheckedAnswer(dspy.Module):
+class SelfCheckedAnswerer(dspy.Module):
     def __init__(self):
         self.answer = dspy.ChainOfThought("context, question -> answer")
         self.check = dspy.ChainOfThought(CheckFaithfulness)
 
     def forward(self, context, question):
         result = self.answer(context=context, question=question)
-
         verification = self.check(context=context, answer=result.answer)
-        dspy.Suggest(
-            verification.is_faithful,
-            f"Some claims may not be supported: {verification.unsupported_claims}. "
-            "Consider revising to stick closer to the sources."
-        )
-
         return dspy.Prediction(
             answer=result.answer,
             is_verified=verification.is_faithful,
             unsupported=verification.unsupported_claims,
         )
-```
 
-Use `dspy.Suggest` (soft) instead of `dspy.Assert` (hard) when you want to flag issues without blocking the response.
+def partial_faithfulness_reward(args: dict, pred: dspy.Prediction) -> float:
+    """Partial credit - 1.0 if faithful, 0.5 if partially faithful, 0.0 if not."""
+    if pred.is_verified:
+        return 1.0
+    # Give partial credit if there are few unsupported claims
+    unsupported = pred.unsupported or []
+    if len(unsupported) <= 1:
+        return 0.5
+    return 0.0
+
+self_checked = dspy.Refine(
+    SelfCheckedAnswerer(), N=3, reward_fn=partial_faithfulness_reward, threshold=0.5
+)
+```
 
 ## Step 5: Cross-check pattern
 
-Generate the answer twice independently, then compare. If two independent generations disagree, something is probably made up.
+Generate the answer multiple times independently and pick the one most consistent with itself. `dspy.BestOfN` samples N candidates and selects the highest-scoring one according to a reward function.
 
 ```python
-class CrossChecked(dspy.Module):
-    def __init__(self):
-        self.gen_a = dspy.ChainOfThought("context, question -> answer")
-        self.gen_b = dspy.ChainOfThought("context, question -> answer")
-        self.compare = dspy.Predict(CompareAnswers)
-
-    def forward(self, context, question):
-        a = self.gen_a(context=context, question=question)
-        b = self.gen_b(context=context, question=question)
-
-        check = self.compare(answer_a=a.answer, answer_b=b.answer)
-        dspy.Assert(
-            check.agree,
-            f"Two independent answers disagree: {check.discrepancy}. "
-            "This suggests hallucination. Regenerate with closer attention to sources."
-        )
-
-        return a
-
 class CompareAnswers(dspy.Signature):
     """Check if two independently generated answers agree on the facts."""
     answer_a: str = dspy.InputField()
     answer_b: str = dspy.InputField()
     agree: bool = dspy.OutputField(desc="Do they agree on all factual claims?")
     discrepancy: str = dspy.OutputField(desc="What they disagree on, if anything")
+
+class GroundedAnswerer(dspy.Module):
+    def __init__(self):
+        self.answer = dspy.ChainOfThought("context, question -> answer")
+        self.verify = dspy.Predict(CheckFaithfulness)
+
+    def forward(self, context, question):
+        result = self.answer(context=context, question=question)
+        check = self.verify(context=context, answer=result.answer)
+        return dspy.Prediction(
+            answer=result.answer,
+            is_faithful=check.is_faithful,
+            unsupported_claims=check.unsupported_claims,
+        )
+
+def faithfulness_reward(args: dict, pred: dspy.Prediction) -> float:
+    return 1.0 if pred.is_faithful else 0.0
+
+# BestOfN samples N candidates and returns the one with the highest reward
+cross_checked = dspy.BestOfN(
+    GroundedAnswerer(), N=3, reward_fn=faithfulness_reward
+)
+
+# Usage — returns the most faithful of the 3 sampled answers
+result = cross_checked(context=context, question=question)
 ```
 
-Best for high-stakes outputs where the cost of hallucination is high. Doubles your LM calls but catches inconsistencies.
+Best for high-stakes outputs where the cost of hallucination is high. Uses N LM calls but picks the most faithful result rather than retrying on failure.
 
 ## Step 6: Confidence thresholds
 
@@ -309,7 +320,7 @@ score = evaluator(my_grounded_qa)
 def citation_metric(example, prediction, trace=None):
     """Score citation quality: coverage + validity."""
     answer = prediction.answer
-    sentences = [s.strip() for s in answer.split(".") if s.strip()]
+    sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', answer) if s.strip()]
     cited = [bool(re.search(r"\[\d+\]", s)) for s in sentences]
     coverage = sum(cited) / max(len(sentences), 1)
 
@@ -363,12 +374,18 @@ class CostEfficientVerifier(dspy.Module):
     def forward(self, context, question):
         result = self.answer(context=context, question=question)
         check = self.verify(context=context, answer=result.answer)
-        dspy.Assert(
-            check.is_faithful,
-            f"Unsupported claims: {check.unsupported_claims}. "
-            "Only use information from the provided sources."
+        return dspy.Prediction(
+            answer=result.answer,
+            is_faithful=check.is_faithful,
+            unsupported_claims=check.unsupported_claims,
         )
-        return result
+
+def faithfulness_reward(args: dict, pred: dspy.Prediction) -> float:
+    return 1.0 if pred.is_faithful else 0.0
+
+cost_efficient = dspy.Refine(
+    CostEfficientVerifier(), N=3, reward_fn=faithfulness_reward, threshold=1.0
+)
 ```
 
 ## Step 9: Batch verification
@@ -403,35 +420,38 @@ def verify_batch(qa_pairs, context, output_path="verification_results.json"):
     return results
 ```
 
-## How backtracking works
+## How Refine works
 
-When `dspy.Assert` fails:
-1. DSPy catches the assertion failure
-2. The error message is fed back to the LM as additional context
-3. The LM retries generation with the feedback ("your answer had unsupported claims X, Y")
-4. This repeats up to `max_backtrack_attempts` times
-5. If all retries fail, the assertion raises an error
+When `dspy.Refine` is used:
+1. The wrapped module generates a candidate prediction
+2. The reward function scores the prediction (0.0 to 1.0)
+3. If the score meets the threshold, Refine returns that prediction immediately
+4. If not, it retries up to N times, using the score as feedback signal
+5. After N attempts, it returns the highest-scoring candidate seen
 
-This is why good error messages matter — they're literally the feedback the model uses to improve.
+`dspy.BestOfN` is similar but always samples all N candidates and returns the best — useful when you want consistent sampling rather than early exit on success.
+
+Good reward functions make Refine work better — specific scores tied to measurable properties (citation ratio, faithfulness check) outperform vague binary pass/fail.
 
 ## Choosing the right pattern
 
 | Pattern | Cost | Latency | Best for |
 |---------|------|---------|----------|
-| Citation enforcement | 1 LM call | Low | When you have numbered sources |
-| Faithfulness verification | 2 LM calls | Medium | RAG systems, doc Q&A |
-| Self-check | 2 LM calls | Medium | General fact-checking |
-| Cross-check | 3 LM calls | High | High-stakes, critical outputs |
+| Citation enforcement (Refine) | 1-3 LM calls | Low-Medium | When you have numbered sources |
+| Faithfulness verification (Refine) | 2-6 LM calls | Medium | RAG systems, doc Q&A |
+| Self-check (Refine) | 2-6 LM calls | Medium | General fact-checking |
+| Cross-check (BestOfN) | N LM calls | High | High-stakes, critical outputs |
 | Confidence gating | 1 LM call | Low | Human-in-the-loop systems |
-| Cheap verifier | 1 expensive + 1 cheap | Low-Medium | Cost-sensitive production |
+| Cheap verifier (Refine) | 1 expensive + 1-3 cheap | Low-Medium | Cost-sensitive production |
 
 ## Gotchas
 
-- **Claude splits sentences on `.` for citation counting, breaking on abbreviations and decimals.** Naive `.split(".")` breaks on "Dr. Smith", "$50.00", and URLs, inflating the uncited sentence count and causing false assertion failures. Use `re.split(r'(?<=[.!?])\s+', text)` for sentence splitting instead.
-- **Claude validates citation numbers with `\[(\d+)\]` but misses grouped citations.** When users or models write `[1, 2]` or `[1-3]`, the standard regex only catches `[1]` format. Extend the pattern to handle ranges and comma-separated lists, or normalize citation format in the signature instructions.
-- **Claude puts the faithfulness verifier on the same expensive LM by default.** Verification is a classification task — cheaper models handle it well. Always call `.set_lm()` on the verifier predictor to use a smaller model. This typically cuts verification cost by 5-10x with minimal accuracy loss.
-- **Claude uses `dspy.Retrieve(k=5)` without configuring a retriever.** `dspy.Retrieve` requires a retrieval model configured via `dspy.configure(rm=...)`. Without it, the call fails at runtime. Either configure a retriever or pass context directly as a function parameter.
-- **`dspy.Assert` error messages are the self-correction prompt — vague messages produce vague fixes.** Claude tends to write generic assertion messages like "Answer must be faithful." Include the specific failing claims and valid source numbers in the message so the model knows exactly what to fix on retry.
+- **Sentence splitting on `.` breaks on abbreviations and decimals.** Naive `.split(".")` breaks on "Dr. Smith", "$50.00", and URLs, inflating the uncited sentence count and producing incorrect reward scores. Use `re.split(r'(?<=[.!?])\s+', text)` for sentence splitting instead.
+- **Citation regex misses grouped citations.** When models write `[1, 2]` or `[1-3]`, the standard `\[(\d+)\]` pattern only catches `[1]` format. Extend the pattern to handle ranges and comma-separated lists, or normalize citation format in the signature instructions.
+- **The faithfulness verifier defaults to the same expensive LM.** Verification is a classification task — cheaper models handle it well. Always call `.set_lm()` on the verifier predictor to use a smaller model. This typically cuts verification cost by 5-10x with minimal accuracy loss.
+- **`dspy.Retrieve` requires a configured retriever.** `dspy.Retrieve` requires a retrieval model configured via `dspy.configure(rm=...)`. Without it, the call fails at runtime. Either configure a retriever or pass context directly as a function parameter.
+- **Reward functions must handle missing fields gracefully.** If the module raises an exception or returns a prediction without an expected field, the reward function will error. Add `getattr(pred, "is_faithful", False)` style defensive access to avoid crashing Refine's retry loop.
+- **Refine with threshold=1.0 requires a perfect score to short-circuit.** For partial-credit reward functions (0.0 to 1.0), set a threshold below 1.0 or use `BestOfN` instead — otherwise Refine always runs all N attempts.
 
 ## Cross-references
 
@@ -440,7 +460,8 @@ This is why good error messages matter — they're literally the feedback the mo
 - Retrieval-augmented generation (RAG) setup — see `/ai-searching-docs`
 - General output validation (format, safety, quality) — see `/ai-checking-outputs`
 - Enforcing business rules and content policies — see `/ai-following-rules`
-- `dspy.Assert` and `dspy.Suggest` backtracking patterns — see `/dspy-assertions`
+- Iterative refinement with reward functions — see `/dspy-refine`
+- Sampling and selecting best outputs — see `/dspy-best-of-n`
 - Retrieval model configuration and search — see `/dspy-retrieval`
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 

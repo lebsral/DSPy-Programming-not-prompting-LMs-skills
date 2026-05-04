@@ -211,16 +211,6 @@ class StructuredReasoner(dspy.Module):
     def forward(self, question):
         result = self.reason(question=question)
 
-        # Validate reasoning quality
-        dspy.Suggest(
-            len(result.trace) >= 2,
-            "Show at least 2 reasoning steps — don't jump to conclusions"
-        )
-        dspy.Suggest(
-            all(step.confidence > 0.3 for step in result.trace),
-            "Low-confidence steps should be reconsidered"
-        )
-
         return result
 
 class ReasonWithTrace(dspy.Signature):
@@ -339,7 +329,7 @@ optimized = optimizer.compile(SelfDiscoveryReasoner(), trainset=trainset)
 
 - **Adding a `reasoning` field to your signature when using ChainOfThought.** DSPy injects the reasoning field automatically. Adding your own creates a duplicate that confuses the LM and produces garbled output. Just define your task-specific input/output fields and let `dspy.ChainOfThought` handle the rest.
 - **Using ProgramOfThought for everything involving numbers.** ProgramOfThought generates and executes Python code, which requires a sandbox and adds latency. For simple numeric comparisons or estimates that do not need exact computation, ChainOfThought is faster and sufficient. Reserve ProgramOfThought for actual arithmetic, date math, or data manipulation.
-- **Forgetting that MultiChainComparison makes N separate LM calls.** Each chain is an independent call, so cost and latency scale linearly. For latency-sensitive paths, consider using ChainOfThought with `dspy.Suggest` constraints instead of MultiChainComparison with 3-5 chains.
+- **Forgetting that MultiChainComparison makes N separate LM calls.** Each chain is an independent call, so cost and latency scale linearly. For latency-sensitive paths, consider using a single ChainOfThought wrapped with `dspy.Refine` instead of MultiChainComparison with 3-5 chains.
 - **Building a Self-Discovery pipeline without optimizing each stage separately.** When you call `BootstrapFewShot` on a multi-stage module, it optimizes end-to-end but the intermediate stages (select, adapt, plan) often get weak demos. Evaluate intermediate outputs during development to catch silent degradation in early stages.
 - **Using string matching to route between reasoning strategies.** The `SmartReasoner` pattern with `if "math" in task_type` is brittle — LMs produce unpredictable classification labels. Use `dspy.Predict` with `Literal` types for routing, or better yet, let the optimizer discover which strategy works best via `dspy.Evaluate` comparisons.
 
@@ -351,7 +341,7 @@ optimized = optimizer.compile(SelfDiscoveryReasoner(), trainset=trainset)
 - **ProgramOfThought** for code-generating computation — see `/dspy-program-of-thought`
 - **MultiChainComparison** for multi-path reasoning — see `/dspy-multi-chain-comparison`
 - **Signatures** for defining input/output contracts — see `/dspy-signatures`
-- **Assertions** for constraining reasoning quality with Suggest/Assert — see `/dspy-assertions`
+- **Refine** for constraining reasoning quality with reward functions — see `/dspy-refine`
 - **Simple calls without reasoning** — see `/dspy-predict`
 - Need AI to call APIs and use tools? See `/ai-taking-actions`
 - Need multi-step pipelines with predetermined stages? See `/ai-building-pipelines`

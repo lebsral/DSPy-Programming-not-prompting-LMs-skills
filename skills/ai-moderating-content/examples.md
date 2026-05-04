@@ -211,34 +211,28 @@ class ListingModerator(dspy.Module):
     def forward(self, title, description, price):
         full_text = f"{title} {description}"
 
-        # Hard blocks: PII patterns (instant, no LM needed)
-        dspy.Assert(
-            not re.search(r"\b\d{3}-\d{2}-\d{4}\b", full_text),
-            "Listing contains SSN — auto-reject and notify seller",
-        )
-        dspy.Assert(
-            not re.search(
-                r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
-                full_text,
-            ),
-            "Listing contains email — ask seller to remove before publishing",
-        )
-        dspy.Assert(
-            not re.search(r"\b\d{3}[-.]?\d{3}[-.]?\d{4}\b", full_text),
-            "Listing contains phone number — ask seller to remove",
-        )
+        # Hard blocks: PII patterns (instant, no LM needed) — return rejection immediately
+        if re.search(r"\b\d{3}-\d{2}-\d{4}\b", full_text):
+            return dspy.Prediction(
+                violations=["pii_exposed"], severity="high",
+                decision="reject", explanation="Listing contains SSN — auto-reject and notify seller",
+            )
+        if re.search(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", full_text):
+            return dspy.Prediction(
+                violations=["pii_exposed"], severity="high",
+                decision="reject", explanation="Listing contains email — ask seller to remove before publishing",
+            )
+        if re.search(r"\b\d{3}[-.]?\d{3}[-.]?\d{4}\b", full_text):
+            return dspy.Prediction(
+                violations=["pii_exposed"], severity="high",
+                decision="reject", explanation="Listing contains phone number — ask seller to remove",
+            )
 
         # LM-based assessment
         result = self.assess(
             title=title,
             description=description,
             price=price,
-        )
-
-        # Validate violations are from allowed set
-        dspy.Assert(
-            all(v in LISTING_VIOLATIONS for v in result.violations),
-            f"Violations must be from: {LISTING_VIOLATIONS}",
         )
 
         # Route
@@ -257,6 +251,18 @@ class ListingModerator(dspy.Module):
             decision=decision,
             explanation=result.explanation,
         )
+
+
+def listing_violations_reward(args, pred):
+    """Reward function: penalize if violations contain values outside the allowed set."""
+    score = 1.0
+    if not all(v in LISTING_VIOLATIONS for v in pred.violations):
+        score -= 0.5  # soft penalty — LM should stay within known categories
+    return score
+
+validated_moderator = dspy.Refine(
+    module=ListingModerator(), N=3, reward_fn=listing_violations_reward, threshold=0.8
+)
 ```
 
 ### Training data with multi-label examples
@@ -358,20 +364,11 @@ moderator = ListingModerator()
 moderator.load("listing_moderator.json")
 
 def moderate_new_listing(listing):
-    try:
-        result = moderator(
-            title=listing["title"],
-            description=listing["description"],
-            price=listing["price"],
-        )
-    except dspy.primitives.assertions.DSPyAssertionError as e:
-        # Hard block triggered (PII pattern match)
-        return {
-            "decision": "reject",
-            "reason": str(e),
-            "action": "notify_seller_to_remove_pii",
-        }
-
+    result = moderator(
+        title=listing["title"],
+        description=listing["description"],
+        price=listing["price"],
+    )
     return {
         "decision": result.decision,
         "violations": result.violations,
@@ -380,4 +377,4 @@ def moderate_new_listing(listing):
     }
 ```
 
-**Result:** The multi-label moderator catches listings that violate multiple policies simultaneously (e.g., counterfeit + misleading claims), while pattern-based hard blocks instantly catch PII before the LM even runs. Confidence-based routing sends ~12% of listings to human reviewers — the ones where the moderator is least certain.
+**Result:** The multi-label moderator catches listings that violate multiple policies simultaneously (e.g., counterfeit + misleading claims), while pattern-based hard blocks instantly catch PII before the LM even runs. `dspy.Refine` retries the LM-based assessment up to 3 times when violation categories look off, ensuring outputs stay within the known category set. Confidence-based routing sends ~12% of listings to human reviewers — the ones where the moderator is least certain.

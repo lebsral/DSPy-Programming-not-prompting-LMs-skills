@@ -1,0 +1,46 @@
+{
+  "skill_name": "ai-matching-records",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I have two CSVs - crm_contacts.csv and imported_contacts.csv - each with columns name, email, phone, and company. I need to find duplicate contacts across both files. Some duplicates have slightly different names like 'Bob' vs 'Robert', different email formats for the same person, or phone numbers formatted differently. There are about 2,000 records total. Build me a deduplication pipeline.",
+      "expected_output": "A Python script that loads both CSVs into record dicts, implements a blocking step (e.g., by phonetic last name or email domain) to narrow the O(n^2) pairs, defines a CompareRecords DSPy signature with is_match: bool + confidence: float + explanation: str, scores candidate pairs with ChainOfThought, routes results into auto-merge/needs-review/reject buckets by confidence threshold, runs transitive closure to build match clusters, and demonstrates merging or linking matched records.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_dspy_signature", "description": "Defines a dspy.Signature subclass for pairwise record comparison"},
+        {"name": "has_confidence_output", "description": "Signature includes confidence: float output field"},
+        {"name": "has_explanation_output", "description": "Signature includes explanation output field"},
+        {"name": "implements_blocking", "description": "Includes a blocking step to reduce candidate pairs before LM calls"},
+        {"name": "uses_chain_of_thought", "description": "Uses dspy.ChainOfThought for pairwise comparison"},
+        {"name": "has_threshold_routing", "description": "Routes pairs into auto-merge, needs-review, and reject buckets based on confidence"},
+        {"name": "implements_transitive_closure", "description": "Groups transitively matched records into clusters (Union-Find or equivalent)"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Our data team has a list of 500 vendor company names scraped from contracts and a canonical vendor registry. We need to match each scraped name to the right registry entry - things like 'IBM' mapping to 'International Business Machines Corp.', or 'MSFT' to 'Microsoft Corporation'. Build a matching pipeline and make it accurate enough that we can auto-approve high-confidence matches and only send low-confidence ones for human review.",
+      "expected_output": "A Python script with a DSPy signature that takes two company name strings and outputs is_match, confidence, and explanation. Should handle abbreviations, legal suffixes, acronyms, and rebrands. Includes blocking (token overlap or n-gram similarity), confidence threshold routing for auto-approve vs human review, and optionally BootstrapFewShot optimization with labeled examples.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_dspy_signature", "description": "Defines a dspy.Signature for company name comparison"},
+        {"name": "signature_handles_semantic", "description": "Signature docstring or field descriptions mention semantic/abbreviation matching, not just string similarity"},
+        {"name": "has_confidence_output", "description": "Outputs a confidence score for threshold-based routing"},
+        {"name": "implements_blocking", "description": "Includes a blocking strategy to reduce pairs before scoring"},
+        {"name": "has_threshold_routing", "description": "Separates high-confidence auto-approvals from low-confidence human review cases"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "We have a support inbox with hundreds of open tickets and users keep filing duplicates about the same issues. I want to automatically detect when a newly filed ticket is a duplicate of an existing open ticket, even if the wording is completely different. When a new ticket comes in, check it against open tickets, flag any likely duplicates, and tell me why you think they're the same issue.",
+      "expected_output": "A Python script that defines a CompareTickets DSPy signature comparing title+description pairs with is_duplicate, confidence, and explanation outputs. Implements blocking on shared title tokens or keywords. Processes a new incoming ticket against a set of open tickets, returns matches above a confidence threshold with explanations, and uses transitive closure or grouping so related tickets end up in the same cluster.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_dspy_signature", "description": "Defines a dspy.Signature comparing two ticket descriptions"},
+        {"name": "has_explanation_output", "description": "Outputs an explanation field describing why tickets are or are not duplicates"},
+        {"name": "implements_blocking", "description": "Includes a blocking step (token overlap, keyword matching, or similar) before LM comparison"},
+        {"name": "has_confidence_threshold", "description": "Uses a confidence threshold to decide which matches to surface"},
+        {"name": "groups_related_tickets", "description": "Groups transitively related duplicates into a single cluster rather than just reporting pairs"}
+      ]
+    }
+  ]
+}

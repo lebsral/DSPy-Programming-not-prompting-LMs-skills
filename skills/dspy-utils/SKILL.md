@@ -1,116 +1,27 @@
 ---
 name: dspy-utils
-description: Use when you need DSPy infrastructure - streaming responses, caching control, debugging with inspect_history, saving/loading programs, async execution, or MCP integration. Common scenarios - enabling streaming responses in production, controlling the cache to avoid stale results, debugging with inspect_history to see raw prompts, saving and loading optimized programs, running DSPy modules asynchronously, or integrating with MCP servers. Related - ai-tracing-requests, ai-serving-apis, ai-monitoring. Also used for dspy.inspect_history, dspy.settings.configure, streaming DSPy output, cache control in DSPy, save and load DSPy program, async DSPy execution, MCP integration with DSPy, debug DSPy prompts, see what DSPy sent to the model, DSPy program serialization, production DSPy utilities, clear DSPy cache, view prompt history, async await with DSPy, stream tokens from DSPy.
+description: Use when you need DSPy infrastructure - caching control, debugging with inspect_history, saving/loading optimized programs, or runtime validation with Refine/BestOfN. Common scenarios - controlling the cache to avoid stale results, debugging with inspect_history to see raw prompts, saving and loading optimized programs, or validating outputs with reward functions. For streaming see /dspy-streaming, for async see /dspy-async, for MCP see /dspy-mcp. Related - ai-tracing-requests, ai-serving-apis, ai-monitoring, dspy-streaming, dspy-async, dspy-mcp. Also used for dspy.inspect_history, dspy.settings.configure, cache control in DSPy, save and load DSPy program, debug DSPy prompts, see what DSPy sent to the model, DSPy program serialization, production DSPy utilities, clear DSPy cache, view prompt history.
 ---
 
-# DSPy Utilities: Streaming, Caching, Debugging, and More
+# DSPy Utilities: Caching, Debugging, Save/Load, and Validation
 
-Guide the user through DSPy's utility functions for production workflows -- streaming LM outputs, controlling caching, debugging calls, persisting optimized programs, running async, integrating MCP tools, and enforcing runtime constraints.
+Guide the user through DSPy's utility functions -- controlling caching, debugging calls, persisting optimized programs, and enforcing runtime constraints with reward functions.
+
+> **Looking for streaming, async, or MCP?** These have dedicated skills now:
+> - Streaming tokens to a UI -- see `/dspy-streaming`
+> - Async execution and FastAPI -- see `/dspy-async`
+> - MCP server integration -- see `/dspy-mcp`
 
 ## Step 1: Which utility do you need?
 
 Ask the user before diving in:
 
-1. **What are you trying to do?** Stream output to a UI, debug a failing program, save/load an optimized program, run async, connect MCP tools, or control caching?
-2. **Is this for development or production?** Development needs (debugging, cache control) differ from production needs (streaming, save/load, async).
+1. **What are you trying to do?** Debug a failing program, save/load an optimized program, control caching, or validate outputs with reward functions?
+2. **Is this for development or production?** Development needs (debugging, cache control) differ from production needs (save/load, validation).
 
 Then jump to the relevant section below.
 
-## 2. StreamListener and streamify -- streaming LM outputs
-
-**When NOT to use streaming:** Batch processing, optimization runs, or evaluation pipelines -- streaming adds overhead and complexity when you don't need incremental output.
-
-Use `streamify` to wrap a DSPy program so it yields output tokens incrementally instead of waiting for the full response. Use `StreamListener` to capture streaming output from specific signature fields.
-
-### streamify
-
-```python
-from dspy.streaming import streamify, StreamListener
-
-# Wrap any DSPy module for streaming
-streaming_program = streamify(
-    program,                                      # The DSPy Module to stream
-    stream_listeners=[...],                       # List of StreamListener instances
-    include_final_prediction_in_output_stream=True,  # Include final Prediction in stream
-    is_async_program=False,                       # Set True if program is already async
-    async_streaming=True,                         # True for async generator, False for sync
-    status_message_provider=None,                 # Custom status messages (optional)
-)
-```
-
-**Parameters:**
-
-| Parameter | Type | Default | Purpose |
-|-----------|------|---------|---------|
-| `program` | `Module` | required | The DSPy module to enable streaming on |
-| `stream_listeners` | `list[StreamListener]` | `None` | Captures streaming output from specific fields |
-| `include_final_prediction_in_output_stream` | `bool` | `True` | Whether the final `Prediction` appears in the stream |
-| `is_async_program` | `bool` | `False` | Set `True` if the wrapped program is already async |
-| `async_streaming` | `bool` | `True` | `True` returns an async generator; `False` returns sync |
-| `status_message_provider` | `StatusMessageProvider` | `None` | Custom status messages for tracking progress |
-
-**Returns:** A callable that returns an async (or sync) generator yielding incremental outputs.
-
-### StreamListener
-
-```python
-listener = StreamListener(
-    signature_field_name="answer",   # Which output field to stream
-    predict=None,                    # Predictor to monitor (auto-detected if None)
-    predict_name=None,               # Name identifier for the predictor
-    allow_reuse=False,               # Allow reuse across multiple streams
-)
-```
-
-**Parameters:**
-
-| Parameter | Type | Default | Purpose |
-|-----------|------|---------|---------|
-| `signature_field_name` | `str` | required | The output field name to listen to |
-| `predict` | `Any` | `None` | Predictor to monitor; auto-detected if `None` |
-| `predict_name` | `str \| None` | `None` | Name identifier for the predictor |
-| `allow_reuse` | `bool` | `False` | Permit reuse across multiple streams (may hurt performance) |
-
-**Key methods:**
-
-- `receive(chunk)` -- processes incoming streaming chunks, manages buffering
-- `finalize()` -- flushes remaining buffered tokens at stream end, returns final chunk with `is_last_chunk=True`
-- `flush()` -- flushes all tokens in the buffer, clears it
-
-### Minimal streaming example
-
-```python
-import dspy
-from dspy.streaming import streamify, StreamListener
-
-lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
-dspy.configure(lm=lm)
-
-qa = dspy.ChainOfThought("question -> answer")
-
-# Create a listener for the "answer" field
-answer_listener = StreamListener(signature_field_name="answer")
-
-# Wrap the program for streaming
-streaming_qa = streamify(
-    qa,
-    stream_listeners=[answer_listener],
-)
-
-# Consume the async generator
-async for chunk in streaming_qa(question="What is DSPy?"):
-    if hasattr(chunk, "answer"):
-        print(chunk.answer, end="", flush=True)
-```
-
-### Notes on streaming
-
-- The listener buffers ~10 tokens internally to detect field boundary delimiters before yielding
-- Adapter format matters: `ChatAdapter` uses `[[ ## field_name ## ]]` delimiters, `JSONAdapter` uses partial JSON parsing
-- Set `allow_reuse=True` only when you need the same listener across multiple streams -- it duplicates chunk processing and can hurt performance
-- The final `Prediction` object appears as the last item in the stream (unless `include_final_prediction_in_output_stream=False`)
-
-## 3. configure_cache -- controlling cache behavior
+## 2. configure_cache -- controlling cache behavior
 
 DSPy caches LM responses by default to reduce costs and speed up development. Use `dspy.configure_cache` to control this globally.
 
@@ -144,7 +55,7 @@ Cache is stored locally on disk. Identical calls (same prompt, parameters, model
 
 **When NOT to disable caching:** During optimization runs -- optimizers rely heavily on cache to avoid redundant LM calls. Disabling cache globally during optimization dramatically increases cost and time.
 
-## 4. inspect_history -- debugging LM calls
+## 3. inspect_history -- debugging LM calls
 
 `dspy.inspect_history` shows the raw prompts and responses from recent LM calls. This is the single most useful debugging tool in DSPy.
 
@@ -190,7 +101,7 @@ You can also print a module to see its structure:
 print(my_program)  # Shows module tree with all sub-modules and signatures
 ```
 
-## 5. save/load -- persisting optimized programs
+## 4. save/load -- persisting optimized programs
 
 After optimizing a DSPy program, save its learned state (few-shot demos, instructions) for production use.
 
@@ -254,133 +165,47 @@ pipeline.load("pipeline_v1.json")
 result = pipeline(text="How do I reset my password?")
 ```
 
-## 6. asyncify -- running DSPy programs asynchronously
+## 5. dspy.Refine and dspy.BestOfN -- reward-based output validation
 
-`dspy.asyncify` wraps a synchronous DSPy program so it can run as an async function, useful for web servers and concurrent workloads.
-
-**When NOT to use asyncify:** If your DSPy program is already called from an async context and you just need concurrent LM calls, DSPy's internal LiteLLM calls are already async-capable. `asyncify` is for wrapping sync `forward()` logic to avoid blocking the event loop.
+Use `dspy.Refine` to wrap any module and retry until a reward function returns a score meeting a threshold. This replaced `dspy.Assert`/`dspy.Suggest` in DSPy 3.x:
 
 ```python
 import dspy
-import asyncio
-
-lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
-dspy.configure(lm=lm)
 
 qa = dspy.ChainOfThought("question -> answer")
 
-# Wrap for async execution
-async_qa = dspy.asyncify(qa)
+def answer_reward(args, pred):
+    """Score answer quality. Returns 0.0-1.0."""
+    if not pred.answer.strip():
+        return 0.0
+    if len(pred.answer.split()) < 5:
+        return 0.5  # soft penalty for short answers
+    return 1.0
 
-# Use in async code
-async def main():
-    result = await async_qa(question="What is DSPy?")
-    print(result.answer)
-
-asyncio.run(main())
-```
-
-### Running multiple programs concurrently
-
-```python
-async def process_batch(questions):
-    async_qa = dspy.asyncify(qa)
-    tasks = [async_qa(question=q) for q in questions]
-    results = await asyncio.gather(*tasks)
-    return [r.answer for r in results]
-```
-
-### Key details
-
-- **Context propagation** -- `asyncify` captures the current thread's `dspy.configure` settings and propagates them to the worker thread
-- **Thread-safe** -- each async call maintains its own configuration state
-- **Cancel-safe** -- uses `abandon_on_cancel=True` internally for clean cancellation
-- A fresh asyncified callable is created on each invocation to capture the latest context
-
-## 7. MCP integration -- using DSPy with MCP servers
-
-DSPy can connect to Model Context Protocol (MCP) servers, converting MCP tools into DSPy tools for use with agents like `dspy.ReAct`.
-
-### Installation
-
-```bash
-pip install -U "dspy[mcp]"
-```
-
-### Connecting to an MCP server
-
-```python
-import dspy
-from mcp import ClientSession
-from mcp.client.stdio import stdio_client, StdioServerParameters
-
-# Define the MCP server to connect to
-server_params = StdioServerParameters(
-    command="python",
-    args=["path/to/your/mcp_server.py"],
-    env=None,
+validated_qa = dspy.Refine(
+    module=qa,
+    N=3,
+    reward_fn=answer_reward,
+    threshold=1.0,
 )
 
-async def main():
-    # Connect to the MCP server
-    async with stdio_client(server_params) as (read, write):
-        async with ClientSession(read, write) as session:
-            await session.initialize()
-
-            # List available tools
-            response = await session.list_tools()
-
-            # Convert MCP tools to DSPy tools
-            dspy_tools = [
-                dspy.Tool.from_mcp_tool(session, tool)
-                for tool in response.tools
-            ]
-
-            # Use with a ReAct agent
-            agent = dspy.ReAct(
-                signature="question -> answer",
-                tools=dspy_tools,
-                max_iters=5,
-            )
-            result = await agent.acall(question="What files are in the project?")
-            print(result.answer)
+result = validated_qa(question="What is DSPy?")
 ```
 
-### Remote MCP servers (HTTP)
+- **`dspy.Refine`** -- retries with feedback from the reward function until threshold is met or N attempts exhausted. Use when later attempts can improve based on earlier failures.
+- **`dspy.BestOfN`** -- runs N independent attempts and returns the best-scoring one. Use when attempts are independent and cross-attempt feedback would not help.
 
-```python
-from mcp.client.streamable_http import streamablehttp_client
-
-async with streamablehttp_client("http://localhost:8000/mcp") as (read, write):
-    async with ClientSession(read, write) as session:
-        await session.initialize()
-        # Same tool conversion pattern as above
-```
-
-### What from_mcp_tool preserves
-
-- Tool name and description
-- Parameter schemas and types
-- Async execution support
-
-## 8. dspy.Assert and dspy.Suggest -- runtime constraints
-
-- **`dspy.Assert(condition, message)`** -- hard constraint. If `False`, DSPy retries the prediction (up to a limit). Use for requirements that must be met.
-- **`dspy.Suggest(condition, message)`** -- soft constraint. Adds feedback but doesn't raise an error. Use for quality preferences.
-
-For detailed patterns, constraint examples, and backtracking behavior, see **`/dspy-assertions`**.
+For detailed patterns and examples, see **`/dspy-refine`** and **`/dspy-best-of-n`**.
 
 ## Gotchas
 
-1. **StreamListener reuse across requests** -- create a fresh `StreamListener` per request. Reusing a listener without `allow_reuse=True` silently drops chunks after the first stream completes.
-2. **`save()` does not persist `forward()` logic** -- only learned state (demos, instructions) is saved. The class definition must exist in your production code at load time.
-3. **Must `dspy.configure()` before `load()`** -- loading a saved program before configuring the LM causes silent failures where the program runs but uses no LM (or the wrong one).
-4. **`inspect_history` shows cached calls too** -- after a cache hit, `inspect_history` still shows the call, but the prompt may look different from what was originally sent. Disable cache if you need exact prompt inspection.
-5. **`asyncify` creates a fresh wrapper each call** -- this is intentional (captures latest config context), so don't cache the asyncified callable at module level if your `dspy.configure` settings change between calls.
+1. **`save()` does not persist `forward()` logic** -- only learned state (demos, instructions) is saved. The class definition must exist in your production code at load time.
+2. **Must `dspy.configure()` before `load()`** -- loading a saved program before configuring the LM causes silent failures where the program runs but uses no LM (or the wrong one).
+3. **`inspect_history` shows cached calls too** -- after a cache hit, `inspect_history` still shows the call, but the prompt may look different from what was originally sent. Disable cache if you need exact prompt inspection.
+4. **Claude disables caching during optimization.** Do NOT disable cache globally during optimizer runs -- optimizers rely heavily on cache to avoid redundant LM calls. Disabling cache during optimization dramatically increases cost and time.
 
 ## Additional resources
 
-- [DSPy streaming tutorial](https://dspy.ai/tutorials/streaming/)
 - [DSPy saving/loading guide](https://dspy.ai/tutorials/saving/)
 - For API details, see [reference.md](reference.md)
 - For worked examples, see [examples.md](examples.md)
@@ -389,9 +214,13 @@ For detailed patterns, constraint examples, and backtracking behavior, see **`/d
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
+- **Streaming** tokens to a UI -- see `/dspy-streaming`
+- **Async execution** and FastAPI -- see `/dspy-async`
+- **MCP server** integration -- see `/dspy-mcp`
 - **`/dspy-lm`** -- Configure language models, per-LM caching, `inspect_history` on LM instances
-- **`/dspy-modules`** -- Build composable programs with `dspy.Module`, assertions in modules, save/load patterns
+- **`/dspy-modules`** -- Build composable programs with `dspy.Module`, save/load patterns
 - **`/ai-tracing-requests`** -- Production observability and tracing for DSPy programs
-- **`/dspy-assertions`** -- Assert/Suggest patterns, constraint examples, and backtracking behavior
-- **`/ai-serving-apis`** -- Serve DSPy programs as web APIs (pairs well with streaming and asyncify)
-- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+- **`/dspy-refine`** -- Refine patterns, reward functions, and iterative improvement
+- **`/dspy-best-of-n`** -- BestOfN for independent sampling without cross-attempt feedback
+- **`/ai-serving-apis`** -- Serve DSPy programs as web APIs
+- **Install `/ai-do` if you do not have it** -- it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

@@ -116,14 +116,18 @@ class LengthControlledSummarizer(dspy.Module):
         self.summarize = dspy.ChainOfThought(SummarizeWithLimit)
 
     def forward(self, text, max_words=100):
-        result = self.summarize(text=text, max_words=max_words)
-        word_count = len(result.summary.split())
-        dspy.Assert(
-            word_count <= max_words,
-            f"Summary is {word_count} words but must be under {max_words}. "
-            "Make it more concise."
-        )
-        return result
+        return self.summarize(text=text, max_words=max_words)
+
+def length_reward(args, pred):
+    """Penalize summaries that exceed the word limit."""
+    word_count = len(pred.summary.split())
+    max_words = args["max_words"]
+    if word_count <= max_words:
+        return 1.0
+    return max(0.0, 1.0 - (word_count - max_words) / max_words)
+
+# Wrap with Refine to enforce the limit
+enforced = dspy.Refine(module=LengthControlled(), N=3, reward_fn=length_reward, threshold=0.9)
 
 class SummarizeWithLimit(dspy.Signature):
     """Summarize the text within the word limit."""
@@ -159,12 +163,16 @@ class MultiDetailSummarizer(dspy.Module):
         limits = {"brief": 50, "standard": 150, "detailed": 400}
         max_words = limits[detail_level]
 
-        dspy.Suggest(
-            word_count <= max_words,
-            f"Summary is {word_count} words for '{detail_level}' level, "
-            f"aim for under {max_words}."
-        )
         return result
+
+def detail_reward(args, pred):
+    """Soft penalty for exceeding detail-level word limits."""
+    limits = {"brief": 50, "standard": 150, "detailed": 400}
+    max_words = limits[args["detail_level"]]
+    word_count = len(pred.summary.split())
+    if word_count <= max_words:
+        return 1.0
+    return max(0.0, 1.0 - 0.5 * (word_count - max_words) / max_words)
 ```
 
 ## Step 5: Handle long documents
@@ -369,7 +377,7 @@ optimized = optimizer.compile(summarizer, trainset=trainset)
 
 ## Gotchas
 
-- **Word/sentence limits are suggestions, not guarantees.** LMs routinely overshoot length constraints. Use `dspy.Assert` with a word-counting function to enforce hard limits — `dspy.Suggest` for soft guidance.
+- **Word/sentence limits are suggestions, not guarantees.** LMs routinely overshoot length constraints. Wrap with `dspy.Refine` and a word-counting reward function to enforce hard limits.
 - **Faithfulness is the number one failure mode.** Summaries confidently include facts not in the source. Always evaluate with a faithfulness metric that checks every claim against the source text.
 - **Map-reduce loses cross-chunk context.** Information that spans chunk boundaries gets lost. Use overlapping chunks (50-100 words overlap) or a hierarchical approach for documents where cross-references matter.
 - **Claude writes vague signature docstrings like "Summarize the text."** Always specify the audience and purpose in the docstring (e.g., "Summarize for a technical PM who needs to decide whether to escalate"). Vague instructions produce generic summaries.
@@ -384,7 +392,7 @@ optimized = optimizer.compile(summarizer, trainset=trainset)
 - Measure and improve summarizer quality — see `/ai-improving-accuracy`
 - Verify summaries against source text — see `/ai-stopping-hallucinations`
 - DSPy signatures for defining input/output contracts — see `/dspy-signatures`
-- Assertions for enforcing length and quality constraints — see `/dspy-assertions`
+- Refine for enforcing length and quality constraints — see `/dspy-refine`
 - ChainOfThought for reasoning-based summarization — see `/dspy-chain-of-thought`
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 

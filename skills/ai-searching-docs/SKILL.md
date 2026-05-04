@@ -413,7 +413,7 @@ optimized = optimizer.compile(DocSearch(), trainset=trainset)
 - **Prefer `ChainOfThought`** for the answer step — reasoning typically helps ground answers in the documents. Use `Predict` if latency matters more than accuracy
 - **Include context in the signature** so the AI knows to use the retrieved passages
 - **Multi-step search for complex questions** — if one search is not enough, chain search queries
-- **Use `dspy.Assert`** to ensure answers actually cite the documents
+- **Use `dspy.Refine`** to ensure answers actually cite the documents by scoring citation presence in a reward function
 - **Separate search from answer generation** — optimize each independently
 - **Consider `dspy.Embeddings`** as a built-in retriever — it handles embedding, FAISS indexing, and search in one class without needing a separate vector store (see reference.md for API details)
 

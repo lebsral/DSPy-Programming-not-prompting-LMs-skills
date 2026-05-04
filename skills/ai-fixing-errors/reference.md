@@ -24,7 +24,7 @@
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| Empty passages returned | Retriever not configured | `dspy.configure(rm=your_retriever)` |
+| Empty passages returned | Retriever not configured or returning no matches | Test retriever directly with a known query |
 | `ConnectionError` on retrieval | Retriever server down | Check server URL and connectivity |
 | Wrong results retrieved | Bad query or wrong index | Test retriever directly, check index content |
 
@@ -43,7 +43,7 @@
 |-------|-------|-----|
 | `RateLimitError` | Too many API calls | Add delays, reduce `num_threads`, use caching |
 | `ContextLengthExceeded` | Prompt too long | Reduce `k` in retriever, reduce few-shot demos |
-| Assertion/Suggestion failures | Output constraints not met | Make constraints less strict, improve descriptions |
+| `dspy.Refine` exhausts attempts | Output does not meet reward threshold | Lower threshold, make reward function return partial scores, increase N |
 | Infinite loop in ReAct | Agent can't find answer | Set `max_iters`, check tool implementations |
 
 ## Debugging Workflow
@@ -76,8 +76,8 @@
 # See what LM is configured
 print(dspy.settings.lm)
 
-# See what retriever is configured
-print(dspy.settings.rm)
+# Test retriever directly (if using one)
+# rm = dspy.ColBERTv2(url="http://..."); print(rm("test query", k=3))
 
 # Inspect last N LM calls (prompts + responses)
 dspy.inspect_history(n=3)
@@ -144,7 +144,7 @@ logger.setLevel(logging.DEBUG)
 ### Counting LM calls and tokens
 
 ```python
-# Check LM call history
-print(f"Total LM calls: {lm.history}")
-# Review token usage in the history entries
+# Inspect recent LM calls
+dspy.inspect_history(n=5)
+# Or use lm.history to access raw call records
 ```

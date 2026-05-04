@@ -1,0 +1,6 @@
+last_audit:
+  date: 2026-05-04
+  score: 38/38
+  versions:
+    dspy: 3.2.0
+    langgraph: 1.1.10

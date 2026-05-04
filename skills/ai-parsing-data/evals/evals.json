@@ -31,12 +31,12 @@
     {
       "id": 2,
       "prompt": "I have a CSV with a 'notes' column containing free-text doctor visit notes. I need to extract: patient complaints (list), diagnosis, prescribed medications (list with name and dosage), and follow-up date. Some notes are really messy and abbreviated. I want to validate that medications have both a name and dosage.",
-      "expected_output": "A Python script that reads CSV, defines Pydantic models with validation, uses dspy.Suggest or Assert to validate medication fields, processes batch, handles messy input gracefully.",
+      "expected_output": "A Python script that reads CSV, defines Pydantic models with validation, uses Pydantic Field constraints or dspy.Refine to validate medication fields, processes batch, handles messy input gracefully.",
       "files": [],
       "assertions": [
         {"name": "uses_pydantic_model", "description": "Defines structured output model for medical note fields"},
         {"name": "has_list_fields", "description": "Uses list types for complaints and medications"},
-        {"name": "includes_validation", "description": "Uses dspy.Suggest or dspy.Assert to validate medication has name and dosage"},
+        {"name": "includes_validation", "description": "Uses Pydantic Field constraints (min_length, etc.) or dspy.Refine with a reward function to validate medication has name and dosage"},
         {"name": "loads_csv", "description": "Reads from the CSV file with pandas or csv module"},
         {"name": "handles_batch", "description": "Processes all rows, not just a single example"}
       ]

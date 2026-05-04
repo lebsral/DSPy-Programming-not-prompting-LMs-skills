@@ -1,35 +1,33 @@
 [
   {
     "prompt": "I have a DSPy program that extracts dates from text. Sometimes the LM returns dates in the wrong format (like 'January 5th' instead of '2024-01-05'). How can I force it to use YYYY-MM-DD format?",
-    "expected_output": "Code using dspy.Assert inside forward() to validate date format with regex and retry on failure",
+    "expected_output": "Code using dspy.Refine with a reward function that validates date format with regex, or Pydantic Field constraints. Mentions that dspy.Assert is removed in DSPy 3.x.",
     "assertions": [
-      "Uses dspy.Assert (not dspy.Suggest) since format is a hard requirement",
-      "Assert is called inside a dspy.Module forward() method",
-      "Assertion message is specific and actionable (mentions the expected format)",
-      "Uses regex or string validation to check the date format",
-      "Does NOT use dspy.Refine for this pattern (inline field validation is the right fit)"
+      "Uses dspy.Refine with a reward function or Pydantic validation (not removed dspy.Assert)",
+      "Reward function or validation checks the date format with regex or parsing",
+      "Mentions that dspy.Assert/Suggest are removed in DSPy 3.x and recommends Refine/BestOfN",
+      "Uses regex or string validation to check the date format"
     ]
   },
   {
     "prompt": "My DSPy summarization module sometimes produces summaries that are too long. I want it to prefer short summaries but not crash if it goes over. How do I add that as a soft constraint?",
-    "expected_output": "Code using dspy.Suggest for soft length constraint",
+    "expected_output": "Code using dspy.Refine with a graduated reward function that penalizes length violations with partial credit. Mentions that dspy.Suggest is removed in DSPy 3.x.",
     "assertions": [
-      "Uses dspy.Suggest (not dspy.Assert) since length is a preference not a hard requirement",
-      "Suggest is called inside forward() with a boolean condition checking word count",
-      "Message describes what the ideal length should be",
-      "Explains that Suggest logs a warning but continues execution",
-      "Mentions that during optimization, suggestions guide the optimizer toward better prompts"
+      "Uses dspy.Refine or dspy.BestOfN with a graduated reward function (not removed dspy.Suggest)",
+      "Reward function gives partial credit for near-misses (graduated float, not binary)",
+      "Mentions that dspy.Suggest is removed in DSPy 3.x",
+      "Explains that the reward function penalizes over-length without making it a hard failure"
     ]
   },
   {
-    "prompt": "I have multiple assertions in my DSPy program and they keep failing. The LM cannot satisfy all 6 constraints at once. What should I do?",
-    "expected_output": "Advice to reduce constraint count, convert secondary constraints to Suggest, and write more specific messages",
+    "prompt": "I have multiple constraints on my DSPy program and it keeps failing. The LM cannot satisfy all 6 rules at once. What should I do?",
+    "expected_output": "Advice to use a graduated reward function with different weights for hard vs soft rules, and to use dspy.Refine instead of removed dspy.Assert",
     "assertions": [
       "Identifies the problem: too many simultaneous hard constraints reduce joint success probability",
-      "Recommends converting non-critical constraints from Assert to Suggest",
-      "Recommends combining related checks into fewer assertions with clearer messages",
-      "Suggests making assertion messages more actionable so retries are more likely to succeed",
-      "Does NOT suggest removing all assertions — explains how to prioritize them"
+      "Recommends using a single graduated reward function with different penalty weights per constraint",
+      "Recommends heavy penalties for critical constraints and light penalties for preferences",
+      "Recommends dspy.Refine or dspy.BestOfN as the enforcement mechanism (not removed dspy.Assert/Suggest)",
+      "Does NOT suggest using dspy.Assert or dspy.Suggest without noting they are removed in DSPy 3.x"
     ]
   }
 ]

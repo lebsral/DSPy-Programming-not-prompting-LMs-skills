@@ -28,6 +28,13 @@ Ask the user:
 
 Each agent gets its own signature, reasoning strategy, and (optionally) tools.
 
+```python
+import dspy
+
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+dspy.configure(lm=lm)
+```
+
 ### Simple agent — just a DSPy module
 
 ```python
@@ -404,16 +411,15 @@ optimizer = dspy.MIPROv2(metric=team_metric, auto="medium")
 optimized_team = optimizer.compile(TeamModule(), trainset=team_trainset)
 ```
 
-## Key patterns
+## When NOT to use multi-agent
 
-- **One DSPy module per agent** — each agent has its own signature, tools, and reasoning strategy
-- **LangGraph orchestrates, DSPy reasons** — LangGraph handles routing and state; DSPy handles what each agent actually thinks
-- **Supervisor pattern for dynamic routing** — when you don't know the order of agents in advance
-- **Chain pattern for fixed pipelines** — when agents always run in the same order (write → edit → review)
-- **Use `Send()` for parallel work** — fan out to multiple agents simultaneously, merge results after
-- **Shared state is your communication bus** — agents read from and write to the LangGraph state
-- **Optimize bottom-up** — tune individual agents first, then optimize the full team end-to-end
-- **Interrupt before side effects** — use `interrupt_before` so humans approve actions with real-world consequences
+Multi-agent adds orchestration complexity. Consider simpler alternatives first:
+
+- **One agent can do the job** — if your task needs tools but not multiple specialists, use a single `dspy.ReAct` agent (see `/ai-taking-actions`). A single agent with 5 tools is simpler than 3 agents with 2 tools each.
+- **Fixed pipeline with no routing** — if agents always run in the same order (write → edit → review) with no conditional branching, a plain DSPy pipeline module is simpler than LangGraph (see `/ai-building-pipelines`).
+- **You are over-specializing** — if each "agent" is just a single `dspy.Predict` call with no tools or state, you do not need agents. Use a multi-step DSPy module instead.
+
+Use multi-agent when you genuinely need dynamic routing (supervisor decides who goes next), parallel execution (fan-out to multiple specialists), or human-in-the-loop checkpoints between steps.
 
 ## Gotchas
 
@@ -423,12 +429,19 @@ optimized_team = optimizer.compile(TeamModule(), trainset=team_trainset)
 - **Claude optimizes the full team before individual agents.** Multi-agent optimization is expensive and hard to debug. Always optimize each agent independently first (with per-agent metrics), then freeze the good ones and optimize the team end-to-end. This bottom-up approach is faster and produces better results.
 - **Claude uses `dspy.Parallel` when it should use LangGraph `Send()`.** `dspy.Parallel` is for independent LM calls within a single module. For parallel agents with different roles, tools, and state, use LangGraph's `Send()` pattern — it gives you proper state management, error handling, and the ability to interrupt individual agents.
 
+## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
+- **Single agent with tools** — start here instead of multi-agent if one agent suffices -- see `/ai-taking-actions`
+- **Stateless pipelines** — when agents always run in the same order without routing -- see `/ai-building-pipelines`
+- **Conversational agents** — if agents need to hold multi-turn conversations -- see `/ai-building-chatbots`
+- **Measure and improve agents** — evaluate and optimize your multi-agent system -- see `/ai-improving-accuracy`
+- **ReAct agents** — the DSPy module powering tool-using agents -- see `/dspy-react`
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+
 ## Additional resources
 
 - For worked examples (research team, support escalation), see [examples.md](examples.md)
-- For the LangChain/LangGraph API reference, see [`docs/langchain-langgraph-reference.md`](../../docs/langchain-langgraph-reference.md)
-- Need a single agent with tools? Start with `/ai-taking-actions`
-- Building a stateless pipeline instead? Use `/ai-building-pipelines`
-- Need the agents to hold conversations? Use `/ai-building-chatbots`
-- Next: `/ai-improving-accuracy` to measure and improve your agents
-- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+- [LangGraph documentation](https://docs.langchain.com/oss/python/langgraph/overview)
+- [LangGraph GitHub](https://github.com/langchain-ai/langgraph)

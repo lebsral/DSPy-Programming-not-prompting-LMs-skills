@@ -127,11 +127,16 @@ If the user already knows DSPy and asks about a specific API concept, route to t
 | dspy.KNN, dspy.KNNFewShot | `/dspy-knn-few-shot` |
 | dspy.LabeledFewShot | `/dspy-labeled-few-shot` |
 | dspy.SIMBA | `/dspy-simba` |
-| ChatAdapter, JSONAdapter, TwoStepAdapter | `/dspy-adapters` |
+| ChatAdapter, JSONAdapter, TwoStepAdapter | `/dspy-adapters` or `/dspy-two-step-adapter` |
+| dspy.TwoStepAdapter, o1, o3, DeepSeek-R1 | `/dspy-two-step-adapter` |
+| dspy.streamify, StreamListener, StreamResponse | `/dspy-streaming` |
+| dspy.Tool.from_mcp_tool, MCP servers | `/dspy-mcp` |
+| dspy.experimental.Citations, Document | `/dspy-citations` |
+| aforward(), acall(), async patterns | `/dspy-async` |
 | dspy.Tool, PythonInterpreter | `/dspy-tools` |
 | dspy.Retrieve, ColBERTv2, Embedder | `/dspy-retrieval` |
 | dspy.Image, Audio, Code, History | `/dspy-primitives` |
-| StreamListener, inspect_history, save/load | `/dspy-utils` |
+| inspect_history, save/load, cache | `/dspy-utils` |
 | Ragas (`ragas.evaluate`) | `/dspy-ragas` |
 | Qdrant (`QdrantRM`) | `/dspy-qdrant` |
 | Ollama (`ollama_chat/`) | `/dspy-ollama` |

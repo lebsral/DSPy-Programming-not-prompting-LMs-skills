@@ -110,13 +110,17 @@ class AnswerFromDocs(dspy.Signature):
     question: str = dspy.InputField()
     answer: str = dspy.OutputField()
 
+def retrieve(query: str, k: int = 3) -> list[str]:
+    """Retrieve relevant passages. Replace with your retriever (ColBERTv2, vector DB, etc.)."""
+    rm = dspy.ColBERTv2(url="http://your-server:port")
+    return rm(query, k=k)
+
 class RAG(dspy.Module):
     def __init__(self):
-        self.retrieve = dspy.Retrieve(k=3)
         self.generate = dspy.ChainOfThought(AnswerFromDocs)
 
     def forward(self, question):
-        context = self.retrieve(question).passages
+        context = retrieve(question)
         return self.generate(context=context, question=question)
 
 teacher = RAG()
@@ -249,10 +253,10 @@ print(f"Fine-tune-only: {ft_score:.1f}%")
 # 4. BetterTogether (prompt + weight optimization)
 bt_opt = dspy.BetterTogether(
     metric=metric,
-    prompt_optimizer=dspy.MIPROv2,
-    weight_optimizer=dspy.BootstrapFinetune,
+    p=dspy.MIPROv2(metric=metric),
+    w=dspy.BootstrapFinetune(metric=metric),
 )
-best = bt_opt.compile(program, trainset=trainset)
+best = bt_opt.compile(program, trainset=trainset, strategy="p -> w -> p")
 best_score = evaluator(best)
 print(f"BetterTogether: {best_score:.1f}%")
 ```

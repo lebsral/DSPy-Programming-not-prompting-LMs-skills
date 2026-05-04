@@ -144,7 +144,7 @@ Four complete planning walkthroughs for common AI project types.
 
 **Phase 2: Validate Before Submission**
 - Goal: Catch mismatches (line items do not sum to total, vendor not in ERP, duplicate invoice number) before they reach the ERP
-- Skill: `/ai-checking-outputs` — add assertion-based validation using `dspy.Assert` for math checks and ERP API lookups for vendor/duplicate checks
+- Skill: `/ai-checking-outputs` — add reward-based validation using `dspy.Refine` for math checks and ERP API lookups for vendor/duplicate checks
 - Deliverable: Pipeline that extracts, validates, and flags exceptions for human review with a reason
 
 **Phase 3: Batch Processing and ERP Integration**

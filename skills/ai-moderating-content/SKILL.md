@@ -1,35 +1,48 @@
 ---
 name: ai-moderating-content
-description: Auto-moderate what users post on your platform. Use when you need content moderation, flag harmful comments, detect spam, filter hate speech, catch NSFW content, block harassment, moderate user-generated content, review community posts, filter marketplace listings, or route bad content to human reviewers. Covers DSPy classification with severity scoring, confidence-based routing, and Assert-based policy enforcement., build content moderation system, UGC moderation at scale, user-generated content filter, trust and safety tooling, hate speech detection model, NSFW detection API, OpenAI moderation alternative, Perspective API alternative, toxic comment classifier, automated abuse detection, report and flag system with AI, content policy enforcement, marketplace listing moderation.
+description: Auto-moderate what users post on your platform. Use when you need content moderation, flag harmful comments, detect spam, filter hate speech, catch NSFW content, block harassment, moderate user-generated content, review community posts, filter marketplace listings, or route bad content to human reviewers. Also used for build content moderation system, UGC moderation at scale, user-generated content filter, trust and safety tooling, hate speech detection model, NSFW detection API, toxic comment classifier, automated abuse detection, report and flag system with AI, content policy enforcement, marketplace listing moderation, DSPy classification with severity scoring, confidence-based routing, reward-based policy enforcement.
 ---
 
 # Auto-Moderate What Users Post
 
 Guide the user through building AI content moderation — classify user-generated content, score severity, and route decisions (auto-approve, human-review, auto-reject). The pattern: classify, score, route.
 
-## When you need content moderation
+## When NOT to use AI moderation
 
-- User-generated content (comments, posts, reviews, messages)
-- Community platforms and forums
-- Marketplace listings (product descriptions, seller profiles)
-- Chat and messaging features
-- Any surface where users create content that others see
+- **Low-volume content** — if a human can review everything in under an hour per day, skip AI. The complexity of maintaining a moderation pipeline is not worth it.
+- **Exact-match violations only** — if your policy is just a blocklist of words or regex patterns (SSNs, emails, phone numbers), use pattern matching directly. No LM needed.
+- **Legal-grade decisions** — AI moderation is a first pass, not a legal ruling. If a wrong moderation decision has legal consequences (DMCA takedowns, defamation claims), always route to human review.
+
+Consider `/ai-sorting` instead if you just need classification without severity scoring or routing logic.
 
 ## Step 1: Define your moderation policy
 
 Ask the user:
 1. **What content do you need to catch?** (hate speech, spam, NSFW, harassment, self-harm, illegal activity, PII)
 2. **What are the severity levels?** (warning, remove, ban)
-3. **What's the tolerance for false positives?** (over-moderating frustrates users)
+3. **What is the tolerance for false positives?** (over-moderating frustrates users)
 4. **Is human review in the loop?** (auto-only vs. auto + human escalation)
 
-## Step 2: Build the moderator
+## Step 2: Choose your approach
+
+| Approach | When to use | Complexity |
+|----------|------------|------------|
+| Single-label + `dspy.Predict` | One violation type per item, simple routing | Low |
+| Single-label + `dspy.ChainOfThought` | Need explanation for each decision, nuanced content | Medium |
+| Multi-label + `dspy.ChainOfThought` | Content can violate multiple policies at once | Medium |
+| Multi-label + confidence routing | Uncertain cases go to human review | High |
+| Pattern blocks + LM assessment | Zero-tolerance patterns (PII) plus semantic analysis | High |
+
+## Step 3: Build the moderator
 
 Classification + severity scoring + routing decision:
 
 ```python
 import dspy
 from typing import Literal
+
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+dspy.configure(lm=lm)
 
 VIOLATIONS = Literal[
     "safe", "spam", "hate_speech", "harassment",
@@ -78,7 +91,7 @@ print(result.decision)  # "remove"
 print(result.violation_type)  # "harassment"
 ```
 
-## Step 3: Multi-label moderation
+## Step 4: Multi-label moderation
 
 Content can violate multiple policies at once (e.g., spam *and* contains PII):
 
@@ -100,20 +113,25 @@ class MultiLabelModerator(dspy.Module):
         self.assess = dspy.ChainOfThought(MultiLabelModerate)
 
     def forward(self, content, platform_context=""):
-        result = self.assess(content=content, platform_context=platform_context)
+        return self.assess(content=content, platform_context=platform_context)
 
-        # Validate that returned violations are from the allowed set
-        dspy.Assert(
-            all(v in VIOLATION_TYPES for v in result.violations),
-            f"Violations must be from: {VIOLATION_TYPES}",
-        )
+def multi_label_reward(args, pred):
+    # Validate that returned violations are from the allowed set
+    if all(v in VIOLATION_TYPES for v in pred.violations):
+        return 1.0
+    return 0.0
 
-        return result
+validated_moderator = dspy.Refine(
+    module=MultiLabelModerator(),
+    N=3,
+    reward_fn=multi_label_reward,
+    threshold=1.0,
+)
 ```
 
-## Step 4: Hard blocks with assertions
+## Step 5: Hard blocks with pattern matching
 
-For zero-tolerance patterns, don't even ask the LM — block instantly with pattern matching:
+For zero-tolerance patterns, block instantly with pattern matching — no LM needed:
 
 ```python
 import re
@@ -124,21 +142,30 @@ class StrictModerator(dspy.Module):
 
     def forward(self, content, platform_context=""):
         # Pattern-based hard blocks (instant, no LM needed)
-        dspy.Assert(
-            not re.search(r"\b\d{3}-\d{2}-\d{4}\b", content),
-            "Content contains SSN pattern — auto-reject",
-        )
-        dspy.Assert(
-            not re.search(
-                r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
-                content,
-            ),
-            "Content contains email addresses — redact before posting",
-        )
-        dspy.Assert(
-            not re.search(r"\b\d{16}\b", content),
-            "Content contains potential credit card number — auto-reject",
-        )
+        if re.search(r"\b\d{3}-\d{2}-\d{4}\b", content):
+            return dspy.Prediction(
+                violation_type="illegal",
+                severity="high",
+                decision="remove",
+                explanation="Content contains SSN pattern — auto-reject",
+            )
+        if re.search(
+            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
+            content,
+        ):
+            return dspy.Prediction(
+                violation_type="illegal",
+                severity="high",
+                decision="remove",
+                explanation="Content contains email addresses — redact before posting",
+            )
+        if re.search(r"\b\d{16}\b", content):
+            return dspy.Prediction(
+                violation_type="illegal",
+                severity="high",
+                decision="remove",
+                explanation="Content contains potential credit card number — auto-reject",
+            )
 
         # LM-based assessment for everything else
         return self.assess(content=content, platform_context=platform_context)
@@ -146,7 +173,7 @@ class StrictModerator(dspy.Module):
 
 Pattern-based blocks are faster, cheaper, and more reliable than LM-based detection for well-defined patterns (SSNs, credit cards, emails). Use regex for structure, LMs for semantics.
 
-## Step 5: Confidence-based routing
+## Step 6: Confidence-based routing
 
 Route uncertain decisions to human reviewers instead of making bad calls:
 
@@ -168,15 +195,12 @@ class ConfidentModerator(dspy.Module):
     def forward(self, content, platform_context=""):
         result = self.assess(content=content, platform_context=platform_context)
 
-        # Validate confidence range
-        dspy.Assert(
-            0.0 <= result.confidence <= 1.0,
-            "Confidence must be between 0.0 and 1.0",
-        )
+        # Clamp confidence to valid range
+        confidence = max(0.0, min(1.0, result.confidence))
 
         # Route based on confidence + severity
-        if result.confidence < self.confidence_threshold:
-            decision = "human_review"  # uncertain → always escalate
+        if confidence < self.confidence_threshold:
+            decision = "human_review"  # uncertain — always escalate
         elif result.severity == "high":
             decision = "remove"
         elif result.severity == "medium":
@@ -189,13 +213,13 @@ class ConfidentModerator(dspy.Module):
         return dspy.Prediction(
             violation_type=result.violation_type,
             severity=result.severity,
-            confidence=result.confidence,
+            confidence=confidence,
             decision=decision,
             explanation=result.explanation,
         )
 ```
 
-## Step 6: Metrics and optimization
+## Step 7: Metrics and optimization
 
 ### Define moderation metrics
 
@@ -213,7 +237,6 @@ def moderation_metric(example, prediction, trace=None):
 def make_category_metric(category):
     """Create a precision metric for a specific violation category."""
     def metric(example, prediction, trace=None):
-        # Did we correctly identify this category?
         if example.violation_type == category:
             return float(prediction.violation_type == category)  # recall
         else:
@@ -228,7 +251,6 @@ spam_metric = make_category_metric("spam")
 ### Optimize the moderator
 
 ```python
-# Prepare labeled training data
 trainset = [
     dspy.Example(
         content="Buy cheap watches at spam-site.com!!!",
@@ -249,30 +271,34 @@ optimizer = dspy.MIPROv2(metric=moderation_metric, auto="medium")
 optimized = optimizer.compile(moderator, trainset=trainset)
 ```
 
-## Step 7: Handle tricky cases
+## Step 8: Handle tricky cases
 
-Brief notes on content that's hard to moderate correctly:
-
-- **Sarcasm and satire** — "Oh sure, what a *great* product" isn't hate speech. Context matters. The `platform_context` field helps here.
-- **Quoting to criticize** — "The seller said 'you're an idiot'" is reporting harassment, not committing it. Include instructions in your signature to distinguish.
+- **Sarcasm and satire** — "Oh sure, what a *great* product" is not hate speech. Context matters. The `platform_context` field helps here.
+- **Quoting to criticize** — "The seller said 'you are an idiot'" is reporting harassment, not committing it. Include instructions in your signature to distinguish.
 - **Code snippets** — Variable names or test strings might contain offensive words. If your platform has code, add a code-detection step before moderation.
 - **Non-English content** — LMs handle major languages well but may miss nuance in less-common languages. Consider language-specific test sets.
 - **Adversarial evasion** — Users will try to bypass moderation (leetspeak, Unicode tricks, word splitting). Test your moderator with `/ai-testing-safety`.
 
-## Tips
+## Gotchas
 
-- **False positives hurt more than false negatives.** Over-moderation kills user engagement. Tune your confidence threshold to minimize false positives, especially for borderline content.
-- **Build separate metrics per category.** You care more about catching hate speech (high harm) than catching mild spam (low harm).
-- **Use a stronger model for uncertain cases.** Route low-confidence decisions from GPT-4o-mini to GPT-4o for a second opinion.
-- **Log every decision.** Moderator decisions should be reviewable and auditable. See `/ai-monitoring` for production logging patterns.
-- **Test your moderator adversarially.** Users *will* try to evade moderation. Run `/ai-testing-safety` against your moderator.
-- **Start permissive, tighten later.** It's easier to add restrictions than to regain user trust after over-moderating.
+- **Claude adds a `reasoning` field to signatures used with ChainOfThought.** Do not add your own `reasoning` output field — DSPy injects one automatically. Adding a second causes duplicate or conflicting reasoning outputs.
+- **Use programmatic checks (not `dspy.Refine`) for hard PII blocks.** For zero-tolerance patterns like SSNs or credit card numbers, check with regex before calling the LM and return a structured rejection immediately. `dspy.Refine` is for output quality constraints that benefit from retrying the LM, not for instant pattern-based blocks.
+- **Claude uses `Literal[list]` instead of `Literal[tuple(list)]` for dynamic categories.** If violation types come from a database or config, you must use `Literal[tuple(categories)]` — `Literal[list]` silently fails type validation.
+- **LM confidence scores are not calibrated probabilities.** When Claude builds a confidence-based router, it treats the 0.0-1.0 confidence output as if 0.7 means 70% accurate. LM self-reported confidence is directionally useful but not calibrated — tune the threshold empirically on your dev set, not based on the number itself.
+- **Over-moderating borderline content is worse than under-moderating.** Claude defaults to being cautious and tends to classify borderline content as violations. For moderation, false positives (removing safe content) hurt user engagement more than false negatives. Bias your metric toward precision over recall for low-severity categories.
+
+## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
+- **Classification patterns** for general sorting and categorization -- see `/ai-sorting`
+- **Output guardrails** for moderating your own AI responses -- see `/ai-checking-outputs`
+- **Adversarial testing** to stress-test your moderator -- see `/ai-testing-safety`
+- **Production monitoring** to track moderation quality over time -- see `/ai-monitoring`
+- **Signatures** for defining input/output contracts -- see `/dspy-signatures`
+- **ChainOfThought** for the reasoning module used in moderation -- see `/dspy-chain-of-thought`
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources
 
-- Use `/ai-sorting` for general classification patterns (moderation is classification + routing)
-- Use `/ai-checking-outputs` for output guardrails on your own AI's responses
-- Use `/ai-testing-safety` to adversarially test your moderator
-- Use `/ai-monitoring` to track moderation quality in production
-- See `examples.md` for complete worked examples
-- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+- For complete worked examples, see [examples.md](examples.md)

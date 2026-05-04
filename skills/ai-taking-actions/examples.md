@@ -103,7 +103,7 @@ print(f"Summary: {result.summary}")
 print(f"Key facts: {result.key_facts}")
 ```
 
-## Safety Assertions
+## Safety with Refine
 
 ```python
 def safe_search(query: str) -> str:
@@ -116,16 +116,19 @@ class SafeBot(dspy.Module):
         self.agent = dspy.ReAct("question -> answer", tools=[safe_search], max_iters=3)
 
     def forward(self, question):
-        result = self.agent(question=question)
-        dspy.Assert(
-            len(result.answer) > 0,
-            "Must provide an answer"
-        )
-        dspy.Suggest(
-            "I don't know" not in result.answer.lower(),
-            "Try harder to find the answer using the search tool"
-        )
-        return result
+        return self.agent(question=question)
+
+
+def safe_bot_reward(args, pred):
+    """Reward function: hard require a non-empty answer, soft encourage confidence."""
+    if not pred.answer or len(pred.answer.strip()) == 0:
+        return 0.0  # hard: must produce an answer
+    score = 1.0
+    if "i don't know" in pred.answer.lower():
+        score -= 0.2  # soft: encourage using the search tool more effectively
+    return score
+
+safe_bot = dspy.Refine(module=SafeBot(), N=3, reward_fn=safe_bot_reward, threshold=0.8)
 ```
 
 ## Optimizing Action-Taking AI

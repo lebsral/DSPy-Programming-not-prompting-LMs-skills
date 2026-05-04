@@ -50,16 +50,23 @@ class SupportBot(dspy.Module):
             intent=intent,
         )
 
-        dspy.Suggest(
-            len(result.response.split()) < 150,
-            "Keep support responses concise",
-        )
-
         return dspy.Prediction(
             response=result.response,
             intent=intent,
             resolved=result.resolved,
         )
+
+
+def support_bot_reward(args, pred):
+    """Soft reward encouraging concise support responses."""
+    score = 1.0
+    if len(pred.response.split()) >= 150:
+        score -= 0.2  # soft: keep responses under 150 words
+    return score
+
+bot = dspy.Refine(
+    module=SupportBot(retriever=my_retriever), N=3, reward_fn=support_bot_reward, threshold=0.8
+)
 ```
 
 ### LangGraph conversation flow
@@ -76,8 +83,6 @@ class SupportState(TypedDict):
     resolved: bool
     escalated: bool
     turn_count: int
-
-bot = SupportBot(retriever=my_retriever)
 
 def handle_message(state: SupportState) -> dict:
     history = "\n".join(f"{m['role']}: {m['content']}" for m in state["messages"][:-1][-10:])

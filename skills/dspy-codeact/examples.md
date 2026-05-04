@@ -193,18 +193,20 @@ class MathAgent(dspy.Module):
         )
 
     def forward(self, problem):
-        result = self.agent(problem=problem)
-        dspy.Assert(
-            result.answer.strip() != "",
-            "Agent must produce a non-empty answer",
-        )
-        dspy.Suggest(
-            "error" not in result.answer.lower(),
-            "Answer should not contain errors -- try a different approach",
-        )
-        return result
+        return self.agent(problem=problem)
 
-agent = MathAgent()
+
+def math_answer_reward(args, pred):
+    """Hard constraint: answer must be non-empty. Soft constraint: no error messages."""
+    if not pred.answer.strip():
+        return 0.0
+    score = 1.0
+    if "error" in pred.answer.lower():
+        score -= 0.3
+    return score
+
+
+agent = dspy.Refine(module=MathAgent(), N=3, reward_fn=math_answer_reward, threshold=0.7)
 result = agent(problem="What is 2^10 + 3^7?")
 print(result.answer)
 ```

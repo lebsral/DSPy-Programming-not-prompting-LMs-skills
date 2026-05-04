@@ -51,10 +51,19 @@ program.load(path, allow_pickle=False, allow_unsafe_lm_state=False)
 
 Saves optimized prompts, demos, and weights. No training data or optimizer needed at deploy time.
 
-## DSPyAssertionError
+## dspy.Refine -- output validation in APIs
+
+When using `dspy.Refine` in a served module, it raises an exception if `fail_count` is exhausted without meeting the reward threshold. Catch this as a validation failure and map to HTTP 422:
 
 ```python
-from dspy.primitives.assertions import DSPyAssertionError
+# dspy.Refine raises a generic Exception when fail_count is exhausted.
+# Detect it by checking the error message or wrapping the Refine call.
+try:
+    result = program(query=request.query)
+except Exception as e:
+    if "refine" in str(e).lower() or "fail_count" in str(e).lower():
+        raise HTTPException(status_code=422, detail=f"Output validation failed: {e}")
+    raise
 ```
 
-Raised when a `dspy.Assert` constraint fails. Map to HTTP 422 in API error handlers.
+Note: `dspy.Assert`/`dspy.Suggest` and `DSPyAssertionError` were removed in DSPy 3.x. Use `dspy.Refine` with a reward function instead.

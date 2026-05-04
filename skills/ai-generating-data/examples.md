@@ -285,7 +285,7 @@ scenarios = {
 
 ### Generate with quality gates
 
-Use `dspy.Suggest` to enforce quality during generation:
+Use `dspy.Refine` with a reward function to enforce quality during generation:
 
 ```python
 class AssessMedicalExample(dspy.Signature):
@@ -304,14 +304,30 @@ class SafeMedicalGenerator(dspy.Module):
 
     def forward(self, urgency, scenario):
         result = self.generate(urgency=urgency, scenario=scenario)
-        assessment = self.assess(complaint=result.complaint, urgency=urgency)
-        dspy.Suggest(assessment.is_medically_plausible, "Complaint should describe a real medical scenario")
-        dspy.Suggest(assessment.urgency_is_correct, "Urgency level should match the symptoms described")
-        dspy.Suggest(assessment.contains_no_pii, "Complaint must not contain any personally identifiable information")
-        dspy.Suggest(assessment.uses_patient_language, "Complaint should sound like a patient, not a medical professional")
         return result
 
-generator = SafeMedicalGenerator()
+assess = dspy.Predict(AssessMedicalExample)
+
+def medical_quality_reward(args, pred):
+    """Score a generated complaint on four quality dimensions."""
+    score = 1.0
+    assessment = assess(complaint=pred.complaint, urgency=args["urgency"])
+    if not assessment.is_medically_plausible:
+        score -= 0.25
+    if not assessment.urgency_is_correct:
+        score -= 0.25
+    if not assessment.contains_no_pii:
+        score -= 0.25
+    if not assessment.uses_patient_language:
+        score -= 0.25
+    return score
+
+generator = dspy.Refine(
+    module=SafeMedicalGenerator(),
+    N=3,
+    reward_fn=medical_quality_reward,
+    threshold=0.75,
+)
 ```
 
 ### Generate and collect
@@ -323,17 +339,14 @@ generated = []
 for urgency, scenario_list in scenarios.items():
     for scenario in scenario_list:
         for i in range(15):
-            try:
-                result = generator(urgency=urgency, scenario=scenario)
+            result = generator(urgency=urgency, scenario=scenario)
+            if result is not None:
                 generated.append(
                     dspy.Example(complaint=result.complaint, urgency=urgency).with_inputs("complaint")
                 )
-            except Exception:
-                # Suggest retries exhausted — skip this one
-                pass
 
 print(f"Generated {len(generated)} examples")
-# Generated 342 examples (some lost to quality gate failures)
+# Generated 342 examples (some skipped when reward threshold not met)
 ```
 
 ### Post-generation privacy audit

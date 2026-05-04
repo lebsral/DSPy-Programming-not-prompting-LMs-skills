@@ -167,7 +167,7 @@ async def process():
 | **Refine** (`dspy.Refine`) | Retry with feedback from a reward function until score threshold is met | Improving a single output with a known quality metric |
 | **Best-of-N** | Generate N candidates, pick the best by a metric | When you want diversity of attempts and can score them |
 | **ChainOfThought** | Single-pass step-by-step reasoning | Standard tasks that fit in context |
-| **Assertions** (`dspy.Assert`/`dspy.Suggest`) | Constraint-based retry with error messages | Enforcing hard/soft rules on outputs |
+| **Output validation** | `dspy.Refine` / `dspy.BestOfN` | Reward-based retry with feedback (replaced `dspy.Assert`/`dspy.Suggest` in 3.x) |
 
 Key difference: RLM gives the LM a **code execution environment** to actively explore the input, rather than just re-prompting with feedback. The LM decides its own exploration strategy.
 

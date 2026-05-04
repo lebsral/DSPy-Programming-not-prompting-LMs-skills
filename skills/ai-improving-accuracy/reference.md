@@ -1,5 +1,7 @@
 # Accuracy Improvement Reference
 
+> Condensed from [dspy.ai/api/optimizers/](https://dspy.ai/api/) and [dspy.ai/api/evaluation/](https://dspy.ai/api/evaluation/Evaluate/). Verify against upstream for latest.
+
 ## Optimizer Comparison Table
 
 | Optimizer | Tunes | Min Data | Cost | Speed | Best For |
@@ -32,9 +34,9 @@ How it works:
 ```python
 dspy.BootstrapFewShot(
     metric=metric,
-    max_bootstrapped_demos=4,         # generated few-shot examples
-    max_labeled_demos=4,              # labeled examples from trainset
-    max_rounds=1,                     # bootstrapping rounds
+    max_bootstrapped_demos=4,         # generated few-shot examples (default: 4)
+    max_labeled_demos=16,             # labeled examples from trainset (default: 16)
+    max_rounds=1,                     # bootstrapping rounds (default: 1)
 )
 ```
 
@@ -47,7 +49,7 @@ dspy.BootstrapFewShotWithRandomSearch(
     metric=metric,
     max_bootstrapped_demos=4,
     num_candidate_programs=8,         # configurations to try
-    max_labeled_demos=4,
+    max_labeled_demos=16,             # default: 16
 )
 ```
 
@@ -278,6 +280,27 @@ evaluator = Evaluate(
 - Overfitting — reduce `max_bootstrapped_demos`
 - Bad metric — validate metric scores manually
 - Use a validation set to check for overfitting
+
+## Key Methods on Optimized Programs
+
+After optimization, the returned program supports:
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `save(path)` | `save(path: str)` | Persist optimized state to JSON |
+| `load(path)` | `load(path: str)` | Load previously saved state |
+| `batch(examples)` | `batch(examples, num_threads=2, ...)` | Process multiple examples in parallel |
+| `forward(**kwargs)` | Varies by module | Execute the program |
+
+```python
+# Save and load
+optimized.save("optimized_v1.json")
+program = MyProgram()
+program.load("optimized_v1.json")
+
+# Batch processing
+results = optimized.batch(devset, num_threads=4)
+```
 
 ## Evaluation Best Practices
 

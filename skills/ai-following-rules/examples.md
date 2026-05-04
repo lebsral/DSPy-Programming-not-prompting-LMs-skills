@@ -8,7 +8,7 @@ A customer-facing chatbot that must follow brand voice guidelines.
 import dspy
 import re
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 BRAND_RULES = {
@@ -24,41 +24,37 @@ class BrandResponse(dspy.Signature):
     context: str = dspy.InputField(desc="Relevant knowledge base info")
     response: str = dspy.OutputField()
 
+def brand_reward(args: dict, pred: dspy.Prediction) -> float:
+    response = pred.response
+    score = 1.0
+
+    # Hard rule: word limit (-0.3 per violation)
+    word_count = len(response.split())
+    if word_count > BRAND_RULES["max_words"]:
+        score -= 0.3
+
+    # Hard rule: no blocked phrases (-0.3 per phrase found)
+    for phrase in BRAND_RULES["blocked_phrases"]:
+        if phrase.lower() in response.lower():
+            score -= 0.3
+
+    # Hard rule: no competitor mentions (-0.3)
+    if "competitor" in response.lower():
+        score -= 0.3
+
+    # Soft rule: include sign-off (-0.1 if missing)
+    if not response.strip().endswith(BRAND_RULES["required_sign_off"]):
+        score -= 0.1
+
+    return max(score, 0.0)
+
 class BrandCompliantBot(dspy.Module):
     def __init__(self):
-        self.respond = dspy.ChainOfThought(BrandResponse)
+        base = dspy.ChainOfThought(BrandResponse)
+        self.respond = dspy.Refine(module=base, N=3, reward_fn=brand_reward, threshold=0.8)
 
     def forward(self, customer_message, context):
-        result = self.respond(customer_message=customer_message, context=context)
-        response = result.response
-
-        # Hard: word limit
-        word_count = len(response.split())
-        dspy.Assert(
-            word_count <= BRAND_RULES["max_words"],
-            f"Response is {word_count} words. Keep it under {BRAND_RULES['max_words']}."
-        )
-
-        # Hard: no blocked phrases
-        for phrase in BRAND_RULES["blocked_phrases"]:
-            dspy.Assert(
-                phrase.lower() not in response.lower(),
-                f"Remove the phrase '{phrase}' — it's not part of our brand voice."
-            )
-
-        # Hard: no competitor mentions
-        dspy.Assert(
-            "competitor" not in response.lower(),
-            "Do not mention competitors. Focus on our product."
-        )
-
-        # Soft: include sign-off
-        dspy.Suggest(
-            response.strip().endswith(BRAND_RULES["required_sign_off"]),
-            f"End with '{BRAND_RULES['required_sign_off']}'"
-        )
-
-        return result
+        return self.respond(customer_message=customer_message, context=context)
 
 # Usage
 bot = BrandCompliantBot()
@@ -90,36 +86,31 @@ class GenerateQuiz(dspy.Signature):
     difficulty: str = dspy.InputField(desc="easy, medium, or hard")
     quiz: QuizQuestion = dspy.OutputField()
 
+def quiz_reward(args: dict, pred: dspy.Prediction) -> float:
+    quiz = pred.quiz
+    score = 1.0
+
+    # Hard rule: correct answer must be in options (-0.3)
+    if quiz.correct_answer not in quiz.options:
+        score -= 0.3
+
+    # Hard rule: all options must be unique (-0.3)
+    if len(set(quiz.options)) != len(quiz.options):
+        score -= 0.3
+
+    # Soft rule: explanation should mention the correct answer (-0.1)
+    if quiz.correct_answer.lower() not in quiz.explanation.lower():
+        score -= 0.1
+
+    return max(score, 0.0)
+
 class ValidatedQuizGen(dspy.Module):
     def __init__(self):
-        self.generate = dspy.ChainOfThought(GenerateQuiz)
+        base = dspy.ChainOfThought(GenerateQuiz)
+        self.generate = dspy.Refine(module=base, N=3, reward_fn=quiz_reward, threshold=0.8)
 
     def forward(self, topic, difficulty="medium"):
-        result = self.generate(topic=topic, difficulty=difficulty)
-        quiz = result.quiz
-
-        # Pydantic already validated types and lengths.
-        # Now check logic constraints:
-
-        # Correct answer must be in options
-        dspy.Assert(
-            quiz.correct_answer in quiz.options,
-            f"correct_answer '{quiz.correct_answer}' must be one of options: {quiz.options}"
-        )
-
-        # All options must be unique
-        dspy.Assert(
-            len(set(quiz.options)) == len(quiz.options),
-            f"Options must be unique. Got duplicates in: {quiz.options}"
-        )
-
-        # Explanation should mention the correct answer
-        dspy.Suggest(
-            quiz.correct_answer.lower() in quiz.explanation.lower(),
-            "Explanation should reference the correct answer."
-        )
-
-        return result
+        return self.generate(topic=topic, difficulty=difficulty)
 
 # Usage
 gen = ValidatedQuizGen()
@@ -132,6 +123,8 @@ print(result.quiz.model_dump_json(indent=2))
 A pricing chatbot that must follow sales rules.
 
 ```python
+import re
+
 AUTHORIZED_DISCOUNTS = {
     "WELCOME10": 0.10,
     "ANNUAL20": 0.20,
@@ -149,9 +142,36 @@ class PricingAnswer(dspy.Signature):
     pricing_info: str = dspy.InputField(desc="Official pricing data")
     answer: str = dspy.OutputField()
 
+def pricing_reward(args: dict, pred: dspy.Prediction) -> float:
+    answer = pred.answer
+    score = 1.0
+
+    # Hard rule: never invent prices (-0.3 per invented price)
+    dollar_amounts = re.findall(r"\$(\d+)", answer)
+    valid_prices = {str(v) for v in PRICING.values() if isinstance(v, int)}
+    for amount in dollar_amounts:
+        if amount not in valid_prices:
+            score -= 0.3
+
+    # Hard rule: never offer unauthorized discounts (-0.3 per unauthorized discount)
+    discount_mentions = re.findall(r"(\d+)%\s*(?:off|discount)", answer.lower())
+    authorized_percents = {str(int(v * 100)) for v in AUTHORIZED_DISCOUNTS.values()}
+    for pct in discount_mentions:
+        if pct not in authorized_percents:
+            score -= 0.3
+
+    # Soft rule: enterprise questions should suggest contacting sales (-0.1)
+    question = args.get("question", "")
+    if "enterprise" in question.lower():
+        if "contact" not in answer.lower() and "sales" not in answer.lower():
+            score -= 0.1
+
+    return max(score, 0.0)
+
 class PricingBot(dspy.Module):
     def __init__(self):
-        self.respond = dspy.ChainOfThought(PricingAnswer)
+        base = dspy.ChainOfThought(PricingAnswer)
+        self.respond = dspy.Refine(module=base, N=3, reward_fn=pricing_reward, threshold=0.8)
 
     def forward(self, question):
         pricing_info = (
@@ -160,35 +180,7 @@ class PricingBot(dspy.Module):
             f"Enterprise: contact sales. "
             f"Active promotions: {', '.join(AUTHORIZED_DISCOUNTS.keys())}"
         )
-        result = self.respond(question=question, pricing_info=pricing_info)
-
-        # Never invent prices
-        import re
-        dollar_amounts = re.findall(r"\$(\d+)", result.answer)
-        valid_prices = {str(v) for v in PRICING.values() if isinstance(v, int)}
-        for amount in dollar_amounts:
-            dspy.Assert(
-                amount in valid_prices,
-                f"${amount} is not an official price. Valid prices: {valid_prices}"
-            )
-
-        # Never offer unauthorized discounts
-        discount_mentions = re.findall(r"(\d+)%\s*(?:off|discount)", result.answer.lower())
-        authorized_percents = {str(int(v * 100)) for v in AUTHORIZED_DISCOUNTS.values()}
-        for pct in discount_mentions:
-            dspy.Assert(
-                pct in authorized_percents,
-                f"{pct}% discount is not authorized. Valid discounts: {AUTHORIZED_DISCOUNTS}"
-            )
-
-        # Always suggest contacting sales for enterprise
-        if "enterprise" in question.lower():
-            dspy.Suggest(
-                "contact" in result.answer.lower() or "sales" in result.answer.lower(),
-                "For enterprise questions, always suggest contacting sales."
-            )
-
-        return result
+        return self.respond(question=question, pricing_info=pricing_info)
 
 # Usage
 bot = PricingBot()
@@ -198,7 +190,7 @@ print(result.answer)
 
 ## Compliance Logging
 
-Wrap any rule-following module to log assertion pass/fail rates for auditing.
+Wrap any rule-following module to log reward scores for auditing.
 
 ```python
 import time
@@ -206,56 +198,66 @@ from dataclasses import dataclass, field
 
 @dataclass
 class ComplianceLog:
-    """Track assertion pass/fail rates for compliance reporting."""
+    """Track reward scores for compliance reporting."""
     entries: list[dict] = field(default_factory=list)
 
-    def log(self, rule_name: str, passed: bool, details: str = ""):
+    def log(self, reward_score: float, details: str = ""):
         self.entries.append({
             "timestamp": time.time(),
-            "rule": rule_name,
-            "passed": passed,
+            "reward_score": reward_score,
+            "passed": reward_score >= 0.8,
             "details": details,
         })
 
-    def pass_rate(self, rule_name: str = None):
-        relevant = self.entries
-        if rule_name:
-            relevant = [e for e in relevant if e["rule"] == rule_name]
-        if not relevant:
+    def pass_rate(self) -> float:
+        if not self.entries:
             return 0.0
-        return sum(e["passed"] for e in relevant) / len(relevant)
+        return sum(e["passed"] for e in self.entries) / len(self.entries)
 
-    def report(self):
-        rules = set(e["rule"] for e in self.entries)
-        return {rule: f"{self.pass_rate(rule):.1%}" for rule in rules}
+    def avg_score(self) -> float:
+        if not self.entries:
+            return 0.0
+        return sum(e["reward_score"] for e in self.entries) / len(self.entries)
+
+    def report(self) -> dict:
+        return {
+            "pass_rate": f"{self.pass_rate():.1%}",
+            "avg_reward_score": f"{self.avg_score():.3f}",
+            "total_calls": len(self.entries),
+        }
 
 
 class AuditedModule(dspy.Module):
-    """Wrapper that logs assertion compliance."""
-    def __init__(self, inner_module):
+    """Wrapper that logs reward-score compliance for any Refine-based module."""
+    def __init__(self, inner_module: dspy.Module, reward_fn, threshold: float = 0.8):
         self.inner = inner_module
-        self.log = ComplianceLog()
+        self.reward_fn = reward_fn
+        self.threshold = threshold
+        self.compliance_log = ComplianceLog()
 
     def forward(self, **kwargs):
-        try:
-            result = self.inner(**kwargs)
-            # If we got here, all assertions passed
-            self.log.log("all_assertions", True)
-            return result
-        except dspy.primitives.assertions.DSPyAssertionError as e:
-            self.log.log("all_assertions", False, str(e))
-            raise
+        result = self.inner(**kwargs)
+        score = self.reward_fn(kwargs, result)
+        self.compliance_log.log(
+            reward_score=score,
+            details=f"threshold={self.threshold}, passed={score >= self.threshold}",
+        )
+        return result
 
 # Usage
-bot = AuditedModule(BrandCompliantBot())
+bot = AuditedModule(
+    inner_module=dspy.ChainOfThought(BrandResponse),
+    reward_fn=brand_reward,
+    threshold=0.8,
+)
 # ... run many queries ...
-print(bot.log.report())
-# {"all_assertions": "94.2%"}
+print(bot.compliance_log.report())
+# {"pass_rate": "94.2%", "avg_reward_score": "0.913", "total_calls": 50}
 ```
 
 ## Multi-Rule Tweet Writer
 
-Compose five rules on a single output — from the DSPy Assertions paper's TweetGen case study.
+Enforce five rules on a single output — using `dspy.BestOfN` to pick the highest-scoring attempt.
 
 ```python
 class WriteTweet(dspy.Signature):
@@ -264,39 +266,42 @@ class WriteTweet(dspy.Signature):
     key_facts: list[str] = dspy.InputField()
     tweet: str = dspy.OutputField(desc="An engaging tweet, no hashtags, under 280 chars")
 
+def tweet_reward(args: dict, pred: dspy.Prediction) -> float:
+    tweet = pred.tweet
+    key_facts = args.get("key_facts", [])
+    topic = args.get("topic", "")
+    score = 1.0
+
+    # Rule 1 (hard): character limit (-0.3)
+    if len(tweet) > 280:
+        score -= 0.3
+
+    # Rule 2 (hard): no hashtags (-0.3)
+    if "#" in tweet:
+        score -= 0.3
+
+    # Rule 3 (hard): must include at least one key fact (-0.3)
+    if not any(fact.lower() in tweet.lower() for fact in key_facts):
+        score -= 0.3
+
+    # Rule 4 (soft): don't start with the topic name — make it engaging (-0.1)
+    if tweet.startswith(topic):
+        score -= 0.1
+
+    # Rule 5 (soft): no URLs — keep it self-contained (-0.1)
+    if "http" in tweet:
+        score -= 0.1
+
+    return max(score, 0.0)
+
 class RuleFollowingTweeter(dspy.Module):
     def __init__(self):
-        self.write = dspy.ChainOfThought(WriteTweet)
+        base = dspy.ChainOfThought(WriteTweet)
+        # BestOfN runs 5 independent attempts and returns the highest-scoring one
+        self.write = dspy.BestOfN(module=base, N=5, reward_fn=tweet_reward)
 
     def forward(self, topic, key_facts):
-        result = self.write(topic=topic, key_facts=key_facts)
-        tweet = result.tweet
-
-        # Rule 1 (hard): Character limit
-        dspy.Assert(len(tweet) <= 280, f"Tweet is {len(tweet)} chars, must be ≤280.")
-
-        # Rule 2 (hard): No hashtags
-        dspy.Assert("#" not in tweet, "Remove all hashtags.")
-
-        # Rule 3 (hard): Must include at least one key fact
-        dspy.Assert(
-            any(fact.lower() in tweet.lower() for fact in key_facts),
-            f"Tweet must include at least one of: {key_facts}"
-        )
-
-        # Rule 4 (soft): Engaging (not a dry statement)
-        dspy.Suggest(
-            not tweet.startswith(topic),
-            "Don't start with the topic name — make it more engaging."
-        )
-
-        # Rule 5 (soft): No URLs (keep it self-contained)
-        dspy.Suggest(
-            "http" not in tweet,
-            "Avoid URLs in the tweet. Make the message self-contained."
-        )
-
-        return result
+        return self.write(topic=topic, key_facts=key_facts)
 
 # Usage
 tweeter = RuleFollowingTweeter()

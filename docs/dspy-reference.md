@@ -256,25 +256,26 @@ print(result)  # shows all fields
 print(result.reasoning)  # specific field
 ```
 
-## Assertions & Constraints
+## Output Validation (Refine / BestOfN)
+
+> `dspy.Assert` and `dspy.Suggest` were removed in DSPy 3.x. Use `dspy.Refine` or `dspy.BestOfN` instead.
 
 ```python
-# Hard constraint (raises error)
-dspy.Assert(condition, "Error message")
+# Reward function scores output quality (higher = better)
+def quality_reward(args, pred):
+    score = 1.0
+    if len(pred.answer.split()) < 10:
+        score -= 0.3  # penalize short answers
+    if pred.answer == "I don't know":
+        score -= 0.5  # penalize non-answers
+    return max(score, 0.0)
 
-# Soft constraint (suggests retry)
-dspy.Suggest(condition, "Suggestion message")
+# Refine: iterative improvement with feedback
+qa = dspy.ChainOfThought("question -> answer")
+refined_qa = dspy.Refine(module=qa, N=3, reward_fn=quality_reward, threshold=0.8)
 
-# Example in a module
-class SafeAnswer(dspy.Module):
-    def __init__(self):
-        self.generate = dspy.ChainOfThought("question -> answer")
-
-    def forward(self, question):
-        result = self.generate(question=question)
-        dspy.Suggest(len(result.answer) > 10, "Answer should be detailed")
-        dspy.Assert(result.answer != "I don't know", "Must provide an answer")
-        return result
+# BestOfN: independent sampling, pick best
+best_qa = dspy.BestOfN(module=qa, N=5, reward_fn=quality_reward, threshold=0.8)
 ```
 
 ## Common Patterns

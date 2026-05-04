@@ -182,14 +182,14 @@ class ProductAgent(dspy.Module):
         )
 
     def forward(self, question: str):
-        result = self.agent(question=question)
+        return self.agent(question=question)
 
-        dspy.Suggest(
-            result.has_data,
-            "Use the search and product detail tools to find real data before answering",
-        )
 
-        return result
+def product_data_reward(args, pred):
+    """Reward answers grounded in real tool data."""
+    if not pred.has_data:
+        return 0.5
+    return 1.0
 
 
 # --- Usage ---
@@ -197,7 +197,7 @@ class ProductAgent(dspy.Module):
 lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
-agent = ProductAgent()
+agent = dspy.Refine(module=ProductAgent(), N=3, reward_fn=product_data_reward, threshold=1.0)
 
 questions = [
     "What hardware products do you have and which is cheaper?",
@@ -234,7 +234,7 @@ Key points:
 - Three tools with different purposes -- the agent picks the right one per question
 - The agent chains tools: search for products, then get details, then calculate totals
 - `has_data` output field lets the module check whether the agent actually used tools
-- `dspy.Suggest` nudges the agent to look up data rather than guessing
+- `dspy.Refine` retries when `has_data` is false, nudging the agent to look up data rather than guessing
 - The calculator uses a character allowlist for safety
 
 

@@ -4,7 +4,7 @@ Build reliable AI features. Powered by [DSPy](https://dspy.ai/) — a framework 
 
 ## Quick start
 
-The only skill you need is `/ai-do`. Describe what you want to build and it tells you which skill to use next.
+The only skill you need out the repo is `/ai-do`. Describe what you want to build and it tells you which skill to use next.
 
 ```bash
 npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do
@@ -16,11 +16,7 @@ Then in Claude Code:
 /ai-do I want to build a support ticket classifier
 ```
 
-It picks the right skill, generates a ready-to-run prompt, and tells you what to install. Or install everything at once:
-
-```bash
-npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --all
-```
+It picks the right skill, generates a ready-to-run prompt, and tells you what to install.
 
 ## What problem are you solving?
 
@@ -59,6 +55,15 @@ npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --all
 | "My AI works on simple inputs but fails on complex ones" / "works on simple inputs but fails on complex ones" | [`/ai-decomposing-tasks`](skills/ai-decomposing-tasks/SKILL.md) | Break unreliable single-step tasks into reliable subtasks |
 | "I need a conversational AI assistant" / "how do I build a chatbot" / "Intercom bot alternative" | [`/ai-building-chatbots`](skills/ai-building-chatbots/SKILL.md) | Build chatbots with memory, state, and doc-grounded responses |
 | "I need multiple AI agents working together" / "CrewAI alternative" | [`/ai-coordinating-agents`](skills/ai-coordinating-agents/SKILL.md) | Supervisor agents, specialist handoff, parallel research teams |
+| "I need to translate content to other languages" / "localize our app" / "i18n with AI" | [`/ai-translating-content`](skills/ai-translating-content/SKILL.md) | Translate with glossary enforcement, batch i18n, brand voice |
+| "I need product recommendations" / "you might also like" / "personalize the feed" | [`/ai-recommending`](skills/ai-recommending/SKILL.md) | Retrieval + LM re-ranking for personalized recommendations |
+| "I need to strip PII before sending to an LLM" / "GDPR compliance" / "anonymize data" | [`/ai-redacting-data`](skills/ai-redacting-data/SKILL.md) | Detect and replace PII with regex + LM pipeline |
+| "I need to deduplicate contacts" / "entity resolution" / "merge records" | [`/ai-matching-records`](skills/ai-matching-records/SKILL.md) | Block, score pairs, merge duplicates across datasets |
+| "I need to normalize messy data" / "standardize company names" / "fix inconsistent formats" | [`/ai-cleaning-data`](skills/ai-cleaning-data/SKILL.md) | AI-powered data normalization with rule inference |
+| "I need to detect fraud or anomalies" / "flag suspicious transactions" / "abuse detection" | [`/ai-detecting-anomalies`](skills/ai-detecting-anomalies/SKILL.md) | Score events against baselines with severity and explanations |
+| "I need smart notification messages" / "weekly digest" / "incident alerts from logs" | [`/ai-generating-notifications`](skills/ai-generating-notifications/SKILL.md) | Event-driven notifications with channel constraints and digests |
+| "I need to analyze images" / "extract text from screenshots" / "generate alt text" | [`/ai-understanding-images`](skills/ai-understanding-images/SKILL.md) | Vision model pipelines with dspy.Image for structured extraction |
+| "I need to rewrite text in a different tone" / "simplify legal language" / "adapt for different audience" | [`/ai-rewriting-text`](skills/ai-rewriting-text/SKILL.md) | Tone, reading level, and audience adaptation with fidelity checks |
 | "My AI is broken/erroring" / "Could not parse LLM output" | [`/ai-fixing-errors`](skills/ai-fixing-errors/SKILL.md) | Diagnose and fix crashes, wrong outputs, and weird behavior |
 | "DSPy can do X but there's no skill for it" | [`/ai-request-skill`](skills/ai-request-skill/SKILL.md) | Build a missing skill and submit a PR, or file a GitHub issue requesting it |
 
@@ -86,7 +91,7 @@ If you already know DSPy and think in its vocabulary, use these API-first skills
 |-------------|-------|----------------|
 | `Signature`, `InputField`, `OutputField` | [`/dspy-signatures`](skills/dspy-signatures/SKILL.md) | Inline and class-based signatures, typed fields, Pydantic models |
 | `dspy.LM`, `dspy.configure` | [`/dspy-lm`](skills/dspy-lm/SKILL.md) | Provider strings, temperature/max_tokens, per-module LM assignment |
-| `dspy.Assert`, `dspy.Suggest` | [`/dspy-assertions`](skills/dspy-assertions/SKILL.md) | Hard/soft constraints, backtracking, retry behavior, optimizer integration |
+| `dspy.Assert`, `dspy.Suggest` | [`/dspy-assertions`](skills/dspy-assertions/SKILL.md) | **REMOVED in DSPy 3.x** — legacy docs only. Use [`/dspy-refine`](skills/dspy-refine/SKILL.md) or [`/dspy-best-of-n`](skills/dspy-best-of-n/SKILL.md) instead |
 | `dspy.Module`, `forward()` | [`/dspy-modules`](skills/dspy-modules/SKILL.md) | Custom modules, composing sub-modules, save/load state |
 | `dspy.Example`, `Prediction` | [`/dspy-data`](skills/dspy-data/SKILL.md) | `with_inputs()`, train/dev splits, loading from CSV/JSON/HuggingFace |
 | `dspy.Evaluate`, metrics | [`/dspy-evaluate`](skills/dspy-evaluate/SKILL.md) | SemanticF1, exact match, LM-as-judge, composite metrics |
@@ -112,12 +117,17 @@ If you already know DSPy and think in its vocabulary, use these API-first skills
 | `dspy.KNN`, `dspy.KNNFewShot` | [`/dspy-knn-few-shot`](skills/dspy-knn-few-shot/SKILL.md) | Embedding-based demo retrieval |
 | `dspy.LabeledFewShot` | [`/dspy-labeled-few-shot`](skills/dspy-labeled-few-shot/SKILL.md) | Hand-picked demonstrations |
 | `dspy.SIMBA` | [`/dspy-simba`](skills/dspy-simba/SKILL.md) | Small-step incremental optimization |
-| `ChatAdapter`, `JSONAdapter`, `TwoStepAdapter` | [`/dspy-adapters`](skills/dspy-adapters/SKILL.md) | Prompt formatting, structured output, reasoning models |
+| `ChatAdapter`, `JSONAdapter`, `TwoStepAdapter` | [`/dspy-adapters`](skills/dspy-adapters/SKILL.md) | Prompt formatting, structured output (see also `/dspy-two-step-adapter`) |
 | `dspy.ChatAdapter` (deep dive) | [`/dspy-chatadapter`](skills/dspy-chatadapter/SKILL.md) | Field delimiters, parse/format internals, JSON fallback, fine-tuning data |
 | `dspy.Tool`, `PythonInterpreter` | [`/dspy-tools`](skills/dspy-tools/SKILL.md) | Wrapping functions as tools, code execution |
 | `dspy.Retrieve`, `ColBERTv2`, `Embedder` | [`/dspy-retrieval`](skills/dspy-retrieval/SKILL.md) | Search, RAG pipelines, embeddings |
 | `dspy.Image`, `dspy.Audio`, `dspy.Code`, `dspy.History` | [`/dspy-primitives`](skills/dspy-primitives/SKILL.md) | Multimodal inputs, conversation history |
-| `StreamListener`, `inspect_history`, `save`/`load` | [`/dspy-utils`](skills/dspy-utils/SKILL.md) | Streaming, caching, debugging, persistence, async |
+| `dspy.streamify`, `StreamListener`, `StreamResponse` | [`/dspy-streaming`](skills/dspy-streaming/SKILL.md) | Real-time token streaming to frontends, SSE, WebSocket |
+| `dspy.Tool.from_mcp_tool`, MCP servers | [`/dspy-mcp`](skills/dspy-mcp/SKILL.md) | Connect agents to MCP tool servers |
+| `dspy.experimental.Citations`, `Document` | [`/dspy-citations`](skills/dspy-citations/SKILL.md) | Structured source attribution for RAG |
+| `dspy.TwoStepAdapter` | [`/dspy-two-step-adapter`](skills/dspy-two-step-adapter/SKILL.md) | Reasoning models (o1, o3, DeepSeek-R1) structured output |
+| `aforward()`, `acall()`, async patterns | [`/dspy-async`](skills/dspy-async/SKILL.md) | Async execution, FastAPI, concurrent calls |
+| `inspect_history`, `save`/`load`, `configure_cache` | [`/dspy-utils`](skills/dspy-utils/SKILL.md) | Caching, debugging, persistence |
 | VizPy (`ContraPromptOptimizer`, `PromptGradOptimizer`) | [`/dspy-vizpy`](skills/dspy-vizpy/SKILL.md) | Commercial drop-in prompt optimizer, alternative to GEPA |
 | Langtrace (`langtrace.init`) | [`/dspy-langtrace`](skills/dspy-langtrace/SKILL.md) | Auto-instrument DSPy, cloud + self-hosted LLM observability |
 | Arize Phoenix (`DSPyInstrumentor`) | [`/dspy-phoenix`](skills/dspy-phoenix/SKILL.md) | Open-source trace viewer with evals, local UI |
@@ -134,7 +144,7 @@ If you already know DSPy and think in its vocabulary, use these API-first skills
 
 ### Option 1: `npx skills` (recommended — works with any AI coding agent)
 
-Install all 80 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
+Install all 94 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
 
 ```bash
 npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills
@@ -165,7 +175,7 @@ Then install a skill group:
 /plugin install dspy-build-skills@dspy-skills     # Building AI features (17 skills)
 /plugin install dspy-quality-skills@dspy-skills    # Quality and reliability (8 skills)
 /plugin install dspy-ops-skills@dspy-skills        # Production operations (7 skills)
-/plugin install dspy-api-skills@dspy-skills        # DSPy API-first skills (32 skills)
+/plugin install dspy-api-skills@dspy-skills        # DSPy API-first skills (37 skills)
 ```
 
 ### Option 3: Manual (git clone)

@@ -1,0 +1,42 @@
+{
+  "skill_name": "ai-generating-data",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I am building a support ticket classifier but I have zero training data. I need to generate synthetic examples for 5 categories: billing, bug, how-to, feature-request, and account.",
+      "expected_output": "A generator signature whose outputs match the task inputs, 5-10 hand-written seed examples with .with_inputs(), category-driven batch generation, quality filtering, and a train/dev split for optimization.",
+      "files": [],
+      "assertions": [
+        {"name": "generator_mirrors_task", "description": "Generator signature outputs match the task signature inputs (e.g., generator outputs ticket_text which is the task input)"},
+        {"name": "seed_examples_with_inputs", "description": "Seed examples use .with_inputs() to mark input fields"},
+        {"name": "generates_per_category", "description": "Generates examples for each category to ensure coverage"},
+        {"name": "includes_filtering", "description": "Filters generated examples for quality using metric-based or LM-based assessment"},
+        {"name": "provider_agnostic", "description": "LM config uses generic provider with alternative comment"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "My email classifier works at 85% but fails on sarcastic emails and emails with mixed languages. I have 200 real examples but these edge cases are underrepresented. How do I generate more data for these specific gaps?",
+      "expected_output": "Scenario-driven generation targeting the specific failure patterns (sarcasm, mixed language), with edge case scenarios as inputs to the generator, plus quality filtering.",
+      "files": [],
+      "assertions": [
+        {"name": "scenario_driven_generation", "description": "Uses scenario-driven generation targeting specific edge cases (sarcasm, mixed language) rather than generic category-driven"},
+        {"name": "edge_case_scenarios", "description": "Defines specific scenarios matching the failure patterns the user described"},
+        {"name": "augments_existing_data", "description": "Adds generated data to the existing 200 real examples rather than replacing them"},
+        {"name": "quality_filtering", "description": "Filters generated examples before mixing with real data"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I need to generate training data for an invoice extraction task. The AI should pull out vendor name, date, total amount, and line items from invoice text. I cannot use real customer invoices for privacy reasons.",
+      "expected_output": "A multi-field generator that takes known field values as inputs and generates realistic invoice text containing them, with privacy-safe synthetic values and assessment-based filtering.",
+      "files": [],
+      "assertions": [
+        {"name": "multi_field_generator", "description": "Generator takes all expected output fields (name, date, amount, items) as inputs and generates the invoice text as output"},
+        {"name": "synthetic_pii", "description": "Uses synthetic vendor names, dates, and amounts rather than real customer data"},
+        {"name": "with_inputs_marks_task_inputs", "description": "Generated Examples mark the invoice text as input and extracted fields as expected outputs"},
+        {"name": "assessment_filtering", "description": "Uses LM-based assessment to verify generated invoices are realistic and fields are correctly embedded"}
+      ]
+    }
+  ]
+}

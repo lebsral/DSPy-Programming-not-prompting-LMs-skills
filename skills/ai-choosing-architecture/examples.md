@@ -96,7 +96,7 @@ ReAct is the first branch for tool use, but retrieval-augmented generation is a 
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 retriever = dspy.Retrieve(k=5)
@@ -165,7 +165,7 @@ Unlike the doc QA example, here the tool selection is dynamic. A question about 
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o")
+lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 def search_news(query: str) -> str:
@@ -238,7 +238,7 @@ For essay grading, `ChainOfThought` with `BestOfN` (where the scorer checks rubr
 ```python
 import dspy
 
-lm = dspy.LM("openai/gpt-4o")
+lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 RUBRIC = """
@@ -280,6 +280,7 @@ grader = dspy.BestOfN(
     module=grader_module,
     N=3,
     reward_fn=consistency_score,
+    threshold=0.8,
 )
 
 result = grader(essay=student_essay, rubric=RUBRIC)

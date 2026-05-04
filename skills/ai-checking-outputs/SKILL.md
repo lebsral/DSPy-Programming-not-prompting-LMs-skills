@@ -1,6 +1,6 @@
 ---
 name: ai-checking-outputs
-description: Verify and validate AI output before it reaches users. Use when you need guardrails, output validation, safety checks, content filtering, fact-checking AI responses, catching hallucinations, preventing bad outputs, or quality gates. Also used for AI output looks right but is wrong, how to validate JSON from LLM, LLM returns invalid data, catch bad AI outputs before users see them, output quality gate, AI guardrails for production, verify LLM did not hallucinate fields, post-processing LLM responses.
+description: Verify and validate AI output before it reaches users. Use when you need guardrails, output validation, safety checks, content filtering, fact-checking AI responses, catching hallucinations, preventing bad outputs, or quality gates. Also used for - AI output looks right but is wrong, how to validate JSON from LLM, LLM returns invalid data, catch bad AI outputs before users see them, output quality gate, AI guardrails for production, verify LLM did not hallucinate fields, post-processing LLM responses. Uses dspy.Refine (iterative with feedback) and dspy.BestOfN (sampling, pick best).
 ---
 
 # Check AI Output Before It Ships
@@ -14,44 +14,48 @@ Ask the user:
 2. **How strict does it need to be?** (reject bad outputs vs. try to fix them?)
 3. **What's the cost of a bad output reaching users?** (annoyance vs. legal/safety risk)
 
-## Step 2: Quick wins — DSPy assertions
+## Step 2: Quick wins — Pydantic validation + dspy.Refine
 
-The simplest way to add checks. `dspy.Assert` is a hard stop (retry if violated), `dspy.Suggest` is a soft nudge:
+The simplest way to add checks combines Pydantic for structure and `dspy.Refine` for iterative self-correction. Define a reward function that returns a float (1.0 = pass, 0.0 = fail), then wrap the module:
 
 ```python
 import dspy
+
+class GenerateResponse(dspy.Signature):
+    question: str = dspy.InputField()
+    answer: str = dspy.OutputField()
 
 class CheckedResponder(dspy.Module):
     def __init__(self):
         self.respond = dspy.ChainOfThought(GenerateResponse)
 
     def forward(self, question):
-        result = self.respond(question=question)
+        return self.respond(question=question)
 
-        # Hard checks — will retry if these fail
-        dspy.Assert(
-            len(result.answer) > 0,
-            "Must produce an answer"
-        )
-        dspy.Assert(
-            len(result.answer.split()) <= 200,
-            "Answer must be under 200 words"
-        )
+def response_quality_reward(args: dict, pred: dspy.Prediction) -> float:
+    answer = pred.answer or ""
+    word_count = len(answer.split())
 
-        # Soft checks — hints for improvement
-        dspy.Suggest(
-            "I don't know" not in result.answer.lower(),
-            "Try to provide a substantive answer"
-        )
-        dspy.Suggest(
-            not any(word in result.answer.lower() for word in ["definitely", "absolutely", "100%"]),
-            "Avoid overconfident language"
-        )
+    # Hard requirements — return 0.0 if violated
+    if len(answer) == 0:
+        return 0.0
+    if word_count > 200:
+        return 0.0
 
-        return result
+    # Soft preferences reduce score
+    score = 1.0
+    if "i don't know" in answer.lower():
+        score -= 0.3
+    if any(w in answer.lower() for w in ["definitely", "absolutely", "100%"]):
+        score -= 0.2
+    return max(score, 0.0)
+
+# Wrap with Refine — retries up to N times feeding back the reward signal
+checked = dspy.Refine(CheckedResponder(), N=3, reward_fn=response_quality_reward, threshold=0.8)
+result = checked(question="What is the boiling point of water?")
 ```
 
-DSPy will automatically retry the LM call (with the assertion feedback) when an `Assert` fails, up to a configurable number of times.
+`dspy.Refine` retries the module up to `N` times, passing reward feedback to guide self-correction. `dspy.BestOfN` generates `N` candidates in parallel and returns the one with the highest reward — use it when you want diversity rather than iterative refinement.
 
 ## Step 3: Format validation
 
@@ -75,31 +79,34 @@ class MySignature(dspy.Signature):
 
 Pydantic catches malformed JSON, out-of-range values, and wrong types before your code ever sees them.
 
-### Custom validation in the module
+### Custom format validation with dspy.Refine
 
 ```python
 import re
 
-class ValidatedExtractor(dspy.Module):
+class ExtractContact(dspy.Signature):
+    text: str = dspy.InputField()
+    email: str = dspy.OutputField()
+    phone: str = dspy.OutputField()
+
+class ContactExtractor(dspy.Module):
     def __init__(self):
         self.extract = dspy.ChainOfThought(ExtractContact)
 
     def forward(self, text):
-        result = self.extract(text=text)
+        return self.extract(text=text)
 
-        # Validate email format
-        dspy.Assert(
-            re.match(r"[^@]+@[^@]+\.[^@]+", result.email or ""),
-            "Email must be a valid email address"
-        )
+def contact_format_reward(args: dict, pred: dspy.Prediction) -> float:
+    email_ok = bool(re.match(r"[^@]+@[^@]+\.[^@]+", pred.email or ""))
+    phone_digits = len(re.sub(r"\D", "", pred.phone or ""))
+    phone_ok = phone_digits >= 10
 
-        # Validate phone format
-        dspy.Assert(
-            len(re.sub(r"\D", "", result.phone or "")) >= 10,
-            "Phone must have at least 10 digits"
-        )
+    if not email_ok or not phone_ok:
+        return 0.0
+    return 1.0
 
-        return result
+validated = dspy.Refine(ContactExtractor(), N=3, reward_fn=contact_format_reward, threshold=1.0)
+result = validated(text="Call me at 555-1234567 or email bob@example.com")
 ```
 
 ## Step 4: Factual verification
@@ -122,45 +129,26 @@ class GroundedResponder(dspy.Module):
 
     def forward(self, question):
         context = self.retrieve(question).passages
-        response = self.answer(context=context, question=question)
+        return self.answer(context=context, question=question)
 
-        # Verify the answer is grounded in sources
-        check = self.verify(context=context, answer=response.answer)
-        dspy.Assert(
-            check.is_supported,
-            f"Answer contains unsupported claims: {check.unsupported_claims}. "
-            "Rewrite using only information from the context."
-        )
+def faithfulness_reward(args: dict, pred: dspy.Prediction) -> float:
+    context = args.get("context", [])
+    # Use a verify module to check grounding — instantiate outside for efficiency
+    check = verify_module(context=context, answer=pred.answer)
+    if not check.is_supported:
+        return 0.0
+    return 1.0
 
-        return response
+# Note: build verify_module once at the module level
+verify_module = dspy.Predict(VerifyFacts)
+
+grounded = dspy.Refine(GroundedResponder(), N=3, reward_fn=faithfulness_reward, threshold=1.0)
+result = grounded(question="What did the report say about Q3 revenue?")
 ```
 
 ### Cross-check — generate two ways, compare
 
 ```python
-class CrossCheckedAnswer(dspy.Module):
-    def __init__(self):
-        self.answer_a = dspy.ChainOfThought(AnswerQuestion)
-        self.answer_b = dspy.ChainOfThought(AnswerQuestion)
-        self.compare = dspy.ChainOfThought(CompareAnswers)
-
-    def forward(self, question):
-        a = self.answer_a(question=question)
-        b = self.answer_b(question=question)
-
-        comparison = self.compare(
-            question=question,
-            answer_a=a.answer,
-            answer_b=b.answer,
-        )
-
-        dspy.Assert(
-            comparison.agree,
-            "Two independent generations disagree — the answer may be unreliable"
-        )
-
-        return a
-
 class CompareAnswers(dspy.Signature):
     """Check if two independently generated answers agree."""
     question: str = dspy.InputField()
@@ -168,13 +156,34 @@ class CompareAnswers(dspy.Signature):
     answer_b: str = dspy.InputField()
     agree: bool = dspy.OutputField(desc="Do the answers substantially agree?")
     discrepancy: str = dspy.OutputField(desc="What they disagree on, if anything")
+
+class CrossCheckedAnswer(dspy.Module):
+    def __init__(self):
+        self.answer_b = dspy.ChainOfThought(AnswerQuestion)
+        self.compare = dspy.ChainOfThought(CompareAnswers)
+
+    def forward(self, question, answer_a):
+        b = self.answer_b(question=question)
+        comparison = self.compare(
+            question=question,
+            answer_a=answer_a,
+            answer_b=b.answer,
+        )
+        return comparison
+
+# Use BestOfN to generate N candidates then pick the most consistent one
+def consistency_reward(args: dict, pred: dspy.Prediction) -> float:
+    # Higher confidence answers score better; refine toward agreement
+    return 1.0 if pred.agree else 0.0
 ```
 
 ## Step 5: Safety and content filtering
 
-### Block harmful outputs
+### Block harmful outputs with dspy.Refine
 
 ```python
+import re
+
 BLOCKED_PATTERNS = [
     r"\b(password|secret|api.?key)\b",
     r"\b\d{3}-\d{2}-\d{4}\b",  # SSN pattern
@@ -185,16 +194,17 @@ class SafeResponder(dspy.Module):
         self.respond = dspy.ChainOfThought(GenerateResponse)
 
     def forward(self, question):
-        result = self.respond(question=question)
+        return self.respond(question=question)
 
-        # Check for leaked sensitive data
-        for pattern in BLOCKED_PATTERNS:
-            dspy.Assert(
-                not re.search(pattern, result.answer, re.IGNORECASE),
-                f"Response may contain sensitive data (pattern: {pattern})"
-            )
+def safety_reward(args: dict, pred: dspy.Prediction) -> float:
+    answer = pred.answer or ""
+    for pattern in BLOCKED_PATTERNS:
+        if re.search(pattern, answer, re.IGNORECASE):
+            return 0.0
+    return 1.0
 
-        return result
+safe_responder = dspy.Refine(SafeResponder(), N=3, reward_fn=safety_reward, threshold=1.0)
+result = safe_responder(question="Tell me about our API authentication setup")
 ```
 
 ### AI-as-safety-judge
@@ -207,107 +217,144 @@ class SafetyCheck(dspy.Signature):
     is_safe: bool = dspy.OutputField()
     concern: str = dspy.OutputField(desc="Safety concern if not safe, empty if safe")
 
+safety_judge = dspy.Predict(SafetyCheck)
+
 class SafetyCheckedResponder(dspy.Module):
     def __init__(self):
         self.respond = dspy.ChainOfThought(GenerateResponse)
-        self.check = dspy.Predict(SafetyCheck)
 
     def forward(self, question):
-        result = self.respond(question=question)
+        return self.respond(question=question)
 
-        safety = self.check(question=question, response=result.answer)
-        dspy.Assert(
-            safety.is_safe,
-            f"Response flagged as unsafe: {safety.concern}. Regenerate."
-        )
+def ai_safety_reward(args: dict, pred: dspy.Prediction) -> float:
+    check = safety_judge(question=args["question"], response=pred.answer)
+    return 1.0 if check.is_safe else 0.0
 
-        return result
+safe_checked = dspy.Refine(SafetyCheckedResponder(), N=3, reward_fn=ai_safety_reward, threshold=1.0)
 ```
 
-## Step 6: Generate → Filter → Pick best (ensemble pattern)
+## Step 6: Sampling and picking best — BestOfN
 
-For high-stakes outputs, generate multiple candidates and filter:
+For high-stakes outputs, use `dspy.BestOfN` to generate multiple independent candidates and keep the highest-scoring one:
 
 ```python
-class FilteredEnsemble(dspy.Module):
-    def __init__(self, num_candidates=5):
-        self.generators = [dspy.ChainOfThought(GenerateAnswer) for _ in range(num_candidates)]
-        self.judge = dspy.ChainOfThought(RankAnswers)
+class GenerateAnswer(dspy.Signature):
+    question: str = dspy.InputField()
+    answer: str = dspy.OutputField()
+
+class AnswerModule(dspy.Module):
+    def __init__(self):
+        self.generate = dspy.ChainOfThought(GenerateAnswer)
 
     def forward(self, question):
-        candidates = []
-        for gen in self.generators:
-            try:
-                result = gen(question=question)
-                # Only keep candidates that pass basic checks
-                if len(result.answer) > 0 and len(result.answer.split()) < 200:
-                    candidates.append(result.answer)
-            except Exception:
-                continue
+        return self.generate(question=question)
 
-        dspy.Assert(len(candidates) > 0, "No valid candidates generated")
+def answer_quality_reward(args: dict, pred: dspy.Prediction) -> float:
+    answer = pred.answer or ""
+    if len(answer) == 0:
+        return 0.0
+    word_count = len(answer.split())
+    if word_count > 200:
+        return 0.0
+    # Reward concise, substantive answers
+    score = min(word_count / 50.0, 1.0)
+    return score
 
-        return self.judge(question=question, candidates=candidates)
-
-class RankAnswers(dspy.Signature):
-    """Pick the best answer from the candidates."""
-    question: str = dspy.InputField()
-    candidates: list[str] = dspy.InputField()
-    best_answer: str = dspy.OutputField()
+# Generate 5 candidates, return the one with the highest reward
+best = dspy.BestOfN(AnswerModule(), N=5, reward_fn=answer_quality_reward, threshold=0.5)
+result = best(question="Explain why the sky is blue")
 ```
 
-## How backtracking works
+Use `BestOfN` when diversity matters — it does not feed one attempt's feedback into the next. Use `Refine` when you want iterative self-correction with prior context.
 
-When `dspy.Assert` fails, DSPy doesn't just retry blindly:
+## How Refine/BestOfN works
 
-1. The assertion failure is caught
-2. The error message is fed back to the LM as additional context
-3. The LM retries with this feedback (e.g., "your answer was 350 words, must be under 280")
-4. This repeats up to `max_backtrack_attempts` times (default: 2)
-5. If all retries fail, the assertion raises an error
+`dspy.Refine`:
+1. Runs the module once and scores the output with `reward_fn`
+2. If the score is below `threshold`, it retries — passing the reward signal back as feedback context
+3. Repeats up to `N` times total
+4. Returns the best-scoring output, or raises if `fail_count` is set and too many attempts fail
 
-This is why **specific error messages matter** — they're the model's self-correction instructions. "Response is 350 words, must be under 280" is much more useful than "too long."
+`dspy.BestOfN`:
+1. Runs the module `N` times independently (no shared feedback between runs)
+2. Scores each output with `reward_fn`
+3. Returns the output with the highest score above `threshold`
+4. Raises if none meet the threshold (or if `fail_count` is hit)
 
-When combined with optimization (`/ai-improving-accuracy`), the model learns to satisfy constraints on the first try, reducing retries in production.
+This is why **reward functions must be specific** — a score of 0.3 vs 0.9 signals very different things to Refine's retry logic. Return 0.0 for hard failures, partial scores for soft preferences.
+
+When combined with optimization (`/ai-improving-accuracy`), the model learns to satisfy reward functions on the first try, reducing retries in production.
+
+## When NOT to use output checking
+
+Do not reach for Refine/BestOfN when simpler approaches work:
+
+- **Pydantic alone is enough for pure format validation.** If you only need type/range/length checking, DSPy's typed signatures with Pydantic models handle this automatically with retries — no reward function needed.
+- **You have < 50ms latency budget.** Each Refine retry doubles LM latency. If speed matters more than perfection, optimize prompts instead (`/ai-improving-accuracy`).
+- **The failure is in the prompt, not the output.** If the model consistently produces bad output on the first attempt, fixing the signature or adding demonstrations is more effective than retrying 3 times and hoping for luck.
+- **You need human review anyway.** If outputs go through human QA before reaching users, adding AI-as-judge adds cost without reducing risk.
+
+Consider `/ai-following-rules` for declarative constraint enforcement, or `/ai-improving-accuracy` for systematic prompt optimization that reduces the need for post-hoc checking.
 
 ## Key patterns
 
-- **Assert for hard requirements** — format, length, safety. DSPy retries automatically.
-- **Suggest for soft preferences** — style, tone, detail level. Won't block but nudges.
-- **Pydantic for structure** — catches malformed output automatically.
-- **Self-verification for facts** — ask the AI "is this grounded in the sources?"
-- **Cross-checking for reliability** — generate twice independently, compare.
-- **Regex for sensitive data** — block SSNs, API keys, passwords in output.
-- **Ensemble for high stakes** — generate many, filter, pick the best.
+- **dspy.Refine for iterative correction** — format, length, safety. Retries with feedback automatically.
+- **dspy.BestOfN for diversity** — generate many independently, pick the best-scoring one.
+- **Pydantic for structure** — catches malformed output automatically before reward evaluation.
+- **Self-verification for facts** — ask the AI "is this grounded in the sources?" inside the reward function.
+- **Cross-checking for reliability** — generate twice independently, compare in reward function.
+- **Regex for sensitive data** — block SSNs, API keys, passwords in the reward function.
+- **threshold=1.0 for hard requirements** — only accept a perfect score (binary pass/fail checks).
+- **threshold < 1.0 for soft requirements** — accept good-enough outputs with partial scores.
 
 ## Checklist: what to check
 
 | Check | When to use | How |
 |-------|------------|-----|
-| Non-empty output | Always | `dspy.Assert(len(answer) > 0, ...)` |
-| Length limits | User-facing text | `dspy.Assert(len(answer.split()) < N, ...)` |
-| Valid format | Structured output | Pydantic model + `dspy.Assert` |
-| Grounded in sources | RAG / doc search | Verification signature |
-| No sensitive data | Any user-facing output | Regex patterns |
-| Safe content | Public-facing apps | AI safety judge |
-| Consistent | Critical decisions | Cross-check with two generations |
-| High quality | High-stakes outputs | Ensemble + ranking |
+| Non-empty output | Always | return 0.0 in reward_fn if len(answer) == 0 |
+| Length limits | User-facing text | return 0.0 if word count exceeds N |
+| Valid format | Structured output | Pydantic model + reward_fn format check |
+| Grounded in sources | RAG / doc search | Verification signature inside reward_fn |
+| No sensitive data | Any user-facing output | Regex patterns in reward_fn |
+| Safe content | Public-facing apps | AI safety judge inside reward_fn |
+| Consistent | Critical decisions | Cross-check two generations in reward_fn |
+| High quality | High-stakes outputs | dspy.BestOfN with quality reward_fn |
+
+## Expected improvement
+
+| Approach | Bad output rate (typical) | Notes |
+|----------|--------------------------|-------|
+| Typed signature only | ~15-25% format errors | Pydantic retries handle most |
+| + Refine with reward_fn (N=3) | ~2-5% | Iterative feedback fixes most remaining |
+| + BestOfN (N=5) with quality reward | ~1-3% | Best for creative/high-stakes tasks |
+| + AI-as-judge in reward_fn | < 1% | Highest quality, 2x LM cost per attempt |
+
+Exact numbers depend on task difficulty and model capability. Measure your baseline first with `dspy.Evaluate` before adding checks.
 
 ## Gotchas
 
-- **Claude writes vague assertion messages.** `dspy.Assert(check, "Bad output")` gives the LM nothing to work with on retry. The error message is the model's self-correction instruction — make it specific: `"Response is 350 words, must be under 280"` not `"too long"`.
-- **Claude puts assertions outside the module.** `dspy.Assert` and `dspy.Suggest` only trigger backtracking when called inside a `dspy.Module.forward()` method. Assertions in standalone scripts or outside `forward()` just raise exceptions with no retry.
-- **Claude uses `dspy.Assert` for style preferences.** Assert is a hard stop — if it fails after retries, the whole call errors. Use `dspy.Suggest` for soft preferences like tone, detail level, or avoiding filler words. Reserve Assert for things that must be true (valid format, no PII, non-empty output).
-- **Claude wraps every LM call in try/except to catch assertion failures.** DSPy's backtracking handles Assert failures internally — catching the exception yourself defeats the retry mechanism. Let assertions propagate; only catch at the top level if you need a fallback for the case where all retries are exhausted.
-- **Claude forgets that self-verification has a cost.** Adding a `VerifyFacts` check doubles your LM calls. For low-stakes outputs (summaries, suggestions), `dspy.Assert` with format checks is sufficient. Reserve AI-as-judge verification for high-stakes outputs where a wrong answer has real consequences.
+- **Reward functions must return float, not bool.** `dspy.Refine` and `dspy.BestOfN` expect a float from `reward_fn(args, pred)`. Returning `True`/`False` or raising an exception will cause unexpected behavior. Always return `0.0` for failure and `1.0` (or a partial score) for success.
+- **args contains the module's input kwargs.** The `args` dict passed to `reward_fn` holds the keyword arguments the module was called with. Access them by name: `args["question"]`, `args["context"]`. Don't assume positional order.
+- **Refine vs BestOfN — pick the right one.** Use `dspy.Refine` when the model can improve given feedback from prior attempts (iterative self-correction). Use `dspy.BestOfN` when you want independent samples with no cross-contamination — e.g., creative generation where you want diverse outputs.
+- **AI-as-judge inside reward_fn multiplies LM calls.** If your reward function calls another LM to verify, each Refine/BestOfN attempt costs two LM calls. For low-stakes outputs (summaries, suggestions), regex or Pydantic checks are sufficient. Reserve AI-as-judge for high-stakes outputs.
+- **threshold=1.0 causes frequent failures on partial scores.** If your reward function returns partial scores (0.3, 0.7, etc.), a threshold of 1.0 means only perfect scores pass — Refine will retry every time. Set threshold to a realistic pass mark for your scoring scale, e.g. 0.8 for a 0–1 quality score.
+- **Don't instantiate LM modules inside reward_fn.** Creating a `dspy.Predict` or `dspy.ChainOfThought` inside the reward function creates a new module object on every call. Instantiate verification modules once at the module or class level and reference them in the closure.
+
+## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
+- `/ai-stopping-hallucinations` — citation enforcement, faithfulness verification, grounding AI in facts
+- `/ai-following-rules` — defining and enforcing content policies, format rules, and business constraints
+- `/ai-building-pipelines` — wire checks into multi-step systems
+- `/ai-making-consistent` — output consistency (not correctness)
+- `/ai-testing-safety` — stress-test your guardrails with adversarial attacks
+- `/ai-scoring` — evaluate human work against criteria
+- `/ai-improving-accuracy` — measure and improve quality systematically
+- `/dspy-refine` — deep-dive on iterative refinement with reward functions
+- `/dspy-best-of-n` — deep-dive on sampling N candidates and picking the best
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources
 
-- Use `/ai-stopping-hallucinations` for citation enforcement, faithfulness verification, and grounding AI in facts
-- Use `/ai-following-rules` for defining and enforcing content policies, format rules, and business constraints
-- Use `/ai-building-pipelines` to wire checks into multi-step systems
-- Use `/ai-making-consistent` for output consistency (not correctness)
-- Use `/ai-testing-safety` to stress-test your guardrails with adversarial attacks
-- Need to evaluate human work against criteria? Use `/ai-scoring`
-- Next: `/ai-improving-accuracy` to measure and improve quality
-- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+- For Refine/BestOfN API details, see [reference.md](reference.md)

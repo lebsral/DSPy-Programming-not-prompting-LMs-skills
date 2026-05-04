@@ -4,7 +4,7 @@
     {
       "id": 0,
       "prompt": "I manage a coding bootcamp and want to auto-grade student project submissions. Each project should be scored on code correctness, code readability, and documentation quality on a 1-5 scale. Correctness should count for 50%, readability 30%, and docs 20%. I have about 40 projects that two instructors have already graded by hand. Can you build a scorer that matches our instructors' grading and flags anything where the AI disagrees significantly?",
-      "expected_output": "A Python script that defines a DSPy rubric scorer with three weighted criteria, scores each criterion independently using ChainOfThought, includes anchor examples for calibration, validates scores with dspy.Assert, compares against gold-standard human grades using a MAE or agreement metric, and optimizes with MIPROv2 or BootstrapFewShot.",
+      "expected_output": "A Python script that defines a DSPy rubric scorer with three weighted criteria, scores each criterion independently using ChainOfThought, includes anchor examples for calibration, validates scores with Pydantic Field constraints or dspy.Refine, compares against gold-standard human grades using a MAE or agreement metric, and optimizes with MIPROv2 or BootstrapFewShot.",
       "files": [],
       "assertions": [
         {"name": "uses_dspy_signature", "description": "Defines a dspy.Signature for scoring a single criterion"},
@@ -12,7 +12,7 @@
         {"name": "uses_chain_of_thought", "description": "Uses ChainOfThought so the model reasons before assigning a score"},
         {"name": "includes_weights", "description": "Applies the specified weights (50/30/20) when computing overall score"},
         {"name": "includes_anchor_examples", "description": "Provides calibration anchors showing what different score levels look like"},
-        {"name": "uses_assert_for_validation", "description": "Uses dspy.Assert to enforce valid score ranges"},
+        {"name": "validates_score_ranges", "description": "Uses Pydantic Field(ge=1, le=5) or dspy.Refine with a reward function to enforce valid score ranges"},
         {"name": "includes_evaluation_metric", "description": "Defines a metric (MAE or agreement) comparing AI scores to human gold scores"},
         {"name": "includes_optimization", "description": "Uses a DSPy optimizer to improve scorer accuracy against the metric"}
       ]

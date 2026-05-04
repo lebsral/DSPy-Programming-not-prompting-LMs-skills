@@ -1,0 +1,33 @@
+[
+  {
+    "prompt": "I want to stream DSPy output to my React frontend using server-sent events. Show me how to set up streaming with FastAPI.",
+    "expected_output": "A FastAPI SSE endpoint using streamify and StreamListener that yields tokens as SSE data events.",
+    "assertions": [
+      "Uses streamify() to wrap the DSPy module",
+      "Creates a StreamListener with signature_field_name",
+      "Uses StreamingResponse with text/event-stream media type",
+      "Yields SSE-formatted data (data: ...\\n\\n)",
+      "Uses async for to consume the stream",
+      "Does not wrap streamify result in an unnecessary extra async function"
+    ]
+  },
+  {
+    "prompt": "My ReAct agent only streams the first iteration and then stops. How do I get it to stream across all reasoning steps?",
+    "expected_output": "Explains that allow_reuse=True is needed on the StreamListener for agents that produce the same field multiple times across iterations.",
+    "assertions": [
+      "Identifies allow_reuse=True as the fix",
+      "Explains why agents need it (multiple iterations produce the same field)",
+      "Shows StreamListener with allow_reuse=True",
+      "Does not suggest removing or replacing the StreamListener"
+    ]
+  },
+  {
+    "prompt": "I have a pipeline with two ChainOfThought calls that both output an 'answer' field. I only want to stream the second one. How?",
+    "expected_output": "Use predict_name parameter on StreamListener to target a specific predictor by its attribute name in the module.",
+    "assertions": [
+      "Uses predict_name parameter on StreamListener",
+      "Shows the attribute name matching the module's self.<name> attribute",
+      "Does not suggest renaming the field or restructuring the module"
+    ]
+  }
+]
