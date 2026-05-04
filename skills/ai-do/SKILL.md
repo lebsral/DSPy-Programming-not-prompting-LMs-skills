@@ -1,6 +1,6 @@
 ---
 name: ai-do
-description: Describe your AI problem and get routed to the right skill with a ready-to-use prompt. Use when you are not sure which ai- skill to use, want help picking the right approach, or just want to describe what you need in plain language. Also use this when someone says I want to build an AI that..., how do I make my AI..., or describes any AI/LLM task without naming a specific skill., I need AI but do not know where to start, which AI pattern should I use, what is the best way to add AI to my app, recommend an AI approach, AI feature discovery, too many AI options, overwhelmed by AI frameworks, just tell me what to build, new to DSPy, beginner AI project help, which LLM pattern fits my use case, confused about AI architecture, help me figure out my AI approach.
+description: Describe your AI problem and get routed to the right skill with a ready-to-use prompt. Use when you are not sure which ai- skill to use, want help picking the right approach, or just want to describe what you need in plain language. Also use this when someone says I want to build an AI that..., how do I make my AI..., or describes any AI/LLM task without naming a specific skill, I need AI but do not know where to start, which AI pattern should I use, what is the best way to add AI to my app, recommend an AI approach, AI feature discovery, too many AI options, overwhelmed by AI frameworks, just tell me what to build, new to DSPy, beginner AI project help, which LLM pattern fits my use case, confused about AI architecture, help me figure out my AI approach.
 argument-hint: "[describe what you want to build or fix]"
 ---
 
@@ -41,7 +41,7 @@ Your goal is to build a complete picture so you route to the right skill with th
 
 ## Step 2: Match to a skill
 
-Use this catalog to find the best match. For a flat list of every skill with one-line descriptions, see [catalog.md](catalog.md).
+Use this catalog to find the best match. For extended descriptions of every skill (including trigger phrases and prerequisites), see [catalog.md](catalog.md).
 
 Many real-world problems need **a sequence of skills** — don't force everything into one. If the problem clearly spans two or more, recommend a sequence (see Step 3).
 
@@ -101,7 +101,7 @@ If the user already knows DSPy and asks about a specific API concept, route to t
 |-------------|-------|
 | Signatures, InputField, OutputField | `/dspy-signatures` |
 | dspy.LM, dspy.configure, providers | `/dspy-lm` |
-| dspy.Assert, dspy.Suggest | `/dspy-assertions` |
+| dspy.Assert, dspy.Suggest (removed in 3.x) | `/dspy-refine` or `/dspy-best-of-n` |
 | dspy.Module, forward() | `/dspy-modules` |
 | dspy.Example, Prediction, datasets | `/dspy-data` |
 | dspy.Evaluate, metrics | `/dspy-evaluate` |
@@ -324,10 +324,13 @@ First, determine whether the problem is within DSPy's scope:
 - **Don't skip routing because the user already has code.** Claude sees an existing project and thinks "this isn't a routing problem." WRONG. Requests like "audit my DSPy usage", "make sure this follows best practices", or "is my system good?" are routing problems. Route to `/ai-improving-accuracy`, the relevant `dspy-` skill, or a sequence. ai-do NEVER gives direct technical help.
 - **Don't refuse to route because the problem "isn't AI."** Claude sees code issues involving DSPy outputs (type errors, serialization, Pydantic model handling) and says "this isn't a DSPy/AI problem, it's just Python." WRONG. If the code touches DSPy types, modules, or outputs, relevant `dspy-` skills exist. Route to `/dspy-signatures` (typed outputs), `/dspy-modules` (composition), `/dspy-primitives` (type system), `/dspy-predict` (Prediction handling), or `/dspy-utils` (debugging). When uncertain, suggest 2-3 candidates and let the user pick — never refuse.
 
+## Additional resources
+
+- For extended descriptions of every skill with trigger phrases and prerequisites, see [catalog.md](catalog.md)
+
 ## Cross-references
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
-- Need a specific skill? See [catalog.md](catalog.md) for the full flat list
 - Want to request a skill that doesn't exist? `/ai-request-skill`
 - Already know which DSPy API you want? Skip ai-do and go directly to the matching `/dspy-*` skill
