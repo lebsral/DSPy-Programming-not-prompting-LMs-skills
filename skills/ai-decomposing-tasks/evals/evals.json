@@ -35,7 +35,7 @@
       "assertions": [
         {"name": "identifies_panels_first", "description": "Has a first step that identifies/lists all test panels before extracting any results"},
         {"name": "extracts_per_panel", "description": "Extracts test results scoped to one specific panel at a time, not all at once"},
-        {"name": "uses_dspy_assert_or_suggest", "description": "Includes a dspy.Assert or dspy.Suggest to validate that panels were found"},
+        {"name": "validates_panels_found", "description": "Includes validation (Pydantic, reward function, or programmatic check) that panels were found before extraction"},
         {"name": "structured_results", "description": "Returns results grouped by panel with typed fields (test name, value, unit, reference range)"},
         {"name": "explains_why_sequential", "description": "Explains that sequential per-panel extraction prevents conflation of similar values across panels"}
       ]

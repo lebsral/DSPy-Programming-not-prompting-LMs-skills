@@ -150,10 +150,8 @@ class SequentialExtractor(dspy.Module):
         # Step 1: Identify what's in the report
         panels = self.identify(report=report)
 
-        dspy.Assert(
-            len(panels.panel_names) > 0,
-            "No test panels found — is this a valid lab report?"
-        )
+        if len(panels.panel_names) == 0:
+            return dspy.Prediction(panels=[], results={})
 
         # Step 2: Extract results per panel
         all_results = {}
@@ -210,10 +208,8 @@ class IdentifyThenExtract(dspy.Module):
         # Step 1: Identify all items (just names — low cognitive load)
         items = self.identify(invoice_text=invoice_text)
 
-        dspy.Assert(
-            len(items.item_descriptions) > 0,
-            "No line items found in invoice"
-        )
+        if len(items.item_descriptions) == 0:
+            return dspy.Prediction(line_items=[])
 
         # Step 2: Extract details per item
         line_items = []
@@ -324,14 +320,20 @@ See `/ai-cutting-costs` for more cost strategies.
 - **Don't decompose prematurely.** Claude tends to jump straight to multi-step pipelines. If the single-step version hasn't been measured yet, measure it first — decomposition adds latency and cost, and sometimes prompt optimization alone is enough.
 - **Don't pass the full document to every substep.** When doing identify-then-process, Claude often passes the entire original text to the per-item extraction step. Instead, pass only the relevant section or use the item description to scope the extraction — this reduces token cost and prevents the model from pulling data from the wrong section.
 - **Don't forget `with_inputs()` on DSPy Examples.** When building evaluation datasets for decomposed pipelines, Claude omits `with_inputs()`, which causes optimizers to treat all fields as labels. Always call `example.with_inputs("document")` (or whatever your input fields are).
-- **Don't use `dspy.Assert` inside optimized modules without a fallback.** Claude places `Assert` statements that throw hard errors during optimization, killing the optimizer run. Use `dspy.Suggest` for soft constraints during optimization, or wrap `Assert` in a try/except that returns a default prediction.
+- **Don't raise hard errors inside optimized modules without a fallback.** Claude places validation checks that throw hard errors during optimization, killing the optimizer run. Use early-return defaults (e.g., `return dspy.Prediction(items=[])`) instead of raising exceptions, or wrap the call in a try/except that returns a default prediction. For output quality constraints, use `dspy.Refine` as a wrapper rather than assertions inside `forward()`.
 - **Don't chunk by character count alone.** Claude defaults to splitting text at fixed character positions, which cuts words and sentences mid-stream. Always split at natural boundaries (paragraphs, sentences, or section headers) then check chunk size.
 
 ## Additional resources
 
 - For worked examples (medical reports, invoices, resumes), see [examples.md](examples.md)
+
+## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
 - Already know your pipeline stages? Use `/ai-building-pipelines` to wire them together
 - Need to improve accuracy within a single step? Use `/ai-improving-accuracy`
 - Need to extract structured data? Start with `/ai-parsing-data` — decompose only if it struggles on complex inputs
-- Next: `/ai-improving-accuracy` to measure and optimize your decomposed pipeline
+- **DSPy modules** used in decomposition (Predict, ChainOfThought, Module) -- see `/dspy-modules`
+- **Iterative refinement** for substeps that need self-correction -- see `/dspy-refine`
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
