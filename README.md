@@ -200,6 +200,17 @@ Or symlink to stay in sync with updates:
 ln -s "$(pwd)/DSPy-Programming-not-prompting-LMs-skills/skills/"* ~/.claude/skills/
 ```
 
+### Option 4: Slash command (just `/ai-do`, no dependencies)
+
+If you only want the router and prefer Claude Code's built-in slash command system:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/lebsral/DSPy-Programming-not-prompting-LMs-skills/main/commands/ai-do.md \
+  -o ~/.claude/commands/ai-do.md
+```
+
+This gives you `/ai-do` globally in Claude Code. It routes you to the right skill and tells you how to install it. No `npx`, no plugins — just one file.
+
 ### Managing skills
 
 ```bash
