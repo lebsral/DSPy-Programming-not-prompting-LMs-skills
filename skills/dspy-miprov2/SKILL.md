@@ -174,10 +174,10 @@ Times vary significantly based on model latency, number of modules, and thread c
 | **Tunes instructions** | Yes | No | Yes | Yes | Yes |
 | **Tunes demos** | Yes | Yes | Yes | Yes | No |
 | **Joint optimization** | Yes | No | Yes | Yes (alternating) | No |
-| **Min examples** | ~50 | ~10 | ~50 | ~50 | ~10 |
-| **Typical improvement** | 15-35% | 5-20% | 15-35% | 15-35% | 5-15% |
+| **Min examples** | ~50 | ~10 | ~50 | ~50 | ~20 |
+| **Typical improvement** | 15-35% | 5-20% | 15-35% | 15-35% | 10-25% |
 | **Cost** | Medium-High | Low | Medium-High | High | Low |
-| **Best for** | Production prompts | Quick start | Iterative refinement | Multi-strategy | Few examples |
+| **Best for** | Production prompts | Quick start | Iterative refinement | Multi-strategy | Few examples, instruction-only, feedback-driven |
 
 ### When to use what
 
@@ -185,7 +185,7 @@ Times vary significantly based on model latency, number of modules, and thread c
 - **MIPROv2** — best prompt optimization, production use, 50+ examples
 - **SIMBA** — iterative refinement with support for minibatching; good alternative to MIPROv2
 - **BetterTogether** — alternates between prompt optimization and fine-tuning for maximum quality
-- **GEPA** — instruction-only tuning, very few examples
+- **GEPA** — instruction-only tuning with textual feedback, 20-100 examples
 - **BootstrapFinetune** — fine-tuning model weights (different category entirely)
 
 ### Stacking optimizers

@@ -169,6 +169,8 @@ print(f"Student (GPT-4o-mini, fine-tuned): {student_score:.1f}%")
 
 The fine-tuned student costs 33x less and retains ~95% of teacher quality.
 
+**Small models can dramatically outperform frontier models on narrow tasks.** In a Yale project parsing 3.6M historical names, GPT-4 and Gemini achieved ~70% accuracy. Fine-tuned Qwen models (0.8B-4B parameters) hit 94-96% — beating frontier models by 25+ points while running locally. The key insight: for well-defined extraction tasks with enough training data (500K+ synthetic examples), tiny fine-tuned models dominate.
+
 ## Step 4: BetterTogether (maximum quality)
 
 BetterTogether alternates between prompt optimization and weight optimization, getting more out of both. Based on the BetterTogether paper (arXiv 2407.10930v2), this approach yields 5-78% gains over either technique alone.
@@ -242,6 +244,10 @@ If the base model fails on most training examples, there aren't enough successfu
 - Use a stronger model for bootstrapping (GPT-4o instead of GPT-4o-mini)
 - Relax your metric during bootstrapping (accept partial credit)
 - Simplify your task (break multi-step into single steps)
+
+### Output format errors from small models
+
+Small fine-tuned models (<4B params) often produce JSON syntax errors — unclosed braces, missing quotes, trailing commas. Switch to YAML output format during fine-tuning to eliminate these entirely. YAML is more forgiving to generate and parses reliably from small models.
 
 ### Model overfits (high train accuracy, low test accuracy)
 

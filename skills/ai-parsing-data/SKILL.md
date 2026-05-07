@@ -74,6 +74,27 @@ print(result.person)  # Person(name='John Doe', age=32, ...)
 
 Use `Optional` for fields that might not appear in every document — this tells the model it's OK to return `None` instead of guessing.
 
+### Output format for small models
+
+Small models (<4B params) produce frequent JSON syntax errors — unclosed braces, missing quotes, trailing commas. Switching to YAML output eliminates these failures entirely while preserving structured data. In one production case (3.6M historical name records), frontier models achieved ~70% accuracy while fine-tuned 0.8B-4B models using YAML output hit 94-96%.
+
+```python
+import yaml
+
+class ParsePersonYAML(dspy.Signature):
+    """Extract person details from the text. Return the result as YAML, not JSON."""
+    text: str = dspy.InputField()
+    person_yaml: str = dspy.OutputField(desc="extracted person data in YAML format")
+
+parser = dspy.Predict(ParsePersonYAML)
+result = parser(text="John Doe, 32, john@example.com")
+
+# Parse YAML back into structured data
+person_data = yaml.safe_load(result.person_yaml)
+```
+
+Use this pattern when running sub-4B parameter models (Qwen, Phi, Gemma) locally. Larger models (GPT-4o, Claude) handle JSON fine — stick with Pydantic output fields for those.
+
 ### List extraction
 
 When you need to pull a variable number of items (entities, line items, experiences):
@@ -231,6 +252,39 @@ validated_parser = dspy.Refine(
 ```
 
 `dspy.Refine` retries the extraction up to N times, keeping the attempt with the highest reward score. Penalize each failed constraint proportionally to its importance.
+
+### Hybrid extraction with regex backstop
+
+The model does the heavy lifting, then regex sweeps for anything it missed. This pattern improved F1 from 0.733 (model-only) to 0.929 (hybrid) in a production privacy extraction system.
+
+```python
+import re
+
+def hybrid_extract(text, parser, patterns):
+    """Run model extraction, then fill gaps with regex patterns."""
+    result = parser(text=text)
+
+    # Regex backstop — catch fields the model missed
+    for field, pattern in patterns.items():
+        model_value = getattr(result, field, None)
+        if not model_value:
+            match = re.search(pattern, text)
+            if match:
+                result.__dict__[field] = match.group(1) if match.groups() else match.group()
+
+    return result
+
+# Define regex patterns for common fields
+patterns = {
+    "email": r"[\w.+-]+@[\w-]+\.[\w.-]+",
+    "phone": r"\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}",
+    "zip_code": r"\b\d{5}(?:-\d{4})?\b",
+}
+
+result = hybrid_extract(messy_text, parser, patterns)
+```
+
+Use this when your input has a mix of structured patterns (emails, phones, dates) and free-form text. The model handles ambiguous fields like names and summaries; regex catches well-formatted fields the model occasionally skips.
 
 ### Handling missing fields
 

@@ -195,17 +195,17 @@ This is useful when you want a capable model to brainstorm instructions but eval
 |--------|-------|------|---------|
 | **What it tunes** | Instructions + prefixes | Instructions | Instructions + few-shot demos |
 | **Search strategy** | Breadth-first candidate generation | Evolutionary (genetic programming) | Bayesian optimization |
-| **Data needed** | 20-200 examples | ~50 examples | 50-500 examples |
+| **Data needed** | 20-200 examples | 20-100 examples | 50-500 examples |
 | **Key parameter** | `breadth` (candidates per round) | Population/generations | `auto` ("light"/"medium"/"heavy") |
 | **Cost** | Moderate (breadth * depth * trainset evals) | Low-moderate | Moderate-high |
-| **Best for** | Exploring many instruction variants | Few examples, quick instruction tuning | Best overall prompt optimization |
+| **Best for** | Exploring many instruction variants | Few examples, feedback-driven instruction tuning | Best overall prompt optimization |
 
 **When to pick COPRO over alternatives:**
 
 - You want explicit control over the search process (breadth, depth, temperature)
 - You want to inspect all candidate instructions and their scores
 - You care about instructions specifically, not few-shot examples
-- You want a middle ground between GEPA (lightweight) and MIPROv2 (heavyweight)
+- You want a middle ground between GEPA (feedback-driven, competitive with MIPROv2) and MIPROv2 (heavyweight)
 
 **When to pick MIPROv2 instead:**
 

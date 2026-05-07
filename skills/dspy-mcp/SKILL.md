@@ -185,6 +185,10 @@ async def safe_agent_call(question: str):
 - For API details, see [reference.md](reference.md)
 - For worked examples, see [examples.md](examples.md)
 
+## Optimizing tool descriptions
+
+Tool descriptions matter for agent performance. The GEPA paper (arxiv 2507.19457) includes an MCP adapter that can automatically optimize tool descriptions -- not just task instructions -- through the same reflective evolution process. If your agent struggles to pick the right tool or misuses tool parameters, consider optimizing tool descriptions with `/dspy-gepa`.
+
 ## Cross-references
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`

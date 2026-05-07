@@ -11,19 +11,26 @@ Guide the user through using `dspy.GEPA` to automatically discover better instru
 
 `dspy.GEPA` is a DSPy optimizer that evolves the **instruction text** in your program's predictors. Rather than adding few-shot examples (like BootstrapFewShot) or tuning model weights (like BootstrapFinetune), GEPA iteratively proposes, evaluates, and refines the natural-language instructions that guide each LM call.
 
+Benchmark results from the GEPA paper (arxiv 2507.19457) show strong performance:
+
+- **93% on MATH** via the DSPy adapter vs 67% with basic DSPy (no optimization)
+- **10+ percentage points over MIPROv2** across six benchmark tasks (+12 on AIME-2025)
+- **20-100 examples** needed, vs 100K-512K rollouts for RL approaches like GRPO
+- GEPA also has MCP and RAG adapters beyond DSPy, but the DSPy adapter is the focus of this skill
+
 Key properties:
 
 - **Tunes instructions only** -- no few-shot demos are injected into prompts, keeping them compact
 - **Uses textual feedback** -- a reflection LM reads execution traces and failure feedback to propose better instructions, not just scalar scores
 - **Maintains a Pareto frontier** -- tracks multiple candidate programs that excel on different subsets, then merges the best traits
-- **Works with ~50 examples** -- needs less data than MIPROv2 or BootstrapFewShotWithRandomSearch
+- **Works with 20-100 examples** -- needs less data than MIPROv2 or BootstrapFewShotWithRandomSearch
 - **Supports per-predictor feedback** -- metrics can return targeted feedback for individual predictors in multi-step pipelines
 
 ## When to use GEPA
 
 Use `dspy.GEPA` when:
 
-- You have ~50+ labeled examples (fewer than what MIPROv2 needs to shine)
+- You have 20-100 labeled examples (fewer than what MIPROv2 needs to shine)
 - You want to optimize **instructions** without adding few-shot examples to the prompt
 - Your task has interpretable failure modes you can describe in natural language
 - You have a multi-step pipeline and want per-predictor instruction tuning
@@ -59,7 +66,7 @@ def metric(gold, pred, trace=None, pred_name=None, pred_trace=None):
 trainset = [
     dspy.Example(text="Great product!", label="positive").with_inputs("text"),
     dspy.Example(text="Terrible service.", label="negative").with_inputs("text"),
-    # ... ~50 examples
+    # ... 20-100 examples
 ]
 
 # 4. Optimize
@@ -173,6 +180,38 @@ def metric(gold, pred, trace=None, pred_name=None, pred_trace=None):
 
 Write feedback that is **actionable** -- describe what the instruction should encourage or discourage. Vague feedback like "wrong answer" does not help the reflection LM.
 
+### Name the failing axis with specifics
+
+Good feedback tells the reflection LM _which_ quality dimension failed and _what_ the correct behavior looks like. Compare:
+
+- Bad: `"Wrong answer"` -- the reflection LM has no direction
+- Bad: `"Score: 0"` -- no feedback at all
+- Good: `"Faithfulness: summary claims 'revenue doubled' but the article says 'revenue grew 15%'. The instruction should emphasize only stating facts from the source text."`
+- Good: `"Format: output used bullet points instead of prose. The instruction should specify narrative paragraph format."`
+
+When your examples contain metadata beyond the core input (e.g., expected categories, known edge cases, trap fields), use that metadata in the metric to give structural feedback. For example, if an example has `example.edge_case = "sarcasm"`, the metric can say `"This review uses sarcasm -- the instruction should warn about positive words with negative intent."` This gives the reflection LM a pattern to fix, not just a score to chase.
+
+### Feedback engineering principles
+
+The GEPA paper (arxiv 2507.19457) shows that task-specific feedback yields 20-30% better evolved prompts than generic feedback. Maximize your feedback quality:
+
+- **Structure feedback with three parts:** what aspect failed, why it failed, and what correct behavior looks like. Example: `"Faithfulness failed: the summary invented a statistic. The instruction should require citing source sentences."`
+- **Explain causal patterns, not just symptoms.** "Wrong answer" gives the reflection LM nothing to work with. "The model confused sarcasm for praise because the review used positive adjectives with negative intent" gives it a pattern to fix.
+- **Use example metadata in feedback.** If your examples have edge case labels, difficulty tags, or domain annotations, reference them: `"This is a sarcasm edge case -- the instruction should warn about positive words with negative intent."`
+- **Be specific to the task domain.** Generic feedback like "be more accurate" is nearly useless. Domain-specific feedback like "dates must be in ISO 8601 format, not US date format" gives the reflection LM a concrete fix.
+
+### Model-size configuration tips
+
+The GEPA paper provides guidance on scaling parameters to model size and budget:
+
+| Configuration | Population | Generations | Validation examples |
+|---------------|-----------|-------------|---------------------|
+| Small models (7B-13B) | 8-12 | 15-25 | 10-15 |
+| Large models (70B+) | 5-8 | 12-18 | 5-10 |
+| Budget-constrained (<$10) | 3-5 | 8-10 | Use aggressive early stopping |
+
+Smaller models benefit from larger populations (more diversity to explore) and more generations (more refinement steps). Larger models converge faster and need fewer candidates.
+
 ## How GEPA works internally
 
 Understanding the algorithm helps you write better metrics and choose parameters:
@@ -195,14 +234,17 @@ The Pareto frontier is the key innovation: rather than keeping only the single b
 | Aspect | `dspy.GEPA` | `dspy.MIPROv2` |
 |--------|-------------|----------------|
 | **What it tunes** | Instructions only | Instructions + few-shot demos |
-| **Data needed** | ~50 examples | ~200 examples |
+| **Data needed** | 20-100 examples | ~200 examples |
 | **Prompt size** | Compact (no demos) | Larger (includes demos) |
 | **Feedback** | Uses textual feedback from metrics | Uses scalar scores only |
 | **Multi-step** | Per-predictor feedback and optimization | Optimizes all predictors jointly |
-| **Best for** | Instruction tuning, compact prompts, rich feedback | Maximum prompt quality, larger budgets |
+| **Typical improvement** | 10-25% (paper reports 10+ points over MIPROv2 on six tasks) | 15-35% |
+| **Best for** | Instruction tuning, compact prompts, feedback-driven optimization | Demo-heavy tasks, larger budgets |
 | **Cost** | Lower (fewer metric calls) | Higher (explores more candidates) |
 
-**Rule of thumb:** Start with GEPA if you have fewer than 200 examples or want compact prompts. Move to MIPROv2 if you have more data and are willing to trade prompt size for quality.
+**Paper context:** The GEPA paper (arxiv 2507.19457) reports GEPA outperforming MIPROv2 by 10+ percentage points across six benchmark tasks. However, MIPROv2 also tunes few-shot demonstrations, which GEPA does not -- for tasks where in-context examples are critical, MIPROv2 may still be the better choice.
+
+**Rule of thumb:** Start with GEPA when you have fewer than 200 examples, want compact prompts, or can provide rich textual feedback in your metric. Move to MIPROv2 if you need few-shot demos in the prompt or have 200+ examples.
 
 ## Providing a validation set
 
@@ -314,6 +356,39 @@ dspy.inspect_history(n=1)
 3. **Claude starts with `auto="heavy"` before validating the metric.** A broken or noisy metric wastes the entire optimization budget. Start with `auto="light"` to verify the metric produces meaningful scores and feedback, then scale up to `"medium"` or `"heavy"` for production runs.
 4. **Claude does not run `dspy.Evaluate` before and after GEPA.** Without a baseline measurement, there is no way to know if GEPA actually improved anything. Always evaluate the unoptimized program first, then compare against the optimized version.
 5. **Claude expects GEPA to optimize Pydantic field descriptions.** GEPA only tunes the signature docstring (instruction). `InputField(desc=...)`, `OutputField(desc=...)`, and Pydantic `Field(description=...)` are never modified. If field descriptions are causing failures, flatten them into the instruction before optimizing (see the workaround in this skill).
+
+## When GEPA does not improve anything
+
+If your optimized program scores the same as the baseline, GEPA is working correctly -- it is just not finding anything to fix.
+
+### The saturation diagnostic
+
+GEPA improves instructions by reflecting on failures. If every minibatch is all-correct, the reflection LM never fires and the instructions stay unchanged. This means the task is **saturated** for the current task LM -- the model already solves it without better instructions.
+
+Signs of saturation:
+- Baseline score == optimized score (often both near 100%)
+- Optimization finishes quickly with no instruction changes
+- `track_stats=True` shows zero reflection calls
+
+### Three fixes for saturation
+
+1. **Harden the examples** -- add adversarial, ambiguous, or edge-case examples that the model currently gets wrong. If your trainset is too easy, GEPA has no signal to work with.
+2. **Weaken the task LM** -- use a smaller or cheaper model as the task LM. Counterintuitively, smaller models (1.2B-8B parameters) often benefit MORE from GEPA than larger ones. A 1.2B model can see 25+ point lifts on tasks where 8B+ models already saturate. The reflection LM should still be strong (GPT-4o, Claude Sonnet).
+3. **Accept the task is solved** -- if your model already handles the task well, optimization is unnecessary. Ship it.
+
+### Practical strategy with free-tier models
+
+Smaller models paired with GEPA can match larger models at zero cost. Free-tier models on OpenRouter (e.g., small Qwen or Llama variants) work as task LMs while a strong model handles reflection. This lets you run optimization loops with no API spend on the task LM side. Set `seed=0` for reproducibility.
+
+```python
+# Weaker task LM + strong reflection LM = maximum GEPA signal
+task_lm = dspy.LM("openrouter/qwen/qwen3-1.7b:free", seed=0)
+reflection_lm = dspy.LM("openai/gpt-4o", temperature=1.0, max_tokens=4096)
+dspy.configure(lm=task_lm)
+
+gepa = dspy.GEPA(metric=metric, reflection_lm=reflection_lm, auto="medium")
+optimized = gepa.compile(program, trainset=trainset)
+```
 
 ## Additional resources
 

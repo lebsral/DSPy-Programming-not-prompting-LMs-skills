@@ -415,6 +415,7 @@ optimized = optimizer.compile(DocSearch(), trainset=trainset)
 - **Multi-step search for complex questions** — if one search is not enough, chain search queries
 - **Use `dspy.Refine`** to ensure answers actually cite the documents by scoring citation presence in a reward function
 - **Separate search from answer generation** — optimize each independently
+- **Consider joint prompt + retrieval optimization** — the GEPA paper (arxiv 2507.19457) shows a RAG adapter that jointly optimizes prompts and retrieval strategy for multiplicative gains. See `/dspy-gepa` for details
 - **Consider `dspy.Embeddings`** as a built-in retriever — it handles embedding, FAISS indexing, and search in one class without needing a separate vector store (see reference.md for API details)
 
 ## Gotchas

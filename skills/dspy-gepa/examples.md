@@ -342,3 +342,82 @@ What this demonstrates:
 - **Actionable feedback per dimension** -- instead of just "bad summary", the metric says exactly which dimension failed and what the instruction should emphasize
 - **Larger minibatch** -- `reflection_minibatch_size=5` gives the reflection LM more context for generation tasks where quality is subjective
 - **Baseline comparison** -- measuring improvement before and after optimization to validate the effort
+
+## Example 3: Diagnosing saturation
+
+When GEPA returns the same score as the baseline, the task is saturated -- the model already solves it without better instructions. This example shows how to detect saturation and fix it by switching to a weaker task LM.
+
+```python
+import dspy
+from dspy.evaluate import Evaluate
+
+# --- Step 1: Run GEPA and see no improvement ---
+
+# A strong task LM that already handles the task well
+task_lm = dspy.LM("openai/gpt-4o-mini")
+reflection_lm = dspy.LM("openai/gpt-4o", temperature=1.0, max_tokens=4096)
+dspy.configure(lm=task_lm)
+
+classify = dspy.ChainOfThought("text -> label: Literal['positive', 'negative', 'neutral']")
+
+def metric(gold, pred, trace=None, pred_name=None, pred_trace=None):
+    correct = pred.label == gold.label
+    if correct:
+        return {"score": 1.0, "feedback": ""}
+    return {
+        "score": 0.0,
+        "feedback": f"Expected '{gold.label}', got '{pred.label}'. Review: '{gold.text[:60]}...'",
+    }
+
+# Assume trainset and valset are prepared with ~50 examples
+# trainset = [...]
+# valset = [...]
+
+evaluator = Evaluate(devset=valset, metric=metric, num_threads=4)
+
+baseline_score = evaluator(classify)
+print(f"Baseline: {baseline_score}")  # e.g., 96.0
+
+gepa = dspy.GEPA(
+    metric=metric,
+    reflection_lm=reflection_lm,
+    auto="medium",
+    track_stats=True,
+)
+optimized = gepa.compile(classify, trainset=trainset, valset=valset)
+
+optimized_score = evaluator(optimized)
+print(f"Optimized: {optimized_score}")  # e.g., 96.0 -- same as baseline
+
+# Diagnosis: baseline == optimized means every minibatch was all-correct,
+# so the reflection LM was never called. The task is saturated.
+
+# --- Step 2: Fix by using a weaker task LM ---
+
+# Switch to a smaller model that will struggle more, giving GEPA signal
+weak_lm = dspy.LM("openrouter/qwen/qwen3-1.7b:free", seed=0)
+dspy.configure(lm=weak_lm)
+
+classify_weak = dspy.ChainOfThought("text -> label: Literal['positive', 'negative', 'neutral']")
+
+weak_baseline = evaluator(classify_weak)
+print(f"Weak model baseline: {weak_baseline}")  # e.g., 62.0
+
+gepa = dspy.GEPA(
+    metric=metric,
+    reflection_lm=reflection_lm,  # reflection LM stays strong
+    auto="medium",
+)
+optimized_weak = gepa.compile(classify_weak, trainset=trainset, valset=valset)
+
+weak_optimized = evaluator(optimized_weak)
+print(f"Weak model optimized: {weak_optimized}")  # e.g., 87.0 -- 25-point lift
+print(f"Lift: {weak_optimized - weak_baseline:.1f} points")
+```
+
+What this demonstrates:
+
+- **Saturation diagnostic** -- baseline == optimized means every minibatch was all-correct and GEPA had no failures to reflect on
+- **Weaker task LM as a fix** -- switching from gpt-4o-mini to a 1.7B model creates optimization signal, enabling large lifts
+- **Strong reflection LM stays** -- the reflection LM should always be a capable model regardless of the task LM
+- **Free-tier reproducibility** -- using `seed=0` and free OpenRouter models for cost-zero optimization loops

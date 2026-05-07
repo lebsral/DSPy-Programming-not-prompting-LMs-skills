@@ -133,7 +133,7 @@ print(f"Baseline: {baseline_score}")
 
 | Training examples | Recommended optimizer | Expected improvement |
 |------------------|-----------------------|---------------------|
-| <20 | GEPA (instruction tuning) | 5-15% |
+| <100 | GEPA (instruction tuning, feedback-driven) | 10-25% |
 | 20-50 | BootstrapFewShot | 5-20% |
 | 50-200 | BootstrapFewShot, then MIPROv2 | 15-35% |
 | 200-500 | MIPROv2 (auto="medium") | 20-40% |
@@ -185,6 +185,8 @@ For the full fine-tuning workflow, see `/ai-fine-tuning`.
 | Optimizer overfits (train high, dev flat) | Too little training data | Generate more examples — see `/ai-generating-data` |
 | Score varies wildly between runs | Non-deterministic metric or small devset | Increase devset to 100+, set temperature=0 |
 | Score high but users complain | Metric does not match real quality | Rewrite metric based on actual failure patterns |
+| Score high on devset but poor on new data | Optimized prompts overfit to validation distribution | Hold out a separate test set. Research shows 10-15% degradation on unseen distributions (arxiv 2507.19457). Re-optimize if switching data domains |
+| Optimizer returns same score as baseline | Task is saturated for this model | Try harder examples or a weaker task LM to create optimization signal. See `/dspy-gepa` |
 
 Optimized prompts are model-specific. If you change models, re-run your optimizer.
 

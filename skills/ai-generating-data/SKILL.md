@@ -85,6 +85,7 @@ Pick the strategy that fits your gap:
 | Scenario-driven | Target specific edge cases | Generate from failure scenario descriptions |
 | Difficulty-driven | Build a balanced difficulty curve | Generate easy/medium/hard separately |
 | Diversity trick (`sindex`) | Prevent repetitive outputs | Add random seed index to break LM patterns |
+| Programmatic (Faker) | Structured fields with known formats | Names, addresses, dates, IDs cheaply at scale |
 
 ### Category-driven generation
 
@@ -127,6 +128,41 @@ for category, scenario in scenarios:
     result = gen(category=category, scenario=scenario)
     examples.append(dspy.Example(ticket_text=result.ticket_text, category=category).with_inputs("ticket_text"))
 ```
+
+### Programmatic generation with Faker
+
+For structured fields (names, addresses, dates, phone numbers), Faker generates hundreds of thousands of examples instantly with zero LM cost. In one production case, 500K synthetic name records were generated with Faker + custom cultural providers, then used to fine-tune models to 96% accuracy.
+
+```python
+from faker import Faker
+from faker.providers import BaseProvider
+
+fake = Faker()
+
+# Custom provider for domain-specific data
+class TicketProvider(BaseProvider):
+    def order_id(self):
+        return f"ORD-{self.random_int(1000, 99999)}"
+
+    def product_name(self):
+        return self.random_element(["Pro Plan", "Starter", "Enterprise", "Team"])
+
+fake.add_provider(TicketProvider)
+
+# Generate structured training records at scale
+examples = []
+for _ in range(10_000):
+    examples.append(dspy.Example(
+        ticket_text=f"Hi, I'm {fake.name()}. Order {fake.order_id()} for {fake.product_name()} "
+                    f"was charged to {fake.email()} but I need it on a different card.",
+        category="billing"
+    ).with_inputs("ticket_text"))
+```
+
+**When to use Faker vs LM generation:**
+- **Faker** — fields with known formats (names, emails, dates, IDs, addresses). Fast, free, structurally correct.
+- **LM generation** — open-ended text, realistic tone, complex scenarios, domain-specific language.
+- **Both together** — Faker for structured scaffolding, LM to add realistic surrounding context.
 
 ### Diversity trick
 

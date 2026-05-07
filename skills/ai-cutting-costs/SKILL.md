@@ -221,6 +221,10 @@ classifier = dspy.Predict(ClassifySignature)
 
 Test with `/ai-improving-accuracy` to make sure quality doesn't drop.
 
+### Saturation-aware early stopping
+
+When running prompt optimization (especially with GEPA or MIPROv2), monitor for score plateaus. Stopping early when the optimizer saturates can save 30-40% of optimization compute. See `/dspy-gepa` for saturation diagnosis details.
+
 ## Cost reduction checklist
 
 1. Switch to a cheaper model (measure quality first)
