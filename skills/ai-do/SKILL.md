@@ -2,6 +2,7 @@
 name: ai-do
 description: Describe your AI problem and get routed to the right skill with a ready-to-use prompt. Use when you are not sure which ai- skill to use, want help picking the right approach, or just want to describe what you need in plain language. Also use this when someone says I want to build an AI that..., how do I make my AI..., or describes any AI/LLM task without naming a specific skill, I need AI but do not know where to start, which AI pattern should I use, what is the best way to add AI to my app, recommend an AI approach, AI feature discovery, too many AI options, overwhelmed by AI frameworks, just tell me what to build, new to DSPy, beginner AI project help, which LLM pattern fits my use case, confused about AI architecture, help me figure out my AI approach.
 argument-hint: "[describe what you want to build or fix]"
+allowed-tools: AskUserQuestion, Read, Write, WebFetch
 ---
 
 # What do you want your AI to do?
@@ -32,15 +33,16 @@ Your goal is to build a complete picture so you route to the right skill with th
 
 ### How to ask
 
-- **Use multiple-choice when possible** — faster for the user and reduces ambiguity:
-  > What best describes your task?
-  > 1. Classify/sort/label content
-  > 2. Extract structured data from text
-  > 3. Generate text (articles, emails, reports)
-  > 4. Answer questions from documents
-  > 5. Something else — describe it
+- **Use AskUserQuestion for multiple-choice** — presents clickable options instead of numbered text lists. The tool supports 2-4 options per question (an "Other" freeform option is added automatically), short `header` labels (max 12 chars), and `description` text on each option to explain what it means. You can ask up to 4 questions in a single call. Example:
+  - question: "What best describes your task?"
+  - header: "Task type"
+  - options:
+    1. label: "Classify/sort" — description: "Categorize, label, tag, or route content into fixed categories"
+    2. label: "Extract data" — description: "Pull structured fields (names, dates, amounts) from unstructured text"
+    3. label: "Generate text" — description: "Write articles, emails, reports, or marketing copy"
+    4. label: "Answer from docs" — description: "Search a knowledge base and answer questions from it"
 
-- **When the user picks a number, proceed immediately** — do not wait for them to restate the option. "2" means they picked option 2. Continue the conversation using that selection as context and move to the next question or to routing. Never require re-invocation of `/ai-do`.
+- **When the user picks an option, proceed immediately** — continue the conversation using that selection as context and move to the next question or to routing. Never require re-invocation of `/ai-do`.
 - **Check what's installed** early — run `ls skills/ 2>/dev/null` and `ls ~/.claude/skills/ 2>/dev/null` so you know what they have before recommending
 - **Ask follow-ups** based on answers — don't frontload every question. If they say "classify tickets," follow up on categories, data volume, and labeled examples
 - **Stop when you can confidently route** — you don't need every detail, just enough to pick the right skill(s) and write a good prompt
@@ -97,6 +99,7 @@ Many real-world problems need **a sequence of skills** — don't force everythin
 | `/ai-switching-models` | Changing AI providers. "switch from OpenAI to Anthropic", "compare models", "vendor lock-in", "try a different model", "prompts that work for GPT-4 don't work for Llama", "model update broke my outputs", "any change in the underlying model breaks the prompts", "prompts optimized for one model don't transfer" |
 | `/ai-monitoring` | Watching AI in production. "track quality over time", "detect degradation", "alerting", "drift detection", "production monitoring", "small unrecorded prompt changes cause silent quality drops", "model providers change their models without you doing anything", "prompt drift in production" |
 | `/ai-tracing-requests` | Debugging a specific AI request. "trace a request", "see every LM call", "why did it give that answer", "profile slow pipeline" |
+| `/ai-watching-optimization` | Want to see optimizer progress. "watch optimization", "is my optimizer working", "see scores as they come in", "optimizer stuck", "optimization taking too long", "live progress during compile" |
 | `/ai-tracking-experiments` | Managing optimization runs. "compare experiments", "which config was best", "reproduce past results" |
 | `/ai-fixing-errors` | AI is broken. "throwing errors", "crashing", "returning garbage", "weird behavior", "doesn't work", "Could not parse LLM output", "outputs appear coherent but contain factual drift" |
 
