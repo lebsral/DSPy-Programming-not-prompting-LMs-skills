@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Build reliable AI features with DSPy — programming not prompting",
-    "version": "1.13.3"
+    "version": "1.13.5"
   },
   "plugins": [
     {
@@ -73,7 +73,8 @@
         "./skills/ai-tracing-requests",
         "./skills/ai-tracking-experiments",
         "./skills/ai-testing-safety",
-        "./skills/ai-fixing-errors"
+        "./skills/ai-fixing-errors",
+        "./skills/ai-watching-optimization"
       ]
     },
     {
