@@ -75,6 +75,15 @@ Many real-world problems need **a sequence of skills** — don't force everythin
 | `/ai-scoring` | Grading or rating against criteria. "score essays", "rate code quality", "evaluate support responses", "grade against a rubric", "quality audit", "LLM as a judge" |
 | `/ai-decomposing-tasks` | AI works on simple inputs but fails on complex ones. "breaks on long documents", "accuracy drops with harder inputs", "works sometimes but not on tricky cases" |
 | `/ai-moderating-content` | Filtering user-generated content. "flag harmful comments", "detect spam", "content moderation", "NSFW filter", "block hate speech" |
+| `/ai-translating-content` | Translating or localizing text. "translate to other languages", "localize our app", "i18n with AI", "translate with a glossary", "keep brand voice across languages", "batch translate" |
+| `/ai-recommending` | Personalized recommendations. "you might also like", "recommend products", "personalize the feed", "retrieval plus re-ranking", "suggest related items" |
+| `/ai-redacting-data` | Stripping or masking sensitive data. "remove PII", "redact before sending to an LLM", "GDPR compliance", "anonymize data", "mask names and emails" |
+| `/ai-matching-records` | Deduplicating or linking records. "dedupe contacts", "entity resolution", "merge duplicate records", "match records across datasets", "fuzzy matching" |
+| `/ai-cleaning-data` | Normalizing messy data. "standardize company names", "fix inconsistent formats", "clean up data", "normalize values", "infer cleaning rules" |
+| `/ai-detecting-anomalies` | Flagging unusual events. "detect fraud", "flag suspicious transactions", "abuse detection", "spot outliers", "score events against a baseline" |
+| `/ai-generating-notifications` | Event-driven messages. "smart notifications", "weekly digest", "incident alerts from logs", "summarize events into an alert", "channel-aware messages" |
+| `/ai-understanding-images` | Analyzing images. "extract text from screenshots", "generate alt text", "analyze images", "OCR with structure", "vision model pipeline", "dspy.Image" |
+| `/ai-rewriting-text` | Rewriting in a different tone or level. "rewrite in a different tone", "simplify legal language", "adapt for a different audience", "change reading level", "keep the meaning but change the voice" |
 
 ### Quality and reliability
 
@@ -137,7 +146,7 @@ If the user already knows DSPy and asks about a specific API concept, route to t
 | dspy.KNN, dspy.KNNFewShot | `/dspy-knn-few-shot` |
 | dspy.LabeledFewShot | `/dspy-labeled-few-shot` |
 | dspy.SIMBA | `/dspy-simba` |
-| ChatAdapter, JSONAdapter, TwoStepAdapter | `/dspy-adapters` or `/dspy-two-step-adapter` |
+| ChatAdapter, JSONAdapter, TwoStepAdapter | `/dspy-adapters` (ChatAdapter deep dive - `/dspy-chatadapter`) or `/dspy-two-step-adapter` |
 | dspy.TwoStepAdapter, o1, o3, DeepSeek-R1 | `/dspy-two-step-adapter` |
 | dspy.streamify, StreamListener, StreamResponse | `/dspy-streaming` |
 | dspy.Tool.from_mcp_tool, MCP servers | `/dspy-mcp` |
@@ -163,6 +172,7 @@ If the user mentions a specific third-party tool by name, route to the matching 
 | Arize Phoenix | `/dspy-phoenix` | "phoenix", "arize", "open-source trace viewer", "DSPyInstrumentor", "openinference" |
 | W&B Weave | `/dspy-weave` | "weave", "wandb", "W&B", "Weights & Biases", "weave.op" |
 | MLflow | `/dspy-mlflow` | "mlflow", "MLflow Tracing", "mlflow.dspy.autolog", "MLflow model registry" |
+| Langfuse | `/dspy-langfuse` | "langfuse", "tracing plus scoring", "annotation queues", "DSPyInstrumentor", "@observe", "experiment tracking with traces" |
 | LangWatch | `/dspy-langwatch` | "langwatch", "optimizer progress", "real-time optimization", "langwatch.dspy.init" |
 | Ragas | `/dspy-ragas` | "ragas", "RAG evaluation", "faithfulness", "context precision", "decomposed RAG metrics" |
 | Qdrant | `/dspy-qdrant` | "qdrant", "dspy-qdrant", "QdrantRM", "vector database", "vector DB for DSPy" |

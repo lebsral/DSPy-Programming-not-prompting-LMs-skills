@@ -284,6 +284,7 @@ What do you need?
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
+- **Problem-first guide to watching optimization** — `/ai-watching-optimization`
 - **Langtrace** (auto-instrumentation, easiest one-line setup) — `/dspy-langtrace`
 - **Arize Phoenix** (open-source with evals) — `/dspy-phoenix`
 - **W&B Weave** (team dashboards, experiment tracking) — `/dspy-weave`

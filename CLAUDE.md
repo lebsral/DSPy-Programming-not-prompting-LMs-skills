@@ -31,6 +31,7 @@ examples/         # Full working example projects
 1. Create a directory under `skills/` named `ai-<problem>` or `dspy-<concept>`
 2. Write `SKILL.md` with frontmatter (`name`, `description`) and instructions
 3. Add `examples.md` or `reference.md` for supporting content
-4. Update the problem catalog table in `README.md`
-5. Test with `/ai-<problem>` in Claude Code
-6. Bump the patch version in `.claude-plugin/marketplace.json`
+4. Update the problem catalog table in `README.md`, the routing tables in `skills/ai-do/SKILL.md`, `skills/ai-do/catalog.md`, and the plugin groups in `.claude-plugin/marketplace.json`
+5. Run `python3 scripts/check-skill-sync.py` to confirm the skill is registered in every catalog (it must stay in sync across all four)
+6. Test with `/ai-<problem>` in Claude Code
+7. Bump the patch version in `.claude-plugin/marketplace.json`

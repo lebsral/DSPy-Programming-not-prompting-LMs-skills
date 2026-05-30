@@ -297,6 +297,7 @@ optimized_rag = optimizer.compile(rag, trainset=trainset)
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
+- Watch MIPROv2 optimization progress -- see `/ai-watching-optimization`
 - Need to prepare training data? Use `/dspy-data`
 - Want to write and run metrics? Use `/dspy-evaluate`
 - Starting with a simpler optimizer first? Use `/dspy-bootstrap-few-shot`

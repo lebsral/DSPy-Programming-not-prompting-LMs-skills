@@ -401,6 +401,7 @@ optimized = gepa.compile(program, trainset=trainset)
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
+- **Watch GEPA optimization in real time** -- see `/ai-watching-optimization`
 - **Improving accuracy** with other optimizers -- see `/ai-improving-accuracy`
 - **MIPROv2** for instruction + few-shot optimization -- see `/dspy-miprov2`
 - **Chain of thought reasoning** as the inner module -- see `/dspy-chain-of-thought`

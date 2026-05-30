@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Build reliable AI features with DSPy — programming not prompting",
-    "version": "1.13.5"
+    "version": "1.13.6"
   },
   "plugins": [
     {
@@ -120,6 +120,7 @@
         "./skills/dspy-mcp",
         "./skills/dspy-citations",
         "./skills/dspy-two-step-adapter",
+        "./skills/dspy-chatadapter",
         "./skills/dspy-async"
       ]
     },
@@ -135,6 +136,7 @@
         "./skills/dspy-weave",
         "./skills/dspy-mlflow",
         "./skills/dspy-langwatch",
+        "./skills/dspy-langfuse",
         "./skills/dspy-ragas",
         "./skills/dspy-qdrant",
         "./skills/dspy-ollama",

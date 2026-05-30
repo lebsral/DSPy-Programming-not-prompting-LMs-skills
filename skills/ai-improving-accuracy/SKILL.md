@@ -218,6 +218,7 @@ my_program.load("optimized_program.json")
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
+- **See optimization progress live** -- see `/ai-watching-optimization`
 - **Cost reduction** once quality is good -- see `/ai-cutting-costs`
 - **Production monitoring** to track quality after deployment -- see `/ai-monitoring`
 - **Experiment tracking** to log and compare optimization runs -- see `/ai-tracking-experiments`

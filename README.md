@@ -50,6 +50,7 @@ It picks the right skill, generates a ready-to-run prompt, and tells you what to
 | "We need to moderate user content" | [`/ai-moderating-content`](skills/ai-moderating-content/SKILL.md) | Build AI content moderation with severity levels and routing |
 | "Is our AI still working in production?" / "silent quality drops, prompt drift" | [`/ai-monitoring`](skills/ai-monitoring/SKILL.md) | Monitor quality, safety, and cost — catch degradation early |
 | "Why did my AI give that wrong answer?" | [`/ai-tracing-requests`](skills/ai-tracing-requests/SKILL.md) | Trace individual requests — see every LM call, retrieval, and step |
+| "I want to see what's happening during optimization" / "is my optimizer stuck?" | [`/ai-watching-optimization`](skills/ai-watching-optimization/SKILL.md) | Watch optimizer progress, interpret convergence, pick the right monitoring tool |
 | "Which of our optimization experiments was best?" | [`/ai-tracking-experiments`](skills/ai-tracking-experiments/SKILL.md) | Log, compare, and promote optimization runs |
 | "I need AI to score, grade, or evaluate things" / "LLM as a judge" | [`/ai-scoring`](skills/ai-scoring/SKILL.md) | Score essays, audit support quality, rate code reviews against rubrics |
 | "My AI works on simple inputs but fails on complex ones" / "works on simple inputs but fails on complex ones" | [`/ai-decomposing-tasks`](skills/ai-decomposing-tasks/SKILL.md) | Break unreliable single-step tasks into reliable subtasks |
