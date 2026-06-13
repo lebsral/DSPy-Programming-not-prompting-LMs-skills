@@ -10,7 +10,7 @@ dspy.configure(lm=lm)
 
 def evaluate_math(expression: str) -> float:
     """Evaluate a mathematical expression and return the result."""
-    return dspy.PythonInterpreter({}).execute(expression)
+    return dspy.PythonInterpreter().execute(expression)
 
 agent = dspy.ReAct("question -> answer: float", tools=[evaluate_math])
 
@@ -32,7 +32,7 @@ def search_wikipedia(query: str) -> str:
 
 def evaluate_math(expression: str) -> float:
     """Evaluate a mathematical expression."""
-    return dspy.PythonInterpreter({}).execute(expression)
+    return dspy.PythonInterpreter().execute(expression)
 
 agent = dspy.ReAct(
     "question -> answer",

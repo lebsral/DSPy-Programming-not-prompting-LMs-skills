@@ -124,8 +124,8 @@ evaluator = Evaluate(
     display_table=5,
 )
 
-score = evaluator(explainer)
-print(f"\nJudge accuracy: {score:.1f}%")
+result = evaluator(explainer)
+print(f"\nJudge accuracy: {result.score:.1f}%")
 ```
 
 ## Composite Metric Evaluation

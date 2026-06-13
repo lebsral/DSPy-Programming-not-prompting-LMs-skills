@@ -167,7 +167,7 @@ class CleanPhoneTyped(dspy.Signature):
     raw: str = dspy.InputField()
     result: CleanedPhone = dspy.OutputField()
 
-phone_cleaner = dspy.TypedPredictor(CleanPhoneTyped)
+phone_cleaner = dspy.Predict(CleanPhoneTyped)
 ```
 
 ## Step 6 - Batch Processing with Confidence Routing
@@ -222,8 +222,7 @@ trainset = [
 def exact_match_metric(example, prediction, trace=None):
     return example.cleaned_value == prediction.cleaned_value
 
-from dspy.teleprompt import BootstrapFewShot
-optimizer = BootstrapFewShot(metric=exact_match_metric, max_bootstrapped_demos=4)
+optimizer = dspy.BootstrapFewShot(metric=exact_match_metric, max_bootstrapped_demos=4)
 optimized_cleaner = optimizer.compile(dspy.Predict(CleanField), trainset=trainset)
 ```
 
@@ -242,7 +241,7 @@ Use regex, pandas, or deterministic transforms instead when:
 | Task | DSPy approach |
 |---|---|
 | Single field, ad hoc | `dspy.Predict(CleanField)` |
-| Validated output format | `dspy.TypedPredictor` with Pydantic |
+| Validated output format | `dspy.Predict` with a Pydantic-typed OutputField |
 | Iterative refinement on failures | `dspy.Refine` with format-check reward |
 | Optimize on gold standard | `BootstrapFewShot` with exact-match metric |
 | Rule inference at scale | Sample anomalies → infer rules → apply deterministically |
@@ -256,10 +255,13 @@ Use regex, pandas, or deterministic transforms instead when:
 **Using `dspy.Assert`/`dspy.Suggest` for format validation.** These are deprecated. Use `dspy.Refine` with a reward function that checks the cleaned value against your format regex:
 
 ```python
-def format_reward(result, target_format_regex):
-    return 1.0 if re.match(target_format_regex, result.cleaned_value) else 0.0
+import re
+TARGET_RE = r"^\+1 \(\d{3}\) \d{3}-\d{4}$"
 
-cleaner = dspy.Refine(dspy.Predict(CleanField), N=3, reward_fn=format_reward)
+def format_reward(args, pred):
+    return 1.0 if re.match(TARGET_RE, pred.cleaned_value or "") else 0.0
+
+cleaner = dspy.Refine(dspy.Predict(CleanField), N=3, reward_fn=format_reward, threshold=1.0)
 ```
 
 **Cleaning related fields independently.** Address components (street, city, state, zip) must be normalized together — passing only the street loses context needed to expand abbreviations correctly. Pass all related fields in a single signature.
@@ -273,7 +275,7 @@ cleaner = dspy.Refine(dspy.Predict(CleanField), N=3, reward_fn=format_reward)
 - `/ai-parsing-data` - extract structured fields from unstructured text (complement to cleaning)
 - `/ai-checking-outputs` - validate cleaned values against schemas or business rules
 - `/dspy-refine` - iterative refinement with a reward function, for format-check loops
-- `/dspy-modules` - understand Predict, TypedPredictor, and other DSPy primitives
+- `/dspy-modules` - understand Predict, ChainOfThought, and other DSPy primitives
 - `/ai-generating-data` - generate synthetic dirty data to build eval sets
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 

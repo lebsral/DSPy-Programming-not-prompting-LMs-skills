@@ -35,14 +35,12 @@ dspy.configure(lm=lm)
 # Create documents from your sources
 documents = [
     Document(
-        text="DSPy is a framework for programming language models. It replaces prompting with composable modules that can be optimized.",
+        data="DSPy is a framework for programming language models. It replaces prompting with composable modules that can be optimized.",
         title="DSPy Overview",
-        source_id="doc-001",
     ),
     Document(
-        text="MIPROv2 is the most powerful DSPy optimizer. It jointly optimizes instructions and few-shot demonstrations.",
+        data="MIPROv2 is the most powerful DSPy optimizer. It jointly optimizes instructions and few-shot demonstrations.",
         title="Optimizers Guide",
-        source_id="doc-002",
     ),
 ]
 ```
@@ -51,8 +49,8 @@ documents = [
 
 ```python
 class CitedQA(dspy.Signature):
-    """Answer the question using the provided context. Cite your sources."""
-    context: list[str] = dspy.InputField(desc="source documents")
+    """Answer the question using the provided documents. Cite your sources."""
+    documents: list[Document] = dspy.InputField(desc="source documents")
     question: str = dspy.InputField()
     answer: str = dspy.OutputField()
     citations: Citations = dspy.OutputField(desc="structured citations for claims in the answer")
@@ -63,41 +61,32 @@ class CitedQA(dspy.Signature):
 ```python
 qa = dspy.ChainOfThought(CitedQA)
 
-# Format documents as context strings
-context = [f"[{doc.source_id}] {doc.title}: {doc.text}" for doc in documents]
-
 result = qa(
-    context=context,
+    documents=documents,
     question="What is the most powerful DSPy optimizer?",
 )
 
 print(result.answer)
 # "MIPROv2 is the most powerful DSPy optimizer..."
 
-for citation in result.citations:
+for citation in result.citations.citations:
     print(f"  Cited: '{citation.cited_text}' from document {citation.document_index}")
 ```
 
 ## Step 4: Anthropic native Citations API
 
-For Anthropic models, enable native citation support for higher accuracy:
+Native citations are **automatic** for Anthropic models. There is no special adapter
+configuration -- you just configure an Anthropic LM, declare a `Citations` output field,
+and pass `documents: list[Document]` as input. DSPy handles the rest.
 
 ```python
 lm = dspy.LM("anthropic/claude-sonnet-4-5-20250929")
 dspy.configure(lm=lm)
 
-# Enable native citations via adapter feature
-dspy.configure(
-    lm=lm,
-    adapter=dspy.ChatAdapter(
-        adapt_to_native_lm_feature=["citations"],
-    ),
-)
-
-# Now Citations output uses Anthropic's built-in citation extraction
-# instead of prompt-based parsing -- higher accuracy, structured response
+# The same CitedQA signature (Citations output + documents input) now uses
+# Anthropic's built-in citation extraction -- no adapter kwarg needed.
 result = qa(
-    context=context,
+    documents=documents,
     question="How does DSPy replace prompting?",
 )
 ```
@@ -111,16 +100,16 @@ result = qa(
 
 ```python
 # Each citation has these fields
-for citation in result.citations:
+for citation in result.citations.citations:
     print(f"Cited text: {citation.cited_text}")
     print(f"Document index: {citation.document_index}")
-    print(f"Start char: {citation.start}")
-    print(f"End char: {citation.end}")
+    print(f"Start char: {citation.start_char_index}")
+    print(f"End char: {citation.end_char_index}")
 
 # Validate that cited text exists in the source document
-for citation in result.citations:
+for citation in result.citations.citations:
     source_doc = documents[citation.document_index]
-    if citation.cited_text in source_doc.text:
+    if citation.cited_text in source_doc.data:
         print(f"VALID: Citation found in {source_doc.title}")
     else:
         print(f"INVALID: Citation not found in source")
@@ -138,18 +127,21 @@ qa = dspy.ChainOfThought(CitedQA)
 answer_listener = StreamListener(signature_field_name="answer")
 streaming_qa = streamify(qa, stream_listeners=[answer_listener])
 
-async for chunk in streaming_qa(context=context, question="..."):
+async for chunk in streaming_qa(documents=documents, question="..."):
     if hasattr(chunk, "answer"):
         print(chunk.answer, end="", flush=True)
     elif isinstance(chunk, dspy.Prediction):
         # Citations are available in the final prediction
-        for citation in chunk.citations:
+        for citation in chunk.citations.citations:
             print(f"\n[{citation.document_index}] {citation.cited_text}")
 ```
 
 ## Step 7: Non-Anthropic fallback patterns
 
-For providers without native citation support, use prompt engineering:
+For providers without native citation support (OpenAI, local models, etc.), the
+`Citations` output field falls back to prompt-based parsing. For maximum control you
+can skip the `Citations` type entirely and use plain-string context with inline markers
+-- this is the **prompt-based fallback path**, not the native Anthropic path:
 
 ```python
 class CitedAnswer(dspy.Signature):
@@ -159,9 +151,9 @@ class CitedAnswer(dspy.Signature):
     question: str = dspy.InputField()
     answer: str = dspy.OutputField(desc="answer with [doc_N] inline citations")
 
-# Number your documents explicitly
+# Number your documents explicitly (plain strings, not Document objects)
 numbered_context = [
-    f"[doc_{i}] {doc.title}: {doc.text}"
+    f"[doc_{i}] {doc.title}: {doc.data}"
     for i, doc in enumerate(documents)
 ]
 
@@ -173,7 +165,7 @@ result = qa(context=numbered_context, question="...")
 ## Gotchas
 
 1. **Claude omits the `Citations` type import.** You must import from `dspy.experimental` -- it is not in the main `dspy` namespace. Use `from dspy.experimental import Citations, Document`.
-2. **Native citations only work with Anthropic models.** If you configure `adapt_to_native_lm_feature=["citations"]` with OpenAI, it silently falls back to prompt-based parsing which may be less accurate.
+2. **Native citations activate automatically for Anthropic models.** When you configure an Anthropic LM and declare a `Citations` output field, DSPy uses Anthropic's native Citations API -- there is no `adapt_to_native_lm_feature` kwarg or special adapter to set. On non-Anthropic models (OpenAI, local), the same `Citations` field silently falls back to prompt-based parsing, which may be less accurate.
 3. **Claude hardcodes document indices.** The `document_index` in citations maps to the position in the context list. If you reorder documents, indices change. Always use the index to look up the source, do not hardcode.
 4. **Citations are experimental.** The API is in `dspy.experimental` and may change between versions. Pin your DSPy version in production.
 5. **Claude generates citations without source material.** Citations only make sense when you provide context documents. Without context, the model fabricates citation metadata. Always pair Citations with a retrieval step.

@@ -1,6 +1,6 @@
 ---
 name: dspy-two-step-adapter
-description: Use when working with reasoning models (o1, o3, o3-mini, DeepSeek-R1, Claude extended thinking) that reject system prompts or ignore formatting instructions. Common scenarios - using o1 or o3 with DSPy, getting structured output from reasoning models, two-phase prompting where a reasoning model generates freely then an extraction model parses the output, or fixing format errors from thinking models. Related - dspy-adapters, dspy-lm, ai-switching-models. Also used for dspy.TwoStepAdapter, o1 with DSPy, o3-mini DSPy, reasoning model in DSPy, DeepSeek-R1 DSPy, extended thinking DSPy, thinking model ignores format, o1 ignores my DSPy format, TwoStepAdapter setup, two-phase prompting, extraction LM, reasoning model structured output, main_lm extraction_lm, model pairing for reasoning models.
+description: Use when working with reasoning models (o1, o3, o3-mini, DeepSeek-R1, Claude extended thinking) that reject system prompts or ignore formatting instructions. Common scenarios - using o1 or o3 with DSPy, getting structured output from reasoning models, two-phase prompting where a reasoning model generates freely then an extraction model parses the output, or fixing format errors from thinking models. Related - dspy-adapters, dspy-lm, ai-switching-models. Also used for dspy.TwoStepAdapter, o1 with DSPy, o3-mini DSPy, reasoning model in DSPy, DeepSeek-R1 DSPy, extended thinking DSPy, thinking model ignores format, o1 ignores my DSPy format, TwoStepAdapter setup, two-phase prompting, extraction LM, reasoning model structured output, extraction_model TwoStepAdapter, model pairing for reasoning models.
 ---
 
 # Use Reasoning Models with dspy.TwoStepAdapter
@@ -40,12 +40,10 @@ main_lm = dspy.LM("openai/o3-mini")
 # The extraction model (parses into structured fields)
 extraction_lm = dspy.LM("openai/gpt-4o-mini")
 
-# Configure the adapter
-adapter = dspy.TwoStepAdapter(
-    main_lm=main_lm,
-    extraction_lm=extraction_lm,
-)
+# Configure the adapter (only the extraction model is passed in)
+adapter = dspy.TwoStepAdapter(extraction_model=extraction_lm)
 
+# The reasoning model is the configured lm, not an adapter argument
 dspy.configure(lm=main_lm, adapter=adapter)
 ```
 
@@ -59,7 +57,7 @@ print(result.answer)  # Structured output, extracted by gpt-4o-mini
 
 ## Step 2: Model pairing recommendations
 
-| Reasoning model (main_lm) | Extraction model (extraction_lm) | Notes |
+| Reasoning model (`dspy.configure(lm=...)`) | Extraction model (`extraction_model=...`) | Notes |
 |---------------------------|----------------------------------|-------|
 | `openai/o1` | `openai/gpt-4o-mini` | Best reasoning + cheap extraction |
 | `openai/o3` | `openai/gpt-4o-mini` | Highest capability |
@@ -86,10 +84,7 @@ dspy.configure(lm=fast_lm)
 # Reasoning model for hard problems
 reasoning_lm = dspy.LM("openai/o3-mini")
 extraction_lm = dspy.LM("openai/gpt-4o-mini")
-reasoning_adapter = dspy.TwoStepAdapter(
-    main_lm=reasoning_lm,
-    extraction_lm=extraction_lm,
-)
+reasoning_adapter = dspy.TwoStepAdapter(extraction_model=extraction_lm)
 
 
 class Pipeline(dspy.Module):
@@ -124,11 +119,9 @@ thinking_lm = dspy.LM(
 # Extraction model
 extraction_lm = dspy.LM("anthropic/claude-haiku-3-5-20241022")
 
-adapter = dspy.TwoStepAdapter(
-    main_lm=thinking_lm,
-    extraction_lm=extraction_lm,
-)
+adapter = dspy.TwoStepAdapter(extraction_model=extraction_lm)
 
+# The thinking model is the configured lm, not an adapter argument
 dspy.configure(lm=thinking_lm, adapter=adapter)
 
 # Works transparently -- thinking model reasons, haiku extracts structure
@@ -151,7 +144,7 @@ If the model follows ChatAdapter format reliably, TwoStepAdapter adds cost and l
 
 1. **Claude uses ChatAdapter for o1/o3 models.** Reasoning models reject ChatAdapter formatting. If you see raw reasoning dumps without structured fields, switch to TwoStepAdapter.
 2. **Claude sets extraction_lm to the same reasoning model.** The extraction model should be fast and cheap (gpt-4o-mini, Claude Haiku). Using o3 for extraction wastes money and is slower.
-3. **Claude forgets to set both `lm` and `adapter` on per-module assignment.** When assigning TwoStepAdapter to a specific module, set both `module.adapter = adapter` and `module.lm = reasoning_lm`. Missing either causes the wrong model or wrong adapter to be used.
+3. **Claude forgets to set both `lm` and `adapter` on per-module assignment.** When assigning TwoStepAdapter to a specific module, set both `module.lm = reasoning_lm` and `module.adapter = dspy.TwoStepAdapter(extraction_model=...)`. There is no `main_lm` constructor arg -- the reasoning model is the module's `lm`, and only the extraction model goes to the adapter. Missing either causes the wrong model or wrong adapter to be used.
 4. **TwoStepAdapter is not needed for DeepSeek-V3.** Only DeepSeek-R1 (the reasoning variant) needs it. DeepSeek-V3 follows formatting like a standard chat model.
 5. **Claude wraps extended thinking in TwoStepAdapter incorrectly.** For Claude extended thinking, pass `thinking={"type": "enabled", "budget_tokens": N}` to the LM constructor, not as a separate parameter.
 

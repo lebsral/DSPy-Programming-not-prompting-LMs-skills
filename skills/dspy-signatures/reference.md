@@ -36,7 +36,7 @@ dspy.InputField(desc=None, prefix=None, **kwargs)
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `desc` | `str \| None` | `None` | Natural-language description shown to LM |
-| `prefix` | `str \| None` | `None` | Override field label in prompt |
+| `prefix` | `str \| None` | `None` | Override field label in prompt (DEPRECATED in 3.2 — emits a warning; use inline annotations/desc instead) |
 | `**kwargs` | | | Passed to `pydantic.Field()` |
 
 ## dspy.OutputField
@@ -48,8 +48,8 @@ dspy.OutputField(desc=None, prefix=None, type_=None, **kwargs)
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `desc` | `str \| None` | `None` | Natural-language description shown to LM |
-| `prefix` | `str \| None` | `None` | Override field label in prompt |
-| `type_` | `type \| None` | `None` | Alternative to Python type annotation |
+| `prefix` | `str \| None` | `None` | Override field label in prompt (DEPRECATED in 3.2 — emits a warning; use inline annotations/desc instead) |
+| `type_` | `type \| None` | `None` | Alternative to Python type annotation (works, but inline annotation preferred) |
 | `**kwargs` | | | Passed to `pydantic.Field()` |
 
 ## Inline Signatures

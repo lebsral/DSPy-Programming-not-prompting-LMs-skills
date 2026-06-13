@@ -27,7 +27,7 @@
     "id": "optimize-with-labels",
     "prompt": "I have labeled data - for 200 users I know which products they clicked after seeing recommendations. How do I use this to improve my DSPy recommender?",
     "assertions": [
-      "uses BootstrapFewShot or MIPROv2 from dspy.teleprompt",
+      "uses dspy.BootstrapFewShot or dspy.MIPROv2 (top-level dspy namespace)",
       "defines a metric function that measures precision@k or similar ranking quality",
       "constructs dspy.Example objects with user_profile and relevant_item_ids",
       "calls optimizer.compile() with the pipeline and trainset",

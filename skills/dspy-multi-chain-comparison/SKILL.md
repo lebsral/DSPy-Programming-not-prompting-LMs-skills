@@ -5,15 +5,17 @@ description: Use when you want higher accuracy by generating multiple reasoning 
 
 # Get Better Answers by Comparing Multiple Reasoning Chains
 
-Guide the user through using `dspy.MultiChainComparison` to improve answer quality. Instead of relying on a single chain of thought, this module generates several independent reasoning chains and then selects the best final answer by comparing them.
+Guide the user through using `dspy.MultiChainComparison` to improve answer quality. Instead of relying on a single chain of thought, you generate several independent reasoning chains yourself and then hand them to this module, which selects the best final answer by comparing them.
 
 ## What is MultiChainComparison
 
 `dspy.MultiChainComparison` is a DSPy module that:
 
-1. **Generates multiple chains of thought** -- each one reasons through the problem independently
-2. **Compares the candidates** -- a final comparison step evaluates all chains and picks the best answer
+1. **Takes M pre-generated reasoning chains** -- you generate these yourself first (one `ChainOfThought` call with `n=M`), then pass them in
+2. **Compares the candidates** -- a single comparison/synthesis LM call evaluates all chains and picks the best answer
 3. **Returns a single answer** -- the output looks the same as any other DSPy module
+
+Important: `MultiChainComparison` does NOT generate the chains for you. You generate the M completions first, then pass them as the first positional argument to the module. The module itself makes exactly **1 LM call** -- the synthesis step.
 
 Think of it as getting multiple opinions from different experts, then having a judge pick the most convincing one. The diversity of reasoning paths surfaces better answers than any single chain alone.
 
@@ -28,14 +30,14 @@ Use it when:
 
 Do NOT use it when:
 
-- **Latency is critical** -- it makes multiple LM calls (one per chain + one comparison), so it is slower than a single `ChainOfThought`
+- **Latency is critical** -- generating M chains (one `ChainOfThought` call with `n=M`) plus the comparison call is slower than a single `ChainOfThought`
 - **The task is straightforward** -- simple classification, extraction, or lookup does not benefit from multiple chains
-- **Cost is a hard constraint** -- each chain is a separate LM call, so costs scale linearly with the number of chains
+- **Cost is a hard constraint** -- generating M chains plus the synthesis call costs more than a single `ChainOfThought`
 - **You need deterministic output** -- the comparison step adds variability
 
 ## Basic usage
 
-`MultiChainComparison` works with any signature, just like `ChainOfThought`:
+Using `MultiChainComparison` is a **two-step** process. First you generate M reasoning chains yourself with one `ChainOfThought` call (set `n=M`), then you pass the resulting `.completions` list as the first positional argument to the `MultiChainComparison` instance:
 
 ```python
 import dspy
@@ -43,13 +45,24 @@ import dspy
 lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
-# Inline signature -- same as you'd use with ChainOfThought
-recommend = dspy.MultiChainComparison("problem -> recommendation")
-result = recommend(problem="We need to migrate from MongoDB to PostgreSQL for our 50GB dataset with complex joins")
+# Step 1: generate M=5 reasoning chains yourself (one ChainOfThought call with n=M)
+generate = dspy.ChainOfThought("problem -> recommendation", n=5)
+completions = generate(
+    problem="We need to migrate from MongoDB to PostgreSQL for our 50GB dataset with complex joins"
+).completions  # list of M completions
+
+# Step 2: pass the completions to MultiChainComparison to synthesize the best answer
+compare = dspy.MultiChainComparison("problem -> recommendation", M=5)
+result = compare(
+    completions,
+    problem="We need to migrate from MongoDB to PostgreSQL for our 50GB dataset with complex joins",
+)
 print(result.recommendation)
 ```
 
-With a class-based signature:
+Make sure `M` on the `MultiChainComparison` instance matches the number of completions you generated (`n` on the `ChainOfThought` generator).
+
+With a class-based signature -- same two-step pattern:
 
 ```python
 import dspy
@@ -60,50 +73,58 @@ class TechRecommendation(dspy.Signature):
     constraints: str = dspy.InputField(desc="Budget, timeline, or technical constraints")
     recommendation: str = dspy.OutputField(desc="The recommended approach with justification")
 
-recommend = dspy.MultiChainComparison(TechRecommendation)
-result = recommend(
+inputs = dict(
     problem="Our API response times are over 2 seconds under load",
     constraints="Small team, no budget for new infrastructure",
 )
+
+# Step 1: generate the chains
+generate = dspy.ChainOfThought(TechRecommendation, n=3)
+completions = generate(**inputs).completions
+
+# Step 2: compare and synthesize
+compare = dspy.MultiChainComparison(TechRecommendation, M=3)
+result = compare(completions, **inputs)
 print(result.recommendation)
 ```
 
 ## How it works internally
 
-When you call a `MultiChainComparison` module, DSPy does the following:
+The work is split across two steps -- the first is yours, the second is the module's:
 
-1. **Runs N independent `ChainOfThought` calls** -- each produces its own `reasoning` and output fields
-2. **Formats all completions** -- collects the reasoning and answers from each chain
-3. **Runs a comparison step** -- a final LM call sees all candidate chains and selects the best answer
+1. **You generate the chains** -- one `ChainOfThought` call with `n=M` produces M completions, each with its own `reasoning` and output fields. This is a single LM call (the provider returns M samples).
+2. **You pass the completions in** -- `compare(completions, **inputs)` hands the M pre-generated chains to `MultiChainComparison`.
+3. **The module runs one comparison step** -- a single LM call sees all candidate chains and selects/synthesizes the best answer.
 
-The comparison step is the key differentiator. Rather than picking randomly or voting, the model actively evaluates the quality of each reasoning chain before choosing.
+The comparison step is the key differentiator. Rather than picking randomly or voting, the model actively evaluates the quality of each reasoning chain before choosing. `MultiChainComparison` itself contributes exactly **1 LM call** -- the synthesis. It does not generate the chains.
 
 ```
-Input --> CoT Chain 1 --> reasoning_1 + answer_1 --|
-      --> CoT Chain 2 --> reasoning_2 + answer_2 --|--> Comparison --> best answer
-      --> CoT Chain 3 --> reasoning_3 + answer_3 --|
+Input --> ChainOfThought(n=M) --> reasoning_1 + answer_1 --|
+                                  reasoning_2 + answer_2 --|--> MultiChainComparison --> best answer
+                                  reasoning_3 + answer_3 --|   (1 synthesis LM call)
+       (1 LM call returning M completions)
 ```
 
 ## Configuring the number of chains
 
-By default, `MultiChainComparison` generates 3 chains. You can adjust `M` and `temperature`:
+By default, `MultiChainComparison` expects 3 chains. `M` tells the module how many completions to expect (it must match the `n` you used when generating them). You can adjust `M` and `temperature`:
 
 ```python
 # Constructor signature
 dspy.MultiChainComparison(signature, M=3, temperature=0.7, **config)
 ```
 
-- `M` — number of independent reasoning chains (default 3)
-- `temperature` — sampling temperature for chain generation (default 0.7). Higher values produce more diverse chains, which gives the comparison step more to work with.
+- `M` — number of reasoning chains the module expects to receive (default 3); set the `ChainOfThought` generator's `n` to the same value.
+- `temperature` — sampling temperature for the comparison step (default 0.7). When generating chains, set the temperature on the `ChainOfThought` generator; higher values produce more diverse chains, which gives the comparison step more to work with.
 
-Guidelines for choosing M:
+Guidelines for choosing M (the chains are 1 `ChainOfThought` call with `n=M`; `MultiChainComparison` adds 1 synthesis call):
 
 | M value | LM calls | Best for |
 |---------|----------|----------|
-| 2 | 3 (2 chains + 1 comparison) | Slight quality boost over single CoT |
-| 3 | 4 (3 chains + 1 comparison) | Good default, balances quality and cost |
-| 5 | 6 (5 chains + 1 comparison) | High-stakes tasks where accuracy is critical |
-| 7+ | 8+ | Diminishing returns for most tasks |
+| 2 | 2 (1 generate call + 1 synthesis) | Slight quality boost over single CoT |
+| 3 | 2 (1 generate call + 1 synthesis) | Good default, balances quality and cost |
+| 5 | 2 (1 generate call + 1 synthesis) | High-stakes tasks where accuracy is critical |
+| 7+ | 2 (1 generate call + 1 synthesis) | Diminishing returns for most tasks |
 
 ## Using MultiChainComparison in a module
 
@@ -122,16 +143,23 @@ class RiskAssessment(dspy.Signature):
     mitigation: str = dspy.OutputField(desc="Recommended mitigation steps")
 
 class ChangeReviewer(dspy.Module):
-    def __init__(self):
+    def __init__(self, M=3):
+        self.M = M
         self.classify = dspy.Predict("change_description -> change_type: str")
-        self.assess = dspy.MultiChainComparison(RiskAssessment, M=3)
+        # Generator produces M chains; MCC synthesizes the best answer
+        self.generate = dspy.ChainOfThought(RiskAssessment, n=M)
+        self.assess = dspy.MultiChainComparison(RiskAssessment, M=M)
 
     def forward(self, change_description, system_context):
         change_type = self.classify(change_description=change_description).change_type
-        result = self.assess(
+        inputs = dict(
             change_description=f"[{change_type}] {change_description}",
             system_context=system_context,
         )
+        # Step 1: generate M reasoning chains
+        completions = self.generate(**inputs).completions
+        # Step 2: compare and synthesize the best answer
+        result = self.assess(completions, **inputs)
         return dspy.Prediction(
             change_type=change_type,
             risk_level=result.risk_level,
@@ -155,55 +183,76 @@ print(f"Mitigation: {result.mitigation}")
 
 ## Cost and latency tradeoffs
 
-MultiChainComparison trades speed and cost for quality. Here is a rough comparison with M=3:
+The two-step pattern trades speed and cost for quality. The chain generation is 1 `ChainOfThought` call (with `n=M`) and `MultiChainComparison` adds 1 synthesis call. Here is a rough comparison with M=3:
 
-| Aspect | ChainOfThought | MultiChainComparison (M=3) |
+| Aspect | ChainOfThought | Generate (n=3) + MultiChainComparison |
 |--------|---------------|---------------------------|
-| LM calls | 1 | 4 (3 chains + 1 comparison) |
-| Latency | 1x | ~3-4x (chains can run in parallel internally) |
-| Cost | 1x | ~4x |
+| LM calls | 1 | 2 (1 generate call returning 3 chains + 1 synthesis) |
+| Latency | 1x | ~2x (the generate call returns M samples in one round trip) |
+| Cost | 1x | ~M+1 tokens worth (M sampled completions + 1 synthesis) |
 | Quality | Good | Better on ambiguous/complex tasks |
+
+Note: even though there are only 2 LM calls, the generate call samples M completions, so token cost scales with M (roughly M generations + 1 synthesis).
 
 Strategies to manage cost:
 
-- **Use a cheaper model for chains, expensive model for comparison** -- the comparison step benefits most from a strong model:
+- **Use a cheaper model for chains, an expensive model for comparison** -- the comparison step benefits most from a strong model, while the chains can be sampled cheaply:
 
 ```python
 cheap_lm = dspy.LM("openai/gpt-4o-mini")  # or any smaller model
 expensive_lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
-dspy.configure(lm=cheap_lm)  # default for chains
+# Generate the M chains with the cheap model
+generate = dspy.ChainOfThought("problem -> recommendation", n=5)
+generate.set_lm(cheap_lm)
 
-pipeline = ChangeReviewer()
-# The comparison predict inside MultiChainComparison can be set separately
-# by accessing the internal predict module
+# Run the synthesis/comparison with the expensive model
+compare = dspy.MultiChainComparison("problem -> recommendation", M=5)
+compare.set_lm(expensive_lm)
+
+problem = "Our API response times are over 2 seconds under load"
+completions = generate(problem=problem).completions
+result = compare(completions, problem=problem)
+print(result.recommendation)
 ```
 
 - **Use MultiChainComparison selectively** -- route only hard tasks through it:
 
 ```python
 class AdaptiveReasoner(dspy.Module):
-    def __init__(self):
+    def __init__(self, M=3):
+        self.M = M
         self.classify_difficulty = dspy.Predict("question -> difficulty: str")
         self.fast = dspy.ChainOfThought("question -> answer")
-        self.thorough = dspy.MultiChainComparison("question -> answer", M=3)
+        self.generate = dspy.ChainOfThought("question -> answer", n=M)
+        self.compare = dspy.MultiChainComparison("question -> answer", M=M)
 
     def forward(self, question):
         difficulty = self.classify_difficulty(question=question).difficulty.lower()
         if "hard" in difficulty or "complex" in difficulty:
-            return self.thorough(question=question)
+            completions = self.generate(question=question).completions
+            return self.compare(completions, question=question)
         return self.fast(question=question)
 ```
 
 ## Optimizing MultiChainComparison
 
-MultiChainComparison modules are optimizable like any other DSPy module. Optimizers tune the prompts for both the chain generation and comparison steps:
+`MultiChainComparison` modules are optimizable like any other DSPy module. Because the chains are generated by a separate `ChainOfThought` step, wrap both steps in a `dspy.Module` so the optimizer can tune the prompts for both the generation and the comparison/synthesis steps:
 
 ```python
 def quality_metric(example, prediction, trace=None):
     return prediction.answer.strip().lower() == example.answer.strip().lower()
 
-program = dspy.MultiChainComparison("question -> answer", M=3)
+class CompareReasoner(dspy.Module):
+    def __init__(self, M=3):
+        self.generate = dspy.ChainOfThought("question -> answer", n=M)
+        self.compare = dspy.MultiChainComparison("question -> answer", M=M)
+
+    def forward(self, question):
+        completions = self.generate(question=question).completions
+        return self.compare(completions, question=question)
+
+program = CompareReasoner(M=3)
 
 optimizer = dspy.BootstrapFewShot(metric=quality_metric, max_bootstrapped_demos=4)
 optimized = optimizer.compile(program, trainset=trainset)
@@ -235,11 +284,11 @@ MultiChainComparison is most valuable when the problem genuinely benefits from d
 
 ## Gotchas
 
-1. **Claude omits the `temperature` parameter.** MultiChainComparison relies on diverse chains — with `temperature=0` (or very low), chains produce near-identical outputs and the comparison step adds cost with no quality gain. Keep the default `temperature=0.7` or set it higher for more diversity.
-2. **Claude uses MultiChainComparison for simple tasks.** For straightforward classification, extraction, or lookup, MultiChainComparison adds 3-4x cost with no quality improvement. Use `dspy.Predict` or `dspy.ChainOfThought` for simple tasks and reserve MultiChainComparison for genuinely ambiguous or high-stakes decisions.
-3. **Claude sets M too high.** Beyond M=5, diminishing returns set in quickly — each additional chain adds a full LM call but contributes marginal diversity. Start with M=3 and only increase if evaluation shows improvement.
-4. **Claude ignores the cost multiplier during optimization.** Running MIPROv2 or BootstrapFewShot on a MultiChainComparison module means every optimization trial makes M+1 LM calls. With M=3 and 100 trials, that is 400 LM calls per predictor. Use `auto="light"` for MIPROv2 or keep trial counts low.
-5. **Claude wraps MultiChainComparison around ChainOfThought.** MultiChainComparison already generates multiple CoT chains internally. Wrapping it in another reasoning module compounds the cost without proportional quality gains.
+1. **Claude calls MultiChainComparison directly with raw inputs.** `MultiChainComparison` does NOT generate the chains. You must generate M completions first (`dspy.ChainOfThought(sig, n=M)`), grab `.completions`, then pass that list as the first positional argument: `compare(completions, **inputs)`. Calling `compare(problem=...)` without completions is wrong.
+2. **Claude forgets to sample diverse chains.** Diversity comes from the `ChainOfThought` generator. Generate with `n=M` and a non-zero temperature on the generator — with `temperature=0` the chains are near-identical and the comparison step adds cost with no quality gain. Keep the default `temperature=0.7` or higher.
+3. **Claude uses MultiChainComparison for simple tasks.** For straightforward classification, extraction, or lookup, the generate-plus-synthesize pattern adds cost with no quality improvement. Use `dspy.Predict` or `dspy.ChainOfThought` for simple tasks and reserve MultiChainComparison for genuinely ambiguous or high-stakes decisions.
+4. **Claude sets M too high.** Beyond M=5, diminishing returns set in quickly — each additional chain adds a sampled generation but contributes marginal diversity. Start with M=3 and only increase if evaluation shows improvement. Also keep `M` on the module equal to the generator's `n`.
+5. **Claude ignores the cost during optimization.** Optimizing a wrapper module that generates M chains plus a synthesis call means every trial makes 2 LM calls and samples M completions. With many trials this adds up. Use `auto="light"` for MIPROv2 or keep trial counts low.
 
 ## Cross-references
 

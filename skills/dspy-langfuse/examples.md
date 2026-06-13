@@ -48,7 +48,7 @@ print(f"Summary: {result.summary}")
 # Push a quality score to Langfuse
 trace_id = langfuse.get_current_trace_id()
 if trace_id:
-    langfuse.score(
+    langfuse.create_score(
         trace_id=trace_id,
         name="classification_correct",
         value=True,

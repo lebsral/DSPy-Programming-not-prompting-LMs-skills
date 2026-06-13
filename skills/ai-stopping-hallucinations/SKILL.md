@@ -349,12 +349,12 @@ trainset = [
 
 # Optimize the citation enforcer
 optimizer = dspy.BootstrapFewShot(metric=faithfulness_metric, max_bootstrapped_demos=4)
-optimized = optimizer.compile(CitationEnforcer(), trainset=trainset)
-optimized.save("optimized_citation_enforcer.json")
+optimized = optimizer.compile(FaithfulAnswerer(), trainset=trainset)
+optimized.save("optimized_faithful_answerer.json")
 
 # Load later
-enforcer = CitationEnforcer()
-enforcer.load("optimized_citation_enforcer.json")
+enforcer = FaithfulAnswerer()
+enforcer.load("optimized_faithful_answerer.json")
 ```
 
 ### Using a cheap LM for verification

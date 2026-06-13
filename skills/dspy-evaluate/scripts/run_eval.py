@@ -45,7 +45,7 @@ def run_eval(
         display_table=display_table,
     )
 
-    score = evaluator(program)
+    score = evaluator(program).score
 
     return {
         "score": score,

@@ -43,12 +43,10 @@ class ClassifyTicket(dspy.Signature):
 classifier = dspy.Predict(ClassifyTicket)
 
 # Optimize with BootstrapFewShot on 100-200 labeled tickets
-from dspy.teleprompt import BootstrapFewShot
-
 def exact_match(example, pred, trace=None):
     return example.queue == pred.queue
 
-optimizer = BootstrapFewShot(metric=exact_match, max_bootstrapped_demos=6)
+optimizer = dspy.BootstrapFewShot(metric=exact_match, max_bootstrapped_demos=6)
 optimized_classifier = optimizer.compile(classifier, trainset=labeled_tickets)
 ```
 
@@ -261,7 +259,7 @@ class GradeEssay(dspy.Signature):
 
 grader_module = dspy.ChainOfThought(GradeEssay)
 
-def consistency_score(prediction) -> float:
+def consistency_score(args, prediction) -> float:
     """Score a prediction by checking that all scores are in range and the
     justification references at least two rubric dimensions."""
     scores = [

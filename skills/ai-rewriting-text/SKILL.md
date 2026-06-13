@@ -188,7 +188,6 @@ rewriter = dspy.Predict(BrandVoiceRewriter)
 
 ```python
 import dspy
-from dspy.teleprompt import BootstrapFewShot
 
 trainset = [
     dspy.Example(
@@ -200,7 +199,7 @@ trainset = [
     # add more examples
 ]
 
-optimizer = BootstrapFewShot(metric=rewrite_metric, max_bootstrapped_demos=3)
+optimizer = dspy.BootstrapFewShot(metric=rewrite_metric, max_bootstrapped_demos=3)
 optimized_rewriter = optimizer.compile(dspy.Predict(RewriteText), trainset=trainset)
 ```
 

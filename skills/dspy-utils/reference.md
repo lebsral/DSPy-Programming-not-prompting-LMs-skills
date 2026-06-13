@@ -69,4 +69,5 @@ Wraps sync DSPy programs for async execution. Captures and propagates `dspy.conf
 ```python
 dspy.configure_cache(enable=True)   # enable/disable caching globally
 dspy.LM("model", cache=False)      # per-LM cache control
+dspy.configure_cache(restrict_pickle=True)  # 3.2+ - harden the on-disk cache against untrusted pickle payloads
 ```

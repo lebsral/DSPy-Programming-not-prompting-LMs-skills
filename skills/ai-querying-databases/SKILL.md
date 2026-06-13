@@ -132,6 +132,27 @@ def get_enriched_schema(engine, table_descs=None, col_descs=None):
 
 Two-stage approach: first pick the relevant tables, then generate SQL.
 
+### Hard validation gate
+
+The modules below call `validate_sql(sql)` to reject unsafe SQL before execution. It enforces the same hard constraints as the `sql_safety_reward` function in Step 4, but raises instead of scoring — use it inside `forward` so a single bad query never reaches the database:
+
+```python
+def validate_sql(sql: str) -> str:
+    """Raise ValueError if the SQL is unsafe; otherwise return it unchanged."""
+    sql_clean = sql.strip().rstrip(";")
+    sql_upper = sql_clean.upper()
+
+    if not sql_upper.startswith("SELECT"):
+        raise ValueError(f"Only SELECT queries are allowed: {sql}")
+
+    dangerous = ["INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "TRUNCATE", "EXEC"]
+    for keyword in dangerous:
+        if keyword in sql_upper.split("SELECT", 1)[0]:
+            raise ValueError(f"Unsafe SQL rejected ({keyword}): {sql}")
+
+    return sql_clean
+```
+
 ### Stage 1: Table selection (for databases with many tables)
 
 ```python

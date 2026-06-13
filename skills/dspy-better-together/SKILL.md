@@ -114,12 +114,10 @@ After all steps, BetterTogether returns the **best-scoring candidate** across al
 Pass your own optimizers as keyword arguments. The keys become identifiers in the strategy string:
 
 ```python
-from dspy.teleprompt import GEPA, BootstrapFinetune
-
 optimizer = dspy.BetterTogether(
     metric=metric,
-    p=GEPA(metric=metric, auto="medium"),
-    w=BootstrapFinetune(metric=metric),
+    p=dspy.GEPA(metric=metric, auto="medium"),
+    w=dspy.BootstrapFinetune(metric=metric),
 )
 
 program.set_lm(lm)

@@ -61,12 +61,10 @@ result = classifier(ticket_text="My invoice shows the wrong amount.")
 print(result.category)  # "billing"
 
 # With optimization
-from dspy.teleprompt import BootstrapFewShot
-
 def accuracy_metric(example, pred, trace=None):
     return example.category == pred.category
 
-optimizer = BootstrapFewShot(metric=accuracy_metric, max_bootstrapped_demos=4)
+optimizer = dspy.BootstrapFewShot(metric=accuracy_metric, max_bootstrapped_demos=4)
 optimized = optimizer.compile(classifier, trainset=trainset)
 ```
 
@@ -94,9 +92,7 @@ print(result.reasoning)  # The chain-of-thought trace
 print(result.answer)
 
 # Optimize with MIPROv2 for best quality
-from dspy.teleprompt import MIPROv2
-
-optimizer = MIPROv2(metric=your_metric, auto="medium")
+optimizer = dspy.MIPROv2(metric=your_metric, auto="medium")
 optimized = optimizer.compile(answerer, trainset=trainset, valset=valset)
 ```
 
@@ -134,9 +130,7 @@ result = agent(question="What was the GDP of Germany in 2023?")
 print(result.answer)
 
 # For agents, BootstrapFewShot is usually enough
-from dspy.teleprompt import BootstrapFewShot
-
-optimizer = BootstrapFewShot(metric=your_metric, max_bootstrapped_demos=2)
+optimizer = dspy.BootstrapFewShot(metric=your_metric, max_bootstrapped_demos=2)
 optimized = optimizer.compile(agent, trainset=trainset)
 ```
 

@@ -71,9 +71,11 @@ All metrics return scores in the range 0.0 to 1.0 (higher is better).
 
 ```python
 from ragas.llms import llm_factory
+from anthropic import Anthropic
 
-# Use any LiteLLM-supported provider string
-evaluator_llm = llm_factory("anthropic/claude-sonnet-4-5-20250929")
+client = Anthropic()  # reads ANTHROPIC_API_KEY
+evaluator_llm = llm_factory("claude-sonnet-4-5-20250929", provider="anthropic", client=client)
+# or use provider="openai" with an OpenAI() client, etc.
 result = evaluate(dataset=dataset, metrics=[Faithfulness()], llm=evaluator_llm)
 ```
 

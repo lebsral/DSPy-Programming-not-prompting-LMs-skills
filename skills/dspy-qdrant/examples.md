@@ -25,7 +25,9 @@ docs = [
 ]
 
 # Create collection
-client.recreate_collection(
+if client.collection_exists("support_docs"):
+    client.delete_collection("support_docs")
+client.create_collection(
     collection_name="support_docs",
     vectors_config=models.VectorParams(size=512, distance=models.Distance.COSINE),
 )

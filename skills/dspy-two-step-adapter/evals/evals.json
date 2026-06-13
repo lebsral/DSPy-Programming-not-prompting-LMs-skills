@@ -1,11 +1,11 @@
 [
   {
     "prompt": "I'm trying to use o3-mini with DSPy but it ignores my output format and just dumps raw reasoning. How do I get structured output?",
-    "expected_output": "Use dspy.TwoStepAdapter with o3-mini as main_lm and a fast model like gpt-4o-mini as extraction_lm.",
+    "expected_output": "Use dspy.TwoStepAdapter(extraction_model=...) with a fast model like gpt-4o-mini as the extraction_model, and set o3-mini as the reasoning model via dspy.configure(lm=...).",
     "assertions": [
       "Recommends TwoStepAdapter (not ChatAdapter or JSONAdapter)",
-      "Sets main_lm to the reasoning model (o3-mini)",
-      "Sets extraction_lm to a fast cheap model (gpt-4o-mini or similar)",
+      "Constructs TwoStepAdapter with extraction_model=<fast cheap model like gpt-4o-mini> (does not pass main_lm or extraction_lm)",
+      "Sets the reasoning model (o3-mini) via dspy.configure(lm=...), not on the adapter",
       "Calls dspy.configure with both lm and adapter",
       "Does not suggest prompt engineering to fix formatting"
     ]

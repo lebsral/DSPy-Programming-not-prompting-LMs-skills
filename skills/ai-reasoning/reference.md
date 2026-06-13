@@ -81,14 +81,15 @@ mcc = dspy.MultiChainComparison(signature, M=3, temperature=0.7, **config)
 Generate N completions and return the highest-scoring one.
 
 ```python
-bon = dspy.BestOfN(module, metric, N=3)
+bon = dspy.BestOfN(module, N=3, reward_fn=my_reward, threshold=1.0)
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `module` | `dspy.Module` | required | The module to run N times |
-| `metric` | `callable` | required | Scoring function to pick the best |
 | `N` | `int` | `3` | Number of completions to generate |
+| `reward_fn` | `callable` | required | `(args, pred) -> float` |
+| `threshold` | `float` | required | minimum reward to accept early |
 
 Simpler than MultiChainComparison when you have a programmatic metric. No internal comparison LM call — just runs the metric on each completion.
 
@@ -99,10 +100,17 @@ Simpler than MultiChainComparison when you have a programmatic metric. No intern
 Iteratively improve an answer using feedback.
 
 ```python
-refine = dspy.Refine(module, metric, max_iters=3)
+refine = dspy.Refine(module, N=3, reward_fn=my_reward, threshold=0.7)
 ```
 
-Runs the module, scores with the metric, and if below threshold, feeds the output back with improvement instructions. Useful for tasks where first-draft quality is acceptable but refinement improves results (writing, code generation).
+Runs the module up to N times, scores each output with `reward_fn(args, pred) -> float`, and returns the first output meeting `threshold` (or the best seen). Useful for tasks where first-draft quality is acceptable but refinement improves results (writing, code generation).
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `module` | `dspy.Module` | required | The module to run |
+| `N` | `int` | required | Max number of attempts |
+| `reward_fn` | `callable` | required | `(args, pred) -> float` |
+| `threshold` | `float` | required | minimum reward to accept |
 
 ---
 

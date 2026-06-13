@@ -139,7 +139,7 @@ Four complete planning walkthroughs for common AI project types.
 
 **Phase 1: Extract Invoice Fields (start here)**
 - Goal: Given a PDF invoice, extract vendor name, invoice number, date, line items, and total as structured JSON
-- Skill: `/ai-parsing-data` — define a DSPy `TypedPredictor` with a Pydantic model for the invoice schema; test on 20 real PDFs manually
+- Skill: `/ai-parsing-data` — define a DSPy `ChainOfThought` with a Pydantic model output field for the invoice schema; test on 20 real PDFs manually
 - Deliverable: An extraction script that processes a PDF and outputs structured JSON. Accuracy measured by hand on 20 samples.
 
 **Phase 2: Validate Before Submission**

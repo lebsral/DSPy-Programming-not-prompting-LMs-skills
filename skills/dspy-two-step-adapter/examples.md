@@ -10,10 +10,7 @@ import dspy
 main_lm = dspy.LM("openai/o3-mini")
 extraction_lm = dspy.LM("openai/gpt-4o-mini")
 
-adapter = dspy.TwoStepAdapter(
-    main_lm=main_lm,
-    extraction_lm=extraction_lm,
-)
+adapter = dspy.TwoStepAdapter(extraction_model=extraction_lm)
 
 dspy.configure(lm=main_lm, adapter=adapter)
 
@@ -43,10 +40,7 @@ import dspy
 main_lm = dspy.LM("deepseek/deepseek-r1")
 extraction_lm = dspy.LM("openai/gpt-4o-mini")
 
-adapter = dspy.TwoStepAdapter(
-    main_lm=main_lm,
-    extraction_lm=extraction_lm,
-)
+adapter = dspy.TwoStepAdapter(extraction_model=extraction_lm)
 
 dspy.configure(lm=main_lm, adapter=adapter)
 
@@ -86,10 +80,7 @@ dspy.configure(lm=fast_lm)
 # Reasoning setup for hard problems
 reasoning_lm = dspy.LM("openai/o3-mini")
 extraction_lm = dspy.LM("openai/gpt-4o-mini")
-reasoning_adapter = dspy.TwoStepAdapter(
-    main_lm=reasoning_lm,
-    extraction_lm=extraction_lm,
-)
+reasoning_adapter = dspy.TwoStepAdapter(extraction_model=extraction_lm)
 
 
 class SmartPipeline(dspy.Module):

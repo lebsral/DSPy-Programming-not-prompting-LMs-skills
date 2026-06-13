@@ -64,7 +64,6 @@ Transform a formal quarterly business report excerpt into a casual, readable blo
 
 ```python
 import dspy
-from dspy.teleprompt import BootstrapFewShot
 
 lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)

@@ -127,6 +127,52 @@ dspy.History(messages=[
 ])
 ```
 
+## dspy.File
+
+Added in DSPy 3.1. Wraps a file (PDF, document, etc.) as a base64 data URI following the OpenAI file content-part spec.
+
+### Fields
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `file_data` | `str \| None` | `None` | Data URI: `data:<mime_type>;base64,<base64_encoded_data>` |
+| `file_id` | `str \| None` | `None` | Identifier for a previously uploaded file |
+| `filename` | `str \| None` | `None` | Optional filename |
+
+At least one of `file_data`, `file_id`, or `filename` must be set.
+
+### Class Methods (preferred for creating File objects)
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `from_path(file_path, filename=None, mime_type=None)` | `-> File` | Read a local file, auto-detect MIME type via `mimetypes.guess_type()`, encode as base64 data URI |
+| `from_bytes(file_bytes, filename=None, mime_type="application/octet-stream")` | `-> File` | Encode raw bytes as a base64 data URI |
+| `from_file_id(file_id, filename=None)` | `-> File` | Reference a provider-uploaded file by ID |
+
+## dspy.Reasoning
+
+Added in DSPy 3.1. Captures the native reasoning/thinking trace from reasoning models as a structured, str-like output type.
+
+### Field
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `content` | `str` | required | The reasoning text |
+
+The validator accepts a plain `str` (converted to `{"content": data}`), a `Reasoning` instance, or a dict with a `content` key.
+
+### Behavior
+
+- **String-like** — implements `__str__`, `__len__`, `__getitem__`, `__contains__`, `__iter__`, `__add__`, `__radd__`, and delegates string methods via `__getattr__`.
+- `adapt_to_native_lm_feature()` sets `reasoning_effort` and removes the field from the signature when the LM supports native reasoning.
+- `parse_lm_response()` extracts reasoning from a `reasoning_content` field; `parse_stream_chunk()` pulls it from streaming chunks.
+
+When no native reasoning is available, DSPy falls back to a generated reasoning field so the same signature works on any LM.
+
+## dspy.Tool and dspy.ToolCalls
+
+`dspy.Tool` wraps a Python callable so the LM can invoke it as a tool; `dspy.ToolCalls` represents the LM's tool-call requests as a structured output type. Both underpin agents and ReAct. See the `/dspy-tools` skill for full API details (registration, argument schemas, execution loops).
+
 ## Base Class: Type
 
 All primitives inherit from `dspy.Type` (which extends `pydantic.BaseModel`). Common inherited methods:

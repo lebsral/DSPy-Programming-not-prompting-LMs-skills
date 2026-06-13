@@ -26,7 +26,7 @@ def search(query: str) -> str:
 
 def calculate(expression: str) -> float:
     """Evaluate a mathematical expression."""
-    return dspy.PythonInterpreter({}).execute(expression)
+    return dspy.PythonInterpreter().execute(expression)
 
 def lookup_database(table: str, query: str) -> str:
     """Query the database for records matching the query."""

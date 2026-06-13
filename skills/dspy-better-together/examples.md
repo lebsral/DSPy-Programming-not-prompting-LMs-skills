@@ -135,7 +135,6 @@ Use GEPA for instruction tuning and BootstrapFinetune for weight optimization in
 ```python
 import dspy
 from dspy.evaluate import Evaluate
-from dspy.teleprompt import GEPA, BootstrapFinetune
 
 lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
@@ -200,8 +199,8 @@ evaluator = Evaluate(devset=valset, metric=metric, num_threads=4, display_progre
 # and BootstrapFinetune for weight optimization
 optimizer = dspy.BetterTogether(
     metric=metric,
-    p=GEPA(metric=metric, auto="medium"),
-    w=BootstrapFinetune(metric=metric),
+    p=dspy.GEPA(metric=metric, auto="medium"),
+    w=dspy.BootstrapFinetune(metric=metric),
 )
 
 compiled = optimizer.compile(
@@ -222,8 +221,8 @@ Use `optimizer_compile_args` to control each optimizer's behavior independently:
 ```python
 optimizer = dspy.BetterTogether(
     metric=metric,
-    p=GEPA(metric=metric, auto="medium"),
-    w=BootstrapFinetune(metric=metric),
+    p=dspy.GEPA(metric=metric, auto="medium"),
+    w=dspy.BootstrapFinetune(metric=metric),
 )
 
 compiled = optimizer.compile(

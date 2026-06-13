@@ -238,7 +238,7 @@ pip install datasets
 from datasets import load_dataset
 
 # Load a dataset
-dataset = load_dataset("hotpotqa", "fullwiki")
+dataset = load_dataset("hotpotqa/hotpot_qa", "fullwiki")
 
 # Convert to DSPy Examples
 trainset = [
@@ -360,9 +360,9 @@ trainset, devset = stratified_split(all_examples, label_field="category")
 Many HuggingFace datasets come pre-split:
 
 ```python
-dataset = load_dataset("hotpotqa", "fullwiki")
-trainset = [dspy.Example(**x).with_inputs("question") for x in dataset["train"][:500]]
-devset = [dspy.Example(**x).with_inputs("question") for x in dataset["validation"][:200]]
+dataset = load_dataset("hotpotqa/hotpot_qa", "fullwiki")
+trainset = [dspy.Example(**x).with_inputs("question") for x in dataset["train"].select(range(500))]
+devset = [dspy.Example(**x).with_inputs("question") for x in dataset["validation"].select(range(200))]
 ```
 
 ## Common patterns

@@ -31,6 +31,9 @@ dspy.configure_cache(enable=False)
 
 # Re-enable caching
 dspy.configure_cache(enable=True)
+
+# DSPy 3.2+ - harden the on-disk cache against untrusted pickle payloads
+dspy.configure_cache(restrict_pickle=True)
 ```
 
 ### Per-LM cache control

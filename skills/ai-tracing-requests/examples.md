@@ -203,6 +203,23 @@ traces = []
 for text in test_texts[:20]:
     pipeline(text=text)
 
+def trace_stats(traces):
+    """Summarize total-latency percentiles across a list of traces."""
+    totals = sorted(t["total_latency_ms"] for t in traces)
+    if not totals:
+        return {"count": 0, "p50_ms": 0, "p95_ms": 0, "p99_ms": 0, "max_ms": 0}
+
+    def pct(p):
+        return totals[min(int(len(totals) * p), len(totals) - 1)]
+
+    return {
+        "count": len(totals),
+        "p50_ms": pct(0.50),
+        "p95_ms": pct(0.95),
+        "p99_ms": pct(0.99),
+        "max_ms": totals[-1],
+    }
+
 all_traces = load_traces()
 stats = trace_stats(all_traces)
 print(stats)

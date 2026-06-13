@@ -1,6 +1,6 @@
 # Accuracy Improvement Reference
 
-> Condensed from [dspy.ai/api/optimizers/](https://dspy.ai/api/) and [dspy.ai/api/evaluation/](https://dspy.ai/api/evaluation/Evaluate/). Verify against upstream for latest.
+> Condensed from [dspy.ai/api/optimizers/](https://dspy.ai/api/optimizers/) and [dspy.ai/api/evaluation/](https://dspy.ai/api/evaluation/Evaluate/). Verify against upstream for latest.
 
 ## Optimizer Comparison Table
 
@@ -81,8 +81,9 @@ Auto settings:
 Generates, evaluates, and proposes alternative instructions using an evolutionary approach.
 
 ```python
-dspy.GEPA()
-# Usage: optimizer.compile(program, trainset=trainset, metric=metric)
+reflection_lm = dspy.LM("openai/gpt-4o", temperature=1.0, max_tokens=4096)  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+optimizer = dspy.GEPA(metric=metric, auto="light", reflection_lm=reflection_lm)
+optimized = optimizer.compile(program, trainset=trainset, valset=devset)
 ```
 
 ### BootstrapFinetune
@@ -119,8 +120,9 @@ You can chain optimizers:
 
 ```python
 # First, optimize instructions with GEPA
-opt1 = dspy.GEPA()
-step1 = opt1.compile(program, trainset=trainset, metric=metric)
+reflection_lm = dspy.LM("openai/gpt-4o", temperature=1.0, max_tokens=4096)  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+opt1 = dspy.GEPA(metric=metric, auto="light", reflection_lm=reflection_lm)
+step1 = opt1.compile(program, trainset=trainset, valset=devset)
 
 # Then, optimize few-shot examples
 opt2 = dspy.BootstrapFewShot(metric=metric, max_bootstrapped_demos=4)

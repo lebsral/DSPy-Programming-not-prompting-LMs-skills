@@ -37,7 +37,7 @@ langfuse.auth_check()    # Verify credentials
 | `langfuse.auth_check()` | Verify API credentials |
 | `langfuse.flush()` | Send pending traces (required for scripts/notebooks) |
 | `langfuse.shutdown()` | Flush and terminate background threads (use on process exit) |
-| `langfuse.score(trace_id, name, value, data_type, comment)` | Attach a score to a trace |
+| `langfuse.create_score(trace_id, name, value, data_type, comment)` | Attach a score to a trace |
 | `langfuse.get_current_trace_id()` | Get the active trace ID |
 | `langfuse.start_as_current_observation(as_type, name)` | Context manager for manual trace/span creation |
 
@@ -90,7 +90,7 @@ with propagate_attributes(
 Attach evaluation results to traces. Score types: `NUMERIC`, `CATEGORICAL`, `BOOLEAN`, `TEXT`.
 
 ```python
-langfuse.score(
+langfuse.create_score(
     trace_id="trace-id",
     name="accuracy",
     value=0.92,           # float for NUMERIC, bool for BOOLEAN, str for CATEGORICAL/TEXT

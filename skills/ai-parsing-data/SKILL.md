@@ -382,7 +382,7 @@ if errors:
 ## Gotchas
 
 - **Pydantic models must be JSON-serializable** — avoid custom types, datetime objects, or complex validators in output models. Stick to `str`, `int`, `float`, `bool`, `list`, `dict`, and nested Pydantic models.
-- **Optional fields need explicit `None` defaults** — use `field: Optional[str] = dspy.OutputField(default=None)` or the model will hallucinate values for missing fields instead of returning None.
+- **Optional fields need an explicit "return None" instruction** — use `field: Optional[str] = dspy.OutputField(desc="... or None if not found")` and state "return None for missing fields" in the signature docstring, or the model will hallucinate values for missing fields instead of returning None.
 - **List extraction undercounts by default** — when extracting lists of items (e.g., "all people mentioned"), the LM tends to stop early. Set `max_tokens` higher and add a "be exhaustive" instruction in the signature docstring.
 - **Long inputs get truncated silently** — if your input text exceeds the model's context window, DSPy doesn't warn you. Chunk long documents before parsing, or use a model with a larger context window.
 - **Nested Pydantic models increase failure rate** — each level of nesting adds extraction difficulty. Flatten where possible, or break into multiple extraction steps (extract outer structure first, then fill in nested fields).

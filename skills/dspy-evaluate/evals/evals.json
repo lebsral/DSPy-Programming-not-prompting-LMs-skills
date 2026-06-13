@@ -15,7 +15,7 @@
     "expected_output": "Recommends SemanticF1 or an LM-as-judge metric for partial credit",
     "assertions": [
       "Recommends SemanticF1 for token-level F1 scoring",
-      "Notes that SemanticF1 expects response fields (not answer)",
+      "Notes that SemanticF1 expects a question field on the example plus response fields (not answer)",
       "Alternatively shows an LM-as-judge pattern using dspy.Predict with a judge signature",
       "Suggests using a separate stronger LM for the judge via dspy.context(lm=judge_lm)"
     ]

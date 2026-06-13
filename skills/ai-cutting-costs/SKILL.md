@@ -94,6 +94,8 @@ Instead of sending everything to the expensive model, classify inputs by difficu
 ### Route by complexity
 
 ```python
+from typing import Literal
+
 class ComplexityRouter(dspy.Module):
     def __init__(self):
         self.assess = dspy.Predict(AssessComplexity)

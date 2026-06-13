@@ -143,6 +143,7 @@ class ProductTagger(dspy.Module):
     """Tag a batch of product listings for a search index."""
 
     def __init__(self):
+        super().__init__()
         self.tag = dspy.Predict(TagItem)
 
     def forward(self, products: list[dict]):

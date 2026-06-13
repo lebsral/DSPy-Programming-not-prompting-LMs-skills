@@ -48,19 +48,12 @@ class Example(dspy.Signature):
     # desc: describes the field to the LM (shows up in the prompt)
     text: str = dspy.InputField(desc="The document to analyze")
 
-    # prefix: overrides the field label in the prompt (default is the field name)
-    summary: str = dspy.OutputField(prefix="Summary:")
-
-    # desc + type constraint combined
-    category: str = dspy.OutputField(
-        desc="The document category",
-        type_=Literal["news", "blog", "research"]
-    )
+    # type constraint via inline annotation (preferred)
+    category: Literal["news", "blog", "research"] = dspy.OutputField(desc="The document category")
 ```
 
 - **`desc`** — a natural language description. Helps the LM understand what the field means. Use this when the field name alone is ambiguous.
-- **`prefix`** — overrides the label shown in the prompt. Defaults to the field name followed by a colon.
-- **`type_`** — alternative way to set type constraint directly on OutputField (instead of using Python type annotation).
+- **`type_`** — sets the type constraint on the field. Still supported, but prefer an inline Python annotation (category: Literal[...] = dspy.OutputField(...)).
 
 ## Pydantic models as output types
 

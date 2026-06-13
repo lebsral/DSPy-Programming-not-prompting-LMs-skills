@@ -111,6 +111,12 @@ class MeetingSummarizer(dspy.Module):
 ### Word limit enforcement
 
 ```python
+class SummarizeWithLimit(dspy.Signature):
+    """Summarize the text within the word limit."""
+    text: str = dspy.InputField()
+    max_words: int = dspy.InputField(desc="Maximum number of words for the summary")
+    summary: str = dspy.OutputField(desc="A concise summary within the word limit")
+
 class LengthControlledSummarizer(dspy.Module):
     def __init__(self):
         self.summarize = dspy.ChainOfThought(SummarizeWithLimit)
@@ -127,13 +133,7 @@ def length_reward(args, pred):
     return max(0.0, 1.0 - (word_count - max_words) / max_words)
 
 # Wrap with Refine to enforce the limit
-enforced = dspy.Refine(module=LengthControlled(), N=3, reward_fn=length_reward, threshold=0.9)
-
-class SummarizeWithLimit(dspy.Signature):
-    """Summarize the text within the word limit."""
-    text: str = dspy.InputField()
-    max_words: int = dspy.InputField(desc="Maximum number of words for the summary")
-    summary: str = dspy.OutputField(desc="A concise summary within the word limit")
+enforced = dspy.Refine(module=LengthControlledSummarizer(), N=3, reward_fn=length_reward, threshold=0.9)
 ```
 
 ### Detail level control
@@ -157,12 +157,6 @@ class MultiDetailSummarizer(dspy.Module):
 
     def forward(self, text, detail_level="standard"):
         result = self.summarize(text=text, detail_level=detail_level)
-
-        # Enforce approximate length expectations
-        word_count = len(result.summary.split())
-        limits = {"brief": 50, "standard": 150, "detailed": 400}
-        max_words = limits[detail_level]
-
         return result
 
 def detail_reward(args, pred):

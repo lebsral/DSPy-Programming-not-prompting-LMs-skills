@@ -175,8 +175,6 @@ def precision_at_k(recommended_ids: list[str], relevant_ids: set[str], k: int) -
 ## Step 7 - Optimize with BootstrapFewShot
 
 ```python
-from dspy.teleprompt import BootstrapFewShot
-
 def recommendation_metric(example, prediction, trace=None):
     """Reward when relevant items appear in top results."""
     relevant = set(example.relevant_item_ids)
@@ -192,7 +190,7 @@ trainset = [
     # Add more labeled examples
 ]
 
-optimizer = BootstrapFewShot(metric=recommendation_metric, max_bootstrapped_demos=4)
+optimizer = dspy.BootstrapFewShot(metric=recommendation_metric, max_bootstrapped_demos=4)
 optimized_pipeline = optimizer.compile(
     RecommendationPipeline(item_catalog={}, item_embeddings={}),
     trainset=trainset,

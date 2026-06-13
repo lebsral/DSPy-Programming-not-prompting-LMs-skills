@@ -38,7 +38,7 @@ Ask the user:
 ### `requirements.txt`
 
 ```
-dspy>=2.6
+dspy>=3.0
 ```
 
 Add `datasets` if loading from HuggingFace. Add provider-specific packages if needed.
@@ -253,7 +253,7 @@ Adapt `QueryRequest`/`QueryResponse` fields to match the user's inputs/outputs.
 ### Updated `requirements.txt`
 
 ```
-dspy>=2.6
+dspy>=3.0
 fastapi>=0.100
 uvicorn[standard]
 pydantic-settings>=2.0

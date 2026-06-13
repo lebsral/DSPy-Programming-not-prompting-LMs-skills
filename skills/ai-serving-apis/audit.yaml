@@ -2,4 +2,4 @@ last_audit:
   date: 2026-05-01
   score: 42/42
   versions:
-    dspy: 3.2.0
+    dspy: 3.2.1

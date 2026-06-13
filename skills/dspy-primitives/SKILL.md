@@ -1,6 +1,6 @@
 ---
 name: dspy-primitives
-description: DSPy typed wrappers (dspy.Image, dspy.Audio, dspy.Code, dspy.History) for multimodal data in signatures. Use when working with non-text inputs like images, audio, or code, building multimodal AI pipelines, processing images alongside text, handling audio transcription inputs, working with code files as typed inputs, or managing conversation history in multi-turn chatbots. Also used for multimodal DSPy, image input in DSPy signature, process images with DSPy, audio input in DSPy, typed fields in signatures, non-text data in DSPy, vision model with DSPy, Claude vision with DSPy, multimodal pipeline, image classification with DSPy, pass images to language model, conversation history type, structured types beyond strings.
+description: DSPy typed wrappers (dspy.Image, dspy.Audio, dspy.Code, dspy.History, dspy.File, dspy.Reasoning, dspy.Tool, dspy.ToolCalls) for multimodal data, files, and structured outputs in signatures. Use when working with non-text inputs like images, audio, or code, passing PDFs or documents to the LM, capturing native reasoning traces from reasoning models, building multimodal AI pipelines, processing images alongside text, handling audio transcription inputs, working with code files as typed inputs, or managing conversation history in multi-turn chatbots. Also used for multimodal DSPy, image input in DSPy signature, process images with DSPy, audio input in DSPy, dspy.File, pass PDF to language model, document input in DSPy, dspy.Reasoning, capture thinking traces, native reasoning output, dspy.Tool, dspy.ToolCalls, typed fields in signatures, non-text data in DSPy, vision model with DSPy, Claude vision with DSPy, multimodal pipeline, image classification with DSPy, pass images to language model, conversation history type, structured types beyond strings.
 ---
 
 # DSPy Primitives
@@ -17,9 +17,9 @@ Before using primitives, clarify:
 
 ## What are primitives
 
-Primitives are DSPy's custom types that go beyond plain strings. They let you pass images, audio, code, and conversation history directly into signatures. DSPy handles the formatting, encoding, and adapter logic so the LM receives the data in the right format for its provider.
+Primitives are DSPy's custom types that go beyond plain strings. They let you pass images, audio, code, files, and conversation history directly into signatures, and capture structured outputs like native reasoning traces. DSPy handles the formatting, encoding, and adapter logic so the LM receives the data in the right format for its provider.
 
-The four primitives:
+The core primitives:
 
 | Primitive | Purpose | Typical use case |
 |-----------|---------|------------------|
@@ -27,6 +27,12 @@ The four primitives:
 | `dspy.Audio` | Audio from files, URLs, or arrays | Transcription, audio classification |
 | `dspy.Code` | Code with language annotation | Code generation, code review, analysis |
 | `dspy.History` | Conversation turns | Chatbots, multi-turn dialogue, follow-up questions |
+| `dspy.File` | Files (PDFs, documents) from a path, bytes, or upload ID | Document Q&A, PDF summarization |
+| `dspy.Reasoning` | Native reasoning/thinking traces from reasoning models | Capturing o1/o3/R1/extended-thinking output |
+| `dspy.Tool` | Wraps a Python callable as a tool the LM can call | Agents, ReAct (see `/dspy-tools`) |
+| `dspy.ToolCalls` | The LM's tool-call requests as a structured output | Agents, ReAct (see `/dspy-tools`) |
+
+Two more types are the core input/output containers: `dspy.Example` holds a single labeled input/output pair (for training and few-shot data) and `dspy.Prediction` is what a module returns. Use them constantly but rarely construct primitives — see `/dspy-data` for `dspy.Example` depth.
 
 ## dspy.Image
 
@@ -289,6 +295,78 @@ class Chatbot(dspy.Module):
         return result
 ```
 
+## dspy.File
+
+Wraps a file (PDF, document, etc.) so you can pass it to an LM that supports file inputs. DSPy encodes the file as a base64 data URI (`data:<mime_type>;base64,<...>`) following the OpenAI file content-part spec. Added in DSPy 3.1.
+
+### Creating File objects
+
+```python
+# From a local file path (auto-detects MIME type)
+file = dspy.File.from_path("./research.pdf")
+
+# From raw bytes
+file = dspy.File.from_bytes(pdf_bytes, filename="research.pdf", mime_type="application/pdf")
+
+# From a previously uploaded file (referenced by provider file ID)
+file = dspy.File.from_file_id("file-abc123", filename="research.pdf")
+
+# Direct instantiation with a data URI
+file = dspy.File(file_data="data:application/pdf;base64,<base64-string>")
+```
+
+### Usage in signatures
+
+```python
+import dspy
+
+lm = dspy.LM("openai/gpt-4o")  # or "anthropic/claude-sonnet-4-5-20250929", etc. (must support file inputs)
+dspy.configure(lm=lm)
+
+class SummarizeDoc(dspy.Signature):
+    """Summarize the key findings in the document."""
+    file: dspy.File = dspy.InputField(desc="Document to summarize")
+    summary: str = dspy.OutputField(desc="Concise summary of the document")
+
+summarizer = dspy.Predict(SummarizeDoc)
+result = summarizer(file=dspy.File.from_path("./research.pdf"))
+print(result.summary)
+```
+
+Use `dspy.File` when you need to feed a whole document to the LM (PDF Q&A, contract review, report summarization) rather than extracting and pasting its text. The model must support file inputs.
+
+## dspy.Reasoning
+
+Captures the native reasoning/thinking trace emitted by reasoning models (o1/o3, DeepSeek-R1, Claude extended thinking) as a structured output field. When the configured model supports native reasoning, DSPy pulls the reasoning trace directly from the response; otherwise it falls back to a generated reasoning field, so the same signature works across reasoning and non-reasoning models. Added in DSPy 3.1.
+
+`dspy.Reasoning` behaves like a string (you can index, slice, concatenate, and call string methods on it) while also being a typed primitive.
+
+### Usage in signatures
+
+```python
+import dspy
+
+lm = dspy.LM("openai/o3-mini")  # or "anthropic/claude-sonnet-4-5-20250929" with thinking, "deepseek/deepseek-reasoner", etc.
+dspy.configure(lm=lm)
+
+class SolveProblem(dspy.Signature):
+    """Solve the math problem."""
+    problem: str = dspy.InputField()
+    reasoning: dspy.Reasoning = dspy.OutputField(desc="The model's native reasoning")
+    answer: str = dspy.OutputField()
+
+solver = dspy.Predict(SolveProblem)
+result = solver(problem="If a train travels 60 km in 45 minutes, what is its speed in km/h?")
+print(result.reasoning)  # the model's native thinking trace
+print(result.answer)     # 80
+```
+
+Use `dspy.Reasoning` when you want access to a reasoning model's native thinking as a first-class output. For a plain generated rationale that works on any LM, use `dspy.ChainOfThought` instead — see `/dspy-chain-of-thought`.
+
+## dspy.Tool and dspy.ToolCalls
+
+`dspy.Tool` wraps a Python callable so the LM can invoke it as a tool, and `dspy.ToolCalls` represents the LM's tool-call requests as a structured output type. These are the building blocks for agents and tool use (ReAct). They are covered in depth — including registration, argument schemas, and execution loops — in `/dspy-tools`; reach for that skill rather than constructing these primitives directly.
+
 ## Combining primitives in signatures
 
 You can mix primitives with regular typed fields in the same signature:
@@ -320,12 +398,14 @@ Not all LM providers support all primitives natively:
 | `dspy.Audio` | An audio-capable model (GPT-4o-audio-preview, Gemini, etc.) |
 | `dspy.Code` | Any LM (formatted as markdown code blocks) |
 | `dspy.History` | Any LM (formatted as conversation turns) |
+| `dspy.File` | A model that supports file inputs (GPT-4o, Claude, Gemini, etc.) |
+| `dspy.Reasoning` | Best with a reasoning model (o1/o3, DeepSeek-R1, Claude extended thinking); falls back to a generated field on others |
 
 DSPy's adapter system handles the provider-specific formatting. You write the signature once; DSPy translates it for the target LM.
 
 ## Gotchas
 
-1. **Claude uses `dspy.Image.from_file()` or `dspy.Image.from_url()` instead of the constructor.** These class methods are deprecated. Use `dspy.Image(url="path/or/url")` directly — the constructor accepts file paths, URLs, bytes, and PIL images via the `url` parameter.
+1. **Claude uses the deprecated `dspy.Image.from_file()` / `from_url()` class methods.** Use `dspy.Image(url="path-or-url")` directly instead — the constructor accepts file paths, URLs, bytes, and PIL images via the `url` parameter.
 2. **Claude passes raw strings where a primitive is expected.** If a signature field is typed as `dspy.Code["python"]`, pass a string directly — DSPy's `validate_input` coerces it. But for `dspy.Image` and `dspy.Audio`, you must construct the primitive object explicitly. Raw strings will not be auto-converted.
 3. **Claude uses `role`/`content` keys in History messages instead of signature field names.** History messages should use keys matching the signature fields (e.g., `{"question": ..., "answer": ...}`), not the generic `role`/`content` format. Using `role`/`content` works but produces worse prompt formatting because DSPy cannot map the history entries to the right signature fields.
 4. **Claude forgets that History is frozen (immutable).** You cannot append to an existing History object. Create a new `dspy.History(messages=[...old_turns, new_turn])` each time. Attempting to mutate raises a `ValidationError`.
@@ -337,6 +417,8 @@ DSPy's adapter system handles the provider-specific formatting. You write the si
 - [dspy.Audio API docs](https://dspy.ai/api/primitives/Audio/)
 - [dspy.Code API docs](https://dspy.ai/api/primitives/Code/)
 - [dspy.History API docs](https://dspy.ai/api/primitives/History/)
+- [DSPy primitives API index](https://dspy.ai/api/primitives/) (Tool, ToolCalls, Example, Prediction)
+- [dspy.File and dspy.Reasoning](https://dspy.ai/diving-deeper/adapters/) — covered in the Adapters guide under "Custom type wrappers" (no dedicated API page yet)
 - For API details, see [reference.md](reference.md)
 - For worked examples, see [examples.md](examples.md)
 
@@ -346,5 +428,7 @@ DSPy's adapter system handles the provider-specific formatting. You write the si
 
 - **Defining signatures** — see `/dspy-signatures`
 - **Using signatures with modules** — see `/dspy-modules`, `/dspy-predict`, `/dspy-chain-of-thought`
+- **Tools and agents (`dspy.Tool`, `dspy.ToolCalls`)** — see `/dspy-tools`
+- **`dspy.Example` and training data** — see `/dspy-data`
 - **Building chatbots with History** — see `/ai-building-chatbots`
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

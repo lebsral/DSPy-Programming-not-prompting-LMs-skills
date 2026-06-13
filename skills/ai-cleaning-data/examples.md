@@ -108,7 +108,7 @@ class StandardizeCompany(dspy.Signature):
     variant: str = dspy.InputField(desc="Company name variant to standardize")
     result: CompanyResolution = dspy.OutputField(desc="Resolution result with canonical name and metadata")
 
-standardizer = dspy.TypedPredictor(StandardizeCompany)
+standardizer = dspy.Predict(StandardizeCompany)
 
 variants = [
     "IBM Corp.",

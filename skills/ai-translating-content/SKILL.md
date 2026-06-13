@@ -50,7 +50,6 @@ Brand terms and product names must survive translation unchanged. Pass them expl
 
 ```python
 from pydantic import BaseModel
-from typing import list
 
 class TranslationResult(BaseModel):
     translated_text: str

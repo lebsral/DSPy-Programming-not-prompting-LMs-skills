@@ -88,11 +88,11 @@ evaluator = Evaluate(
 
 # Score each individual program
 for i, prog in enumerate(optimized_programs):
-    score = evaluator(prog)
+    score = evaluator(prog).score
     print(f"Program {i + 1} accuracy: {score:.1f}%")
 
 # Score the ensemble
-ensemble_score = evaluator(ensemble_program)
+ensemble_score = evaluator(ensemble_program).score
 print(f"Ensemble accuracy: {ensemble_score:.1f}%")
 
 
@@ -224,16 +224,16 @@ evaluator = Evaluate(
     display_progress=True,
 )
 
-score_fast = evaluator(prog_fast)
+score_fast = evaluator(prog_fast).score
 print(f"Fast-model program accuracy: {score_fast:.1f}%")
 
-score_strong = evaluator(prog_strong)
+score_strong = evaluator(prog_strong).score
 print(f"Strong-model program accuracy: {score_strong:.1f}%")
 
-score_rs = evaluator(prog_rs)
+score_rs = evaluator(prog_rs).score
 print(f"Random-search program accuracy: {score_rs:.1f}%")
 
-ensemble_score = evaluator(ensemble_program)
+ensemble_score = evaluator(ensemble_program).score
 print(f"Ensemble accuracy: {ensemble_score:.1f}%")
 
 

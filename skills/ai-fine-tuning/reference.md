@@ -1,6 +1,6 @@
 # Fine-Tuning API Reference
 
-> Condensed from [dspy.ai/api/optimizers/](https://dspy.ai/api/). Verify against upstream for latest.
+> Condensed from [dspy.ai/api/optimizers/](https://dspy.ai/api/optimizers/). Verify against upstream for latest.
 
 ## dspy.BootstrapFinetune
 

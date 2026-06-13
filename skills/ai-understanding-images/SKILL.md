@@ -39,13 +39,13 @@ analyzer = dspy.Predict(AnalyzeImage)
 
 # From a URL
 result = analyzer(
-    image=dspy.Image.from_url("https://example.com/photo.jpg"),
+    image=dspy.Image(url="https://example.com/photo.jpg"),
     question="What product is shown?"
 )
 
 # From a local file
 result = analyzer(
-    image=dspy.Image.from_file("photo.jpg"),
+    image=dspy.Image(url="photo.jpg"),
     question="What product is shown?"
 )
 
@@ -60,9 +60,8 @@ print(result.answer)
 |---|---|---|
 | `openai/gpt-4o` | Best overall vision quality | Higher cost |
 | `openai/gpt-4o-mini` | Fast, cheap, good for simple tasks | Weaker on complex layouts |
-| `anthropic/claude-opus-4-5` | Strong reasoning about images | High cost |
-| `anthropic/claude-sonnet-4-5-20250929` | Balanced quality/cost | Good for production |
-| `google/gemini-pro-vision` | Long context, PDF support | Check API availability |
+| `anthropic/claude-sonnet-4-5-20250929` | Balanced quality/cost, strong image reasoning (Sonnet/Opus 4.x) | Good for production |
+| `google/gemini-2.5-flash` | Long context, PDF support | Check API availability |
 
 All models listed here support image inputs. Always verify vision support before deploying.
 
@@ -90,7 +89,7 @@ class CategorizeProduct(dspy.Signature):
 
 categorizer = dspy.Predict(CategorizeProduct)
 result = categorizer(
-    image=dspy.Image.from_url("https://example.com/item.jpg"),
+    image=dspy.Image(url="https://example.com/item.jpg"),
     context="Listed as: Vintage leather jacket, size M"
 )
 print(result.attributes.category, result.attributes.condition)
@@ -111,7 +110,7 @@ class GenerateAltText(dspy.Signature):
 
 alt_gen = dspy.Predict(GenerateAltText)
 result = alt_gen(
-    image=dspy.Image.from_url("https://example.com/team-photo.jpg"),
+    image=dspy.Image(url="https://example.com/team-photo.jpg"),
     context="About page of a SaaS startup"
 )
 ```
@@ -136,7 +135,7 @@ class ExtractReceipt(dspy.Signature):
     total: float = dspy.OutputField(desc="Total amount due")
 
 extractor = dspy.Predict(ExtractReceipt)
-result = extractor(image=dspy.Image.from_file("receipt.jpg"))
+result = extractor(image=dspy.Image(url="receipt.jpg"))
 ```
 
 ### Chart and graph data extraction
@@ -164,7 +163,7 @@ class AnalyzeUI(dspy.Signature):
 
 ui_analyzer = dspy.ChainOfThought(AnalyzeUI)
 result = ui_analyzer(
-    image=dspy.Image.from_file("screenshot.png"),
+    image=dspy.Image(url="screenshot.png"),
     focus="accessibility issues"
 )
 ```
@@ -203,7 +202,7 @@ def resize_for_vision(image_path: str, max_side: int = 1024) -> dspy.Image:
     buf = io.BytesIO()
     img.save(buf, format="JPEG", quality=85)
     b64 = base64.b64encode(buf.getvalue()).decode()
-    return dspy.Image.from_base64(b64, media_type="image/jpeg")
+    return dspy.Image(url=f"data:image/jpeg;base64,{b64}")
 
 image = resize_for_vision("large_photo.jpg")
 result = analyzer(image=image, question="What is shown?")
@@ -278,7 +277,7 @@ class ReasonAboutImage(dspy.Signature):
 reasoner = dspy.ChainOfThought(ReasonAboutImage)
 
 # Pattern 3 - Batch processing
-images = [dspy.Image.from_file(p) for p in image_paths]
+images = [dspy.Image(url=p) for p in image_paths]
 results = [extractor(image=img) for img in images]
 
 # Pattern 4 - Iterative refinement when quality is low
@@ -289,9 +288,9 @@ refiner = dspy.Refine(dspy.Predict(AnalyzeImage), N=3, reward_fn=my_reward)
 
 ## Gotchas
 
-- **Wrap image inputs in `dspy.Image`** - Claude writes raw URL strings as image inputs instead of `dspy.Image.from_url()`. Always use `dspy.Image.from_url()` or `dspy.Image.from_file()`. Raw strings are treated as text, not images.
+- **Wrap image inputs in `dspy.Image`** - Claude writes raw URL strings as image inputs instead of wrapping them. Always wrap the URL or local path directly: `dspy.Image(url="https://...")` or `dspy.Image(url="local/path.jpg")`. Raw strings are treated as text, not images. (The old `dspy.Image(url=)` / `from_file()` classmethods are deprecated in favor of `dspy.Image(url=...)`.)
 
-- **Verify the model supports vision** - Claude picks a model that does not support image inputs. Not all LLMs handle images. Confirm vision support for your chosen model before deploying (GPT-4o, Claude 3.5+, Gemini Pro Vision all work).
+- **Verify the model supports vision** - Claude picks a model that does not support image inputs. Not all LLMs handle images. Confirm vision support for your chosen model before deploying (GPT-4o, Claude 3.5+, Gemini 2.x all work).
 
 - **Use `dspy.Refine` not `dspy.Assert`** - Claude uses `dspy.Assert`/`dspy.Suggest` to validate image outputs. Use `dspy.Refine` with a reward function for iterative improvement instead.
 

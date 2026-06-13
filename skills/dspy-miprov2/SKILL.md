@@ -285,7 +285,7 @@ optimized_rag = optimizer.compile(rag, trainset=trainset)
 2. **Claude passes `trainset` as a positional argument to `compile()`.** The `trainset` parameter is keyword-only in MIPROv2: `optimizer.compile(program, trainset=trainset)`, not `optimizer.compile(program, trainset)`. Passing it positionally raises a TypeError.
 3. **Claude forgets `.with_inputs()` on training examples.** Every `dspy.Example` in the trainset must call `.with_inputs("field1", "field2")` to mark which fields are inputs vs labels. Without this, MIPROv2 cannot distinguish inputs from expected outputs and optimization silently underperforms.
 4. **Claude sets `num_candidates` without also setting `num_trials`.** When using manual configuration (no `auto`), both `num_candidates` and `num_trials` must be set. Setting only one produces suboptimal search — more candidates without enough trials to evaluate them is wasted compute.
-5. **Claude uses the deprecated `requires_permission_to_run` parameter.** This parameter has been removed from MIPROv2. Passing `True` raises a ValueError. Remove it entirely from `compile()` calls.
+5. **Claude uses the deprecated `requires_permission_to_run` parameter.** This parameter is deprecated. Passing `True` raises an error; `False` logs a deprecation warning. Remove it entirely from `compile()` calls.
 
 ## Additional resources
 

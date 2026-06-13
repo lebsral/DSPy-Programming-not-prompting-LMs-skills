@@ -8,7 +8,7 @@
       "dspy.InputField",
       "dspy.OutputField",
       "dspy.Predict",
-      "from_url\\|from_file\\|from_base64"
+      "dspy.Image\\(url="
     ],
     "must_not_contain": [
       "dspy.Assert",
@@ -42,7 +42,7 @@
       "PIL\\|Pillow\\|Image\\.open",
       "resize\\|LANCZOS\\|ANTIALIAS",
       "1024",
-      "dspy.Image.from_base64\\|from_file",
+      "dspy.Image\\(url=",
       "JPEG\\|quality"
     ],
     "must_not_contain": [

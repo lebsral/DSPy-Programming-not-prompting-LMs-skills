@@ -43,7 +43,7 @@ def grounded_bot_reward(args, pred):
     answer = pred.answer
 
     # Enforce citations
-    sentences = [s.strip() for s in answer.split(".") if s.strip()]
+    sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', answer) if s.strip()]
     cited = [bool(re.search(r"\[\d+\]", s)) for s in sentences]
     coverage = sum(cited) / max(len(sentences), 1)
     if coverage < 0.5 and "don't have info" not in answer.lower():
@@ -65,7 +65,6 @@ docs = [
     "[4] To cancel, go to Settings > Billing > Cancel Plan.",
 ]
 
-bot = GroundedSupportBot()
 result = bot(help_docs=docs, question="How do I cancel and get a refund?")
 # bot is a Refine wrapper — it retries up to 3 times if citations or faithfulness check fails
 print(result.answer)

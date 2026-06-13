@@ -163,7 +163,7 @@ from langfuse import get_client
 langfuse = get_client()
 
 # Score a trace after evaluation
-langfuse.score(
+langfuse.create_score(
     trace_id="trace-id-from-dashboard",
     name="accuracy",
     value=0.92,
@@ -184,7 +184,7 @@ score = evaluator(my_program)
 
 # Log the aggregate score
 langfuse = get_client()
-langfuse.score(
+langfuse.create_score(
     trace_id=langfuse.get_current_trace_id(),
     name="dspy_eval_accuracy",
     value=score,

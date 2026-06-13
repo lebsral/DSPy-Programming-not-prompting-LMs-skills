@@ -18,20 +18,20 @@ class CitedRAG(dspy.Module):
         self.qa = dspy.ChainOfThought(CitedQA)
 
     def forward(self, question):
-        # Retrieve relevant documents
+        # Retrieve relevant passages
         passages = self.retriever(question).passages
 
-        # Format as context with source IDs
-        context = [f"[{i}] {p}" for i, p in enumerate(passages)]
+        # Wrap each passage as a Document for native citations
+        documents = [Document(data=p, title=f"passage-{i}") for i, p in enumerate(passages)]
 
         # Generate answer with citations
-        result = self.qa(context=context, question=question)
+        result = self.qa(documents=documents, question=question)
         return result
 
 
 class CitedQA(dspy.Signature):
-    """Answer using only the provided context. Cite each claim."""
-    context: list[str] = dspy.InputField()
+    """Answer using only the provided documents. Cite each claim."""
+    documents: list[Document] = dspy.InputField()
     question: str = dspy.InputField()
     answer: str = dspy.OutputField()
     citations: Citations = dspy.OutputField()
@@ -43,7 +43,7 @@ rag = CitedRAG(retriever=retriever)
 result = rag(question="What optimizers does DSPy support?")
 
 print(result.answer)
-for c in result.citations:
+for c in result.citations.citations:
     print(f"  Source [{c.document_index}]: {c.cited_text[:60]}...")
 ```
 
@@ -55,17 +55,15 @@ Extracting claims with precise source attribution for compliance:
 import dspy
 from dspy.experimental import Citations, Document
 
+# Native citations are automatic for Anthropic models -- no adapter kwarg needed.
 lm = dspy.LM("anthropic/claude-sonnet-4-5-20250929")
-dspy.configure(
-    lm=lm,
-    adapter=dspy.ChatAdapter(adapt_to_native_lm_feature=["citations"]),
-)
+dspy.configure(lm=lm)
 
 
 class LegalCitedAnswer(dspy.Signature):
     """Answer the legal question citing specific clauses from the contract.
     Every factual claim must have a citation."""
-    contract_sections: list[str] = dspy.InputField(desc="numbered contract sections")
+    contract_sections: list[Document] = dspy.InputField(desc="contract sections")
     question: str = dspy.InputField()
     answer: str = dspy.OutputField()
     citations: Citations = dspy.OutputField()
@@ -74,9 +72,9 @@ class LegalCitedAnswer(dspy.Signature):
 qa = dspy.ChainOfThought(LegalCitedAnswer)
 
 contract_sections = [
-    "Section 1.1: The term of this agreement is 24 months from the effective date.",
-    "Section 2.3: Either party may terminate with 90 days written notice.",
-    "Section 4.1: The monthly fee is $5,000, payable within 30 days of invoice.",
+    Document(data="The term of this agreement is 24 months from the effective date.", title="Section 1.1"),
+    Document(data="Either party may terminate with 90 days written notice.", title="Section 2.3"),
+    Document(data="The monthly fee is $5,000, payable within 30 days of invoice.", title="Section 4.1"),
 ]
 
 result = qa(
@@ -86,10 +84,10 @@ result = qa(
 
 print(f"Answer: {result.answer}")
 print(f"\nCitations:")
-for c in result.citations:
-    print(f"  Section [{c.document_index}]: \"{c.cited_text}\"")
+for c in result.citations.citations:
+    print(f"  {c.document_title} [{c.document_index}]: \"{c.cited_text}\"")
     # Verify citation accuracy
-    assert c.cited_text in contract_sections[c.document_index]
+    assert c.cited_text in contract_sections[c.document_index].data
 ```
 
 ## Example 3: Multi-source research with citation validation
@@ -106,7 +104,7 @@ dspy.configure(lm=lm)
 
 class ResearchAnswer(dspy.Signature):
     """Synthesize information from multiple sources. Cite each claim."""
-    sources: list[str] = dspy.InputField(desc="labeled source documents")
+    sources: list[Document] = dspy.InputField(desc="labeled source documents")
     question: str = dspy.InputField()
     answer: str = dspy.OutputField(desc="synthesis with citations")
     citations: Citations = dspy.OutputField()
@@ -116,9 +114,9 @@ def validate_citations(result, sources):
     """Check that all citations reference real text in the sources."""
     valid = 0
     invalid = 0
-    for c in result.citations:
+    for c in result.citations.citations:
         if c.document_index < len(sources):
-            if c.cited_text in sources[c.document_index]:
+            if c.cited_text in sources[c.document_index].data:
                 valid += 1
             else:
                 invalid += 1
@@ -133,9 +131,9 @@ def validate_citations(result, sources):
 qa = dspy.ChainOfThought(ResearchAnswer)
 
 sources = [
-    "[Wikipedia] Python was created by Guido van Rossum and first released in 1991.",
-    "[Official docs] Python 3.12 introduced per-interpreter GIL and improved error messages.",
-    "[Blog] Python is the most popular language for machine learning and data science.",
+    Document(data="Python was created by Guido van Rossum and first released in 1991.", title="Wikipedia"),
+    Document(data="Python 3.12 introduced per-interpreter GIL and improved error messages.", title="Official docs"),
+    Document(data="Python is the most popular language for machine learning and data science.", title="Blog"),
 ]
 
 result = qa(sources=sources, question="When was Python created and what is it used for?")

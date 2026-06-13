@@ -36,7 +36,7 @@ categorizer = dspy.Predict(CategorizeProduct)
 
 # Process a single product
 result = categorizer(
-    image=dspy.Image.from_url("https://example.com/jacket.jpg"),
+    image=dspy.Image(url="https://example.com/jacket.jpg"),
     listing_title="vintage jacket size M great condition"
 )
 print(result.attributes.category)       # Clothing
@@ -56,7 +56,7 @@ products = [
 results = []
 for product in products:
     res = categorizer(
-        image=dspy.Image.from_url(product["url"]),
+        image=dspy.Image(url=product["url"]),
         listing_title=product["title"]
     )
     results.append({
@@ -134,7 +134,7 @@ alt_gen = dspy.Predict(AltTextOutput)
 
 # Single image
 result = alt_gen(
-    image=dspy.Image.from_url("https://example.com/team.jpg"),
+    image=dspy.Image(url="https://example.com/team.jpg"),
     page_context="About page of a B2B SaaS company, section titled 'Our Team'",
     image_role="informative"
 )
@@ -162,7 +162,7 @@ cms_images = [
 
 for item in cms_images:
     res = alt_gen(
-        image=dspy.Image.from_url(item["url"]),
+        image=dspy.Image(url=item["url"]),
         page_context=item["context"],
         image_role=item["role"]
     )
@@ -239,7 +239,7 @@ extractor = dspy.Predict(ReceiptData)
 
 # Process a single receipt
 result = extractor(
-    image=dspy.Image.from_file("receipt.jpg"),
+    image=dspy.Image(url="receipt.jpg"),
     currency_hint="USD"
 )
 
@@ -278,7 +278,7 @@ def preprocess_receipt(image_path: str) -> dspy.Image:
     buf = io.BytesIO()
     img.save(buf, format="JPEG", quality=92)
     b64 = base64.b64encode(buf.getvalue()).decode()
-    return dspy.Image.from_base64(b64, media_type="image/jpeg")
+    return dspy.Image(url=f"data:image/jpeg;base64,{b64}")
 
 def receipt_reward(example, prediction, trace=None):
     """Reward function for receipt extraction quality."""

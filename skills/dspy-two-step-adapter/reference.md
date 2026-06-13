@@ -6,20 +6,20 @@
 
 ```python
 dspy.TwoStepAdapter(
-    main_lm,         # dspy.LM -- the reasoning model
-    extraction_lm,   # dspy.LM -- the parsing/extraction model
+    extraction_model,   # dspy.BaseLM -- the parsing/extraction model
 )
 ```
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `main_lm` | `dspy.LM` | Primary reasoning model (o1, o3, DeepSeek-R1, etc.) |
-| `extraction_lm` | `dspy.LM` | Fast model that extracts structured fields from main_lm output |
+| `extraction_model` | `BaseLM` | Fast model that extracts structured fields from the reasoning model's free-form output |
+
+The reasoning (main) model is **not** passed to the adapter. It is set via `dspy.configure(lm=reasoning_lm, adapter=adapter)` (or `module.lm = reasoning_lm` for per-module use).
 
 ## How it works
 
-1. **Phase 1:** Sends the prompt to `main_lm` without formatting constraints. The reasoning model generates freely.
-2. **Phase 2:** Takes the raw output from Phase 1 and sends it to `extraction_lm` with ChatAdapter formatting, asking it to extract the required fields.
+1. **Phase 1:** Sends the prompt to the configured reasoning model (`dspy.configure(lm=...)`) without formatting constraints. The reasoning model generates freely.
+2. **Phase 2:** Takes the raw output from Phase 1 and sends it to `extraction_model` with ChatAdapter formatting, asking it to extract the required fields.
 
 The user sees a single call -- the two-phase flow is transparent.
 
@@ -30,7 +30,7 @@ The user sees a single call -- the two-phase flow is transparent.
 ```python
 main_lm = dspy.LM("openai/o3-mini")
 extraction_lm = dspy.LM("openai/gpt-4o-mini")
-adapter = dspy.TwoStepAdapter(main_lm=main_lm, extraction_lm=extraction_lm)
+adapter = dspy.TwoStepAdapter(extraction_model=extraction_lm)
 
 dspy.configure(lm=main_lm, adapter=adapter)
 ```
@@ -39,10 +39,7 @@ dspy.configure(lm=main_lm, adapter=adapter)
 
 ```python
 module.lm = reasoning_lm
-module.adapter = dspy.TwoStepAdapter(
-    main_lm=reasoning_lm,
-    extraction_lm=extraction_lm,
-)
+module.adapter = dspy.TwoStepAdapter(extraction_model=extraction_lm)
 ```
 
 ## Supported reasoning models

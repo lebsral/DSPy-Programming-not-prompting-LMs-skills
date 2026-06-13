@@ -28,7 +28,7 @@ evaluator = Evaluate(devset=devset, metric=semantic_f1, num_threads=4)
 score = evaluator(my_program)
 ```
 
-`SemanticF1` is a good default metric for open-ended QA tasks where exact match is too strict. It expects `response` fields on both the example and prediction (not `answer`). Constructor: `SemanticF1(threshold=0.66, decompositional=False)`. The `threshold` controls the minimum score during optimization (when `trace` is set).
+`SemanticF1` is a good default metric for open-ended QA tasks where exact match is too strict. It expects a `question` field on the example plus a `response` field on both the example and prediction (not `answer`). Constructor: `SemanticF1(threshold=0.66, decompositional=False)`. The `threshold` controls the minimum score during optimization (when `trace` is set).
 
 ### CompleteAndGrounded
 

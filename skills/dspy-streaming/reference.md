@@ -24,7 +24,7 @@ streaming_program = streamify(
 | `include_final_prediction_in_output_stream` | `bool` | `True` | Emit final `Prediction` as last stream item |
 | `is_async_program` | `bool` | `False` | Set `True` if `program.forward()` is already async |
 | `async_streaming` | `bool` | `True` | `True` returns async generator; `False` returns sync |
-| `status_message_provider` | `Callable` | `None` | Function returning status strings during processing |
+| `status_message_provider` | `StatusMessageProvider \| None` | `None` | Instance of `StatusMessageProvider` (subclass overriding status hooks) that emits `StatusMessage` chunks. |
 
 **Returns:** A callable that accepts the same kwargs as the original module and returns a generator (async or sync) yielding chunks.
 

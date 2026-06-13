@@ -55,7 +55,7 @@ Both `prompt` (string) and `messages` (list of dicts with `role`/`content`) form
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `copy` | `(**kwargs) -> LM` | Shallow copy with updated parameters |
+| `copy` | `(**kwargs) -> LM` | Deep copy with updated parameters |
 | `dump_state` | `() -> dict` | Serialize config (excludes API keys) |
 | `inspect_history` | `(n=1, file=None) -> None` | Print last n LM interactions |
 

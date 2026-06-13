@@ -1,13 +1,13 @@
 [
   {
     "prompt": "I have a DSPy classification task but sometimes the model reasons poorly and gives wrong answers. How can I get more reliable results by having it try multiple reasoning paths?",
-    "expected_output": "Uses dspy.MultiChainComparison to generate and compare multiple reasoning chains",
+    "expected_output": "Generates M reasoning chains with ChainOfThought(n=M), then passes the completions to dspy.MultiChainComparison to synthesize the best answer",
     "assertions": [
-      "Uses dspy.MultiChainComparison (not just ChainOfThought or Predict)",
-      "Sets M parameter to control number of chains (default 3)",
-      "Explains that each chain reasons independently and a comparison step picks the best",
-      "Mentions the cost tradeoff: M+1 LM calls per invocation",
-      "Keeps temperature at 0.7 or higher for chain diversity"
+      "Generates M chains first with dspy.ChainOfThought(signature, n=M) and grabs .completions",
+      "Passes the completions list as the first positional argument to a dspy.MultiChainComparison instance (e.g. compare(completions, **inputs)), not raw inputs alone",
+      "Uses dspy.MultiChainComparison (not just ChainOfThought or Predict) and sets M to match the generator's n (default 3)",
+      "Explains that MultiChainComparison does NOT generate chains itself and makes exactly 1 synthesis LM call",
+      "Keeps temperature at 0.7 or higher on the generator for chain diversity"
     ]
   },
   {
@@ -16,8 +16,9 @@
     "assertions": [
       "Recommends starting with M=3 as a default",
       "Suggests using MultiChainComparison selectively — only for hard or high-stakes tasks",
-      "Shows the adaptive routing pattern: classify difficulty, then route hard tasks to MCC and easy tasks to CoT",
-      "Mentions cost scales linearly with M (M+1 LM calls per invocation)",
+      "Shows the adaptive routing pattern: classify difficulty, then for hard tasks generate chains with ChainOfThought(n=M) and pass the completions to MultiChainComparison; route easy tasks to plain CoT",
+      "Explains the cost correctly: generating M chains is 1 ChainOfThought call (n=M) and MultiChainComparison adds 1 synthesis call (2 LM calls total), with token cost scaling with M",
+      "Suggests using a cheaper LM for the generator (generate.set_lm(...)) and a stronger LM for the comparison (compare.set_lm(...))",
       "Does not recommend M higher than 5 without evaluation evidence"
     ]
   },
@@ -29,7 +30,7 @@
       "Explains that ChainOfThought is a single reasoning chain — good default but less reliable on ambiguous tasks",
       "Explains that Predict is for simple tasks without reasoning",
       "Notes when NOT to use MultiChainComparison: simple tasks, latency-critical, cost-constrained",
-      "Shows a working code example with a signature appropriate for technical evaluation"
+      "Shows a working two-step code example: generate completions with dspy.ChainOfThought(signature, n=M).completions, then pass them positionally to a dspy.MultiChainComparison instance for an evaluation-appropriate signature"
     ]
   }
 ]

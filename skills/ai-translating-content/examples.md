@@ -9,7 +9,6 @@ Translate landing page and product copy from English to Spanish (Mexico) while p
 ```python
 import dspy
 from pydantic import BaseModel
-from typing import list
 
 lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)

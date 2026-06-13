@@ -245,7 +245,7 @@ CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
 ### requirements.txt
 
 ```
-dspy>=2.5
+dspy>=3.0
 fastapi>=0.100
 uvicorn[standard]
 pydantic-settings>=2.0

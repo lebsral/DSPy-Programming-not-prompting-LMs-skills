@@ -28,9 +28,12 @@ class ArchitectureReviewer(dspy.Module):
     """Review a system design using multiple reasoning chains for thorough analysis."""
 
     def __init__(self, num_chains=3):
+        self.num_chains = num_chains
         self.extract_requirements = dspy.ChainOfThought(
             "design_description -> key_requirements: str"
         )
+        # Generate the M chains, then compare/synthesize the best answer
+        self.generate = dspy.ChainOfThought(ArchitectureReview, n=num_chains)
         self.review = dspy.MultiChainComparison(ArchitectureReview, M=num_chains)
 
     def forward(self, design_description, requirements=""):
@@ -39,10 +42,14 @@ class ArchitectureReviewer(dspy.Module):
             extracted = self.extract_requirements(design_description=design_description)
             requirements = extracted.key_requirements
 
-        result = self.review(
+        inputs = dict(
             design_description=design_description,
             requirements=requirements,
         )
+        # Step 1: generate M independent reasoning chains
+        completions = self.generate(**inputs).completions
+        # Step 2: compare them and synthesize the strongest review
+        result = self.review(completions, **inputs)
 
         return dspy.Prediction(
             strengths=result.strengths,
@@ -159,19 +166,26 @@ class InterviewQuestions(dspy.Signature):
 class HiringAdvisor(dspy.Module):
     """Evaluate a candidate from multiple perspectives and generate interview questions."""
 
-    def __init__(self):
-        self.evaluate = dspy.MultiChainComparison(CandidateEvaluation, M=4)
+    def __init__(self, M=4):
+        self.M = M
+        # Generate the M chains, then compare/synthesize the best evaluation
+        self.generate = dspy.ChainOfThought(CandidateEvaluation, n=M)
+        self.evaluate = dspy.MultiChainComparison(CandidateEvaluation, M=M)
         self.generate_questions = dspy.ChainOfThought(InterviewQuestions)
 
     def forward(self, candidate_profile, role_requirements, team_context):
         # Stage 1: Multi-perspective evaluation
         # Each chain may weigh different factors -- technical depth, culture fit,
         # growth potential, risk tolerance. The comparison picks the most balanced view.
-        evaluation = self.evaluate(
+        eval_inputs = dict(
             candidate_profile=candidate_profile,
             role_requirements=role_requirements,
             team_context=team_context,
         )
+        # Step 1: generate M reasoning chains
+        completions = self.generate(**eval_inputs).completions
+        # Step 2: compare and synthesize the most balanced assessment
+        evaluation = self.evaluate(completions, **eval_inputs)
 
         # Stage 2: Generate targeted questions based on concerns
         questions_result = self.generate_questions(

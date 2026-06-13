@@ -109,6 +109,8 @@ async for chunk in streaming_summarizer(document="..."):
 For agents, use `allow_reuse=True` so the listener captures output across multiple reasoning iterations:
 
 ```python
+from dspy.streaming import StatusMessageProvider
+
 agent = dspy.ReAct("question -> answer", tools=[search, lookup])
 
 # allow_reuse=True is critical for agents -- the agent generates
@@ -118,10 +120,16 @@ answer_listener = StreamListener(
     allow_reuse=True,
 )
 
+# status_message_provider must be a StatusMessageProvider subclass
+# INSTANCE that overrides status hooks -- not a lambda
+class AgentStatus(StatusMessageProvider):
+    def tool_start_status_message(self, instance, inputs):
+        return f"Calling {instance.name}..."
+
 streaming_agent = streamify(
     agent,
     stream_listeners=[answer_listener],
-    status_message_provider=lambda step: f"Agent step {step}...",
+    status_message_provider=AgentStatus(),
 )
 
 async for chunk in streaming_agent(question="..."):
