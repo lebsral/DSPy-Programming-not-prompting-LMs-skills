@@ -42,12 +42,19 @@ def skills_on_disk():
     )
 
 
-def marketplace_skills():
+def marketplace_groups():
+    """{plugin_name: [skill_name, ...]} for each plugin group."""
     data = json.loads((REPO / ".claude-plugin" / "marketplace.json").read_text())
+    return {
+        plugin["name"]: [e.rsplit("/", 1)[-1] for e in plugin.get("skills", [])]
+        for plugin in data.get("plugins", [])
+    }
+
+
+def marketplace_skills():
     listed = set()
-    for plugin in data.get("plugins", []):
-        for entry in plugin.get("skills", []):
-            listed.add(entry.rsplit("/", 1)[-1])
+    for names in marketplace_groups().values():
+        listed.update(names)
     return listed
 
 
@@ -121,6 +128,27 @@ def main():
             "[ai-do/SKILL.md] references skills not on disk: " + ", ".join(routing_dangling)
         )
 
+    # 5. README.md advertised counts — the install copy quotes a total skill
+    #    count and a per-plugin-group count. Both drift silently as skills are
+    #    added. Assert them against reality (disk + marketplace group sizes).
+    readme = text_of("README.md")
+    m = re.search(r"Install all (\d+) skills", readme)
+    if not m:
+        problems.append("[README.md] missing the 'Install all N skills' line")
+    elif int(m.group(1)) != len(skills):
+        problems.append(
+            f"[README.md] says 'Install all {m.group(1)} skills' but {len(skills)} on disk"
+        )
+    for group, names in marketplace_groups().items():
+        gm = re.search(rf"{re.escape(group)}@dspy-skills.*?\((\d+) skills\)", readme)
+        if not gm:
+            problems.append(f"[README.md] plugin group {group} not listed with a count")
+        elif int(gm.group(1)) != len(names):
+            problems.append(
+                f"[README.md] {group} says ({gm.group(1)} skills) but marketplace "
+                f"has {len(names)}"
+            )
+
     if problems:
         print(f"Skill sync FAILED ({len(skills)} skills on disk):\n")
         for p in problems:
@@ -132,8 +160,8 @@ def main():
         return 1
 
     print(f"Skill sync OK — all {len(skills)} skills registered across README, "
-          "marketplace.json, ai-do/catalog.md, and ai-do/SKILL.md routing, "
-          "and ai-do advertises no skill missing from disk.")
+          "marketplace.json, ai-do/catalog.md, and ai-do/SKILL.md routing; "
+          "ai-do advertises no skill missing from disk; README counts match.")
     return 0
 
 

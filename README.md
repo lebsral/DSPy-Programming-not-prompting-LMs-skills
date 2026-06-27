@@ -145,7 +145,7 @@ If you already know DSPy and think in its vocabulary, use these API-first skills
 
 ### Option 1: `npx skills` (recommended — works with any AI coding agent)
 
-Install all 94 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
+Install all 95 skills in one command. Works with Claude Code, Cursor, Codex, Cline, Windsurf, and [35+ other agents](https://agentskills.io).
 
 ```bash
 npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills
@@ -173,10 +173,11 @@ npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills -g
 Then install a skill group:
 
 ```bash
-/plugin install dspy-build-skills@dspy-skills     # Building AI features (17 skills)
-/plugin install dspy-quality-skills@dspy-skills    # Quality and reliability (8 skills)
-/plugin install dspy-ops-skills@dspy-skills        # Production operations (7 skills)
-/plugin install dspy-api-skills@dspy-skills        # DSPy API-first skills (37 skills)
+/plugin install dspy-build-skills@dspy-skills      # Building AI features (28 skills)
+/plugin install dspy-quality-skills@dspy-skills    # Quality and reliability (9 skills)
+/plugin install dspy-ops-skills@dspy-skills        # Production operations (8 skills)
+/plugin install dspy-api-skills@dspy-skills        # DSPy API-first skills (39 skills)
+/plugin install dspy-tools-skills@dspy-skills      # Ecosystem tool integrations (11 skills)
 ```
 
 ### Option 3: Manual (git clone)
