@@ -29,3 +29,9 @@ skills/*-workspace/
 # Local authoring guides (not shipped with the plugin)
 docs/skill-standards.md
 CLAUDE.md
+
+# Agent tooling scratch mirror (generated during subagent runs)
+.agents/
+
+# Graded eval output (scripts/run_evals.py --grade)
+eval-results.json
