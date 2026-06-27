@@ -1,11 +1,20 @@
 #!/usr/bin/env python3
 """Verify every skill in skills/ is registered in all of the places that must
-stay in sync. Drift between these catalogs is a recurring bug: a skill can exist
-on disk but be unreachable through ai-do routing, undiscoverable in the README,
-or uninstallable via the plugin marketplace.
+stay in sync. Drift between these catalogs is a recurring bug, and it cuts both
+ways:
+
+  * Missing — a skill exists on disk but is unreachable through ai-do routing,
+    undiscoverable in the README, or uninstallable via the plugin marketplace.
+  * Dangling — ai-do advertises a skill that has NO directory on disk. The
+    router then emits `npx skills add ... --skill <name>`, which fails because
+    the name is unknown. Worse, a bundled `--skill a,b,c` install fails
+    entirely if any one name is unknown, so a single dead reference can break
+    the install of valid skills alongside it.
+
+This script guards both directions.
 
 Run from anywhere: `python3 scripts/check-skill-sync.py`
-Exits non-zero (and prints what is missing) if any catalog is out of sync.
+Exits non-zero (and prints what is wrong) if any catalog is out of sync.
 """
 
 import json
@@ -46,6 +55,23 @@ def text_of(*relpath):
     return (REPO / Path(*relpath)).read_text()
 
 
+# A skill-name token: ai-... or dspy-... (lowercase letters, digits, hyphens).
+# Placeholders like /ai-<problem>, /dspy-*, or /skill-name do not match.
+_NAME = r"(?:ai|dspy)-[a-z0-9]+(?:-[a-z0-9]+)*"
+
+
+def referenced_skills(text):
+    """Every skill name the text points at — as `/<name>` or inside a
+    `--skill <a,b,c>` install bundle. Used to catch dangling references to
+    skills that do not exist on disk."""
+    found = set(re.findall(r"/(" + _NAME + r")\b", text))
+    for bundle in re.findall(r"--skill\s+([a-z0-9,\-]+)", text):
+        for tok in bundle.split(","):
+            if re.fullmatch(_NAME, tok):
+                found.add(tok)
+    return found
+
+
 def check(name, present, required, problems):
     """required: iterable of skill names that must appear in `present` (a set)."""
     missing = sorted(s for s in required if s not in present)
@@ -55,6 +81,7 @@ def check(name, present, required, problems):
 
 def main():
     skills = skills_on_disk()
+    real = set(skills)
     problems = []
 
     # 1. README.md — problem catalog + concept tables. Match the SKILL.md link path.
@@ -74,6 +101,11 @@ def main():
     catalog = text_of("skills", "ai-do", "catalog.md")
     catalog_present = {s for s in skills if re.search(rf"`?/{re.escape(s)}\b", catalog)}
     check("ai-do/catalog.md", catalog_present, [s for s in skills if s != AI_DO], problems)
+    catalog_dangling = sorted(referenced_skills(catalog) - real)
+    if catalog_dangling:
+        problems.append(
+            "[ai-do/catalog.md] references skills not on disk: " + ", ".join(catalog_dangling)
+        )
 
     # 4. ai-do/SKILL.md — in-context routing tables. This is what Claude reads
     #    first, so a skill absent here is effectively unreachable for most asks.
@@ -83,6 +115,11 @@ def main():
         s for s in skills if s != AI_DO and s not in ROUTING_EXCEPTIONS
     ]
     check("ai-do/SKILL.md routing", routing_present, routing_required, problems)
+    routing_dangling = sorted(referenced_skills(skill_md) - real)
+    if routing_dangling:
+        problems.append(
+            "[ai-do/SKILL.md] references skills not on disk: " + ", ".join(routing_dangling)
+        )
 
     if problems:
         print(f"Skill sync FAILED ({len(skills)} skills on disk):\n")
@@ -95,7 +132,8 @@ def main():
         return 1
 
     print(f"Skill sync OK — all {len(skills)} skills registered across README, "
-          "marketplace.json, ai-do/catalog.md, and ai-do/SKILL.md routing.")
+          "marketplace.json, ai-do/catalog.md, and ai-do/SKILL.md routing, "
+          "and ai-do advertises no skill missing from disk.")
     return 0
 
 
