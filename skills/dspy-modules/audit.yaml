@@ -1,0 +1,4 @@
+# No formal audit has been recorded for this skill yet. Run the skill-quality
+# audit against the current DSPy version, then replace last_audit with a real
+# block: {date: YYYY-MM-DD, score: N/N, versions: {dspy: X.Y.Z}}.
+last_audit: null
