@@ -1,0 +1,40 @@
+name: checks
+
+# Enforces the repo's structural invariants on every PR and push, plus a
+# weekly heartbeat so drift is caught even when nothing is being merged.
+# All checks are pure-stdlib Python — no dependencies, no secrets, fast.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 12 * * 1" # Mondays 12:00 UTC
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Every skill registered across README, marketplace, ai-do routing +
+      # catalog; no dangling /skill references; README counts match reality.
+      - name: Skill catalog sync
+        run: python3 scripts/check-skill-sync.py
+
+      # Every non-exempt skill has SKILL.md + examples.md + reference.md.
+      - name: Skill file completeness
+        run: python3 scripts/check-skill-files.py
+
+      # Every skill's evals.json is schema-valid (coverage is reported).
+      - name: Eval suite (validate)
+        run: python3 scripts/run_evals.py --validate
+
+      # Audit coverage report. Fails only on structural problems (a skill with
+      # no audit.yaml); stale/pending are informational, so CI does not turn
+      # red merely as weeks pass.
+      - name: Audit coverage
+        run: python3 scripts/check-audits.py

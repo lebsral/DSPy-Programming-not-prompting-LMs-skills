@@ -1,0 +1,44 @@
+name: eval-grade
+
+# Opt-in graded eval run: feeds each skill's eval prompts through an LM with
+# the skill loaded and grades the response against its assertions (LLM judge).
+# This costs money and needs an API key, so it is NOT part of the PR gate.
+# It runs manually, or weekly if an LM API key secret is configured. Without
+# the secret it no-ops cleanly rather than failing.
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "DSPy model string for the judge/solver"
+        default: "openai/gpt-4o-mini"
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install DSPy
+        run: pip install dspy
+      - name: Grade eval suites
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MODEL: ${{ github.event.inputs.model || 'openai/gpt-4o-mini' }}
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "No OPENAI_API_KEY secret configured — skipping graded evals."
+            exit 0
+          fi
+          python3 scripts/run_evals.py --grade --model "$MODEL"
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: eval-results.json
+          if-no-files-found: ignore
