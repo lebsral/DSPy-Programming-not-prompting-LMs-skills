@@ -41,6 +41,23 @@ Good trigger phrases use words web/SaaS developers actually say:
 4. **Cross-references**: Point to related skills with `/skill-name`
 5. **Additional resources**: Link to `examples.md`, `reference.md` if they exist
 
+## Supporting files (required, with narrow exemptions)
+
+Every skill ships three files: `SKILL.md`, `examples.md`, and `reference.md`.
+
+- **`examples.md`** — runnable prompt + code examples with expected output, covering the main use cases plus at least one realistic end-to-end "production pattern."
+- **`reference.md`** — exact API signatures, package names with verified minimum versions, parameter tables, env vars, and config snippets. Verify every API against current upstream docs before writing — these libraries move fast; do not assert an API you have not confirmed. When an API differs across SDK majors (e.g. v2 vs v3), show both and call out the break in gotchas.
+
+`scripts/check-skill-files.py` enforces this. A skill is exempt only for a principled reason, recorded in that script's `EXEMPT_*` sets:
+
+| Skill | Exempt from | Why |
+|-------|-------------|-----|
+| `ai-do` | examples.md, reference.md | Pure router; its reference is `catalog.md`, and it teaches no code |
+| `ai-request-skill` | examples.md, reference.md | Meta/process skill; no DSPy API surface to document |
+| `dspy-assertions` | examples.md | Legacy-only — `dspy.Assert`/`Suggest` were removed in DSPy 3.x |
+
+Do not add an exemption to dodge work — add the file. Exemptions are for skills that would otherwise carry an empty file.
+
 ## Gotchas section (required)
 
 The highest-signal content in any skill. Include 3-5 things Claude specifically gets wrong in this domain — not generic advice, but patterns observed from actual Claude behavior with DSPy.
