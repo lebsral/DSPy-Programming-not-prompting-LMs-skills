@@ -57,6 +57,7 @@ Entry point with callback support and usage tracking. Delegates to `forward()`.
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
+| `acall` | `(*args, **kwargs) -> Prediction` | Async version of `__call__`. Use for non-blocking execution in async contexts. |
 | `set_lm` | `(lm)` | Recursively sets the LM for all Predict instances within the module. |
 | `get_lm` | `()` | Retrieves the current LM. |
 | `batch` | `(examples, ...)` | Process multiple inputs in parallel. |

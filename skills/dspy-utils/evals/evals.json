@@ -1,23 +1,65 @@
-[
-  {
-    "id": "dspy-utils-streaming",
-    "prompt": "I need to stream my DSPy chatbot responses to the browser in real time using FastAPI. How do I set that up?",
-    "should_contain": ["streamify", "StreamListener", "StreamingResponse"],
-    "should_not_contain": [],
-    "notes": "Must use streamify + StreamListener pattern with FastAPI StreamingResponse. Should create fresh listener per request."
-  },
-  {
-    "id": "dspy-utils-debug",
-    "prompt": "My DSPy program is giving wrong answers and I can't figure out why. How do I debug what's being sent to the model?",
-    "should_contain": ["inspect_history"],
-    "should_not_contain": [],
-    "notes": "Should recommend inspect_history(n=1) as first step, show debugging workflow, mention checking prompt and raw response."
-  },
-  {
-    "id": "dspy-utils-save-load",
-    "prompt": "I optimized my DSPy program with MIPROv2 and want to save it for production. How do I save and load it correctly?",
-    "should_contain": ["save", "load", "dspy.configure"],
-    "should_not_contain": [],
-    "notes": "Must show save after optimization, load in production with configure() BEFORE load(). Should mention class definition must exist at load time."
-  }
-]
+{
+  "skill_name": "dspy-utils",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "My DSPy program is giving wrong answers and I can't figure out why. How do I debug what's being sent to the model?",
+      "expected_output": "Use dspy.inspect_history(n=1) immediately after running the failing input. This shows the full prompt the LM received, the raw response, and which adapter formatted the request. The debugging workflow is: run on failing input, call inspect_history(n=1), check if instructions are clear, check the raw response format.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "uses_inspect_history",
+          "description": "Recommends dspy.inspect_history(n=1) as the first debugging step, not print statements or logging"
+        },
+        {
+          "name": "shows_debugging_workflow",
+          "description": "Explains what inspect_history shows (prompt, raw response, adapter) not just that it exists"
+        },
+        {
+          "name": "does_not_suggest_only_logging",
+          "description": "Does not recommend generic Python logging as the primary debugging approach -- inspect_history is DSPy-specific"
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "I optimized my DSPy program with MIPROv2 and want to save it for production. How do I save and load it correctly?",
+      "expected_output": "After optimization call optimized.save('path.json') to save learned state (demos, instructions). In production create a fresh MyProgram() instance then call program.load('path.json'). Critically: call dspy.configure(lm=lm) BEFORE load(), not after. The class definition must exist in production code -- forward() logic is not saved. Use save_program=True if you want to avoid recreating the class at load time, then use dspy.load() instead of program.load().",
+      "files": [],
+      "assertions": [
+        {
+          "name": "configure_before_load",
+          "description": "Explicitly states dspy.configure(lm=lm) must be called BEFORE program.load(), not after"
+        },
+        {
+          "name": "mentions_class_required",
+          "description": "Notes that the class definition (forward() logic) must exist at load time -- it is not saved in the JSON"
+        },
+        {
+          "name": "mentions_dspy_load_option",
+          "description": "Mentions dspy.load() with save_program=True as an alternative that avoids recreating the class"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I need to generate diverse training examples with DSPy but I keep getting the same cached response. How do I disable the cache for data generation?",
+      "expected_output": "Disable both disk and memory cache with dspy.configure_cache(enable_disk_cache=False, enable_memory_cache=False) before generating data. Or use dspy.LM('model', cache=False) per-LM. Re-enable after generation. Important: do not disable cache globally if you are also running optimizer -- optimizers depend on cache.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "uses_correct_configure_cache_api",
+          "description": "Uses dspy.configure_cache(enable_disk_cache=False, enable_memory_cache=False) -- NOT the old dspy.configure_cache(enable=False) which does not exist"
+        },
+        {
+          "name": "warns_about_optimizer_cache",
+          "description": "Warns that disabling cache globally breaks optimizer runs -- should only disable for specific generation steps"
+        },
+        {
+          "name": "mentions_per_lm_option",
+          "description": "Mentions per-LM cache control (dspy.LM('model', cache=False)) as an alternative to global disable"
+        }
+      ]
+    }
+  ]
+}

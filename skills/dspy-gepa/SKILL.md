@@ -1,13 +1,24 @@
 ---
 name: dspy-gepa
-description: Use when you want to optimize instructions without few-shot examples — a lightweight alternative to COPRO when you do not have or do not want to use demonstrations. Common scenarios - optimizing instructions when you do not have or do not want to use few-shot demonstrations, lightweight instruction search as a first step, tasks where examples in the prompt confuse the model, or when you want fast instruction optimization without the cost of COPRO. Related - ai-improving-accuracy, dspy-copro, dspy-miprov2. Also used for dspy.GEPA, instruction optimization without demos, lightweight prompt optimization, optimize instructions only, no few-shot examples needed, GEPA vs COPRO, quick instruction search, when demonstrations hurt performance, zero-shot optimization, instruction-only optimizer, simplest instruction tuner, fast prompt optimization, skip few-shot and just tune instructions, optimize Pydantic field descriptions, GEPA structured output, GEPA does not optimize field desc.
+description: Optimize instructions in DSPy programs via reflective evolution using dspy.GEPA without adding few-shot examples. Use when you want to optimize instructions without few-shot examples — a lightweight alternative when you do not have or do not want to use demonstrations. Common scenarios - optimizing instructions when you do not have or do not want to use few-shot demonstrations, lightweight instruction search as a first step, tasks where examples in the prompt confuse the model, or when you want fast instruction optimization. Related - ai-improving-accuracy, dspy-copro, dspy-miprov2. Also used for dspy.GEPA, instruction optimization without demos, lightweight prompt optimization, optimize instructions only, no few-shot examples needed, GEPA vs COPRO, GEPA vs MIPROv2, quick instruction search, when demonstrations hurt performance, zero-shot optimization, instruction-only optimizer, simplest instruction tuner, fast prompt optimization, skip few-shot and just tune instructions, optimize Pydantic field descriptions, GEPA structured output, GEPA does not optimize field desc.
 ---
 
 # Instruction Optimization with dspy.GEPA
 
 Guide the user through using `dspy.GEPA` to automatically discover better instructions for their DSPy programs through reflective evolution.
 
+## Step 1 — Gather context
+
+Before generating code, ask (skip questions already clear from context):
+
+1. **Task type** - Classification, generation, extraction, or multi-step pipeline? Multi-step pipelines can leverage per-predictor feedback via `pred_name`, which significantly improves optimization quality.
+2. **Data size** - How many labeled examples are available? GEPA needs 20-100 examples. Fewer examples favor `auto="light"`; more favor `auto="medium"` or `"heavy"`.
+3. **Failure mode** - What does "wrong" output look like? GEPA's power comes from textual feedback — knowing the failure pattern lets you write a metric that explains errors to the reflection LM, not just scores them.
+4. **Budget** - Rough API cost tolerance? `auto="light"` costs a few dollars; `auto="heavy"` can reach $20-50+ depending on validation set size and model choice. The `reflection_lm` model has the biggest cost impact.
+
 ## What is dspy.GEPA
+
+> **Experimental:** `dspy.GEPA` is marked `@experimental` as of DSPy v3.0.0. The API may change in future releases. Included in `pip install dspy` via the `gepa[dspy]` package.
 
 `dspy.GEPA` is a DSPy optimizer that evolves the **instruction text** in your program's predictors. Rather than adding few-shot examples (like BootstrapFewShot) or tuning model weights (like BootstrapFinetune), GEPA iteratively proposes, evaluates, and refines the natural-language instructions that guide each LM call.
 
@@ -193,11 +204,9 @@ When your examples contain metadata beyond the core input (e.g., expected catego
 
 ### Feedback engineering principles
 
-The GEPA paper (arxiv 2507.19457) shows that task-specific feedback yields 20-30% better evolved prompts than generic feedback. Maximize your feedback quality:
+The GEPA paper (arxiv 2507.19457) shows that task-specific feedback yields 20-30% better evolved prompts than generic feedback:
 
 - **Structure feedback with three parts:** what aspect failed, why it failed, and what correct behavior looks like. Example: `"Faithfulness failed: the summary invented a statistic. The instruction should require citing source sentences."`
-- **Explain causal patterns, not just symptoms.** "Wrong answer" gives the reflection LM nothing to work with. "The model confused sarcasm for praise because the review used positive adjectives with negative intent" gives it a pattern to fix.
-- **Use example metadata in feedback.** If your examples have edge case labels, difficulty tags, or domain annotations, reference them: `"This is a sarcasm edge case -- the instruction should warn about positive words with negative intent."`
 - **Be specific to the task domain.** Generic feedback like "be more accurate" is nearly useless. Domain-specific feedback like "dates must be in ISO 8601 format, not US date format" gives the reflection LM a concrete fix.
 
 ### Model-size configuration tips
@@ -392,7 +401,8 @@ optimized = gepa.compile(program, trainset=trainset)
 
 ## Additional resources
 
-- [dspy.GEPA API docs](https://dspy.ai/api/optimizers/GEPA/)
+- [dspy.GEPA getting-started guide](https://dspy.ai/getting-started/gepa-optimization/)
+- [dspy.GEPA in-depth reference](https://dspy.ai/diving-deeper/gepa-in-depth/)
 - [DSPy optimizer selection guide](https://dspy.ai/learn/optimization/optimizers/)
 - For constructor signatures and method reference, see [reference.md](reference.md)
 - For worked examples (sentiment classification, multi-step summarization), see [examples.md](examples.md)

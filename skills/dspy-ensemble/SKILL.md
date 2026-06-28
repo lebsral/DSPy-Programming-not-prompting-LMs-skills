@@ -1,11 +1,20 @@
 ---
 name: dspy-ensemble
-description: Use when you have multiple optimized versions of a program and want to combine them — voting, averaging, or routing across program variants for more robust outputs. Common scenarios - you have optimized several versions of a program and want to combine the best ones, using majority voting across multiple programs for higher accuracy, building a robust system by routing to different specialized programs, or reducing variance by averaging outputs. Related - ai-improving-accuracy, ai-making-consistent, dspy-bootstrap-rs. Also used for dspy.Ensemble, combine multiple optimized programs, majority voting across models, ensemble of DSPy programs, voting for reliability, reduce variance with multiple programs, aggregate predictions, combine outputs from different optimizers, when one program is not reliable enough, model committee, ensemble for production robustness, multiple programs one answer.
+description: Combines multiple optimized DSPy programs into a single ensemble via majority voting, averaging, or custom reduce functions using dspy.Ensemble. Use when you have run multiple optimization passes and want to combine the best programs for more reliable outputs, when majority voting across programs would improve accuracy, when one program alone is not reliable enough, or when different optimizers found different strengths you want to combine. Also used for dspy.Ensemble, combine multiple optimized programs, majority voting across models, ensemble of DSPy programs, voting for reliability, reduce variance with multiple programs, aggregate predictions, combine outputs from different optimizers, when one program is not reliable enough, model committee, ensemble for production robustness, multiple programs one answer, ai-improving-accuracy cross-optimizer, ai-making-consistent multiple programs.
 ---
 
 # Combine Programs with dspy.Ensemble
 
 Guide the user through using DSPy's `Ensemble` optimizer to combine multiple optimized programs into a single ensemble that aggregates their outputs. This is useful when you have run several optimization passes (different optimizers, different hyperparameters, different random seeds) and want to combine them for more robust predictions.
+
+## Step 1 — Gather context
+
+Before generating code, ask:
+
+1. **How many optimized programs do you have?** (Ensemble only makes sense with 2+. If you have one, consider `dspy.BestOfN` instead.)
+2. **What do the outputs look like?** Categorical labels or short answers → use `dspy.majority`. Numeric scores → use a custom averaging reduce_fn. Complex structured outputs → design the reduce_fn around the key field.
+3. **Do you have latency or cost constraints?** If yes, set `size=N` to run only a subset of programs per call rather than all of them.
+4. **Are the programs already compiled, or do you need to optimize them first?** If not yet compiled, generate the optimization step too.
 
 ## What is Ensemble
 
@@ -242,6 +251,10 @@ Both combine multiple outputs, but they work differently:
 | **Optimizer type** | Combines at the program level | Combines at the inference level |
 
 You can even stack them: ensemble multiple optimized programs, then wrap the ensemble with BestOfN for additional quality.
+
+## Expected improvement
+
+Ensemble typically adds 3-10 percentage points of accuracy over the best individual program when programs are genuinely diverse (different optimizers, different seeds, different LMs). Near-zero gains when programs are nearly identical — run `dspy.Evaluate` on each individual program first and confirm they have meaningfully different failure modes before committing to ensemble inference cost.
 
 ## Gotchas
 

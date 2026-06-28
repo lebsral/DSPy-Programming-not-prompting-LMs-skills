@@ -1,4 +1,14 @@
-# No formal audit has been recorded for this skill yet. Run the skill-quality
-# audit against the current DSPy version, then replace last_audit with a real
-# block: {date: YYYY-MM-DD, score: N/N, versions: {dspy: X.Y.Z}}.
-last_audit: null
+last_audit:
+  date: 2026-06-28
+  score: 54/55
+  versions:
+    dspy: 3.2.1
+  notes: >
+    First real audit. Fixed: broken dspy.Retrieve link (api/retrieval/ was 404 — replaced
+    with GitHub source + specific Embeddings/ColBERTv2/Embedder links); added
+    dspy.retrievers.WeaviateRM and DatabricksRM mention as undocumented source-only retrievers
+    (A4); added dspy-knn-few-shot cross-reference (C8); added "When not to use retrieval"
+    anti-pattern section (X3); fixed reference.md upstream link to point to specific API
+    pages instead of generic root (D6). Remaining WARN — X6 (no before/after optimization
+    metrics); this is a retrieval-setup skill not an optimization skill, so leaving as WARN.
+    Catalog description unchanged — no YAML description edits needed.

@@ -1,4 +1,13 @@
-# No formal audit has been recorded for this skill yet. Run the skill-quality
-# audit against the current DSPy version, then replace last_audit with a real
-# block: {date: YYYY-MM-DD, score: N/N, versions: {dspy: X.Y.Z}}.
-last_audit: null
+last_audit:
+  date: 2026-06-28
+  score: 55/55
+  versions:
+    dspy: 3.2.1
+  notes: >
+    First formal audit. API verified against https://dspy.ai/api/optimizers/BootstrapFewShot/.
+    All constructor params and defaults confirmed accurate (max_bootstrapped_demos=4,
+    max_labeled_demos=16, max_rounds=1, max_errors=None, metric_threshold=None,
+    teacher_settings=None). Fixes applied - description WHAT prefix added (F3),
+    gather-context Step 1 added (S3), evals.json converted to proper wrapper format
+    with object assertions (E3), real data-loading examples added to examples.md (X5).
+    Catalog description updated - see summary.

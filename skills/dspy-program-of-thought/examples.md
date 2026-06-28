@@ -17,7 +17,7 @@ class InvestmentCalculator(dspy.Signature):
     future_value: float = dspy.OutputField(desc="Total value at the end, rounded to 2 decimal places")
 
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 calc = dspy.ProgramOfThought(InvestmentCalculator)
@@ -54,7 +54,7 @@ class SalesAnalysis(dspy.Signature):
     answer: str = dspy.OutputField(desc="The computed answer")
 
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 analyzer = dspy.ProgramOfThought(SalesAnalysis)
@@ -109,7 +109,7 @@ class DateCalculator(dspy.Signature):
     answer: str = dspy.OutputField(desc="The computed answer")
 
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 solver = dspy.ProgramOfThought(DateCalculator)

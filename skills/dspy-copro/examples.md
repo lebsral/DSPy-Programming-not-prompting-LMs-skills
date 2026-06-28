@@ -206,3 +206,99 @@ What this demonstrates:
 - **Fresh program per run** -- creates a new `dspy.ChainOfThought` for each configuration to ensure a fair comparison
 - **Extracting the winning instruction** -- after comparing configs, inspects the best-scoring instruction to see what COPRO found
 - **Practical decision-making** -- this pattern helps you choose the right breadth setting for your task before committing to a production optimization run
+
+## Example 3: Production pattern — loading real data from CSV
+
+A support-ticket routing program optimized with COPRO using data loaded from a CSV file. Demonstrates the full production workflow: load real data, split train/dev, optimize, evaluate, save.
+
+```python
+import csv
+import random
+import dspy
+from dspy.evaluate import Evaluate
+
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+
+# --- Load real data from CSV ---
+# CSV has columns: text, category
+# Categories: billing, technical, account, general
+def load_tickets(path: str) -> list[dspy.Example]:
+    examples = []
+    with open(path, newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            examples.append(
+                dspy.Example(
+                    text=row["text"].strip(),
+                    category=row["category"].strip().lower(),
+                ).with_inputs("text")
+            )
+    return examples
+
+all_examples = load_tickets("support_tickets.csv")  # ~200 labeled rows
+random.shuffle(all_examples)
+
+# Split into train / dev
+split = int(0.8 * len(all_examples))
+trainset = all_examples[:split]
+devset = all_examples[split:]
+
+print(f"Train: {len(trainset)} | Dev: {len(devset)}")
+
+
+# --- Define program and metric ---
+CATEGORIES = ["billing", "technical", "account", "general"]
+
+class RouteTicket(dspy.Signature):
+    """Route a customer support ticket to the correct team."""
+    text: str = dspy.InputField(desc="Raw support ticket text")
+    category: str = dspy.OutputField(desc=f"One of: {', '.join(CATEGORIES)}")
+
+router = dspy.ChainOfThought(RouteTicket)
+
+def category_match(example, prediction, trace=None):
+    return prediction.category.strip().lower() == example.category.strip().lower()
+
+
+# --- Baseline ---
+evaluator = Evaluate(devset=devset, metric=category_match, num_threads=8, display_progress=True)
+baseline = evaluator(router)
+print(f"Baseline accuracy: {baseline:.1f}%")
+
+
+# --- Optimize with COPRO ---
+optimizer = dspy.COPRO(
+    metric=category_match,
+    breadth=15,
+    depth=3,
+    init_temperature=1.4,
+    track_stats=True,
+)
+
+optimized = optimizer.compile(
+    router,
+    trainset=trainset,
+    eval_kwargs=dict(num_threads=8, display_progress=True),
+)
+
+optimized_score = evaluator(optimized)
+print(f"Optimized accuracy: {optimized_score:.1f}% (improvement: {optimized_score - baseline:+.1f}%)")
+
+# Inspect the winning instruction
+for name, candidates in optimized.candidate_programs.items():
+    best = max(candidates, key=lambda c: c["score"])
+    print(f"\nBest instruction for {name}:")
+    print(f"  Score: {best['score']:.2f}")
+    print(f"  Instruction: {best['instruction']}")
+
+# Save for production
+optimized.save("ticket_router_optimized.json")
+print("Saved optimized program.")
+```
+
+What this demonstrates:
+
+- **CSV data loading** -- reads labeled examples from a real file with `csv.DictReader`, showing how to adapt COPRO to actual data pipelines
+- **Train/dev split** -- shuffles and splits data so evaluation is on held-out examples, not the training set
+- **Routing task** -- a realistic multi-class routing scenario with 4 business categories
+- **Before/after accuracy** -- prints the concrete improvement from optimization
+- **Production save** -- saves the optimized program to JSON for deployment

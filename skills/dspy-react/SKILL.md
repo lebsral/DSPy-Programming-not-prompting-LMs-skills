@@ -1,11 +1,20 @@
 ---
 name: dspy-react
-description: Use when the task requires calling external tools or APIs to gather information — multi-step tool use with reasoning, like searching databases, calling APIs, or combining multiple data sources. Common scenarios - building agents that search the web and synthesize results, multi-step information gathering from APIs, chatbots that look up data before answering, question answering that requires external knowledge, or any task needing interleaved reasoning and action. Related - ai-taking-actions, ai-searching-docs, dspy-codeact, dspy-tools. Also used for dspy.ReAct, ReAct agent pattern, reasoning and acting loop, tool-using agent in DSPy, search then answer pattern, agent with tools, multi-step tool use, interleave thinking and acting, API-calling agent, agent that reasons about tool outputs, when to use ReAct vs CodeAct, build intelligent agent with DSPy.
+description: Build tool-using agents with dspy.ReAct - the Reasoning-Action-Observation loop for interleaved thinking and action. Use when the task requires calling external tools or APIs to gather information - multi-step tool use with reasoning, like searching databases, calling APIs, or combining multiple data sources. Common scenarios - building agents that search the web and synthesize results, multi-step information gathering from APIs, chatbots that look up data before answering, question answering that requires external knowledge, or any task needing interleaved reasoning and action. Related - ai-taking-actions, ai-searching-docs, dspy-codeact, dspy-tools, dspy-mcp. Also used for dspy.ReAct, ReAct agent pattern, reasoning and acting loop, tool-using agent in DSPy, search then answer pattern, agent with tools, multi-step tool use, interleave thinking and acting, API-calling agent, agent that reasons about tool outputs, when to use ReAct vs CodeAct, build intelligent agent with DSPy.
 ---
 
 # Build Tool-Using Agents with dspy.ReAct
 
 Guide the user through building agents that reason step-by-step and call tools to accomplish tasks. `dspy.ReAct` implements the Reasoning-Action-Observation loop -- the agent thinks about what to do, calls a tool, observes the result, and repeats until it has an answer.
+
+## Gather context first
+
+Before generating code, ask:
+
+1. **What tools does the agent need?** Describe what each tool does and what data source it connects to (e.g., "a web search tool that calls the Serper API", "a database lookup for user accounts by email").
+2. **How many steps might the agent need per query?** One or two lookups (simple) or multi-step research chains (complex)? This determines `max_iters`.
+3. **What are the agent's inputs?** Just a question, or also context like user ID, session state, or a system prompt?
+4. **What outputs do you need?** A plain answer field, or structured fields like `confidence`, `sources`, or `category`?
 
 ## What is ReAct
 
@@ -222,6 +231,8 @@ agent = dspy.CodeAct("question -> answer", tools=[search, calculate])
 
 If you're unsure, start with ReAct. Switch to CodeAct if the agent needs to do math, string manipulation, or data transformations between tool calls.
 
+> **Upcoming in DSPy 3.3.0 (beta):** `ReActV2` will add native tool calling via the model's built-in tool-calling API. Not yet stable -- audit against DSPy 3.2.1 for production use.
+
 ## Error handling
 
 Tools can fail. Handle errors inside your tools so the agent gets a useful message instead of a crash:
@@ -285,6 +296,8 @@ optimized_agent = optimizer.compile(agent, trainset=trainset)
 optimized_agent.save("optimized_agent.json")
 ```
 
+Verify improvement: run `dspy.Evaluate` on a held-out devset before and after optimization. On tool-calling tasks with clear right/wrong answers (exact-match metrics), `BootstrapFewShot` typically gains 8-15 percentage points by teaching the agent better tool-selection patterns through examples; `MIPROv2` can add a further 5-12 points by optimizing the reasoning instructions.
+
 ## Debugging
 
 Inspect what the agent is doing:
@@ -302,9 +315,9 @@ print(agent)
 ## Gotchas
 
 1. **Claude sets `max_iters=5` but the default is 20.** Claude habitually passes `max_iters=5` which cuts off complex multi-step tasks too early. The actual default is 20. Only lower it when you want to constrain simple tasks (2-3 for lookups). For complex research, the default of 20 is appropriate.
-2. **Tool errors are passed back as observations** -- make your error messages informative so the agent can recover (e.g., "No user found with that email" not just "Error").
-3. **ReAct is slow by design** -- each iteration is a separate LM call. Use `CodeAct` for computation-heavy tasks where the agent can do work in code between tool calls.
-4. **Tool function docstrings become part of the prompt** -- write clear, concise docstrings. Verbose docstrings waste tokens every iteration.
+2. **Claude writes tools that raise exceptions instead of returning error strings.** When a tool raises an exception, the ReAct loop crashes -- the agent cannot recover. When a tool returns an error string (e.g., `"Error: user not found with email alice@example.com"`), the agent sees it as an Observation and can retry with different arguments or switch tools. Always wrap tool logic in try/except and return descriptive error strings, never raise.
+3. **Claude adds `reasoning` or `trajectory` as signature fields.** DSPy injects these fields internally for the Thought-Action-Observation trace. Adding them to your signature causes field conflicts and duplicate output. Never declare `reasoning`, `trajectory`, `next_thought`, `next_tool_name`, or `next_tool_args` in a ReAct signature -- only declare actual input and output fields like `question` and `answer`.
+4. **Claude writes tool docstrings like code comments, not like agent instructions.** The agent reads each docstring to decide when and how to call that tool. `"Wraps the requests library to call the search API"` gives the agent no guidance. Write action-oriented docstrings: `"Search for information about a topic. Use when you need current facts, definitions, or data not in your training."` Keep docstrings to 1-2 sentences -- they appear in every iteration prompt, so verbose docstrings inflate token usage linearly with `max_iters`.
 5. **Claude ignores the `trajectory` in the return value.** `ReAct` returns a `dspy.Prediction` with a `.trajectory` dict containing the full Thought-Action-Observation trace. Access `result.trajectory` to log or debug the agent's reasoning path. Claude often discards this and only uses `result.answer`.
 
 ## Additional resources
@@ -318,6 +331,7 @@ print(agent)
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
 - **Defining tools** in detail -- see `/dspy-tools`
+- **MCP tools** for wiring external MCP servers into ReAct agents -- see `/dspy-mcp`
 - **CodeAct** for code-based agents -- see `/dspy-codeact`
 - **Building custom modules** to wrap ReAct -- see `/dspy-modules`
 - **Action-taking AI** from a problem-first perspective -- see `/ai-taking-actions`

@@ -1,11 +1,20 @@
 ---
 name: dspy-bootstrap-rs
-description: Use when basic BootstrapFewShot is not enough and you want to search over multiple candidate demo sets — better results at the cost of more LM calls. Common scenarios - BootstrapFewShot alone is not reaching target accuracy, you want to search over multiple candidate demo sets and pick the best, optimizing for tasks where example selection matters a lot, or when you have compute budget for a more thorough search. Related - ai-improving-accuracy, dspy-bootstrap-few-shot. Also used for dspy.BootstrapFewShotWithRandomSearch, random search over demonstrations, better than basic BootstrapFewShot, search for optimal few-shot examples, brute force demo selection, try many demo combinations, more compute for better demos, upgrade from BootstrapFewShot, intermediate optimizer between simple and MIPROv2, when basic few-shot optimization is not enough, explore demonstration space.
+description: Optimize few-shot demos for a DSPy program by searching over multiple candidate demo sets using dspy.BootstrapFewShotWithRandomSearch. Use when basic BootstrapFewShot is not enough and you want better results at the cost of more LM calls. Common scenarios - BootstrapFewShot alone is not reaching target accuracy, you want to search over multiple candidate demo sets and pick the best, optimizing for tasks where example selection matters a lot, or you have compute budget for a more thorough search. Also used for random search over demonstrations, search for optimal few-shot examples, brute force demo selection, try many demo combinations, more compute for better demos, upgrade from BootstrapFewShot, intermediate optimizer between simple and MIPROv2, when basic few-shot optimization is not enough, explore demonstration space.
 ---
 
 # Optimize Few-Shot Demos with dspy.BootstrapFewShotWithRandomSearch
 
 Guide the user through using DSPy's `BootstrapFewShotWithRandomSearch` optimizer to find the best set of few-shot demonstrations for their program. This optimizer runs BootstrapFewShot multiple times with different random seeds and keeps the candidate program that scores highest on a metric.
+
+## Step 1 — Gather context
+
+Before writing any code, ask the user:
+
+1. **How many training examples do you have?** BootstrapRS works best with 50-200+ examples. Fewer than ~50 → suggest plain `BootstrapFewShot` instead; the random search has too little data to meaningfully differentiate candidates.
+2. **What is your metric / success criterion?** (exact match, semantic similarity, a custom function — needed to write the metric)
+3. **Single module or multi-step pipeline?** Multi-step pipelines accumulate demos across every predictor — use `max_bootstrapped_demos=2` and `max_labeled_demos=2` to avoid context overflow.
+4. **What is your compute budget?** Each candidate run costs roughly the same as one BootstrapFewShot pass. With the default 16 candidates, plan for ~16x that cost. Adjust `num_candidate_programs` accordingly.
 
 ## What it is
 
@@ -241,17 +250,17 @@ final = mipro_optimizer.compile(bootstrapped, trainset=trainset)
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
-- **BootstrapFewShot** for the simpler single-run version -- see `/ai-improving-accuracy`
-- **MIPROv2** for instruction + demo optimization -- see `/ai-improving-accuracy`
+- **BootstrapFewShot** for the simpler single-run version -- see `/dspy-bootstrap-few-shot`
+- **MIPROv2** for instruction + demo optimization -- see `/dspy-miprov2`
 - **Evaluate** for measuring quality with metrics and devsets -- see `/dspy-evaluate`
 - **Data handling** for preparing training sets -- see `/dspy-data`
-- **Improving accuracy** for the full optimization decision framework -- see `/ai-improving-accuracy`
+- **Improving accuracy** for the full optimizer decision framework -- see `/ai-improving-accuracy`
 - For worked examples, see [examples.md](examples.md)
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources
 
 - [dspy.BootstrapFewShotWithRandomSearch API docs](https://dspy.ai/api/optimizers/BootstrapFewShotWithRandomSearch/)
-- [DSPy optimizer selection guide](https://dspy.ai/learn/optimization/optimizers/)
+- [DSPy optimizer selection guide](https://dspy.ai/diving-deeper/choosing-an-optimizer/)
 - For constructor signatures and method reference, see [reference.md](reference.md)
 - For worked examples (QA optimization, multi-step pipeline), see [examples.md](examples.md)

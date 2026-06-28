@@ -1,4 +1,4 @@
-> Condensed from [dspy.ai/api/optimizers/GEPA/](https://dspy.ai/api/optimizers/GEPA/). Verify against upstream for latest.
+> Condensed from [dspy.ai/getting-started/gepa-optimization/](https://dspy.ai/getting-started/gepa-optimization/) and [dspy.ai/diving-deeper/gepa-in-depth/](https://dspy.ai/diving-deeper/gepa-in-depth/). Source: [dspy/teleprompt/gepa/gepa.py](https://github.com/stanfordnlp/dspy/blob/main/dspy/teleprompt/gepa/gepa.py). Verify against upstream for latest.
 
 # dspy.GEPA — API Reference
 
@@ -38,10 +38,16 @@ dspy.GEPA(
     track_stats=False,                   # return detailed metadata
     track_best_outputs=False,            # retain best outputs per task
     use_wandb=False,                     # W&B integration
+    wandb_api_key=None,                  # W&B API key (str | None)
+    wandb_init_kwargs=None,              # dict passed to wandb.init()
     use_mlflow=False,                    # MLflow integration
+    warn_on_score_mismatch=True,         # warn if metric scores differ from GEPA's internal scoring
 
     # Reproducibility
     seed=0,                              # random seed
+
+    # Advanced passthrough
+    gepa_kwargs=None,                    # dict of kwargs forwarded to the underlying gepa engine
 )
 ```
 
@@ -65,8 +71,14 @@ dspy.GEPA(
 | `perfect_score` | `float` | `1.0` | Score that counts as perfect |
 | `log_dir` | `str \| None` | `None` | Directory for optimization logs |
 | `track_stats` | `bool` | `False` | Attach `DspyGEPAResult` to `optimized.detailed_results` |
-| `track_best_outputs` | `bool` | `False` | Retain best outputs per task |
+| `track_best_outputs` | `bool` | `False` | Retain best outputs per task. Requires `track_stats=True` |
+| `use_wandb` | `bool` | `False` | Enable Weights and Biases logging |
+| `wandb_api_key` | `str \| None` | `None` | W&B API key (overrides env var) |
+| `wandb_init_kwargs` | `dict \| None` | `None` | Extra kwargs forwarded to `wandb.init()` |
+| `use_mlflow` | `bool` | `False` | Enable MLflow logging |
+| `warn_on_score_mismatch` | `bool` | `True` | Warn when metric scores differ from GEPA internal scoring |
 | `seed` | `int \| None` | `0` | Random seed for reproducibility |
+| `gepa_kwargs` | `dict \| None` | `None` | Advanced kwargs forwarded to the underlying gepa engine. Note: `reflection_prompt_template` cannot be set here — use `instruction_proposer` instead |
 
 ## compile()
 

@@ -1,11 +1,19 @@
 ---
 name: dspy-bootstrap-finetune
-description: Use when you need maximum quality from a smaller/cheaper model — generates training data from a teacher model and fine-tunes a student model weights. Common scenarios - distilling GPT-4 quality into a cheaper model, generating training data from a strong teacher to fine-tune a weak student, reducing inference costs by replacing an expensive model with a fine-tuned small one, or building a production model that is fast and cheap. Related - ai-fine-tuning, ai-cutting-costs, dspy-better-together. Also used for dspy.BootstrapFinetune, model distillation with DSPy, teacher-student training, fine-tune small model from GPT-4 outputs, reduce API costs with fine-tuning, generate training data then fine-tune, cheap model same quality, distill large model into small model, fine-tune Llama from GPT-4, production model training, move from API to self-hosted model.
+description: Generates training data from a teacher model and fine-tunes student model weights using dspy.BootstrapFinetune. Use when you need maximum quality from a smaller/cheaper model — distilling GPT-4 quality into a cheaper model, generating training data from a strong teacher to fine-tune a weak student, reducing inference costs by replacing an expensive model with a fine-tuned small one, or building a production model that is fast and cheap. Related - ai-fine-tuning, ai-cutting-costs, dspy-better-together. Also used for model distillation with DSPy, teacher-student training, fine-tune small model from GPT-4 outputs, reduce API costs with fine-tuning, generate training data then fine-tune, cheap model same quality, distill large model into small model, fine-tune Llama from GPT-4, production model training, move from API to self-hosted model.
 ---
 
 # Fine-Tune LM Weights with dspy.BootstrapFinetune
 
 Guide the user through using DSPy's `BootstrapFinetune` optimizer to automatically generate training data from successful reasoning traces and fine-tune a language model's weights. This is the heaviest optimization DSPy offers -- it changes the model itself, not just the prompt.
+
+## Before writing code
+
+Ask these three questions before generating any BootstrapFinetune code:
+
+1. **How many labeled examples do you have?** Under 500, steer toward `/ai-improving-accuracy` (BootstrapFewShot or MIPROv2) — not enough successful traces for effective fine-tuning.
+2. **Have you already tried prompt optimization?** BootstrapFewShot and MIPROv2 are 10-100x cheaper and should always come first. If they already tried and hit a ceiling, proceed.
+3. **Distillation or same-model fine-tuning?** Distillation (large teacher → small student) is the primary use case and gives the biggest cost win. Same-model fine-tuning is valid too but the tradeoffs differ — confirm the user understands it locks behavior to one fine-tuned checkpoint.
 
 ## What is BootstrapFinetune
 
@@ -145,6 +153,7 @@ dspy.BootstrapFinetune(
     metric=None,            # Scoring function: (example, prediction, trace) -> bool/float
     multitask=True,         # Share training data across predictors
     train_kwargs=None,      # Fine-tuning hyperparams (e.g., {"n_epochs": 2})
+    adapter=None,           # Adapter for formatting training data (usually leave as None)
     exclude_demos=False,    # Clear few-shot demos after fine-tuning
     num_threads=None,       # Parallel threads for bootstrapping
 )
@@ -155,6 +164,7 @@ dspy.BootstrapFinetune(
 | `metric` | `Callable \| None` | `None` | Scores each trace during bootstrapping. Only passing traces become training data. |
 | `multitask` | `bool` | `True` | When `True`, shares training data across predictors. When `False`, each predictor gets its own fine-tuning data. |
 | `train_kwargs` | `dict \| None` | `None` | Fine-tuning hyperparameters passed to the provider (e.g., `{"n_epochs": 2}`). Can be LM-specific: `{lm: {"n_epochs": 3}}`. |
+| `adapter` | `Adapter \| dict[LM, Adapter] \| None` | `None` | Adapter for formatting training data. Can be per-LM. Leave as `None` unless you need custom formatting. |
 | `exclude_demos` | `bool` | `False` | If `True`, clears few-shot demos after fine-tuning (the model has internalized them). |
 | `num_threads` | `int \| None` | `None` | Threads for bootstrapping. Must be >= the number of fine-tuning jobs. 24 is a good starting point. |
 
@@ -286,6 +296,7 @@ If only a small fraction of training examples produce passing traces, the fine-t
 
 - **BootstrapFewShot** for lighter optimization without fine-tuning -- see `/ai-improving-accuracy`
 - **Fine-tuning workflow** for the full decision framework, prerequisites, and BetterTogether -- see `/ai-fine-tuning`
+- **BetterTogether** to combine weight fine-tuning with prompt optimization for maximum quality -- see `/dspy-better-together`
 - **Cost reduction** for distillation and other strategies to cut API spend -- see `/ai-cutting-costs`
 - For worked examples (distillation, production cost reduction), see [examples.md](examples.md)
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

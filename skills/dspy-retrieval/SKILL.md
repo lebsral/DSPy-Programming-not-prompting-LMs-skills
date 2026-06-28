@@ -29,6 +29,8 @@ There are four key components:
 | `dspy.Embedder` | Compute embeddings | Turn text into vectors using any LiteLLM-supported model |
 | `dspy.retrievers.Embeddings` | Local vector search | Build a retriever from an embedder + corpus, uses FAISS |
 
+> `dspy.retrievers.WeaviateRM` and `dspy.retrievers.DatabricksRM` also exist in the source as undocumented `dspy.Retrieve` subclasses requiring optional extras (`pip install dspy-ai[weaviate]`). Use them with caution — no official docs page, API may change.
+
 ## dspy.Retrieve
 
 The base class for all retrievers. Use it directly with a configured retrieval model (`rm`), or subclass it to wrap your own search backend.
@@ -381,6 +383,13 @@ result = predictor(documents=docs, question="What is the refund policy?")
 
 **Note:** This is in `dspy.experimental` — the API may change. For broader anti-hallucination patterns, see `/ai-stopping-hallucinations`.
 
+## When not to use retrieval
+
+- **Small, static knowledge base that fits in the prompt.** If your docs are under ~10-20 passages total, embed them directly in the system prompt instead of building a retrieval pipeline. Retrieval adds latency, embedding cost, and a retrieval-quality failure mode that does not exist when everything is in context.
+- **Facts that change faster than you can re-index.** If the source data updates every minute (live prices, inventory), retrieval over stale embeddings is worse than no retrieval. Prefer a live API call or database lookup instead.
+- **Single-turn factual lookups on well-known data.** For questions a capable LM already knows (dates, capitals, common definitions), retrieval adds cost and latency without improving accuracy. Try without retrieval first and only add it when the LM makes factual errors on your specific domain.
+- **Avoid retrieval as a substitute for prompt engineering.** Before adding a retrieval pipeline, check whether adding a few inline examples or a clearer signature fixes the problem.
+
 ## Gotchas
 
 - **Using `dspy.Retrieve` without configuring `rm`.** Claude often writes `dspy.Retrieve(k=5)` without setting `dspy.configure(rm=...)` first. Without a configured retrieval model, calling `Retrieve` raises a confusing error. Either configure `rm` globally or pass a concrete retriever (like `dspy.retrievers.Embeddings`) directly to your module.
@@ -391,9 +400,10 @@ result = predictor(documents=docs, question="What is the refund policy?")
 
 ## Additional resources
 
-- [dspy.Retrieve API docs](https://dspy.ai/api/retrieval/)
-- [dspy.ColBERTv2 API docs](https://dspy.ai/api/tools/ColBERTv2)
-- [dspy.Embedder API docs](https://dspy.ai/api/models/Embedder)
+- [dspy.ColBERTv2 API docs](https://dspy.ai/api/tools/ColBERTv2/)
+- [dspy.retrievers.Embeddings API docs](https://dspy.ai/api/tools/Embeddings/)
+- [dspy.Embedder API docs](https://dspy.ai/api/models/Embedder/)
+- [dspy.Retrieve source](https://github.com/stanfordnlp/dspy/blob/main/dspy/retrievers/retrieve.py) (no dedicated docs page; base class for custom retrievers)
 - For API details, see [reference.md](reference.md)
 - For worked examples, see [examples.md](examples.md)
 
@@ -405,4 +415,5 @@ result = predictor(documents=docs, question="What is the refund policy?")
 - **Vector database setup** (Qdrant, Pinecone, ChromaDB, Weaviate) -- see `/dspy-qdrant`
 - **End-to-end document search** with vector stores and chunking -- see `/ai-searching-docs`
 - **Keeping answers grounded** and avoiding hallucination -- see `/ai-stopping-hallucinations`
+- **Dynamic few-shot selection** using `dspy.KNN` with the same embedder infrastructure -- see `/dspy-knn-few-shot`
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

@@ -36,12 +36,15 @@ dspy.Evaluate(
 
 ```python
 result = evaluator(
-    program,                   # dspy.Module (required)
-    metric=None,               # override metric
-    devset=None,               # override devset
-    num_threads=None,          # override threads
-    display_progress=None,     # override progress
-    display_table=None,        # override table
+    program,                      # dspy.Module (required)
+    metric=None,                  # override metric
+    devset=None,                  # override devset
+    num_threads=None,             # override threads
+    display_progress=None,        # override progress
+    display_table=None,           # override table
+    callback_metadata=None,       # dict[str, Any] | None — passed to callbacks
+    save_as_csv=None,             # override CSV output path
+    save_as_json=None,            # override JSON output path
 )
 ```
 
@@ -99,7 +102,7 @@ complete_and_grounded = CompleteAndGrounded(threshold=0.66)
 
 ### Other built-ins
 
-| Metric | Description |
-|--------|-------------|
-| `answer_exact_match` | Normalized string equality on `answer` field |
-| `answer_passage_match` | Substring check on `answer` field |
+| Metric | Signature | Description |
+|--------|-----------|-------------|
+| `answer_exact_match(example, pred, trace=None, frac=1.0)` | `example.answer`, `pred.answer` | Normalized string equality; `frac<1.0` uses F1 threshold |
+| `answer_passage_match(example, pred, trace=None)` | `example.answer`, `pred.context` | RAG retrieval check — True if any passage in `pred.context` contains `example.answer` |

@@ -1,6 +1,6 @@
 # Retrieval API Reference
 
-> Condensed from [dspy.ai/api](https://dspy.ai/api/). Verify against upstream for latest.
+> Condensed from [dspy.ai/api/tools/ColBERTv2](https://dspy.ai/api/tools/ColBERTv2/), [dspy.ai/api/tools/Embeddings](https://dspy.ai/api/tools/Embeddings/), and [dspy.ai/api/models/Embedder](https://dspy.ai/api/models/Embedder/). Verify against upstream for latest.
 
 ## dspy.Retrieve
 

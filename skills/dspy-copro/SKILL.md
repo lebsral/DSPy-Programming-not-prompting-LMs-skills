@@ -7,6 +7,15 @@ description: Use when you want to optimize instructions by generating many candi
 
 Guide the user through using `dspy.COPRO` to automatically generate, evaluate, and select the best instructions for their DSPy program's signatures.
 
+## Step 1 — Gather context
+
+Before writing code, ask:
+
+1. **What does your program do?** Which module does it use — `Predict`, `ChainOfThought`, a custom `dspy.Module`? What are the input/output fields?
+2. **How many labeled training examples do you have?** COPRO needs 20-200. Below 20 the search is unreliable; above 200, consider MIPROv2 for joint instruction + demo optimization.
+3. **Do you have an evaluation metric already, or do you need help writing one?** COPRO requires a metric — exact match, semantic similarity, LM-as-judge, etc.
+4. **Do you want instructions only, or also few-shot demos?** If demos would help, use `dspy.MIPROv2` instead — it jointly optimizes both and typically outperforms COPRO.
+
 ## What is COPRO
 
 `dspy.COPRO` (Collaborative Prompting) is a DSPy optimizer that improves your program by finding better instructions for each signature. Instead of you hand-writing prompt instructions, COPRO generates many candidate instructions, evaluates each one against your metric, and keeps the best.
@@ -117,6 +126,7 @@ The returned program has additional metadata:
 
 - `optimized.candidate_programs` -- dict of all evaluated candidates with their scores
 - `optimized.total_calls` -- total LM API calls made during optimization
+- `optimized.results_best` / `optimized.results_latest` -- per-iteration best/latest scores (only present when `track_stats=True`)
 
 ## The breadth parameter
 
@@ -238,10 +248,9 @@ This is useful when you want a capable model to brainstorm instructions but eval
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
 - **Improving accuracy end-to-end** (metrics, evaluation, optimizer selection) -- see `/ai-improving-accuracy`
-- **MIPROv2 for combined instruction + demo optimization** -- see `/ai-improving-accuracy`
-- **GEPA for lightweight instruction tuning** -- see `/ai-improving-accuracy`
+- **MIPROv2 for combined instruction + demo optimization** -- see `/dspy-miprov2`
+- **GEPA for lightweight instruction tuning** -- see `/dspy-gepa`
 - **Writing evaluation metrics** -- see `/dspy-evaluate`
 - **Preparing training data** -- see `/dspy-data`
 - **Signatures and instructions** -- see `/dspy-signatures`
-- For worked examples, see [examples.md](examples.md)
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

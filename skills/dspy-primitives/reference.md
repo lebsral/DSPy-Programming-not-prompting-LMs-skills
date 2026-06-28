@@ -173,9 +173,63 @@ When no native reasoning is available, DSPy falls back to a generated reasoning 
 
 `dspy.Tool` wraps a Python callable so the LM can invoke it as a tool; `dspy.ToolCalls` represents the LM's tool-call requests as a structured output type. Both underpin agents and ReAct. See the `/dspy-tools` skill for full API details (registration, argument schemas, execution loops).
 
+## dspy.Example
+
+The standard data container in DSPy. Used for training data, few-shot demos, and evaluation rows.
+
+### Constructor
+
+```python
+dspy.Example(base=None, **kwargs)
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `base` | `dict \| Example \| None` | `None` | Dictionary or Example to copy fields from before applying kwargs |
+| `**kwargs` | any | — | Field names and values (override base) |
+
+### Key Methods
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `with_inputs(*keys)` | `-> Example` | Mark fields as inputs; returns new Example with `_input_keys` set. Required before use with optimizers or `dspy.Evaluate`. |
+| `inputs()` | `-> Example` | Returns new Example with only the input fields |
+| `labels()` | `-> Example` | Returns new Example with only the non-input (label) fields |
+| `keys(include_dspy=False)` | `-> KeysView` | Returns field names (like `dict.keys()`). Pass `include_dspy=True` to include internal `dspy_` fields |
+| `values(include_dspy=False)` | `-> ValuesView` | Returns field values |
+| `items(include_dspy=False)` | `-> ItemsView` | Returns `(name, value)` pairs |
+| `copy(**kwargs)` | `-> Example` | Shallow copy with optional field overrides |
+| `without(*keys)` | `-> Example` | Returns copy with specified fields removed |
+| `get(key, default=None)` | `-> Any` | Returns field value or default if missing |
+| `toDict()` | `-> dict` | Converts to plain dict with recursive serialization (handles nested Examples, Pydantic models, lists) |
+
+Fields are accessible via attribute (`ex.question`) or dictionary notation (`ex["question"]`).
+
+## dspy.Prediction
+
+Extends `dspy.Example`. Returned by every DSPy module forward call.
+
+### Constructor
+
+```python
+dspy.Prediction(*args, **kwargs)
+```
+
+Inherits all `Example` parameters. Also initializes `_completions` and `_lm_usage`.
+
+### Additional Methods (beyond Example)
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `get_lm_usage()` | `-> dict` | Returns token usage dict from the LM call |
+| `set_lm_usage(value)` | `-> None` | Sets LM usage (used internally by the adapter) |
+| `from_completions(list_or_dict, signature=None)` | `classmethod -> Prediction` | Construct from raw completion data |
+
+Predictions with a `score` field support comparison operators (`<`, `>`, `<=`, `>=`) that compare the score as a float.
+
 ## Base Class: Type
 
-All primitives inherit from `dspy.Type` (which extends `pydantic.BaseModel`). Common inherited methods:
+All multimodal primitives (Image, Audio, Code, etc.) inherit from `dspy.Type` (which extends `pydantic.BaseModel`). Common inherited methods:
 
 | Method | Description |
 |--------|-------------|

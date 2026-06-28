@@ -1,11 +1,20 @@
 ---
 name: dspy-knn-few-shot
-description: Use when you want few-shot demos that are dynamically selected per input based on similarity — better than fixed demos when inputs vary widely. Common scenarios - inputs vary widely and fixed examples do not cover enough cases, dynamically selecting the most relevant demos per input, building a retrieval-augmented prompt with similar examples, or when static few-shot examples work for some inputs but fail on others. Related - ai-improving-accuracy, dspy-labeled-few-shot, dspy-bootstrap-few-shot. Also used for dspy.KNNFewShot, dynamic few-shot selection, similar examples per input, retrieval-augmented few-shot, adaptive demonstrations, nearest neighbor example selection, dynamic prompt construction, different examples for different inputs, embedding-based demo retrieval, when fixed examples do not generalize, per-input demo selection, contextual few-shot examples, smart example selection.
+description: Select the most relevant few-shot demonstrations for each input at runtime using dspy.KNNFewShot and dspy.KNN — embedding-based retrieval that adapts demos per query. Use when you want few-shot demos dynamically selected per input based on similarity, inputs vary widely and fixed examples do not cover enough cases, dynamically selecting the most relevant demos per input, building a retrieval-augmented prompt with similar examples, or when static few-shot examples work for some inputs but fail on others. Related - ai-improving-accuracy, dspy-labeled-few-shot, dspy-bootstrap-few-shot, dspy-retrieval. Also used for dynamic few-shot selection, similar examples per input, retrieval-augmented few-shot, adaptive demonstrations, nearest neighbor example selection, dynamic prompt construction, different examples for different inputs, embedding-based demo retrieval, when fixed examples do not generalize, per-input demo selection, contextual few-shot examples, smart example selection.
 ---
 
 # Dynamic Few-Shot with dspy.KNN and dspy.KNNFewShot
 
 Guide the user through using DSPy's KNN-based retrieval to dynamically select the most relevant few-shot demonstrations for each input at inference time, rather than using the same static examples for every query.
+
+## Step 1 — Gather context
+
+Before generating code, ask if you do not already know:
+
+1. **How many training examples do you have?** Fewer than 20 makes similarity retrieval unreliable — suggest `BootstrapFewShot` instead.
+2. **How diverse are the inputs?** If all inputs are from one narrow domain, static few-shot matches KNN quality at lower overhead.
+3. **What embedding provider is preferred?** Local sentence-transformers (free, runs locally) or an API like OpenAI embeddings (higher quality, costs money per call).
+4. **Do you have a quality metric?** A metric lets KNNFewShot apply BootstrapFewShot filtering on top of retrieved neighbors, improving demo quality further.
 
 ## What KNN and KNNFewShot are
 
@@ -202,6 +211,10 @@ Keep in mind that each retrieved demo adds to the prompt length. If your example
 | **Latency** | No retrieval overhead | Small overhead for embedding + similarity search |
 | **Scales with data** | More data doesn't help (fixed demo slots) | More data improves retrieval quality |
 
+### Expected improvement
+
+KNNFewShot adds the most value when inputs are diverse. On tasks with 8+ categories or domains, dynamic selection typically adds **5-15% accuracy** over static few-shot (BootstrapFewShot) by ensuring each query always sees examples from relevant categories. On homogeneous inputs the gain is minimal — use BootstrapFewShot instead. Run `dspy.Evaluate(devset=devset, metric=metric)` on both a static and KNN-compiled program to measure the delta for your specific task before committing to the added embedding dependency.
+
 ## Passing BootstrapFewShot arguments
 
 Since KNNFewShot wraps BootstrapFewShot internally, you can pass any BootstrapFewShot parameter via `**few_shot_bootstrap_args`:
@@ -234,6 +247,7 @@ This retrieves 5 nearest neighbors per query and then applies BootstrapFewShot l
 
 - **BootstrapFewShot** for static few-shot optimization -- see `/dspy-bootstrap-few-shot`
 - **LabeledFewShot** for simple static demo selection without bootstrapping -- see `/dspy-labeled-few-shot`
+- **Retrieval modules and dspy.Embedder** for building RAG pipelines and embedding configuration -- see `/dspy-retrieval`
 - **Improving accuracy** for the full optimization workflow -- see `/ai-improving-accuracy`
 - For worked examples, see [examples.md](examples.md)
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
@@ -242,6 +256,6 @@ This retrieves 5 nearest neighbors per query and then applies BootstrapFewShot l
 
 - [dspy.KNN API docs](https://dspy.ai/api/optimizers/KNN/)
 - [dspy.KNNFewShot API docs](https://dspy.ai/api/optimizers/KNNFewShot/)
-- [DSPy optimizer selection guide](https://dspy.ai/learn/optimization/optimizers/)
+- [DSPy optimizers overview](https://dspy.ai/api/optimizers/)
 - For constructor signatures and method reference, see [reference.md](reference.md)
 - For worked examples (ticket classification, custom embeddings), see [examples.md](examples.md)

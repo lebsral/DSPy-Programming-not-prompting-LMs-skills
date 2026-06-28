@@ -31,7 +31,7 @@ optimizer.compile(student, *, trainset, sample=True)
 | Method | Description |
 |--------|-------------|
 | `compile(student, *, trainset, sample=True)` | Attach demos to all predictors in the student program |
-| `get_params()` | Returns list of `(name, param)` tuples for all named parameters |
+| `get_params()` | Returns the teleprompter configuration as a dictionary |
 
 ## Behavior details
 

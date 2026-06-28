@@ -1,6 +1,6 @@
 ---
 name: dspy-bootstrap-few-shot
-description: Use when you have 50+ labeled examples and want a quick accuracy boost as your first optimization step — the simplest and fastest DSPy optimizer. Common scenarios - your first optimization attempt on a new DSPy program, adding few-shot examples automatically from labeled data, quick accuracy boost before trying heavier optimizers, bootstrapping demonstrations from a teacher model, or getting started with DSPy optimization. Related - ai-improving-accuracy, dspy-labeled-few-shot. Also used for dspy.BootstrapFewShot, simplest DSPy optimizer, first optimizer to try, automatic few-shot example selection, bootstrap demonstrations from labels, quick optimization baseline, add examples to prompt automatically, teacher bootstrapping, labeled data to few-shot demos, starting point for DSPy optimization, easy accuracy improvement, how to optimize DSPy program for the first time.
+description: Automatically generate and select few-shot demonstrations for a DSPy program from labeled data using dspy.BootstrapFewShot - the simplest and fastest optimizer. Use when you have 50+ labeled examples and want a quick accuracy boost as your first optimization step. Common scenarios - your first optimization attempt on a new DSPy program, adding few-shot examples automatically from labeled data, quick accuracy boost before trying heavier optimizers, bootstrapping demonstrations from a teacher model, or getting started with DSPy optimization. Related - ai-improving-accuracy, dspy-labeled-few-shot. Also used for dspy.BootstrapFewShot, simplest DSPy optimizer, first optimizer to try, automatic few-shot example selection, bootstrap demonstrations from labels, quick optimization baseline, add examples to prompt automatically, teacher bootstrapping, labeled data to few-shot demos, starting point for DSPy optimization, easy accuracy improvement, how to optimize DSPy program for the first time.
 ---
 
 # Bootstrap Few-Shot Demonstrations
@@ -28,6 +28,14 @@ optimized = optimizer.compile(my_program, trainset=trainset)
 - You have **~50+ labeled examples** (fewer can work but results vary)
 - You want to **add few-shot demonstrations** without hand-writing them
 - You want a **quick baseline** before trying heavier optimizers
+
+## Step 1 — Understand your setup
+
+Before generating code, clarify:
+
+1. **What does your DSPy program do?** (classification, QA, extraction, summarization, etc.) — this shapes the metric and example structure.
+2. **How many labeled examples do you have?** If fewer than ~20, consider `/dspy-labeled-few-shot` instead (hand-picked demos, no bootstrapping overhead).
+3. **What metric will you use to judge quality?** Exact match, fuzzy match, LLM-as-judge, or a task-specific function? The metric is the heart of BootstrapFewShot — if it is too strict (less than ~10% pass rate on your trainset), barely any demos will be bootstrapped.
 
 ## Basic usage
 

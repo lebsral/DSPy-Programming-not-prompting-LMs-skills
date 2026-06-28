@@ -19,6 +19,15 @@ Use it when you have:
 
 If call B depends on the result of call A, those two calls must be sequential. Everything else can be parallel.
 
+## Step 1 — Clarify the use case
+
+Before writing code, ask:
+
+1. **Same module or mixed?** Are you running one module on many inputs (batch), or multiple different modules on the same input (fan-out)? Same-module batches can use either `dspy.Parallel` or the simpler `.batch()` method (see below). Fan-out requires `dspy.Parallel`.
+2. **How many items?** Fewer than ~5 items — just call the module directly; parallelism overhead is not worth it. 5–100 items — `dspy.Parallel` with 4-8 threads. 100+ items — increase threads up to your provider rate limit.
+3. **Any data dependencies?** If any call needs the output of a previous call, those must stay sequential. Confirm all pairs are truly independent before parallelizing.
+4. **Error tolerance?** If any failure should abort the batch, use `max_errors`. If you want partial results, set `return_failed_examples=True`.
+
 ## Basic usage
 
 Pass a list of `(module, inputs)` pairs. Each pair is one unit of work:
@@ -60,7 +69,7 @@ dspy.Parallel(
     num_threads=4,               # number of concurrent threads (default: settings.num_threads)
     max_errors=5,                # stop after this many failures (default: settings.max_errors)
     return_failed_examples=False,# if True, return failures separately instead of raising
-    provide_traceback=False,     # include tracebacks in error output
+    provide_traceback=None,      # include tracebacks in error output (None = use settings default)
     disable_progress_bar=False,  # suppress the tqdm progress bar
     timeout=120,                 # max seconds per task before timeout
 )
@@ -76,6 +85,45 @@ dspy.Parallel(
 | `disable_progress_bar` | `bool` | `False` | Suppress the progress bar. |
 | `timeout` | `int` | `120` | Max seconds per individual task. |
 | `straggler_limit` | `int` | `3` | Threshold for flagging slow-running tasks. |
+
+## `.batch()` — simpler alternative for same-module batching
+
+Every `dspy.Module` has a built-in `.batch()` method that handles the most common case: running the same module on many inputs. If you do not need to mix different modules per item, `.batch()` is less code than `dspy.Parallel`:
+
+```python
+classify = dspy.Predict("text -> label: str")
+texts = ["Great!", "Terrible.", "Meh."]
+
+# Build a list of Examples
+examples = [dspy.Example(text=t).with_inputs("text") for t in texts]
+
+# Run in parallel -- same as dspy.Parallel under the hood
+results = classify.batch(examples, num_threads=4)
+for r in results:
+    print(r.label)
+```
+
+`.batch()` accepts all the same concurrency parameters as `dspy.Parallel`:
+
+```python
+results = classify.batch(
+    examples,
+    num_threads=4,
+    max_errors=5,
+    return_failed_examples=True,
+    provide_traceback=None,
+    timeout=120,
+)
+# With return_failed_examples=True: returns (results, failed_examples, exceptions)
+```
+
+**When to use `.batch()` vs `dspy.Parallel`:**
+
+| Need | Use |
+|------|-----|
+| Same module, many inputs | `.batch()` — simpler API |
+| Different modules per input (fan-out) | `dspy.Parallel` — required |
+| Mix modules and share an exec loop | `dspy.Parallel` — more control |
 
 ## Configuring concurrency
 
@@ -301,13 +349,16 @@ This keeps the parallelism as an implementation detail. Callers don't need to kn
 3. **Claude forgets that `return_failed_examples=True` changes the return type.** Without it, `parallel(pairs)` returns a flat list. With it, it returns a 3-tuple `(results, failed_examples, exceptions)`. Destructure accordingly or the code will break.
 4. **Claude nests Parallel inside Parallel without considering total concurrency.** An inner `Parallel(num_threads=3)` inside an outer `Parallel(num_threads=4)` creates up to 12 concurrent LM calls. This can exceed provider rate limits. Calculate the total: `outer_threads * inner_threads`.
 5. **Claude uses `dspy.Parallel` for 1-2 items.** The threading overhead is not worth it for fewer than ~5 items. Just call the module directly.
+6. **Skipping result order verification.** `dspy.Parallel` preserves input order — `results[i]` corresponds to `exec_pairs[i]`. Verify this with a quick sanity check: zip `results` with your original inputs and confirm the first few items align before processing the full batch.
 
 ## Cross-references
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
 - **Modules** are the building blocks you pass to Parallel -- see `/dspy-modules`
+- **Batch classification** (sort items into categories at scale) -- see `/ai-sorting`
 - **Multi-step pipelines** that combine sequential and parallel stages -- see `/ai-building-pipelines`
+- **Async API serving** (non-blocking DSPy in FastAPI / asyncio) -- see `/ai-serving-apis`
 - **Evaluation** uses its own threading via `num_threads` -- see `/dspy-evaluate`
 - For worked examples (batch classification, multi-aspect analysis), see [examples.md](examples.md)
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

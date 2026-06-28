@@ -1,6 +1,6 @@
 ---
 name: dspy-primitives
-description: DSPy typed wrappers (dspy.Image, dspy.Audio, dspy.Code, dspy.History, dspy.File, dspy.Reasoning, dspy.Tool, dspy.ToolCalls) for multimodal data, files, and structured outputs in signatures. Use when working with non-text inputs like images, audio, or code, passing PDFs or documents to the LM, capturing native reasoning traces from reasoning models, building multimodal AI pipelines, processing images alongside text, handling audio transcription inputs, working with code files as typed inputs, or managing conversation history in multi-turn chatbots. Also used for multimodal DSPy, image input in DSPy signature, process images with DSPy, audio input in DSPy, dspy.File, pass PDF to language model, document input in DSPy, dspy.Reasoning, capture thinking traces, native reasoning output, dspy.Tool, dspy.ToolCalls, typed fields in signatures, non-text data in DSPy, vision model with DSPy, Claude vision with DSPy, multimodal pipeline, image classification with DSPy, pass images to language model, conversation history type, structured types beyond strings.
+description: DSPy typed wrappers (dspy.Image, dspy.Audio, dspy.Code, dspy.History, dspy.File, dspy.Reasoning, dspy.Tool, dspy.ToolCalls, dspy.Example, dspy.Prediction) for multimodal data, files, and structured outputs in signatures. Use when working with non-text inputs like images, audio, or code, passing PDFs or documents to the LM, capturing native reasoning traces from reasoning models, building multimodal AI pipelines, processing images alongside text, handling audio transcription inputs, working with code files as typed inputs, or managing conversation history in multi-turn chatbots. Also used for multimodal DSPy, image input in DSPy signature, process images with DSPy, audio input in DSPy, dspy.File, pass PDF to language model, document input in DSPy, dspy.Reasoning, capture thinking traces, native reasoning output, dspy.Tool, dspy.ToolCalls, typed fields in signatures, non-text data in DSPy, vision model with DSPy, Claude vision with DSPy, multimodal pipeline, image classification with DSPy, pass images to language model, conversation history type, structured types beyond strings, dspy.Example, dspy.Prediction, training data container, labeled examples DSPy, module output DSPy.
 ---
 
 # DSPy Primitives
@@ -31,8 +31,8 @@ The core primitives:
 | `dspy.Reasoning` | Native reasoning/thinking traces from reasoning models | Capturing o1/o3/R1/extended-thinking output |
 | `dspy.Tool` | Wraps a Python callable as a tool the LM can call | Agents, ReAct (see `/dspy-tools`) |
 | `dspy.ToolCalls` | The LM's tool-call requests as a structured output | Agents, ReAct (see `/dspy-tools`) |
-
-Two more types are the core input/output containers: `dspy.Example` holds a single labeled input/output pair (for training and few-shot data) and `dspy.Prediction` is what a module returns. Use them constantly but rarely construct primitives — see `/dspy-data` for `dspy.Example` depth.
+| `dspy.Example` | A single labeled input/output pair | Training data, few-shot demos, evaluations |
+| `dspy.Prediction` | What a DSPy module returns | Reading outputs, comparing results, usage tracking |
 
 ## dspy.Image
 
@@ -367,6 +367,57 @@ Use `dspy.Reasoning` when you want access to a reasoning model's native thinking
 
 `dspy.Tool` wraps a Python callable so the LM can invoke it as a tool, and `dspy.ToolCalls` represents the LM's tool-call requests as a structured output type. These are the building blocks for agents and tool use (ReAct). They are covered in depth — including registration, argument schemas, and execution loops — in `/dspy-tools`; reach for that skill rather than constructing these primitives directly.
 
+## dspy.Example and dspy.Prediction
+
+`dspy.Example` is the standard data container in DSPy — every training sample, few-shot demo, and evaluation row is a `dspy.Example`. `dspy.Prediction` extends `Example` and is what every DSPy module returns.
+
+### dspy.Example
+
+```python
+# Create an example with arbitrary fields
+ex = dspy.Example(question="What is the capital of France?", answer="Paris")
+ex = ex.with_inputs("question")  # mark which fields are inputs vs labels
+
+# Access fields by attribute or key
+print(ex.question)   # "What is the capital of France?"
+print(ex.answer)     # "Paris"
+print(ex.keys())     # dict_keys(['question', 'answer'])
+print(ex.inputs())   # Example with only input fields (question)
+print(ex.labels())   # Example with only label fields (answer)
+
+# Copy with overrides (returns a new Example)
+ex2 = ex.copy(answer="Paris, France")
+
+# Convert to plain dict for JSON serialization
+print(ex.toDict())
+```
+
+`with_inputs()` is required before using an example with optimizers or `dspy.Evaluate` — optimizers use `.inputs()` to construct the forward call and `.labels()` to compare predicted outputs.
+
+### dspy.Prediction
+
+Every call to a DSPy module returns a `dspy.Prediction`:
+
+```python
+module = dspy.Predict("question -> answer")
+result = module(question="What is 2+2?")
+
+print(result.answer)       # access output field by name
+print(result.keys())       # all field names
+print(result.get_lm_usage()) # token usage dict from the LM call
+```
+
+`dspy.Prediction` also stores intermediate completions when multiple samples are generated (e.g., with `dspy.BestOfN`), accessible via `result._completions`.
+
+For training data construction and optimization workflows, see `/dspy-data`.
+
+## When not to use primitives
+
+- **Prefer text extraction over `dspy.Image` for structured documents.** If you need data from a scanned PDF or form, use a dedicated OCR/parsing library (pdfplumber, PyMuPDF, Tesseract) and pass the extracted text as a string. Vision models reading documents are slower, more expensive, and less reliable for structured data like tables.
+- **Pre-transcribe audio rather than using `dspy.Audio` when accuracy matters.** Use a dedicated ASR model (Whisper, Deepgram) first, then pass the transcript text to DSPy. End-to-end audio adds latency and the audio-capable model must also handle your DSPy task.
+- **Paste text instead of `dspy.File` for short documents.** For documents under ~2K words, extract the text and pass it directly as a string field. Use `dspy.File` when the document is too long to fit in the prompt or when native file-reading by the model preserves structure (e.g., multi-column layouts).
+- **Use `dspy.ChainOfThought` instead of `dspy.Reasoning` on non-reasoning models.** `dspy.Reasoning` is designed for o1/o3/DeepSeek-R1/Claude extended-thinking. On standard models it falls back to a generated reasoning field — `dspy.ChainOfThought` is a more explicit and optimizable approach for those cases.
+
 ## Combining primitives in signatures
 
 You can mix primitives with regular typed fields in the same signature:
@@ -410,6 +461,7 @@ DSPy's adapter system handles the provider-specific formatting. You write the si
 3. **Claude uses `role`/`content` keys in History messages instead of signature field names.** History messages should use keys matching the signature fields (e.g., `{"question": ..., "answer": ...}`), not the generic `role`/`content` format. Using `role`/`content` works but produces worse prompt formatting because DSPy cannot map the history entries to the right signature fields.
 4. **Claude forgets that History is frozen (immutable).** You cannot append to an existing History object. Create a new `dspy.History(messages=[...old_turns, new_turn])` each time. Attempting to mutate raises a `ValidationError`.
 5. **Claude uses `dspy.Image` with a non-vision model.** If the configured LM does not support vision (e.g., GPT-4o-mini, older Claude models), image inputs are silently ignored or cause errors. Always verify the model supports the primitive type.
+6. **Claude cannot verify multimodal input encoding without inspecting LM history.** To confirm an image or file was properly encoded and sent, inspect `dspy.settings.lm.history[-1]` after a call — the `kwargs` key shows the formatted request. A malformed primitive (empty bytes, wrong MIME type, unsupported URL scheme) shows up as a missing or broken content part in the request, not as a Python exception.
 
 ## Additional resources
 
@@ -417,7 +469,11 @@ DSPy's adapter system handles the provider-specific formatting. You write the si
 - [dspy.Audio API docs](https://dspy.ai/api/primitives/Audio/)
 - [dspy.Code API docs](https://dspy.ai/api/primitives/Code/)
 - [dspy.History API docs](https://dspy.ai/api/primitives/History/)
-- [DSPy primitives API index](https://dspy.ai/api/primitives/) (Tool, ToolCalls, Example, Prediction)
+- [dspy.Example API docs](https://dspy.ai/api/primitives/Example/)
+- [dspy.Prediction API docs](https://dspy.ai/api/primitives/Prediction/)
+- [dspy.Tool API docs](https://dspy.ai/api/primitives/Tool/)
+- [dspy.ToolCalls API docs](https://dspy.ai/api/primitives/ToolCalls/)
+- [DSPy primitives API index](https://dspy.ai/api/primitives/)
 - [dspy.File and dspy.Reasoning](https://dspy.ai/diving-deeper/adapters/) — covered in the Adapters guide under "Custom type wrappers" (no dedicated API page yet)
 - For API details, see [reference.md](reference.md)
 - For worked examples, see [examples.md](examples.md)

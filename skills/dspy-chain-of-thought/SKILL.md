@@ -7,6 +7,14 @@ description: Use when the task benefits from intermediate reasoning before produ
 
 Guide the user through using DSPy's `ChainOfThought` module -- the go-to module for tasks that benefit from intermediate reasoning before producing an answer.
 
+## Step 1: Gather context
+
+Before writing any code, ask:
+
+1. **What are the input and output fields?** Paste or describe your signature — inline string or class-based. This determines how to structure the module.
+2. **What kind of task is this?** Classification, extraction, analysis, decision-making, or multi-step reasoning? Tasks where a human would need to think before answering benefit most from CoT.
+3. **Have you tried `dspy.Predict` already?** If so, what went wrong — wrong answers, missing nuance, or poor edge-case handling? This shapes whether to demonstrate optimization too.
+
 ## What is ChainOfThought
 
 `dspy.ChainOfThought` is a drop-in replacement for `dspy.Predict` that automatically injects a `reasoning` field before your output fields. Same signature, one-word swap -- the LM reasons step-by-step before answering. The `reasoning` field is always available on the result even though your signature doesn't declare it.
@@ -156,6 +164,18 @@ What optimization does for ChainOfThought:
 - **Improves consistency** -- the LM sees examples of good reasoning patterns before generating its own
 - **Works with all optimizers** -- `BootstrapFewShot`, `MIPROv2`, `BootstrapFewShotWithRandomSearch` all support CoT modules
 
+**Verify improvement before shipping:** Always compare accuracy before and after optimization:
+
+```python
+evaluator = dspy.evaluate.Evaluate(devset=devset, metric=ticket_metric, num_threads=4)
+baseline = evaluator(classifier)
+optimized_score = evaluator(optimized)
+print(f"Baseline: {baseline:.1f}%  →  Optimized: {optimized_score:.1f}%")
+dspy.inspect_history(n=1)  # confirm reasoning trace appears before output fields
+```
+
+Typical results: `BootstrapFewShot` with 3-5 demos improves accuracy by 10–25 percentage points on classification and judgment tasks. `MIPROv2` can yield an additional 10–20 points on top of that.
+
 ## Using CoT inside custom modules
 
 ChainOfThought is a sub-module like any other. Use it in `dspy.Module` for multi-step pipelines:
@@ -213,5 +233,8 @@ Both sub-modules use CoT because code review and fix suggestion both benefit fro
 - **Signatures** for defining input/output contracts -- see `/dspy-signatures`
 - **Modules** for building multi-step programs with CoT sub-modules -- see `/dspy-modules`
 - **Reasoning patterns** for broader strategies (decomposition, self-correction) -- see `/ai-reasoning`
+- **MultiChainComparison** when one reasoning path is unreliable -- generates N chains and selects the best-reasoned answer -- see `/dspy-multi-chain-comparison`
+- **Best-of-N** for sampling N independent outputs and picking the best via a reward function -- see `/dspy-best-of-n`
+- **Refine** for iterative improvement with feedback until quality meets a threshold -- see `/dspy-refine`
 - For worked examples, see [examples.md](examples.md)
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

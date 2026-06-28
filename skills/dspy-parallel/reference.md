@@ -65,6 +65,36 @@ Each pair in `exec_pairs` is `(module, inputs)` where `inputs` can be:
 | `list` | `(module, ["What is DSPy?"])` |
 | `tuple` | `(module, ("What is DSPy?",))` |
 
+## `.batch()` — Module-level alternative
+
+Every `dspy.Module` provides a `.batch()` convenience method that internally uses `dspy.Parallel`. It is the simpler choice when running the same module on many inputs.
+
+```python
+module.batch(
+    examples: list[Example],
+    num_threads: int | None = None,
+    max_errors: int | None = None,
+    return_failed_examples: bool = False,
+    provide_traceback: bool | None = None,
+    disable_progress_bar: bool = False,
+    timeout: int = 120,
+    straggler_limit: int = 3,
+) -> list[Any] | tuple[list[Any], list[Example], list[Exception]]
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `examples` | `list[Example]` | — | List of `dspy.Example` instances to process. Each is unpacked via `.inputs()` before being passed to the module. |
+| `num_threads` | `int \| None` | `None` | Thread count. Falls back to `dspy.settings.num_threads`. |
+| `max_errors` | `int \| None` | `None` | Max errors before raising. Falls back to `dspy.settings.max_errors`. |
+| `return_failed_examples` | `bool` | `False` | When `True`, return changes to a 3-tuple `(results, failed_examples, exceptions)`. |
+| `provide_traceback` | `bool \| None` | `None` | Include Python tracebacks for failures. |
+| `disable_progress_bar` | `bool` | `False` | Suppress progress bar. |
+| `timeout` | `int` | `120` | Per-task timeout in seconds. |
+| `straggler_limit` | `int` | `3` | Threshold for slow-task detection. |
+
+**Use `.batch()` when you have one module and many inputs. Use `dspy.Parallel` directly when you need to mix different modules per pair (fan-out).**
+
 ## Internal attributes
 
 | Attribute | Type | Description |

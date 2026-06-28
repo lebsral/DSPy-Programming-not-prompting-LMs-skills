@@ -10,15 +10,17 @@ dspy.ChatAdapter(
     use_native_function_calling=False, # bool
     native_response_types=None,        # list[type] | None
     use_json_adapter_fallback=True,    # bool
+    parallel_tool_calls=None,          # bool | None
 )
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `callbacks` | `list[BaseCallback] | None` | `None` | Callback hooks executed during format/parse operations. |
+| `callbacks` | `list[BaseCallback] \| None` | `None` | Callback hooks executed during format/parse operations. |
 | `use_native_function_calling` | `bool` | `False` | Use provider-native function calling for structured output (OpenAI, Anthropic). |
-| `native_response_types` | `list[type] | None` | `None` | Output field types handled by native LM features instead of text parsing. |
+| `native_response_types` | `list[type] \| None` | `None` | Output field types handled by native LM features instead of text parsing. |
 | `use_json_adapter_fallback` | `bool` | `True` | Automatically retry with JSONAdapter when ChatAdapter parsing fails. |
+| `parallel_tool_calls` | `bool \| None` | `None` | Enable provider-side parallel tool-call generation when native function calling is active. |
 
 ## Methods
 
@@ -34,9 +36,13 @@ dspy.ChatAdapter(
 | Method | Signature | Returns | Description |
 |--------|-----------|---------|-------------|
 | `format` | `(signature, demos, inputs)` | `list[dict[str, Any]]` | Convert signature + demos + inputs into multiturn chat messages (system, user, assistant). |
-| `format_system_message` | `(signature)` | `str` | Generate system instructions from signature docstring, field descriptions, and type constraints. |
+| `format_task_description` | `(signature)` | `str` | Generate task instructions from the signature docstring. |
+| `format_field_structure` | `(signature)` | `str` | Generate field structure showing expected input/output format and `[[ ## field ## ]]` layout. |
+| `format_field_description` | `(signature)` | `str` | Generate type constraints and per-field descriptions for the system message. |
 | `format_user_message_content` | `(signature, inputs, prefix='', suffix='', main_request=False)` | `str` | Structure user input with `[[ ## field ## ]]` markers and optional output format reminders. |
 | `user_message_output_requirements` | `(signature)` | `str` | Return lightweight format reminder for long conversations to maintain output structure awareness. |
+| `format_demos` | `(signature, demos)` | `list[dict[str, Any]]` | Format few-shot demos as alternating user/assistant message pairs. |
+| `format_conversation_history` | `(signature, history_field_name, inputs)` | `list[dict[str, Any]]` | Convert `dspy.History` field into prior message pairs inserted before the current input. |
 
 ### Parse methods
 
@@ -70,7 +76,7 @@ The `[[ ## completed ## ]]` marker signals that all output fields have been prov
 
 ```
 ChatAdapter.parse() succeeds? → Return result
-                     fails?   → ContextWindowExceededError? → Re-raise
+                     fails?   → LMError? → Re-raise immediately
                                → Other error? → Retry entire call with JSONAdapter
 ```
 

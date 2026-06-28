@@ -89,13 +89,25 @@ Returns the optimizer's parameters as a dictionary.
 
 ## dspy.Embedder
 
-Wraps any embedding function for use with KNN.
+Wraps a hosted model or custom callable for use with KNN and other retrieval modules.
 
 ```python
-dspy.Embedder(embed_function)
+dspy.Embedder(
+    model,               # str | Callable -- hosted model name or embedding function
+    batch_size=200,      # int -- default batch size for processing inputs
+    caching=True,        # bool -- whether to cache responses from hosted models
+    **kwargs,            # passed to the embedding model
+)
 ```
 
-The `embed_function` must accept `str | list[str]` and return `list[list[float]]`.
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `model` | `str \| Callable` | required | A LiteLLM model string (e.g., `"openai/text-embedding-3-small"`) or a callable that accepts `list[str]` and returns a 2D array or list of float32 vectors |
+| `batch_size` | `int` | `200` | Default batch size for processing inputs when using hosted models |
+| `caching` | `bool` | `True` | Whether to cache responses from hosted models (no effect on local callables) |
+| `**kwargs` | `dict` | `{}` | Additional keyword arguments forwarded to the embedding model |
+
+The callable form must accept `str | list[str]` and return `list[list[float]]`.
 
 ### Common configurations
 

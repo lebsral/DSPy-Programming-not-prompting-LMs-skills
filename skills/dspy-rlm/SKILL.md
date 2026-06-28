@@ -78,7 +78,7 @@ The LM will:
 ```python
 dspy.RLM(
     signature,              # str | Signature -- required, defines inputs/outputs
-    max_iterations=20,      # max REPL interaction loops
+    max_iters=20,           # max REPL interaction loops
     max_llm_calls=50,       # max sub-LM query calls per execution
     max_output_chars=10_000,# max chars from REPL output per step
     verbose=False,          # enable detailed execution logging
@@ -180,7 +180,7 @@ RLM instances with custom interpreters are not thread-safe. For concurrent usage
 - **Forgetting Deno installation.** RLM's default PythonInterpreter uses a Pyodide WASM sandbox that requires Deno. If Deno is not installed, you get a cryptic subprocess error. Always check `deno --version` before running RLM code.
 - **Using RLM for tasks that fit in context.** Claude defaults to RLM when asked about "iterative refinement" even for short inputs. RLM adds significant overhead (multiple REPL loops, sub-LM calls). For inputs under ~50K chars, use `dspy.ChainOfThought` or `dspy.Predict` instead.
 - **Forgetting `print()` in REPL code.** The LM must `print()` values to see REPL output -- assignments alone produce no visible result. If the LM's exploration seems stuck, check the trajectory for code that computes but never prints.
-- **Setting `max_iterations` too low for complex tasks.** Claude tends to set `max_iterations=5` for brevity. RLM defaults to 20 for a reason -- complex data exploration often needs 10-15 iterations. Only lower it for simple lookups.
+- **Setting `max_iters` too low for complex tasks.** Claude tends to set `max_iters=5` for brevity. RLM defaults to 20 for a reason -- complex data exploration often needs 10-15 iterations. Only lower it for simple lookups.
 - **Not using `sub_lm` for cost control.** Every `llm_query()` call inside the REPL uses the main LM by default. For large-context tasks with many sub-queries, this gets expensive fast. Always set `sub_lm` to a cheaper model for semantic analysis calls.
 
 ## Additional resources

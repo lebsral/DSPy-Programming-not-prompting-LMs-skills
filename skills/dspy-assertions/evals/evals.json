@@ -1,33 +1,41 @@
-[
-  {
-    "prompt": "I have a DSPy program that extracts dates from text. Sometimes the LM returns dates in the wrong format (like 'January 5th' instead of '2024-01-05'). How can I force it to use YYYY-MM-DD format?",
-    "expected_output": "Code using dspy.Refine with a reward function that validates date format with regex, or Pydantic Field constraints. Mentions that dspy.Assert is removed in DSPy 3.x.",
-    "assertions": [
-      "Uses dspy.Refine with a reward function or Pydantic validation (not removed dspy.Assert)",
-      "Reward function or validation checks the date format with regex or parsing",
-      "Mentions that dspy.Assert/Suggest are removed in DSPy 3.x and recommends Refine/BestOfN",
-      "Uses regex or string validation to check the date format"
-    ]
-  },
-  {
-    "prompt": "My DSPy summarization module sometimes produces summaries that are too long. I want it to prefer short summaries but not crash if it goes over. How do I add that as a soft constraint?",
-    "expected_output": "Code using dspy.Refine with a graduated reward function that penalizes length violations with partial credit. Mentions that dspy.Suggest is removed in DSPy 3.x.",
-    "assertions": [
-      "Uses dspy.Refine or dspy.BestOfN with a graduated reward function (not removed dspy.Suggest)",
-      "Reward function gives partial credit for near-misses (graduated float, not binary)",
-      "Mentions that dspy.Suggest is removed in DSPy 3.x",
-      "Explains that the reward function penalizes over-length without making it a hard failure"
-    ]
-  },
-  {
-    "prompt": "I have multiple constraints on my DSPy program and it keeps failing. The LM cannot satisfy all 6 rules at once. What should I do?",
-    "expected_output": "Advice to use a graduated reward function with different weights for hard vs soft rules, and to use dspy.Refine instead of removed dspy.Assert",
-    "assertions": [
-      "Identifies the problem: too many simultaneous hard constraints reduce joint success probability",
-      "Recommends using a single graduated reward function with different penalty weights per constraint",
-      "Recommends heavy penalties for critical constraints and light penalties for preferences",
-      "Recommends dspy.Refine or dspy.BestOfN as the enforcement mechanism (not removed dspy.Assert/Suggest)",
-      "Does NOT suggest using dspy.Assert or dspy.Suggest without noting they are removed in DSPy 3.x"
-    ]
-  }
-]
+{
+  "skill_name": "dspy-assertions",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I have a DSPy program that extracts dates from text. Sometimes the LM returns dates in the wrong format (like 'January 5th' instead of '2024-01-05'). How can I force it to use YYYY-MM-DD format?",
+      "expected_output": "Code using dspy.Refine with a reward function that validates date format with regex, or Pydantic Field constraints. Mentions that dspy.Assert is removed in DSPy 3.x.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_refine_not_assert", "description": "Uses dspy.Refine with a reward function or Pydantic validation, not the removed dspy.Assert"},
+        {"name": "validates_date_format", "description": "Reward function or validation checks date format with regex or datetime parsing"},
+        {"name": "notes_assert_removed", "description": "Mentions that dspy.Assert and dspy.Suggest are removed in DSPy 3.x and recommends Refine or BestOfN"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "My DSPy summarization module sometimes produces summaries that are too long. I want it to prefer short summaries but not crash if it goes over. How do I add that as a soft constraint?",
+      "expected_output": "Code using dspy.Refine with a graduated reward function that penalizes length violations with partial credit. Mentions that dspy.Suggest is removed in DSPy 3.x.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_refine_or_bestofn", "description": "Uses dspy.Refine or dspy.BestOfN with a graduated reward function, not the removed dspy.Suggest"},
+        {"name": "graduated_reward_not_binary", "description": "Reward function gives partial credit for near-misses using graduated float scores, not a binary pass/fail"},
+        {"name": "notes_suggest_removed", "description": "Mentions that dspy.Suggest is removed in DSPy 3.x"},
+        {"name": "soft_penalty_not_hard_fail", "description": "Explains that the reward function penalizes over-length with a partial score deduction rather than a hard failure"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I have multiple constraints on my DSPy program and it keeps failing. The LM cannot satisfy all 6 rules at once. What should I do?",
+      "expected_output": "Advice to use a graduated reward function with different weights for hard vs soft rules, and to use dspy.Refine instead of removed dspy.Assert",
+      "files": [],
+      "assertions": [
+        {"name": "identifies_joint_constraint_failure", "description": "Identifies that too many simultaneous hard constraints reduce joint success probability"},
+        {"name": "recommends_graduated_reward", "description": "Recommends using a single graduated reward function with different penalty weights per constraint"},
+        {"name": "differentiates_hard_soft_penalties", "description": "Recommends heavy penalties for critical constraints and light penalties for style preferences"},
+        {"name": "recommends_refine_or_bestofn", "description": "Recommends dspy.Refine or dspy.BestOfN as the enforcement mechanism, not removed dspy.Assert or dspy.Suggest"},
+        {"name": "does_not_recommend_removed_apis", "description": "Does not suggest using dspy.Assert or dspy.Suggest without noting they are removed in DSPy 3.x"}
+      ]
+    }
+  ]
+}

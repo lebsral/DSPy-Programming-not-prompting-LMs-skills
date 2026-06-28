@@ -1,4 +1,12 @@
-# No formal audit has been recorded for this skill yet. Run the skill-quality
-# audit against the current DSPy version, then replace last_audit with a real
-# block: {date: YYYY-MM-DD, score: N/N, versions: {dspy: X.Y.Z}}.
-last_audit: null
+last_audit:
+  date: 2026-06-28
+  score: 57/57
+  versions:
+    dspy: 3.2.1
+  notes: >
+    First real audit. Fixed: parallel_tool_calls param missing from constructor
+    (A1); ContextWindowExceededError -> LMError in fallback flow (A3);
+    BamlAdapter (undocumented) noted in comparison table (A4);
+    format_system_message (non-existent method) replaced with
+    format_task_description/format_field_structure/format_field_description
+    in reference.md, added format_demos and format_conversation_history (A5).

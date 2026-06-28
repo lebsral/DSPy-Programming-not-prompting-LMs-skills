@@ -1,23 +1,39 @@
-[
-  {
-    "id": "dspy-signatures-inline-vs-class",
-    "prompt": "I need to classify customer messages into categories. Should I use an inline signature or a class-based one?",
-    "should_contain": ["Literal", "dspy.Signature", "OutputField"],
-    "should_not_contain": [],
-    "notes": "Should recommend class-based for classification with Literal type constraint. Should show the class-based pattern with docstring and OutputField."
-  },
-  {
-    "id": "dspy-signatures-pydantic-output",
-    "prompt": "I want to extract structured invoice data from raw text — vendor, date, line items with quantities and prices. How do I define the DSPy signature?",
-    "should_contain": ["BaseModel", "dspy.Signature", "OutputField", "list"],
-    "should_not_contain": [],
-    "notes": "Should use Pydantic BaseModel for nested output (LineItem inside Invoice). Should show InputField for raw text and OutputField with the Pydantic type."
-  },
-  {
-    "id": "dspy-signatures-field-descriptions",
-    "prompt": "My DSPy signature works but the LM keeps misunderstanding what the output fields mean. How do I improve it?",
-    "should_contain": ["desc", "docstring"],
-    "should_not_contain": [],
-    "notes": "Should recommend adding desc= to OutputField and improving the Signature docstring. Should mention that field names themselves matter since DSPy uses them in the prompt."
-  }
-]
+{
+  "skill_name": "dspy-signatures",
+  "evals": [
+    {
+      "id": "dspy-signatures-inline-vs-class",
+      "prompt": "I need to classify customer messages into categories: billing, technical, account, general. Should I use an inline signature or a class-based one?",
+      "expected_output": "A class-based dspy.Signature with a Literal type constraint on the output field, a docstring instruction, and dspy.InputField/dspy.OutputField. Recommend class-based because of the Literal type constraint.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_literal_types", "description": "Uses Literal[...] for the category output field, not a free-text str"},
+        {"name": "uses_class_based_signature", "description": "Shows a class MySignature(dspy.Signature) definition, not just an inline string"},
+        {"name": "includes_docstring", "description": "Signature class has a docstring that acts as the task instruction"},
+        {"name": "uses_output_field", "description": "Output field declared with dspy.OutputField()"}
+      ]
+    },
+    {
+      "id": "dspy-signatures-pydantic-output",
+      "prompt": "I want to extract structured invoice data from raw text — vendor, date, line items with quantities and prices. How do I define the DSPy signature?",
+      "expected_output": "A Pydantic BaseModel for LineItem and Invoice/InvoiceData, then a dspy.Signature with the Pydantic model as the output type using dspy.OutputField.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_pydantic_model", "description": "Defines one or more Pydantic BaseModel classes for the structured output"},
+        {"name": "uses_nested_model", "description": "Uses a nested model (LineItem inside Invoice) since line items are a list"},
+        {"name": "output_typed_with_pydantic", "description": "The dspy.Signature output field uses the Pydantic model as the type annotation"},
+        {"name": "provider_agnostic", "description": "LM config uses generic provider (e.g. openai/gpt-4o-mini) with a comment showing alternatives"}
+      ]
+    },
+    {
+      "id": "dspy-signatures-literal-dynamic-categories",
+      "prompt": "My categories come from a database at runtime. How do I use a Literal type with a list I build dynamically?",
+      "expected_output": "Use Literal[tuple(categories_list)] not Literal[categories_list] — the tuple() wrapping is required for dynamic Literal construction.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_tuple_wrapping", "description": "Shows Literal[tuple(list)] not Literal[list] for dynamic categories"},
+        {"name": "explains_why", "description": "Explains that Literal[list] silently fails at runtime — Literal requires a tuple, not a list, for dynamic values"}
+      ]
+    }
+  ]
+}

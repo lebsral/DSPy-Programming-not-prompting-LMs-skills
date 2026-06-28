@@ -1,6 +1,6 @@
 # DSPy Utilities API Reference
 
-> Condensed from [dspy.ai](https://dspy.ai/). Verify against upstream for latest.
+> Condensed from [dspy.ai/api/utils/configure_cache](https://dspy.ai/api/utils/configure_cache/), [dspy.ai/api/utils/inspect_history](https://dspy.ai/api/utils/inspect_history/), and [dspy.ai/tutorials/saving](https://dspy.ai/tutorials/saving/). Verify against upstream for latest.
 
 ## streamify
 
@@ -41,19 +41,38 @@ listener = StreamListener(
 ## inspect_history
 
 ```python
-dspy.inspect_history(n=1)  # show last n LM calls
+dspy.inspect_history(n=1, file=None)
 ```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `n` | `int` | `1` | Number of recent LM calls to display |
+| `file` | `TextIO \| None` | `None` | Write to file instead of stdout (disables ANSI color codes) |
 
 Shows full prompt sent, raw response, and adapter format.
 
 ## save / load
 
 ```python
-program.save("path.json")   # save learned state (demos, instructions)
-program.load("path.json")   # load into a fresh instance of the same class
+# Save learned state only (class definition must exist at load time)
+program.save("path.json")
+
+# Save entire program including class definition
+program.save("path_dir", save_program=True, modules_to_serialize=None)
+
+# Load state into a fresh instance
+program = MyProgram()
+program.load("path.json", allow_pickle=False)
+
+# Load an entire saved program (requires save_program=True)
+program = dspy.load("path_dir", allow_pickle=False)
 ```
 
-Saves only learned state -- class definition must exist at load time. Call `dspy.configure()` before `load()`.
+`save()` parameters: `path` (str), `save_program` (bool, default `False`), `modules_to_serialize` (list, optional).
+`load()` parameters: `path` (str), `allow_pickle` (bool, default `False` -- set `True` for `.pkl` files).
+`dspy.load()` parameters: `path` (str), `allow_pickle` (bool, default `False`).
+
+Call `dspy.configure(lm=lm)` before `program.load()`. Not needed for `dspy.load()`.
 
 ## asyncify
 
@@ -67,7 +86,33 @@ Wraps sync DSPy programs for async execution. Captures and propagates `dspy.conf
 ## configure_cache
 
 ```python
-dspy.configure_cache(enable=True)   # enable/disable caching globally
+dspy.configure_cache(
+    enable_disk_cache=True,         # persistent file-based cache
+    enable_memory_cache=True,       # RAM-based cache
+    disk_cache_dir=None,            # storage location (defaults to ~/.dspy_cache)
+    disk_size_limit_bytes=None,     # max disk storage (defaults to DISK_CACHE_LIMIT)
+    memory_max_entries=1000000,     # max in-memory entries
+    restrict_pickle=False,          # harden against untrusted pickle payloads (3.2+)
+    safe_types=None,                # additional trusted types for restricted pickle
+)
 dspy.LM("model", cache=False)      # per-LM cache control
-dspy.configure_cache(restrict_pickle=True)  # 3.2+ - harden the on-disk cache against untrusted pickle payloads
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `enable_disk_cache` | `bool \| None` | `True` | Persistent file-based caching |
+| `enable_memory_cache` | `bool \| None` | `True` | RAM-based caching |
+| `disk_cache_dir` | `str \| None` | `DISK_CACHE_DIR` | Cache directory path |
+| `disk_size_limit_bytes` | `int \| None` | `DISK_CACHE_LIMIT` | Max disk storage |
+| `memory_max_entries` | `int` | `1000000` | Max in-memory entries |
+| `restrict_pickle` | `bool` | `False` | Harden against untrusted payloads |
+| `safe_types` | `list[type] \| None` | `None` | Additional trusted types |
+
+Common usage:
+```python
+# Disable all caching
+dspy.configure_cache(enable_disk_cache=False, enable_memory_cache=False)
+
+# Disable only disk cache
+dspy.configure_cache(enable_disk_cache=False)
 ```

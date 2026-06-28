@@ -1,5 +1,32 @@
 # dspy-bootstrap-rs -- Worked Examples
 
+## Loading real data
+
+Replace the toy datasets below with real data from CSV, JSONL, or an API:
+
+```python
+import csv, json
+import dspy
+
+# From CSV (columns: question, answer)
+with open("qa_data.csv") as f:
+    examples = [
+        dspy.Example(question=row["question"], answer=row["answer"]).with_inputs("question")
+        for row in csv.DictReader(f)
+    ]
+
+# From JSONL (one {"input": ..., "label": ...} per line)
+with open("dataset.jsonl") as f:
+    examples = [
+        dspy.Example(**json.loads(line)).with_inputs("input")
+        for line in f
+    ]
+
+trainset, devset = examples[:int(len(examples)*0.8)], examples[int(len(examples)*0.8):]
+```
+
+---
+
 ## Example 1: QA optimization with random search
 
 Optimize a question-answering module by searching over multiple candidate demo sets. This shows the basic end-to-end workflow: prepare data, define a metric, run the optimizer, and compare against baseline.

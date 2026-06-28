@@ -16,7 +16,7 @@ dspy.Ensemble(
 |-----------|------|---------|-------------|
 | `reduce_fn` | `Callable | None` | `None` | Aggregation function applied to the list of predictions. If `None`, returns the raw list. |
 | `size` | `int | None` | `None` | Number of programs to randomly sample per inference call. `None` = use all programs. |
-| `deterministic` | `bool` | `False` | Reserved for future use. Must be `False` -- setting `True` raises `NotImplementedError`. |
+| `deterministic` | `bool` | `False` | Reserved for future use. Must be `False` -- setting `True` raises `AssertionError: "TODO: Implement example hashing for deterministic ensemble."` |
 
 ## compile()
 

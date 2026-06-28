@@ -1,58 +1,47 @@
 # Examples: DSPy Utilities
 
-## Example 1: Streaming responses in a web app
+## Example 1: configure_cache patterns for development vs production
 
-Stream a DSPy program's output through a FastAPI endpoint using `streamify` and `StreamListener`. The user sees tokens arrive incrementally instead of waiting for the full response.
+Control DSPy caching to match your workflow -- aggressive caching during optimization, disabled during data generation.
 
 ```python
 import dspy
-from dspy.streaming import streamify, StreamListener
-from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
 
-app = FastAPI()
-
-# Configure DSPy
 lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
-# Define the program
-class QA(dspy.Module):
-    def __init__(self):
-        self.answer = dspy.ChainOfThought("question -> answer")
+# ---- Development: disable disk cache to always hit the API ----
+# Use this when testing prompt changes or debugging latency
+dspy.configure_cache(enable_disk_cache=False)
 
-    def forward(self, question):
-        return self.answer(question=question)
+classifier = dspy.Predict("ticket_text -> urgency: Literal['low', 'medium', 'high', 'critical']")
+result = classifier(ticket_text="Production database is down")
 
-qa = QA()
+# ---- Data generation: disable all caching for diverse outputs ----
+# Identical prompts need different responses, so cache would return the same result
+dspy.configure_cache(enable_disk_cache=False, enable_memory_cache=False)
 
-@app.get("/ask")
-async def ask(question: str):
-    # Create a fresh listener per request
-    answer_listener = StreamListener(signature_field_name="answer")
+generate = dspy.Predict("topic -> example_sentence")
+sentences = [generate(topic="weather").example_sentence for _ in range(5)]
+# All 5 calls hit the API -- caching would collapse them to one response
 
-    # Wrap the program for streaming
-    streaming_qa = streamify(
-        qa,
-        stream_listeners=[answer_listener],
-        include_final_prediction_in_output_stream=False,
-    )
+# ---- Optimization: use default caching (both enabled) ----
+# Never disable cache during optimizer runs -- they make many redundant calls
+dspy.configure_cache(enable_disk_cache=True, enable_memory_cache=True)  # default
 
-    async def generate():
-        async for chunk in streaming_qa(question=question):
-            # Each chunk has the streamed field as an attribute
-            if hasattr(chunk, "answer"):
-                yield chunk.answer
+optimizer = dspy.BootstrapFewShot(metric=lambda ex, pred, trace=None: True, max_bootstrapped_demos=3)
+optimized = optimizer.compile(classifier, trainset=[...])
 
-    return StreamingResponse(generate(), media_type="text/plain")
+# ---- Security: harden against pickle injection in shared environments ----
+dspy.configure_cache(restrict_pickle=True)
 ```
 
 ### What to notice
 
-- `StreamListener` is created fresh per request -- do not reuse listeners across requests unless you set `allow_reuse=True`.
-- `include_final_prediction_in_output_stream=False` prevents the final `Prediction` object from appearing in the stream, since we only want the incremental text.
-- The `streamify` wrapper returns an async generator, which maps naturally to FastAPI's `StreamingResponse`.
-- The listener internally buffers ~10 tokens to detect field boundary delimiters. The first few tokens may arrive with a slight delay.
+- `enable_disk_cache=False` disables only the file-based cache; in-memory cache still speeds up repeated calls within the same process.
+- `enable_disk_cache=False, enable_memory_cache=False` is the full off switch -- use for data generation or latency benchmarking.
+- Never disable both during optimizer runs -- the optimizer makes hundreds of repeated calls and relies on cache to avoid redundant API charges.
+- Per-LM cache control (`dspy.LM("model", cache=False)`) is cleaner when you want one LM cached and another not.
 
 ## Example 2: Debug workflow with inspect_history
 

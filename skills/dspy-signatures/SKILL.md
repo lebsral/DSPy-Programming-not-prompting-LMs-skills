@@ -1,6 +1,6 @@
 ---
 name: dspy-signatures
-description: Use when you need to define the input/output contract for an LM call — choosing between inline and class-based signatures, adding type constraints, or using Pydantic models for structured outputs. Common scenarios - defining input and output fields for an LM call, adding type constraints to outputs, using Pydantic models for complex structured output, choosing between inline string signatures and class-based signatures, or declaring field descriptions that guide the model. Related - ai-parsing-data, ai-following-rules, dspy-predict, dspy-modules. Also used for dspy.Signature, dspy.InputField, dspy.OutputField, define LM call interface, typed outputs in DSPy, Pydantic model as signature, inline vs class signature, field descriptions in DSPy, structured output schema, input output contract for LLM, how to define DSPy signature, type hints in signatures, class-based signature DSPy.
+description: Defines typed input/output contracts for LM calls using dspy.Signature, dspy.InputField, and dspy.OutputField. Use when you need to define the input/output contract for an LM call — choosing between inline and class-based signatures, adding type constraints, or using Pydantic models for structured outputs. Common scenarios - defining input and output fields for an LM call, adding type constraints to outputs, using Pydantic models for complex structured output, choosing between inline string signatures and class-based signatures, or declaring field descriptions that guide the model. Also used for define LM call interface, typed outputs in DSPy, Pydantic model as signature, inline vs class signature, field descriptions in DSPy, structured output schema, input output contract for LLM, how to define DSPy signature, type hints in signatures, class-based signature DSPy.
 ---
 
 # DSPy Signatures
@@ -134,7 +134,7 @@ MySignature = MySignature.append("confidence", dspy.OutputField(), type_=float)
 MySignature = MySignature.delete("unused_field")
 ```
 
-DSPy also supports special input types: `dspy.Image` for image inputs and `dspy.History` for conversation history.
+DSPy also supports special input types: `dspy.Image` for image inputs, `dspy.History` for conversation history, `dspy.Audio` for audio inputs, and `dspy.Code` for code content. These are primitives from `dspy` — use them as field type annotations just like `str` or `int`.
 
 ## When NOT to use class-based signatures
 
@@ -150,11 +150,13 @@ DSPy also supports special input types: `dspy.Image` for image inputs and `dspy.
 4. **The docstring on a Signature class becomes the task instruction** -- write it carefully, as a clear directive. A vague docstring like "Classify the text" performs much worse than "Classify the customer support message into a department for routing."
 5. **Field `desc` values are NOT optimized** -- DSPy optimizers (GEPA, MIPROv2, COPRO) tune the Signature docstring and/or few-shot demos, but `InputField(desc=...)`, `OutputField(desc=...)`, and Pydantic `Field(description=...)` values are fixed. If your structured output task relies heavily on field descriptions for guidance, see `/dspy-gepa` for a workaround that flattens field descriptions into the instruction for optimization.
 
+**Verify your signature works** by calling the module with one realistic example and printing every output field. If a Pydantic output raises a validation error, the type constraint is too strict for what the LM produces — relax it or add a `desc` that tells the LM the exact format expected.
+
 ## Additional resources
 
-- [dspy.Signature API docs](https://dspy.ai/api/signatures/Signature)
-- [dspy.InputField API docs](https://dspy.ai/api/signatures/InputField)
-- [dspy.OutputField API docs](https://dspy.ai/api/signatures/OutputField)
+- [dspy.Signature API docs](https://dspy.ai/api/signatures/Signature/)
+- [dspy.InputField API docs](https://dspy.ai/api/signatures/InputField/)
+- [dspy.OutputField API docs](https://dspy.ai/api/signatures/OutputField/)
 - For API details, see [reference.md](reference.md)
 - For worked examples, see [examples.md](examples.md)
 

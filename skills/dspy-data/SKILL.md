@@ -1,11 +1,20 @@
 ---
 name: dspy-data
-description: Use when you need to prepare training/dev data for DSPy optimizers — loading from CSV/JSON/HuggingFace, creating Examples, setting input keys, or building train/dev splits. Common scenarios - loading a CSV of labeled examples for optimization, converting HuggingFace datasets to DSPy format, creating train/dev/test splits, building Examples with proper input keys, converting JSON data for DSPy, or preparing evaluation datasets. Related - ai-generating-data, dspy-evaluate. Also used for dspy.Example, dspy.Dataset, load training data for DSPy, CSV to DSPy examples, HuggingFace dataset in DSPy, prepare data for optimization, input_keys in DSPy, train dev split for DSPy, how to format data for DSPy optimizer, labeled examples format, create examples from JSON, what format does DSPy expect, dataset preparation for DSPy, with_inputs in DSPy Example, build evaluation dataset.
+description: Prepare training and dev data for DSPy - loading from CSV/JSON/HuggingFace, creating dspy.Example objects, setting input keys, and building train/dev splits. Use when you need to prepare data for DSPy optimizers, load labeled examples, or convert dataset formats. Common scenarios - loading a CSV of labeled examples for optimization, converting HuggingFace datasets to DSPy format, creating train/dev/test splits, building Examples with proper input keys, converting JSON data for DSPy, or preparing evaluation datasets. Related - ai-generating-data, dspy-evaluate. Also used for dspy.Example, load training data for DSPy, CSV to DSPy examples, HuggingFace dataset in DSPy, prepare data for optimization, input_keys in DSPy, train dev split for DSPy, how to format data for DSPy optimizer, labeled examples format, create examples from JSON, what format does DSPy expect, dataset preparation for DSPy, with_inputs in DSPy Example, build evaluation dataset.
 ---
 
 # Work with DSPy Data: Examples, Predictions, and Datasets
 
 Guide the user through creating, loading, and managing data for DSPy programs. Data is the fuel for DSPy optimizers — getting it right is the difference between a program that works and one that doesn't.
+
+## Step 1 — Gather context
+
+Ask these before generating code (skip any you already know from context):
+
+1. **Data source** — Where is the data coming from? CSV/JSON file, HuggingFace dataset, database query, or hand-crafted examples?
+2. **Schema** — What fields does the data have, and which are inputs vs expected outputs? (This determines what goes in `with_inputs()`.)
+3. **Scale** — How many examples are available? DSPy optimizers work well with 20–300 examples; very large datasets should be sampled down.
+4. **Task type** — Classification with fixed categories, extraction, or open-ended generation? This affects how to map raw data fields to signature fields.
 
 ## What are Examples
 
@@ -427,6 +436,32 @@ labels = Counter(ex.label for ex in trainset)
 print(f"Label distribution: {labels}")
 ```
 
+### Verify your dataset before optimization
+
+Run this before passing to an optimizer — catches missing `with_inputs()` and field name mismatches early:
+
+```python
+def verify_dataset(examples, expected_inputs):
+    assert len(examples) >= 5, f"Too few examples: {len(examples)}"
+    for ex in examples[:3]:
+        assert ex.inputs().keys(), "Missing with_inputs() — optimizer will fail"
+        for field in expected_inputs:
+            assert field in ex.inputs(), f"Input field '{field}' missing — check with_inputs()"
+    print(f"OK: {len(examples)} examples, fields={list(examples[0].keys())}")
+
+verify_dataset(trainset, expected_inputs=["question"])  # adjust field names
+```
+
+## When not to use dspy.Example
+
+You do not need `dspy.Example` for every situation:
+
+- **One-off runs** — if you are calling a module once without optimizing, pass keyword arguments directly: `module(question="What is DSPy?")`. No need for Examples.
+- **Prototyping without a dataset** — build and test your module before collecting data. Add Examples only once you reach the optimize-or-evaluate stage.
+- **Already have a pandas DataFrame** — use `.iterrows()` only when you need DSPy format; often you can prototype with the DataFrame first.
+
+Convert to `dspy.Example` when you need to run an optimizer (`compile()`) or a formal evaluator (`dspy.Evaluate`).
+
 ## Gotchas
 
 - **Claude forgets `with_inputs()` on every Example.** Without it, optimizers cannot distinguish inputs from expected outputs. Every example passed to an optimizer or evaluator must have `with_inputs()` called. Claude often creates examples and only calls `with_inputs()` on the first one or skips it entirely when building lists inline.
@@ -446,6 +481,7 @@ print(f"Label distribution: {labels}")
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
+- **`/dspy-signatures`** — define the input/output contract that determines which fields go in `with_inputs()`
 - **`/dspy-evaluate`** — evaluate your program on a devset with metrics
 - **`/ai-generating-data`** — generate synthetic training data when you have none
 - **`/ai-improving-accuracy`** — use optimizers that consume your trainset to boost quality

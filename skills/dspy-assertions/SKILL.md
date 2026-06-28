@@ -1,6 +1,6 @@
 ---
 name: dspy-assertions
-description: REMOVED IN DSPy 3.x -- use dspy.Refine or dspy.BestOfN instead (see /dspy-refine, /dspy-best-of-n). Legacy documentation for dspy.Assert and dspy.Suggest kept for existing codebases only. For new code, use dspy.Refine (iterative improvement with feedback) or dspy.BestOfN (sampling, pick best). Also used for dspy.Assert, dspy.Suggest, runtime validation for LLM output, retry on bad output, backtracking on constraint violation, guard rails in DSPy.
+description: Legacy reference for dspy.Assert and dspy.Suggest, both removed in DSPy 3.x - use dspy.Refine or dspy.BestOfN instead. Use when maintaining a legacy DSPy 2.x codebase that uses dspy.Assert or dspy.Suggest, or migrating from Assert/Suggest to DSPy 3.x. Also used for dspy.Assert, dspy.Suggest, runtime validation for LLM output, retry on bad output, backtracking on constraint violation, guard rails in DSPy, migrate from Assert, migrate from Suggest, ImportError cannot import Assert, ImportError cannot import Suggest.
 ---
 
 # Enforce Constraints with dspy.Assert and dspy.Suggest
@@ -16,7 +16,15 @@ description: REMOVED IN DSPy 3.x -- use dspy.Refine or dspy.BestOfN instead (see
 > | `DSPyAssertionError` on exhaustion | `fail_count` parameter in Refine/BestOfN |
 > | Error message as feedback | Refine auto-generates feedback from reward scores |
 
-Guide the user through adding runtime constraints to DSPy programs. Assertions let you declare what valid output looks like — DSPy handles retrying, backtracking, and feeding error messages back to the LM automatically.
+This skill documents the legacy `dspy.Assert`/`dspy.Suggest` APIs for users with existing DSPy 2.x code. **For all new code, use `/dspy-refine` or `/dspy-best-of-n`** — these are the DSPy 3.x replacements that work today.
+
+## Step 1 — Understand the user's situation
+
+Determine which scenario applies before proceeding:
+
+1. **Maintaining a legacy DSPy 2.x codebase** that already uses `dspy.Assert`/`dspy.Suggest` — use the legacy API reference below to understand behavior. The APIs work in DSPy 2.x only.
+2. **Migrating to DSPy 3.x** and getting `ImportError: cannot import name 'Assert' from 'dspy'` — skip to the Migration section. Use `dspy.Refine` or `dspy.BestOfN` instead.
+3. **Writing new code** — do not use Assert/Suggest at all. Go directly to `/dspy-refine` or `/dspy-best-of-n`.
 
 ## Two kinds of constraints
 
@@ -200,6 +208,7 @@ After optimization, the program will have few-shot demos that naturally produce 
 When all retries are exhausted, `dspy.Assert` raises `DSPyAssertionError`. Handle it at the call site:
 
 ```python
+# DSPy 2.x only — this module does not exist in DSPy 3.x
 from dspy.primitives.assertions import DSPyAssertionError
 
 try:
@@ -249,6 +258,16 @@ refined = dspy.Refine(module=my_module, N=3, reward_fn=quality_reward, threshold
 
 For full migration patterns, see `/dspy-refine` and `/dspy-best-of-n`.
 
+**Verify the migration** by spot-checking your reward function before relying on it in production:
+
+```python
+# Confirm reward function returns expected scores
+print(quality_reward(None, valid_pred))    # should be >= threshold (e.g., 0.8)
+print(quality_reward(None, invalid_pred))  # should be < threshold
+```
+
+Then run a sample call through the Refine/BestOfN wrapper and inspect `result` to confirm the output meets your constraints.
+
 ## Gotchas
 
 - **Claude writes vague assertion messages like "Invalid output".** The message is injected back into the LM prompt on retry — it IS the feedback. Write actionable instructions: "Summary is {len(words)} words, must be under 50. Remove examples and keep only the key conclusion." The more specific, the more likely the retry succeeds.
@@ -259,14 +278,17 @@ For full migration patterns, see `/dspy-refine` and `/dspy-best-of-n`.
 
 ## Additional resources
 
-- [DSPy assertions guide](https://dspy.ai/learn/programming/7-assertions/) — upstream documentation
-- [reference.md](reference.md) — Assert/Suggest signatures, parameters, backtracking behavior, deprecation notes
+- [dspy.Refine API docs](https://dspy.ai/api/modules/Refine/) — recommended replacement for dspy.Assert (iterative improvement with feedback)
+- [dspy.BestOfN API docs](https://dspy.ai/api/modules/BestOfN/) — recommended replacement for dspy.Suggest patterns (sample N, pick best)
+- [reference.md](reference.md) — Legacy Assert/Suggest signatures, parameters, backtracking behavior, deprecation notes
+- Note: the DSPy assertions guide (dspy.ai/learn/programming/7-assertions/) was removed from the docs along with the API in DSPy 3.x
 
 ## Cross-references
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
-- **dspy.Refine** (recommended replacement) — see `/dspy-refine`
+- **dspy.Refine** (iterative improvement with feedback, recommended migration target) — see `/dspy-refine`
+- **dspy.BestOfN** (independent sampling, pick best, replaces soft Suggest patterns) — see `/dspy-best-of-n`
 - **Problem-first framing** with worked examples — see `/ai-checking-outputs`
 - **Stopping hallucinations** with grounding and citations — see `/ai-stopping-hallucinations`
 - **Enforcing business rules** and content policies — see `/ai-following-rules`

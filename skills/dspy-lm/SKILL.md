@@ -26,6 +26,15 @@ print(result.label)
 
 The pattern is always: `dspy.LM("provider/model")` then `dspy.configure(lm=lm)`.
 
+## Step 1 — Gather context
+
+Before configuring an LM, confirm if not already clear:
+
+1. **Which provider?** OpenAI, Anthropic, Google, Together AI, Groq, Azure, or local (Ollama/vLLM)?
+2. **Single model or mixed pipeline?** One model everywhere, or different models per stage for cost/quality tradeoffs?
+3. **Reasoning model involved?** (o1, o3, o4, DeepSeek-R1, Claude extended thinking) — these require `temperature=1.0` or `None` and large `max_tokens`.
+4. **Local/offline requirement?** Privacy or no-internet constraints point to Ollama or vLLM, which need extra setup.
+
 ## Provider strings
 
 DSPy uses the LiteLLM `"provider/model-name"` format. Here are the most common providers:
@@ -95,6 +104,14 @@ pipeline = MyPipeline()
 pipeline.classify.set_lm(cheap_lm)
 pipeline.generate.set_lm(expensive_lm)
 ```
+
+### When to use each override method
+
+| Method | Scope | Persistent? | Use when |
+|--------|-------|-------------|----------|
+| `dspy.configure(lm=lm)` | Global default | Yes | Setting the LM once at program start |
+| `module.set_lm(lm)` | Per-module instance | Yes | Routing specific steps to a different model permanently |
+| `dspy.context(lm=lm)` | Code block | No (reverts after) | One-off call with a different LM without changing defaults |
 
 ### Temporary LM override with `dspy.context`
 
@@ -172,9 +189,12 @@ lm = dspy.LM("openai/gpt-4o-mini", cache=True)
 # Disable caching for this LM
 lm = dspy.LM("openai/gpt-4o-mini", cache=False)
 
-# Configure cache settings globally
+# Configure cache settings globally (controls disk and memory tiers separately)
 dspy.configure_cache(
-    enable=True,          # Toggle caching on/off
+    enable_disk_cache=True,        # Toggle on-disk caching
+    enable_memory_cache=True,      # Toggle in-memory caching
+    disk_size_limit_bytes=None,    # Optional: cap disk cache size
+    memory_max_entries=None,       # Optional: cap in-memory entries
 )
 ```
 
@@ -243,11 +263,17 @@ For full vLLM setup (tensor parallelism, GPU sizing, quantization, production de
 2. **Claude sets `temperature=0` for reasoning models.** OpenAI reasoning models (o1, o3, o4, gpt-5 families) require `temperature=1.0` or `None`. Setting `temperature=0` raises an error. Similarly, `max_tokens` must be `>= 16000` or `None` for these models.
 3. **Claude calls `dspy.configure(lm=lm)` inside `forward()`.** Configuration should happen once at the top of your script, not per-call. Calling `dspy.configure` inside `forward()` resets global state on every invocation and breaks caching. Use `set_lm()` or `dspy.context()` for per-module or temporary overrides instead.
 4. **Claude forgets `api_base` for local models.** Ollama and vLLM require `api_base` pointing to the local server (`http://localhost:11434` for Ollama, `http://localhost:8000/v1` for vLLM). Without it, DSPy tries to reach the cloud API and fails with an authentication error.
-5. **Claude hardcodes API keys in source code.** API keys should be set as environment variables (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.), never passed directly to `dspy.LM()`. DSPy reads them automatically via LiteLLM.
+5. **Claude hardcodes API keys in source code.** Set API keys as environment variables (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.) — DSPy reads them automatically via LiteLLM. Passing `api_key=...` directly to `dspy.LM()` is supported but should be reserved for local dev overrides, not production code.
+
+## Related DSPy model classes
+
+- **`dspy.Embedder`** — For computing text embeddings (RAG, semantic search). Uses the same LiteLLM provider string format: `dspy.Embedder("openai/text-embedding-3-small")`. Not an LM — cannot be passed to `dspy.configure(lm=...)`. See [dspy.ai/api/models/Embedder/](https://dspy.ai/api/models/Embedder/).
+- **`BaseLM`** (upcoming) — DSPy 3.3.0 (beta) introduces a typed `BaseLM` interface with `LMRequest`/`LMResponse` typed boundaries. Stable 3.2.1 uses `dspy.LM` as documented here.
 
 ## Additional resources
 
 - [dspy.LM API docs](https://dspy.ai/api/models/LM/)
+- [dspy.Embedder API docs](https://dspy.ai/api/models/Embedder/)
 - [LiteLLM provider docs](https://docs.litellm.ai/docs/providers)
 - For API details, see [reference.md](reference.md)
 - For worked examples, see [examples.md](examples.md)

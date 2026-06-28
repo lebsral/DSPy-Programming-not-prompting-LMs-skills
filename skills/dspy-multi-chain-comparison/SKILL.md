@@ -7,6 +7,15 @@ description: Use when you want higher accuracy by generating multiple reasoning 
 
 Guide the user through using `dspy.MultiChainComparison` to improve answer quality. Instead of relying on a single chain of thought, you generate several independent reasoning chains yourself and then hand them to this module, which selects the best final answer by comparing them.
 
+## Step 1 — Gather context
+
+Before generating code, clarify:
+
+1. **What is your signature?** What inputs does your task take and what output do you want? (example: `"problem -> recommendation"` or a class-based `dspy.Signature`)
+2. **How many chains (M)?** Start with M=3 unless latency or cost is constrained. Increase to M=5 for high-stakes tasks where you have evidence that a single ChainOfThought is unreliable.
+3. **Are you wrapping in a `dspy.Module`?** Wrapping both the generator and the comparison step in a module enables optimizer tuning of both prompts.
+4. **Do you need selective routing?** If only some inputs are complex enough to warrant MultiChainComparison, an adaptive router (classify difficulty → fast CoT or multi-chain) reduces cost significantly.
+
 ## What is MultiChainComparison
 
 `dspy.MultiChainComparison` is a DSPy module that:
@@ -267,6 +276,8 @@ For best results with MIPROv2:
 optimizer = dspy.MIPROv2(metric=quality_metric, auto="medium")
 optimized = optimizer.compile(program, trainset=trainset)
 ```
+
+Typical improvement range (task-dependent): a single `ChainOfThought` baseline often scores 60-70% on hard reasoning tasks; M=3 chains without optimization typically adds 5-10 points; M=3 with `BootstrapFewShot` adds another 5-8 points on top of that; M=3 with `MIPROv2` can push further still. Always measure on your specific devset with `dspy.Evaluate` — actual gains depend heavily on how ambiguous the task is and how much diversity M chains actually introduce.
 
 ## When NOT to use MultiChainComparison
 

@@ -1,4 +1,18 @@
-# No formal audit has been recorded for this skill yet. Run the skill-quality
-# audit against the current DSPy version, then replace last_audit with a real
-# block: {date: YYYY-MM-DD, score: N/N, versions: {dspy: X.Y.Z}}.
-last_audit: null
+last_audit:
+  date: 2026-06-28
+  score: 53/53
+  versions:
+    dspy: 3.2.1
+  notes: >
+    First real audit. Pre-fix score was 50/53 (3 FAILs, 4 WARNs). Fixed:
+    S3 (added Step 1 gather-context with 4 clarifying questions);
+    C8 (added /dspy-react and /dspy-program-of-thought to cross-refs);
+    V2 (replaced null placeholder with this record);
+    F3 (description now leads with WHAT statement before Use when);
+    A1 (tool rules list now includes "not lambdas" per live API docs);
+    X1 (removed redundant Use CodeAct when bullets, deferred to decision table);
+    X7 (added Verify section with inspect_history pattern).
+    API verified against dspy.ai/api/modules/CodeAct/ — max_iters=5 default
+    confirmed correct; lambda exclusion confirmed from live docs.
+    CATALOG NOTE: description changed — catalog.md /dspy-codeact entry needs
+    updating to new description (not edited per audit instructions).

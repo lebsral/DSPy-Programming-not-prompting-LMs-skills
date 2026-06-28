@@ -1,34 +1,43 @@
-[
-  {
-    "prompt": "I need to build a DSPy module that solves math word problems by generating code instead of reasoning in text. Show me how.",
-    "expected_output": "Uses dspy.ProgramOfThought with a math-oriented signature. Mentions Deno is required for the sandbox.",
-    "assertions": [
-      "Uses dspy.ProgramOfThought (not ChainOfThought)",
-      "Mentions that Deno must be installed for code execution",
-      "Shows the correct constructor with max_iters parameter (default 3)",
-      "LM configuration is provider-agnostic with alternative comment",
-      "Does not set max_iters to 5 without justification"
-    ]
-  },
-  {
-    "prompt": "What is the difference between ProgramOfThought and ChainOfThought? When should I use each?",
-    "expected_output": "Explains ProgramOfThought generates and executes code while ChainOfThought reasons in natural language. Recommends ProgramOfThought for math/computation and ChainOfThought for qualitative reasoning.",
-    "assertions": [
-      "Explains ProgramOfThought generates executable Python code",
-      "Explains ChainOfThought reasons in natural language",
-      "Recommends ProgramOfThought for math, counting, data manipulation",
-      "Recommends ChainOfThought for classification, summarization, qualitative tasks",
-      "Does not claim one is strictly better than the other"
-    ]
-  },
-  {
-    "prompt": "My ProgramOfThought module crashes with a subprocess error before generating any code. What is wrong?",
-    "expected_output": "Identifies that Deno is likely not installed. ProgramOfThought requires Deno for its WASM sandbox.",
-    "assertions": [
-      "Identifies missing Deno as the likely cause",
-      "Explains ProgramOfThought uses a Deno/Pyodide WASM sandbox",
-      "Provides Deno installation instructions",
-      "Does not suggest falling back to exec() or similar unsafe alternatives"
-    ]
-  }
-]
+{
+  "skill_name": "dspy-program-of-thought",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I need to build a DSPy module that solves math word problems by generating code instead of reasoning in text. Show me how.",
+      "expected_output": "Uses dspy.ProgramOfThought with a math-oriented signature. Mentions Deno is required for the sandbox.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_program_of_thought", "description": "Uses dspy.ProgramOfThought (not ChainOfThought)"},
+        {"name": "mentions_deno", "description": "Mentions that Deno must be installed for code execution"},
+        {"name": "correct_default", "description": "Shows the constructor with max_iters parameter and default of 3"},
+        {"name": "provider_agnostic", "description": "LM configuration is provider-agnostic with alternative comment"},
+        {"name": "no_inflated_max_iters", "description": "Does not set max_iters to 5 without justification"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "What is the difference between ProgramOfThought and ChainOfThought? When should I use each?",
+      "expected_output": "Explains ProgramOfThought generates and executes code while ChainOfThought reasons in natural language. Recommends ProgramOfThought for math/computation and ChainOfThought for qualitative reasoning.",
+      "files": [],
+      "assertions": [
+        {"name": "explains_code_generation", "description": "Explains ProgramOfThought generates executable Python code"},
+        {"name": "explains_cot", "description": "Explains ChainOfThought reasons in natural language"},
+        {"name": "recommends_pot_for_math", "description": "Recommends ProgramOfThought for math, counting, data manipulation"},
+        {"name": "recommends_cot_for_qualitative", "description": "Recommends ChainOfThought for classification, summarization, qualitative tasks"},
+        {"name": "no_strict_superiority", "description": "Does not claim one is strictly better than the other in all cases"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "My ProgramOfThought module crashes with a subprocess error before generating any code. What is wrong?",
+      "expected_output": "Identifies that Deno is likely not installed. ProgramOfThought requires Deno for its WASM sandbox.",
+      "files": [],
+      "assertions": [
+        {"name": "identifies_deno", "description": "Identifies missing Deno as the likely cause of the crash"},
+        {"name": "explains_sandbox", "description": "Explains ProgramOfThought uses a Deno/Pyodide WASM sandbox"},
+        {"name": "provides_install", "description": "Provides Deno installation instructions"},
+        {"name": "no_unsafe_fallback", "description": "Does not suggest falling back to exec() or similar unsafe alternatives"}
+      ]
+    }
+  ]
+}

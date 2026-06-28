@@ -1,4 +1,17 @@
-# No formal audit has been recorded for this skill yet. Run the skill-quality
-# audit against the current DSPy version, then replace last_audit with a real
-# block: {date: YYYY-MM-DD, score: N/N, versions: {dspy: X.Y.Z}}.
-last_audit: null
+last_audit:
+  date: 2026-06-28
+  score: 55/57
+  versions:
+    dspy: 3.2.1
+  notes: >
+    First real audit. Major API drift fixed: configure_cache(enable=) does not
+    exist -- corrected to enable_disk_cache/enable_memory_cache throughout
+    SKILL.md and reference.md. Added dspy.load() top-level function and
+    save(save_program=True) docs. Replaced out-of-scope streaming Example 1
+    in examples.md with configure_cache example. Rewrote evals.json in correct
+    format (expected_output + assertions). Added Refine/BestOfN tradeoff table.
+    Added configure_cache and inspect_history API doc links. Fixed description
+    to include WHAT statement. Fixed reference.md upstream link to specific
+    pages. Two remaining WARNs: A4 (dspy.context/logging omitted -- narrow
+    scope is intentional), R3 (catalog.md entry stale -- not edited per
+    audit instructions, report in summary).

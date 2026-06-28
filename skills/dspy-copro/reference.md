@@ -49,6 +49,8 @@ optimized = optimizer.compile(
 |-----------|------|-------------|
 | `candidate_programs` | `dict` | All evaluated candidates with their scores, keyed by predictor name. |
 | `total_calls` | `int` | Total number of LM API calls made during optimization. |
+| `results_best` | `dict` | Per-iteration best scores across candidates. Only present when `track_stats=True`. |
+| `results_latest` | `dict` | Per-iteration latest scores. Only present when `track_stats=True`. |
 
 ## get_params()
 

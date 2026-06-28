@@ -1,6 +1,6 @@
 ---
 name: dspy-utils
-description: Use when you need DSPy infrastructure - caching control, debugging with inspect_history, saving/loading optimized programs, or runtime validation with Refine/BestOfN. Common scenarios - controlling the cache to avoid stale results, debugging with inspect_history to see raw prompts, saving and loading optimized programs, or validating outputs with reward functions. For streaming see /dspy-streaming, for async see /dspy-async, for MCP see /dspy-mcp. Related - ai-tracing-requests, ai-serving-apis, ai-monitoring, dspy-streaming, dspy-async, dspy-mcp. Also used for dspy.inspect_history, dspy.settings.configure, cache control in DSPy, save and load DSPy program, debug DSPy prompts, see what DSPy sent to the model, DSPy program serialization, production DSPy utilities, clear DSPy cache, view prompt history.
+description: DSPy utility functions for caching control, debugging with inspect_history, saving/loading optimized programs, and runtime validation with Refine/BestOfN. Use when you need DSPy infrastructure - controlling the cache to avoid stale results, debugging with inspect_history to see raw prompts, saving and loading optimized programs, or validating outputs with reward functions. For streaming see /dspy-streaming, for async see /dspy-async, for MCP see /dspy-mcp. Related - ai-tracing-requests, ai-serving-apis, ai-monitoring, dspy-streaming, dspy-async, dspy-mcp. Also used for dspy.configure_cache, dspy.inspect_history, dspy.load, cache control in DSPy, save and load DSPy program, debug DSPy prompts, see what DSPy sent to the model, DSPy program serialization, production DSPy utilities, clear DSPy cache, view prompt history.
 ---
 
 # DSPy Utilities: Caching, Debugging, Save/Load, and Validation
@@ -26,11 +26,14 @@ Then jump to the relevant section below.
 DSPy caches LM responses by default to reduce costs and speed up development. Use `dspy.configure_cache` to control this globally.
 
 ```python
-# Disable caching entirely
-dspy.configure_cache(enable=False)
+# Disable all caching (disk and memory)
+dspy.configure_cache(enable_disk_cache=False, enable_memory_cache=False)
 
-# Re-enable caching
-dspy.configure_cache(enable=True)
+# Disable only disk cache (keep memory cache for speed)
+dspy.configure_cache(enable_disk_cache=False)
+
+# Re-enable both caches
+dspy.configure_cache(enable_disk_cache=True, enable_memory_cache=True)
 
 # DSPy 3.2+ - harden the on-disk cache against untrusted pickle payloads
 dspy.configure_cache(restrict_pickle=True)
@@ -113,15 +116,23 @@ After optimizing a DSPy program, save its learned state (few-shot demos, instruc
 ```python
 # After optimization
 optimized = optimizer.compile(my_program, trainset=trainset)
+
+# Save learned state only (default -- class definition must exist at load time)
 optimized.save("optimized_program.json")
+
+# Save entire program including class definition (load without recreating the class)
+optimized.save("optimized_program_dir", save_program=True)
 ```
 
 ### Load
 
 ```python
-# In production -- create a fresh instance, then load state
+# Option A: load state into a fresh instance of the same class
 program = MyProgram()
 program.load("optimized_program.json")
+
+# Option B: load an entire saved program (only when saved with save_program=True)
+program = dspy.load("optimized_program_dir")
 
 # Use it
 result = program(question="What is DSPy?")
@@ -133,11 +144,13 @@ result = program(question="What is DSPy?")
 - Optimized instructions (from MIPROv2, GEPA, etc.)
 - Any state tracked by `dspy.Predict` modules
 
-### What does NOT get saved
+### What does NOT get saved (state-only save)
 
 - Python logic in `forward()` -- that's your code, it must exist at load time
 - Model weights (unless you used `BootstrapFinetune`)
 - LM configuration -- you must call `dspy.configure()` before loading
+
+Use `save(save_program=True)` to include the class definition. Then `dspy.load()` reconstructs the program without needing the class imported.
 
 ### Production deployment pattern
 
@@ -195,8 +208,12 @@ validated_qa = dspy.Refine(
 result = validated_qa(question="What is DSPy?")
 ```
 
-- **`dspy.Refine`** -- retries with feedback from the reward function until threshold is met or N attempts exhausted. Use when later attempts can improve based on earlier failures.
-- **`dspy.BestOfN`** -- runs N independent attempts and returns the best-scoring one. Use when attempts are independent and cross-attempt feedback would not help.
+| Approach | How it works | Use when |
+|----------|-------------|----------|
+| `dspy.Refine` | Retries with feedback from the reward function until threshold met or N attempts exhausted | Later attempts can improve based on earlier failures |
+| `dspy.BestOfN` | Runs N independent attempts, returns the best-scoring one | Attempts are independent; cross-attempt feedback would not help |
+
+Both require `threshold` (no default -- must be explicit). Both accept `fail_count` (how many failures allowed before raising; defaults to `N`).
 
 For detailed patterns and examples, see **`/dspy-refine`** and **`/dspy-best-of-n`**.
 
@@ -205,11 +222,14 @@ For detailed patterns and examples, see **`/dspy-refine`** and **`/dspy-best-of-
 1. **`save()` does not persist `forward()` logic** -- only learned state (demos, instructions) is saved. The class definition must exist in your production code at load time.
 2. **Must `dspy.configure()` before `load()`** -- loading a saved program before configuring the LM causes silent failures where the program runs but uses no LM (or the wrong one).
 3. **`inspect_history` shows cached calls too** -- after a cache hit, `inspect_history` still shows the call, but the prompt may look different from what was originally sent. Disable cache if you need exact prompt inspection.
-4. **Claude disables caching during optimization.** Do NOT disable cache globally during optimizer runs -- optimizers rely heavily on cache to avoid redundant LM calls. Disabling cache during optimization dramatically increases cost and time.
+4. **Never disable cache globally during optimizer runs.** Optimizers rely heavily on cache to avoid redundant LM calls. Disabling cache with `enable_disk_cache=False, enable_memory_cache=False` during optimization dramatically increases cost and time -- only disable cache for specific inference calls, not globally.
 
 ## Additional resources
 
+- [DSPy configure_cache API](https://dspy.ai/api/utils/configure_cache/)
+- [DSPy inspect_history API](https://dspy.ai/api/utils/inspect_history/)
 - [DSPy saving/loading guide](https://dspy.ai/tutorials/saving/)
+- [DSPy cache tutorial](https://dspy.ai/tutorials/cache/)
 - For API details, see [reference.md](reference.md)
 - For worked examples, see [examples.md](examples.md)
 

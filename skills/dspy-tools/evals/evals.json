@@ -1,23 +1,41 @@
-[
-  {
-    "id": "dspy-tools-wrap-function",
-    "prompt": "I have a Python function that searches our Postgres database. How do I make it available as a tool for a DSPy ReAct agent?",
-    "should_contain": ["dspy.Tool", "type hints", "docstring", "ReAct"],
-    "should_not_contain": [],
-    "notes": "Should show wrapping with type hints and docstring, passing to ReAct. Should mention returning strings. May mention implicit wrapping vs explicit dspy.Tool."
-  },
-  {
-    "id": "dspy-tools-sandbox-execution",
-    "prompt": "I need my DSPy agent to run arbitrary Python code safely in a sandbox. How do I set up PythonInterpreter?",
-    "should_contain": ["PythonInterpreter", "Deno", "CodeAct"],
-    "should_not_contain": [],
-    "notes": "Should show PythonInterpreter with context manager, mention Deno prerequisite, selective permissions. Should mention CodeAct integration."
-  },
-  {
-    "id": "dspy-tools-mcp-integration",
-    "prompt": "I have an MCP server running and want to use its tools in a DSPy agent. How do I convert MCP tools to DSPy tools?",
-    "should_contain": ["from_mcp_tool", "ClientSession", "aforward"],
-    "should_not_contain": [],
-    "notes": "Should show from_mcp_tool pattern with session setup, mention tools are async so use aforward."
-  }
-]
+{
+  "skill_name": "dspy-tools",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I have a Python function that searches our Postgres database. How do I make it available as a tool for a DSPy ReAct agent?",
+      "expected_output": "A solution showing the search function with type hints on all parameters and a clear docstring, passed to dspy.ReAct (implicitly or wrapped with dspy.Tool). Should note that the function should return a string, include dspy.configure(lm=...) with a generic provider, and show the agent calling pattern.",
+      "files": [],
+      "assertions": [
+        {"name": "type_hints_on_tool", "description": "Emphasizes that all tool function parameters need type hints — DSPy infers the JSON schema from them; without hints the agent gets no parameter info"},
+        {"name": "string_return_value", "description": "Notes that tools must return strings (not dicts, objects, or ORM results) — the agent sees the raw return value as an Observation"},
+        {"name": "react_integration", "description": "Shows passing the tool (directly or as dspy.Tool) to dspy.ReAct tools list"},
+        {"name": "provider_agnostic_lm", "description": "LM configuration uses a generic provider string with an alternative comment, not a hardcoded single provider"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "I need my DSPy agent to run arbitrary Python code safely in a sandbox. How do I set up PythonInterpreter?",
+      "expected_output": "Shows dspy.PythonInterpreter used as a context manager with the 'with' statement, mentions that Deno must be installed as a prerequisite, demonstrates at least one selective permission parameter (enable_read_paths, enable_network_access, etc.), and shows or mentions integration with dspy.CodeAct.",
+      "files": [],
+      "assertions": [
+        {"name": "context_manager_usage", "description": "Uses PythonInterpreter as a context manager with 'with PythonInterpreter() as interp:' — required to properly start and shut down the Deno/Pyodide process"},
+        {"name": "deno_prerequisite_mentioned", "description": "Notes that Deno must be installed — the most common failure mode for new users"},
+        {"name": "selective_permissions_shown", "description": "Shows at least one permission parameter (enable_read_paths, enable_write_paths, enable_network_access, or enable_env_vars) to demonstrate that permissions are off by default"},
+        {"name": "codeact_integration", "description": "Mentions or shows dspy.CodeAct as the agent that uses PythonInterpreter for sandboxed code generation"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I have an MCP server running and want to use its tools in a DSPy agent. How do I convert MCP tools to DSPy tools?",
+      "expected_output": "Shows dspy.Tool.from_mcp_tool with a ClientSession setup using the mcp library, notes that converted tools are async so the agent must use aforward() not agent(), includes the pip install dspy[mcp] install step, and shows the full async context manager pattern.",
+      "files": [],
+      "assertions": [
+        {"name": "from_mcp_tool_class_method", "description": "Uses dspy.Tool.from_mcp_tool — the specific class method for MCP conversion, not a custom wrapper"},
+        {"name": "client_session_management", "description": "Shows ClientSession setup using the mcp library — DSPy does not manage the server connection, the user must"},
+        {"name": "aforward_for_async_tools", "description": "Notes that MCP tools are async so agent.aforward() must be used instead of agent() — the most common gotcha"},
+        {"name": "mcp_extra_install", "description": "Includes pip install 'dspy[mcp]' or equivalent — the MCP integration is an optional extra that must be installed separately"}
+      ]
+    }
+  ]
+}

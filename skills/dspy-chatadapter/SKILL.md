@@ -33,6 +33,7 @@ dspy.ChatAdapter(
     use_native_function_calling=False, # bool
     native_response_types=None,        # list[type] | None
     use_json_adapter_fallback=True,    # bool
+    parallel_tool_calls=None,          # bool | None
 )
 ```
 
@@ -42,6 +43,7 @@ dspy.ChatAdapter(
 | `use_native_function_calling` | `bool` | `False` | Use provider-native function calling for structured output |
 | `native_response_types` | `list[type] \| None` | `None` | Output field types handled by native LM features instead of text parsing |
 | `use_json_adapter_fallback` | `bool` | `True` | Automatically retry with JSONAdapter when parsing fails |
+| `parallel_tool_calls` | `bool \| None` | `None` | Enable provider-side parallel tool-call generation when native function calling is active |
 
 ## How formatting works
 
@@ -112,7 +114,7 @@ By default, ChatAdapter automatically retries with JSONAdapter when parsing fail
 
 ```
 ChatAdapter.parse() succeeds? -> Return result
-                     fails?   -> Is it a ContextWindowExceededError?
+                     fails?   -> Is it an LMError?
                                    Yes -> Re-raise (cannot fix by reformatting)
                                    No  -> Retry entire call with JSONAdapter
 ```
@@ -232,6 +234,8 @@ This is useful when you want to fine-tune a model on the exact prompt format DSP
 | **Native structured output** | Optional (`use_native_function_calling`) | On by default | N/A | No |
 | **LM calls per prediction** | 1 | 1 | 2 (main + extraction) | 1 |
 | **Best for** | General use, most models | Reliable structured output, complex Pydantic types | Reasoning models (o1, o3) | Models that respond well to XML |
+
+> **BamlAdapter** (`dspy.adapters.BamlAdapter`) exists in the source (`dspy/adapters/baml_adapter.py`) but has no official docs page and is undocumented — treat as experimental. Do not recommend it in production code.
 
 ### When to switch away from ChatAdapter
 

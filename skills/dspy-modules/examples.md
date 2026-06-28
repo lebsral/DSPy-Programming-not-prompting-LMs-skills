@@ -35,7 +35,7 @@ class CleanQA(dspy.Module):
 
 # --- Usage ---
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-haiku-4-5", etc.
 dspy.configure(lm=lm)
 
 qa = CleanQA()
@@ -108,7 +108,7 @@ def rag_confidence_reward(args, pred):
 
 # --- Usage ---
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-haiku-4-5", etc.
 dspy.configure(lm=lm)
 
 # Note: dspy.Retrieve requires a retrieval model to be configured.
@@ -205,7 +205,7 @@ class SmartRouter(dspy.Module):
 
 # --- Usage ---
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-haiku-4-5", etc.
 dspy.configure(lm=lm)
 
 router = SmartRouter()

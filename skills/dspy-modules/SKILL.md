@@ -1,11 +1,22 @@
 ---
 name: dspy-modules
-description: Use when you need to compose multiple DSPy calls into a pipeline — structuring multi-step programs as reusable, optimizable components with forward() logic. Common scenarios - building a multi-step pipeline as a class, composing Predict and ChainOfThought calls in sequence, creating reusable AI components, structuring a RAG pipeline as a module, or building nested programs where one module calls another. Related - ai-building-pipelines, dspy-predict, dspy-chain-of-thought. Also used for dspy.Module, forward() method, custom DSPy module, compose DSPy calls, multi-step DSPy program, pipeline as a class, reusable AI components, nested DSPy modules, module design patterns, how to structure a DSPy program, class-based DSPy pipeline, self.predict in forward, modular AI pipeline, build complex DSPy programs, combine multiple DSPy calls into one module.
+description: Build multi-step DSPy programs as composable, optimizable modules using dspy.Module and forward(). Use when composing Predict and ChainOfThought calls into a reusable pipeline, structuring a RAG pipeline as a class, creating nested DSPy modules, or designing a class-based multi-step program. Also used for dspy.Module, forward() method, custom DSPy module, compose DSPy calls, multi-step DSPy program, pipeline as a class, reusable AI components, nested DSPy modules, module design patterns, how to structure a DSPy program, class-based DSPy pipeline, self.predict in forward, modular AI pipeline, build complex DSPy programs, combine multiple DSPy calls into one module, save and load optimized module state.
 ---
 
 # Build Composable AI Programs with dspy.Module
 
 Guide the user through structuring DSPy programs as reusable, composable modules. A `dspy.Module` is the building block for all DSPy programs -- like PyTorch's `nn.Module` but for language model pipelines.
+
+## Step 1 — Gather context
+
+Ask before writing any code:
+
+1. **What kind of pipeline?** (RAG, classify-then-route, iterative refinement, simple extraction?)
+2. **How many sub-modules / steps?** (Single-step can skip the Module wrapper; 2+ steps benefit from it)
+3. **Will you optimize this with a DSPy optimizer?** (If yes, sub-module layout as `self.` attributes is critical)
+4. **Do you need async support?** (Requires `async def forward()` and `acall` — impacts design from the start)
+
+Then build or explain the pattern that fits.
 
 ## What is dspy.Module
 
@@ -257,6 +268,42 @@ Use `batch()` to process multiple examples in parallel:
 pipeline = MyProgram()
 examples = [dspy.Example(question=q).with_inputs("question") for q in questions]
 results = pipeline.batch(examples, num_threads=4, timeout=120)
+```
+
+## When NOT to use dspy.Module
+
+Skip the class if you only need a single LM call and will never optimize or save it — call `dspy.Predict` or `dspy.ChainOfThought` directly:
+
+```python
+# Fine for one-off scripts and notebooks
+predict = dspy.ChainOfThought("question -> answer")
+result = predict(question="What is DSPy?")
+```
+
+Wrap in a Module when you need any of: re-use across the codebase, DSPy optimizer traversal, `save()`/`load()` state, `batch()` parallelism, or programmatic inspection via `named_predictors()`.
+
+## Choosing a forward() pattern
+
+| Pattern | Use when | Key property |
+|---------|----------|-------------|
+| Sequential steps | Each step's output feeds the next | Simplest; fully optimizable |
+| Conditional routing | Different paths based on intermediate result | Cheap classifier directs to specialized handler |
+| Loop / retry | Quality check drives iteration count | `max_rounds` param prevents infinite loops |
+| `dspy.Refine` wrapper | Retry is boilerplate — just need a reward function | Delegates retry logic to DSPy |
+| Nested modules | Reusable sub-pipeline across multiple parent modules | Optimizers traverse nested trees automatically |
+
+## Verification
+
+```python
+# Check module tree before optimizing -- catch missing self. attributes early
+print(pipeline)
+
+# Confirm all Predict instances are discoverable
+print(pipeline.named_predictors())   # should list every sub-module
+
+# Smoke-test on one example before running batch
+result = pipeline(**example.inputs())
+assert hasattr(result, "answer"), "forward() must return a Prediction with expected fields"
 ```
 
 ## Gotchas

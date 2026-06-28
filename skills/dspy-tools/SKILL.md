@@ -1,6 +1,6 @@
 ---
 name: dspy-tools
-description: Use when you need to give DSPy agents tool-calling abilities — wrapping Python functions as tools, building tool-using pipelines, or setting up code execution environments. Common scenarios - wrapping a Python function as a tool for DSPy agents, building tool-using pipelines, setting up a calculator or search tool, giving agents access to databases or APIs, or configuring code execution environments for agents. Related - ai-taking-actions, dspy-react, dspy-codeact. Also used for dspy.Tool, wrap function as DSPy tool, give agent tools, tool calling in DSPy, function calling for agents, build custom tools for DSPy agent, calculator tool for LLM, search tool for agent, database tool for AI, Python function to agent tool, MCP tools with DSPy, tool registry, how to define tools in DSPy, agent tool configuration, executable tools for AI agents.
+description: Wraps Python functions as dspy.Tool objects and configures dspy.PythonInterpreter for sandboxed code execution in DSPy agents. Use when you need to give DSPy agents tool-calling abilities — wrapping Python functions as tools, building tool-using pipelines, or setting up code execution environments. Common scenarios - wrapping a Python function as a tool for DSPy agents, building tool-using pipelines, setting up a calculator or search tool, giving agents access to databases or APIs, or configuring code execution environments for agents. Related - ai-taking-actions, dspy-react, dspy-codeact. Also used for dspy.Tool, dspy.PythonInterpreter, wrap function as DSPy tool, give agent tools, tool calling in DSPy, function calling for agents, build custom tools for DSPy agent, calculator tool for LLM, search tool for agent, database tool for AI, Python function to agent tool, MCP tools with DSPy, tool registry, how to define tools in DSPy, agent tool configuration, executable tools for AI agents.
 ---
 
 # Give Agents Tool-Calling Abilities with dspy.Tool
@@ -16,6 +16,12 @@ Ask the user before diving in:
 3. **Do you need sandboxed execution?** If the agent generates and runs arbitrary code, use `PythonInterpreter`. Otherwise, plain tool functions are simpler.
 
 Then jump to the relevant section below.
+
+| Approach | Best for | Trade-off |
+|----------|----------|-----------|
+| Function passed directly to `dspy.ReAct` | Most tool use — search, lookup, API calls | Simplest; name and description come from the function itself |
+| `dspy.Tool` explicit wrap | Override name/desc/schema; convert LangChain or MCP tools | Same runtime cost, more control over what the LM sees |
+| `dspy.PythonInterpreter` + `dspy.CodeAct` | Arbitrary computation, multi-step data manipulation | Requires Deno; more powerful but harder to debug |
 
 ## What is dspy.Tool
 
@@ -154,12 +160,12 @@ tool = dspy.Tool(
 ```python
 dspy.PythonInterpreter(
     deno_command=None,          # list[str] | None -- custom Deno launch command
-    enable_read_paths=None,     # list[str] | None -- paths the sandbox can read
-    enable_write_paths=None,    # list[str] | None -- paths the sandbox can write
+    enable_read_paths=None,     # list[PathLike | str] | None -- paths the sandbox can read
+    enable_write_paths=None,    # list[PathLike | str] | None -- paths the sandbox can write
     enable_env_vars=None,       # list[str] | None -- environment variables to expose
     enable_network_access=None, # list[str] | None -- allowed network domains
     sync_files=True,            # bool -- sync file changes back to host
-    tools=None,                 # dict[str, Callable] | None -- host-side tool functions
+    tools=None,                 # dict[str, Callable[..., str]] | None -- host-side tool functions
     output_fields=None,         # list[dict] | None -- output field definitions
 )
 ```
@@ -220,37 +226,7 @@ agent = dspy.CodeAct(
 )
 ```
 
-## ToolCalls type
-
-`dspy.ToolCalls` is a structured type representing tool-calling information -- tool names and their arguments in JSON format. Use it in signatures when you want the LM to output tool calls directly (without the ReAct loop).
-
-```python
-import dspy
-
-class PlanActions(dspy.Signature):
-    """Given a user request, plan which tools to call."""
-    request: str = dspy.InputField()
-    actions: dspy.ToolCalls = dspy.OutputField()
-
-planner = dspy.Predict(PlanActions)
-result = planner(request="Look up the weather in Paris and convert to Celsius")
-print(result.actions)  # ToolCalls with name and args for each tool call
-```
-
-### Creating ToolCalls from dicts
-
-```python
-from dspy import ToolCalls
-
-tool_calls = ToolCalls.from_dict_list([
-    {"name": "search", "args": {"query": "weather in Paris"}},
-    {"name": "convert_temp", "args": {"value": 72, "from_unit": "F", "to_unit": "C"}},
-])
-```
-
-### ToolCalls with native LM tool calling
-
-When the configured LM supports native tool calling (most modern LMs do), `ToolCalls` automatically adapts to use the LM's native function-calling API rather than generating JSON as text. This improves reliability.
+> **Upcoming in DSPy 3.3.0 (beta):** `dspy.ToolCalls` and `dspy.ToolCallResults` are structured types for native tool-calling workflows added in 3.3.0 beta. Not yet available in the stable 3.2.1 release. See [dspy.ToolCalls API docs](https://dspy.ai/api/primitives/ToolCalls/) when you upgrade.
 
 ## Using tools with ReAct
 
@@ -436,13 +412,15 @@ def search(query: str) -> str:
 
 1. **Missing type hints cause empty tool schemas.** Claude often writes tool functions without type annotations. DSPy infers the JSON schema from type hints — without them, the agent gets no parameter info and passes wrong types or missing arguments.
 2. **Returning complex objects instead of strings.** Claude returns dicts, dataclasses, or ORM objects from tools. The agent sees the `repr()` which is often unhelpful. Always return a formatted string or `json.dumps()` output.
-3. **Tools that import heavy libraries at call time.** Claude puts `import pandas` inside the tool function body. This works but adds latency on every call. Move imports to the top of the file — they run once, not per tool invocation.
+3. **Lambda wrappers strip docstrings and type hints.** Claude often curries arguments using lambdas (e.g., `lambda q: search(q, api_key=key)`). Lambdas have no docstring and no type hints, so DSPy generates an empty tool schema and the agent cannot call the tool correctly. Use `functools.partial` or pass `desc` and `arg_desc` explicitly to `dspy.Tool` instead.
 4. **Forgetting `await agent.aforward()` with MCP tools.** MCP tools are async, so the agent must be called with `aforward()`. Claude defaults to `agent()` which blocks or fails silently in async contexts.
 5. **CodeAct tools referencing global state.** Claude writes CodeAct tools that read from module-level variables or closures. CodeAct tools run in a sandbox and cannot access your process globals — they must be self-contained pure functions.
 
 ## Additional resources
 
-- [dspy.Tool API docs](https://dspy.ai/api/primitives/Tool)
+- [dspy.Tool API docs](https://dspy.ai/api/primitives/Tool/)
+- [dspy.PythonInterpreter API docs](https://dspy.ai/api/tools/PythonInterpreter/)
+- [dspy.ToolCalls API docs](https://dspy.ai/api/primitives/ToolCalls/) (DSPy 3.3.0 beta)
 - For API details, see [reference.md](reference.md)
 - For worked examples, see [examples.md](examples.md)
 

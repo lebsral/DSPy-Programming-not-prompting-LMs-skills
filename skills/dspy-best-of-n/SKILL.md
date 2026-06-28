@@ -1,11 +1,19 @@
 ---
 name: dspy-best-of-n
-description: Use when output quality varies across runs and you want to sample multiple completions and pick the best — trading latency for reliability on high-stakes outputs. Common scenarios - generating multiple candidate answers and picking the highest-scoring one, improving reliability on high-stakes classification, reducing variance in creative generation, getting better summaries by sampling several and selecting the best, or trading latency for quality on critical decisions. Related - ai-improving-accuracy, ai-making-consistent. Also used for sample multiple completions, pick the best of several LLM outputs, majority voting for LLM, self-consistency decoding, reduce LLM output variance, generate and select pattern, best candidate selection, how to make AI more reliable by trying multiple times, brute force better quality, retry and pick best, dspy.BestOfN, quality vs latency tradeoff, n=5 completions pick best.
+description: Runs any DSPy module N times and returns the highest-scoring output via a reward function using dspy.BestOfN. Use when output quality varies across runs and you want to sample multiple completions and pick the best — trading latency for reliability on high-stakes outputs. Common scenarios - generating multiple candidate answers and picking the highest-scoring one, improving reliability on high-stakes classification, reducing variance in creative generation, getting better summaries by sampling several and selecting the best, or trading latency for quality on critical decisions. Related - ai-improving-accuracy, ai-making-consistent, dspy-refine. Also used for sample multiple completions, pick the best of several LLM outputs, majority voting for LLM, self-consistency decoding, reduce LLM output variance, generate and select pattern, best candidate selection, how to make AI more reliable by trying multiple times, brute force better quality, retry and pick best, dspy.BestOfN, quality vs latency tradeoff, n=5 completions pick best.
 ---
 
 # Pick the Best Output with dspy.BestOfN
 
 Guide the user through using DSPy's `BestOfN` module to run a program multiple times and keep the highest-scoring result. This is rejection sampling -- generate N candidates, score each one, return the winner.
+
+## Before generating code, confirm
+
+If the user has not already answered these, ask before writing BestOfN code:
+
+1. **Do you have an existing DSPy module** to wrap, or do you need to build one first? (BestOfN wraps any `dspy.Module` — Predict, ChainOfThought, ReAct, a custom class, etc.)
+2. **Can you score outputs automatically?** BestOfN requires a `reward_fn` — a function that scores each output without human judgment. If the user has no scoring idea, suggest simple heuristics (length check, regex match, test execution) before reaching for an LM judge.
+3. **What is the latency or cost budget?** N attempts at `temperature=1.0` means N full LM calls. Help the user pick N that fits their constraints.
 
 ## What is BestOfN
 
@@ -224,6 +232,7 @@ This stacks two quality improvements: better prompts from the optimizer, and rej
 - **Claude uses BestOfN when the reward function is as expensive as the module itself.** If your reward function calls an LM (e.g., LM-as-judge), each BestOfN attempt costs 2x tokens (one for the module, one for the judge). For N=5, that is 10 LM calls total. Use programmatic reward functions (test execution, regex, length checks) whenever possible.
 - **Claude forgets to set `threshold` to enable early stopping.** Without a meaningful threshold, BestOfN always runs all N attempts even when the first one is perfect. Set threshold to a value that represents "good enough" (e.g., 1.0 for binary pass/fail, 0.9 for graded metrics) to save tokens on easy inputs.
 - **Claude wraps an already-optimized module but does not evaluate the incremental gain.** BestOfN on top of an optimized module costs N times more per call at inference time. Always measure the quality gain from BestOfN separately to confirm the extra cost is justified — if the optimized module already hits 95%+, BestOfN may not add enough to be worth it.
+- **Claude skips a baseline check before recommending BestOfN.** Before adding BestOfN, run the base module on 20 inputs and count what fraction score >= threshold with your reward function. If >85% already pass, BestOfN adds little value at N times the cost. If <50% pass, BestOfN provides significant lift. Skip this check and you might add N=5 calls to a module that was already succeeding 90% of the time.
 
 ## Additional resources
 
@@ -236,6 +245,8 @@ This stacks two quality improvements: better prompts from the optimizer, and rej
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
 - **MultiChainComparison** for LM-based candidate selection -- see `/dspy-multi-chain-comparison`
+- **Refine** for iterative improvement with LM feedback between attempts -- see `/dspy-refine`
 - **Evaluate** for measuring quality with metrics and devsets -- see `/dspy-evaluate`
 - **Improving accuracy** for the full optimization workflow -- see `/ai-improving-accuracy`
+- **Making consistent** for reducing variance in AI output -- see `/ai-making-consistent`
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

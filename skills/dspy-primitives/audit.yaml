@@ -1,4 +1,16 @@
-# No formal audit has been recorded for this skill yet. Run the skill-quality
-# audit against the current DSPy version, then replace last_audit with a real
-# block: {date: YYYY-MM-DD, score: N/N, versions: {dspy: X.Y.Z}}.
-last_audit: null
+last_audit:
+  date: 2026-06-28
+  score: 50/50
+  versions:
+    dspy: 3.2.1
+  notes: >
+    First real audit. Fixed A4 (dspy.Example and dspy.Prediction had dedicated
+    API pages but were not covered — added sections to SKILL.md and reference.md
+    with constructors and key methods). Added X3 anti-pattern section (when not
+    to use each primitive). Added X7 verification gotcha (inspect lm.history to
+    confirm encoding). Fixed E3 evals.json format (added skill_name wrapper, id,
+    files fields). Updated description to include dspy.Example and dspy.Prediction.
+    Added explicit API doc links for Example, Prediction, Tool, ToolCalls in
+    Additional resources. File/Reasoning have no dedicated API pages — linked to
+    adapters guide (best available). All 8 documented primitives now have API pages
+    linked; File and Reasoning are documented in the adapters guide only.

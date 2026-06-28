@@ -1,11 +1,20 @@
 ---
 name: dspy-simba
-description: Use when you want conservative, incremental optimization — making small targeted improvements rather than large changes, useful for already-working programs that need fine-tuning. Common scenarios - your program already works well and you want to improve it without breaking what works, conservative optimization that preserves existing quality, fine-tuning a production program incrementally, or when aggressive optimization causes regressions. Related - ai-improving-accuracy, dspy-miprov2, dspy-refine. Also used for dspy.SIMBA, conservative optimization, incremental improvement, do not break what works, small targeted optimization, safe optimization for production, avoid regressions during optimization, production-safe optimizer, gentle optimization, when MIPROv2 changes too much, preserve existing quality, stable optimization, risk-averse prompt tuning, optimize without regressions.
+description: Optimize a DSPy program in small conservative steps using dspy.SIMBA (Stochastic Introspective Mini-Batch Ascent). Use when your program already works and you want to push accuracy higher without breaking what works, you need safe incremental improvement for a production program, or aggressive optimizers like MIPROv2 cause regressions. Also used for conservative optimization, incremental improvement, do not break what works, small targeted optimization, safe optimization for production, avoid regressions during optimization, production-safe optimizer, gentle optimization, when MIPROv2 changes too much, preserve existing quality, stable optimization, risk-averse prompt tuning, optimize without regressions.
 ---
 
 # Small-Step Optimization with dspy.SIMBA
 
 Guide the user through using `dspy.SIMBA` (Stochastic Introspective Mini-Batch Ascent) to optimize DSPy programs through incremental, targeted improvements rather than large sweeping changes.
+
+## Step 1: Gather context
+
+Before writing code, ask 2-4 of these to right-size the optimizer setup:
+
+1. **What does your program currently do, and what metric are you optimizing?** (accuracy, F1, LM-as-judge, etc.) — affects whether to use binary vs float metric.
+2. **Does the program already work reasonably well, or are you starting from scratch?** — SIMBA is designed for incremental improvement on a working baseline, not cold-start optimization.
+3. **How many labeled training examples do you have?** — SIMBA needs at least 30-50; mini-batch size (`bsize`) should be smaller than your dataset.
+4. **Is this a production program where regressions are unacceptable?** — affects `num_candidates`, `max_demos`, and whether to add a regression check before saving.
 
 ## What is dspy.SIMBA
 
@@ -104,6 +113,7 @@ This cycle repeats for `max_steps` iterations, with each step making a small, ta
 
 ```python
 dspy.SIMBA(
+    *,                              # All parameters are keyword-only
     metric,                         # Scoring function (required)
     bsize=32,                       # Mini-batch size
     num_candidates=6,               # New candidates per iteration
@@ -260,10 +270,12 @@ The exact numbers depend on your task, data, and LM. SIMBA shines on the increme
 - **Evaluating your program** before and after optimization -- see `/dspy-evaluate`
 - **Building the program to optimize** -- see `/dspy-chain-of-thought` or `/dspy-modules`
 - **Preparing training data** -- see `/dspy-data`
+- **Full prompt + instruction optimization** (higher ceiling, more data) -- see `/dspy-miprov2`
+- **Evolution-based prompt optimization** (reflection-driven, ~50 examples) -- see `/dspy-gepa`
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
 ## Additional resources
 
-- [dspy.SIMBA API docs](https://dspy.ai/api/optimizers/SIMBA)
+- [dspy.SIMBA API docs](https://dspy.ai/api/optimizers/SIMBA/)
 - For API details, see [reference.md](reference.md)
 - For worked examples, see [examples.md](examples.md)

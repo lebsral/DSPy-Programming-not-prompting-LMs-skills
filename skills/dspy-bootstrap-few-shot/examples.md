@@ -1,5 +1,45 @@
 # BootstrapFewShot Examples
 
+## Loading Real Data from CSV or HuggingFace
+
+Most production datasets come from files or APIs, not hand-coded lists. Load them before calling `compile()`.
+
+```python
+import dspy
+import csv
+
+# --- Load from CSV ---
+# CSV has columns: question, answer
+def load_csv(path, input_fields):
+    with open(path) as f:
+        rows = list(csv.DictReader(f))
+    return [dspy.Example(**row).with_inputs(*input_fields) for row in rows]
+
+trainset = load_csv("data/train.csv", ["question"])
+devset   = load_csv("data/dev.csv",   ["question"])
+
+# --- Load from HuggingFace ---
+from datasets import load_dataset
+
+raw = load_dataset("hotpotqa", "fullwiki", split="train")
+trainset = [
+    dspy.Example(question=x["question"], answer=x["answer"]).with_inputs("question")
+    for x in raw.select(range(200))   # take first 200
+]
+
+# --- Load from a JSONL file ---
+import json
+
+def load_jsonl(path, input_fields):
+    with open(path) as f:
+        rows = [json.loads(line) for line in f]
+    return [dspy.Example(**row).with_inputs(*input_fields) for row in rows]
+
+trainset = load_jsonl("data/train.jsonl", ["question"])
+```
+
+Then optimize exactly as shown below — no change to the `BootstrapFewShot` call itself.
+
 ## QA Optimization with Exact Match Metric
 
 A question-answering pipeline optimized with BootstrapFewShot. Shows the full workflow: baseline evaluation, optimization, and before/after comparison.

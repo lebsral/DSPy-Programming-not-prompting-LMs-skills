@@ -1,11 +1,20 @@
 ---
 name: dspy-miprov2
-description: Use when you want the highest-quality prompt optimization DSPy offers — jointly optimizes instructions and few-shot demos, with auto=light/medium/heavy presets. Common scenarios - you want the best possible accuracy from prompt optimization, jointly tuning instructions and few-shot demonstrations, using auto presets for different compute budgets, or when COPRO or BootstrapFewShot alone are not reaching your accuracy target. Related - ai-improving-accuracy, dspy-copro, dspy-bootstrap-few-shot. Also used for dspy.MIPROv2, best DSPy optimizer, highest quality optimization, auto=light medium heavy, joint instruction and demo optimization, most powerful prompt optimizer, MIPROv2 vs COPRO vs BootstrapFewShot, which optimizer should I use, state of the art prompt optimization, when to use MIPROv2, optimize both instructions and examples, heavy optimization for production, best optimizer for accuracy.
+description: dspy.MIPROv2 jointly optimizes instructions and few-shot demos using Bayesian search - DSPy most powerful prompt optimizer. Use when you want the best possible accuracy from prompt optimization, jointly tuning instructions and few-shot demonstrations, using auto=light/medium/heavy presets for different compute budgets, or when COPRO or BootstrapFewShot alone are not reaching your accuracy target. Also used for best DSPy optimizer, highest quality optimization, auto=light medium heavy, joint instruction and demo optimization, most powerful prompt optimizer, MIPROv2 vs COPRO vs BootstrapFewShot, which optimizer should I use, state of the art prompt optimization, when to use MIPROv2, optimize both instructions and examples, heavy optimization for production, best optimizer for accuracy, ai-improving-accuracy.
 ---
 
 # Optimize Prompts with MIPROv2
 
 Guide the user through using `dspy.MIPROv2`, DSPy's most powerful prompt optimizer. MIPROv2 jointly optimizes instructions and few-shot demonstrations to maximize a metric on your training data.
+
+## Step 1 — Gather context
+
+Before generating code, ask:
+
+1. **Training data size** — How many labeled examples? MIPROv2 needs 50+ for `"light"`, 100+ for `"medium"`, 200+ for `"heavy"`. Under 50 → use `BootstrapFewShot` first (see `/dspy-bootstrap-few-shot`).
+2. **Baseline accuracy** — What is the current dev set score? Run `dspy.Evaluate` before optimizing so you know the improvement.
+3. **Compute budget** — Rough cost/time tolerance? Maps to `auto="light"` (~$1-2), `auto="medium"` (~$5-10), or `auto="heavy"` (~$15-30).
+4. **Program structure** — How many `dspy.Predict` / `dspy.ChainOfThought` modules? Each gets its own optimized instructions and demos, which affects total optimization cost.
 
 ## What is MIPROv2
 
@@ -18,12 +27,17 @@ It works by proposing candidate instructions, bootstrapping demonstrations, and 
 
 ## When to use MIPROv2
 
+**Use MIPROv2 when:**
 - **Production optimization** — you want the best prompt quality DSPy can deliver
 - **50+ training examples** — MIPROv2 needs enough data to search effectively
 - **Both instructions and demos matter** — you want the optimizer to tune everything, not just examples
 - **You have budget for multiple LM calls** — MIPROv2 is more expensive than BootstrapFewShot but produces better results
 
-If you have fewer than 50 examples or need a quick first pass, start with `BootstrapFewShot` (see `/dspy-bootstrap-few-shot`), then upgrade to MIPROv2.
+**Do NOT use MIPROv2 when:**
+- **Fewer than 50 training examples** — search cannot generalize from sparse data; use `BootstrapFewShot` first, then upgrade
+- **Your metric is weak or noisy** — MIPROv2 optimizes whatever metric you give it; a metric that always returns 1.0 or is highly noisy produces garbage optimized prompts
+- **Still in development/exploration** — run a few manual iterations first to confirm your program works; optimize last before production
+- **Instructions do not matter** — if your task is pure extraction with no natural-language framing, `BootstrapFewShot` alone may be sufficient at lower cost
 
 ## Basic usage
 
@@ -99,11 +113,7 @@ MIPROv2 generates candidate instructions by analyzing your training data and the
 
 ### Few-shot demonstrations
 
-MIPROv2 bootstraps demonstrations by running your program on training examples and keeping successful traces (where the metric passes). It then selects which demos to include in each module's prompt.
-
-### Joint optimization
-
-The key advantage over simpler optimizers: MIPROv2 searches over **combinations** of instructions and demos together. Good instructions may need different demos than mediocre instructions, and MIPROv2 finds the best pairing.
+MIPROv2 bootstraps demonstrations by running your program on training examples and keeping successful traces (where the metric passes). It then selects which demos to include in each module's prompt. The key advantage: it searches over **combinations** of instructions and demos together — good instructions may need different demos than mediocre instructions.
 
 ## Key parameters
 

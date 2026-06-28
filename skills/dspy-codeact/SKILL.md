@@ -1,11 +1,20 @@
 ---
 name: dspy-codeact
-description: Use when the agent task is best solved by writing and executing Python code — data manipulation, computation, file processing, or tasks where code is more reliable than natural language reasoning. Common scenarios - data analysis tasks where the agent writes pandas code, computation-heavy tasks where natural language reasoning fails, file processing automation, tasks requiring precise calculations, or building agents that manipulate data programmatically. Related - ai-taking-actions, dspy-react, dspy-program-of-thought. Also used for dspy.CodeAct, agent writes and runs Python code, code execution agent, data analysis agent, AI agent that writes code, computation with LLM agent, pandas automation with AI, agent that processes files, code-generating agent, execute Python in sandbox, when ReAct is not precise enough use code, programmatic problem solving agent.
+description: Build agents that write and execute Python code using dspy.CodeAct. Use when the task requires computation, data transformation, or multi-step logic better expressed as code than tool calls or natural language - data analysis, precise calculations, file processing. Common scenarios - data analysis tasks where the agent writes pandas code, computation-heavy tasks where natural language reasoning fails, file processing automation, tasks requiring precise calculations, or building agents that manipulate data programmatically. Related - ai-taking-actions, dspy-react, dspy-program-of-thought. Also used for dspy.CodeAct, agent writes and runs Python code, code execution agent, data analysis agent, AI agent that writes code, computation with LLM agent, pandas automation with AI, agent that processes files, code-generating agent, execute Python in sandbox, when ReAct is not precise enough use code, programmatic problem solving agent.
 ---
 
 # Build Agents That Write and Execute Code with dspy.CodeAct
 
 Guide the user through building DSPy agents that solve problems by generating and running Python code, rather than calling tools through a fixed interface.
+
+## Step 1 — Gather context
+
+Ask the user before writing code:
+
+1. **What task should the agent perform?** (e.g., data analysis, math computation, file processing, custom calculation) — this guides tool design and `max_iters` choice.
+2. **Do you have existing Python functions to expose as tools, or do they need to be defined?** CodeAct requires plain functions with type hints and docstrings — not classes or lambdas.
+3. **What LM provider are you using?** Any DSPy-supported provider works — OpenAI, Anthropic, local models, etc.
+4. **Will you optimize the agent on training examples, or use it for one-off tasks?** Optimization with BootstrapFewShot significantly improves performance on repeated tasks.
 
 ## What is CodeAct
 
@@ -34,12 +43,7 @@ CodeAct inherits from both ReAct and ProgramOfThought, combining reasoning-and-a
 
 ## When to use CodeAct
 
-Use CodeAct when the agent needs to:
-
-- **Do computation** -- math, aggregations, statistics, string processing
-- **Transform data** -- reshape, filter, combine results from multiple tool calls
-- **Write multi-step logic** -- loops, conditionals, variable assignment between steps
-- **Solve problems programmatically** -- tasks where the approach itself needs to be figured out
+Use CodeAct when the agent needs computation, data transformation, or multi-step logic — see the decision table at the bottom of this skill for scenario-by-scenario guidance.
 
 Avoid CodeAct when:
 
@@ -128,7 +132,7 @@ def analyze(data: str) -> str:
 
 **Rules for tools:**
 
-1. Must be plain functions (not callable objects, not class methods)
+1. Must be plain functions (not callable objects, not class methods, not lambdas)
 2. Must have type hints and a docstring
 3. Cannot import external libraries (numpy, pandas, requests, etc.) inside the function body
 4. All logic must be self-contained -- no references to external classes or global state
@@ -221,6 +225,18 @@ optimized = optimizer.compile(agent, trainset=trainset)
 optimized.save("optimized_codeact.json")
 ```
 
+## Verify the agent works
+
+After building, run a concrete test and inspect the generated code:
+
+```python
+result = agent(question="What is the factorial of 10 plus the 15th Fibonacci number?")
+print(result.answer)       # should be a computed number, not vague prose
+dspy.inspect_history(n=1)  # see the code the agent generated and executed
+```
+
+If the agent produces reasoning text instead of executing code, check that all tools have type hints and docstrings — these are required for the agent to understand how to call them.
+
 ## When to use CodeAct vs ReAct
 
 | Scenario | Use |
@@ -252,7 +268,8 @@ optimized.save("optimized_codeact.json")
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
-- **ReAct** for tool-calling agents -- see `/ai-taking-actions`
+- **ReAct** for simpler tool-calling agents -- see `/dspy-react` and `/ai-taking-actions`
+- **ProgramOfThought** for code-based single-shot reasoning without a tool loop -- see `/dspy-program-of-thought`
 - **Tools** and tool patterns -- see `/ai-taking-actions`
 - **Multi-agent coordination** -- see `/ai-coordinating-agents`
 - **Modules** for composing CodeAct with other modules -- see `/dspy-modules`

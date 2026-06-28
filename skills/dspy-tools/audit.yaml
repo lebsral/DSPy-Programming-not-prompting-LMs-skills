@@ -1,4 +1,15 @@
-# No formal audit has been recorded for this skill yet. Run the skill-quality
-# audit against the current DSPy version, then replace last_audit with a real
-# block: {date: YYYY-MM-DD, score: N/N, versions: {dspy: X.Y.Z}}.
-last_audit: null
+last_audit:
+  date: 2026-06-28
+  score: 57/57
+  versions:
+    dspy: 3.2.1
+  notes: >
+    First formal audit. Fixed: ToolCalls section replaced with 3.3.0-beta forward note (A2);
+    missing PythonInterpreter API link added (L1/L4); reference.md gained PythonInterpreter
+    param table (D2) and key methods (D3); evals.json reformatted to standard schema (E3/E4);
+    enable_read_paths type corrected to PathLike|str (A1); execute()/variables param added
+    to reference.md (A5); trailing slash fixed on Tool link (L2); upstream links in reference.md
+    now cover all three APIs (D6); tradeoff table added for ReAct vs CodeAct vs PI (X4);
+    description gained leading WHAT sentence + dspy.PythonInterpreter trigger (F3/F6);
+    gotcha 3 replaced with lambda-wrapper schema failure (C4);
+    all V-checks pass with dspy 3.2.1 pinned.

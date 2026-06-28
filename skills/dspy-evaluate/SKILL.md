@@ -1,19 +1,40 @@
 ---
 name: dspy-evaluate
-description: Use when you need to measure how well your DSPy program performs — writing metrics, scoring against a dev set, or comparing before/after optimization. Common scenarios - measuring accuracy before and after optimization, writing custom metrics for your task, scoring a program against a held-out dev set, comparing two prompt strategies, building a test suite for AI quality, or running regression tests on AI outputs. Related - ai-improving-accuracy, ai-scoring, ai-monitoring. Also used for dspy.Evaluate, dspy.evaluate, write DSPy metric function, measure AI accuracy, evaluate DSPy program, dev set evaluation, before and after optimization comparison, custom scoring function, test AI quality systematically, AI regression testing, metric-driven development, how to know if my DSPy program improved, score predictions against labels, evaluation harness for LLM, CI/CD for AI quality.
+description: Run dspy.Evaluate to score DSPy programs against labeled examples using custom or built-in metrics. Use when you need to measure how well your DSPy program performs — writing metrics, scoring against a dev set, or comparing before/after optimization. Common scenarios - measuring accuracy before and after optimization, writing custom metrics for your task, scoring a program against a held-out dev set, comparing two prompt strategies, building a test suite for AI quality, or running regression tests on AI outputs. Related - ai-improving-accuracy, ai-scoring, ai-monitoring. Also used for dspy.Evaluate, dspy.evaluate, write DSPy metric function, measure AI accuracy, evaluate DSPy program, dev set evaluation, before and after optimization comparison, custom scoring function, test AI quality systematically, AI regression testing, metric-driven development, how to know if my DSPy program improved, score predictions against labels, evaluation harness for LLM, CI/CD for AI quality.
 ---
 
 # Evaluate Your DSPy Program
 
 Guide the user through measuring AI quality with DSPy's `Evaluate` class. The pattern: pick a metric, prepare a devset, run the evaluator, interpret results, then feed the same metric into an optimizer.
 
+## Step 1 — Gather context
+
+Before recommending a metric or writing evaluation code, clarify:
+
+1. **What fields does your program output?** (`answer`, `response`, custom fields — metric field names must match exactly; `SemanticF1` requires `response`, not `answer`)
+2. **Do you have labeled gold answers**, or do you need an LM judge to assess open-ended quality?
+3. **What does "correct" mean for your task?** Exact string match, semantic overlap, factual groundedness, safety, or a weighted combination?
+4. **Is this metric feeding into an optimizer?** If yes, you may want trace-aware logic — stricter requirements during optimization than during bare evaluation.
+
 ## What is dspy.Evaluate
 
-`dspy.Evaluate` runs your program on every devset example, scores each with a metric, and reports the aggregate score. It handles threading and progress display. Returns a percentage (0-100).
+`dspy.Evaluate` runs your program on every devset example, scores each with a metric, and reports the aggregate score. It handles threading and progress display. Returns an `EvaluationResult`; access `.score` for the percentage (0-100) and `.results` for per-example `(example, prediction, score)` tuples.
 
 ## Built-in metrics
 
-DSPy provides `answer_exact_match` (normalized string equality) and `answer_passage_match` (substring check). Both expect an `answer` field on example and prediction.
+DSPy provides `answer_exact_match` (normalized string equality — compares `example.answer` with `prediction.answer`) and `answer_passage_match` (RAG retrieval hit check — returns `True` if any passage in `prediction.context` contains `example.answer`). They do **not** share the same field expectations.
+
+### Choosing a metric
+
+| Metric | Example fields | Prediction fields | Best for | LM cost |
+|--------|---------------|-------------------|---------|---------|
+| `answer_exact_match` | `answer` | `answer` | Factoid QA, structured output | Free |
+| `answer_passage_match` | `answer` | `context` (list of passages) | RAG retrieval hit rate | Free |
+| `SemanticF1` | `question`, `response` | `response` | Open-ended QA with near-miss answers | 1 LM call |
+| `CompleteAndGrounded` | `question`, `response` | `response`, `context` | RAG faithfulness + completeness | 2 LM calls |
+| Custom LM-as-judge | Any | Any | Subjective quality, style, safety | 1+ LM calls |
+
+Start with the cheapest metric that captures your quality signal. Each LM-judge call costs one LM invocation per example — on a 100-example devset with 4 optimizer rounds this adds thousands of extra calls. Only reach for LM-as-judge when simpler metrics genuinely cannot distinguish good from bad outputs.
 
 ### SemanticF1
 
@@ -214,6 +235,7 @@ print(f"Delta:     {optimized_result.score - baseline.score:+.1f}%")
 3. **Claude uses `CompleteAndGrounded` without providing `context`.** `CompleteAndGrounded` expects `response` and `context` on the prediction, and `question` and `response` on the example. Without `context`, it cannot check groundedness.
 4. **Metrics must return a `float` or `bool`, not a string** -- returning a string silently breaks scoring.
 5. **Small dev sets (<30 examples) give unreliable scores** -- results can swing 10-20% between runs. Aim for 50+ examples for stable evaluation.
+6. **Do not start with an LM-as-judge if `answer_exact_match` or `SemanticF1` is sufficient.** Each judge call costs one LM invocation per example per evaluation pass. During optimizer compilation with hundreds of candidate traces, costs multiply fast. Benchmark the simple metrics first; add a judge only if they cannot distinguish your good from bad outputs.
 
 ## Additional resources
 
@@ -232,5 +254,6 @@ print(f"Delta:     {optimized_result.score - baseline.score:+.1f}%")
 - Want the best prompt optimization? Use `/dspy-miprov2`
 - For the full measure-improve-verify loop, see `/ai-improving-accuracy`
 - For **decomposed RAG evaluation** (faithfulness, context precision/recall) see `/dspy-ragas`
+- For scoring AI outputs outside of optimization loops, see `/ai-scoring`
 - For worked examples (exact match, LM judge, composite), see [examples.md](examples.md)
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

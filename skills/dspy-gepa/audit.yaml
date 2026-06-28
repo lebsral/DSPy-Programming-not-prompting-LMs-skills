@@ -1,4 +1,15 @@
-# No formal audit has been recorded for this skill yet. Run the skill-quality
-# audit against the current DSPy version, then replace last_audit with a real
-# block: {date: YYYY-MM-DD, score: N/N, versions: {dspy: X.Y.Z}}.
-last_audit: null
+last_audit:
+  date: 2026-06-28
+  score: 55/57
+  versions:
+    dspy: 3.2.1
+  notes: >
+    First formal audit. Pre-fix score was 46/57.
+    Fixed: F3 (description WHAT clause), S2/S3 (added Step 1 context-gathering questions),
+    A1 (added wandb_api_key/wandb_init_kwargs/warn_on_score_mismatch/gepa_kwargs to reference.md),
+    A4 (added @experimental note and gepa[dspy] install info),
+    L3 (replaced broken dspy.ai/api/optimizers/GEPA/ redirect with working getting-started and in-depth URLs),
+    X1 (removed duplicate metadata-in-feedback tip and duplicate wrong-answer anti-example),
+    V2/V3 (this file).
+    Remaining 2 points: R3 WARN — catalog.md description is out of sync after SKILL.md description update;
+    update /dspy-gepa entry in skills/ai-do/catalog.md to match new description.

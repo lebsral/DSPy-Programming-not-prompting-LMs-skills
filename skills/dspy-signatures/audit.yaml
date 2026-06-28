@@ -1,4 +1,13 @@
-# No formal audit has been recorded for this skill yet. Run the skill-quality
-# audit against the current DSPy version, then replace last_audit with a real
-# block: {date: YYYY-MM-DD, score: N/N, versions: {dspy: X.Y.Z}}.
-last_audit: null
+last_audit:
+  date: 2026-06-28
+  score: 55/55
+  versions:
+    dspy: 3.2.1
+  notes: >
+    First formal audit. Fixed: F3 (added WHAT prefix to description), A4 (added
+    Audio and Code to special input types), A5/D3 (added append_instructions,
+    dump_state, load_state to reference.md methods table), D6 (made upstream link
+    display text specific), L2 (added trailing slashes to all API links), X7
+    (added verification tip to gotchas), E3/E4 (rewrote evals.json to use
+    expected_output and assertions format), reference.md (added format and parser
+    as deprecated alongside prefix).

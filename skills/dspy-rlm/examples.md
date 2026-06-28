@@ -20,7 +20,7 @@ reviews_text = open("reviews_export.txt").read()  # e.g. 500K chars
 rlm = dspy.RLM(
     "reviews, query -> summary, top_complaints: list[str], sentiment_breakdown: str",
     sub_lm=cheap_lm,
-    max_iterations=15,
+    max_iters=15,
     verbose=True,
 )
 
@@ -57,7 +57,7 @@ class QualityGuidedAnalysis(dspy.Module):
         self.analyze = dspy.RLM(
             "reviews, query -> summary, top_complaints: list[str]",
             sub_lm=dspy.LM("openai/gpt-4o-mini"),
-            max_iterations=15,
+            max_iters=15,
         )
         self.judge = dspy.ChainOfThought(
             "query, summary, top_complaints -> quality_score: float, feedback"
@@ -127,7 +127,7 @@ logs = open("/var/log/app/server.log").read()  # e.g. 2M chars
 rlm = dspy.RLM(
     "logs, query -> error_patterns: list[str], timeline: str, root_cause: str",
     tools=[validate_timestamp],
-    max_iterations=20,
+    max_iters=20,
     max_llm_calls=30,
     verbose=True,
 )
@@ -151,7 +151,7 @@ class ConstrainedLogAnalysis(dspy.Module):
     def __init__(self):
         self.analyze = dspy.RLM(
             "logs, query -> error_patterns: list[str], timeline: str, root_cause: str",
-            max_iterations=20,
+            max_iters=20,
             max_llm_calls=30,
         )
 

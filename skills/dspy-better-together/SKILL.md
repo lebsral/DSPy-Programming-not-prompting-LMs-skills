@@ -1,11 +1,20 @@
 ---
 name: dspy-better-together
-description: Use when you have already tried prompt-only optimization and want the next level — jointly tuning prompts and model weights for maximum quality. Common scenarios - you have maxed out prompt optimization and need the next level, combining instruction tuning with weight tuning for maximum quality, making a small model match a large model through joint optimization, or squeezing the last few percent of accuracy. Related - ai-fine-tuning, ai-improving-accuracy, ai-cutting-costs. Also used for dspy.BetterTogether, joint prompt and weight optimization, beyond prompt engineering, combine fine-tuning with prompt optimization, maximum possible quality from DSPy, hybrid optimization strategy, prompt optimization hit a ceiling, fine-tune and optimize prompts at the same time, advanced DSPy optimization, best possible accuracy, what to try after MIPROv2, next level AI quality.
+description: Jointly optimize prompts and model weights using dspy.BetterTogether for maximum accuracy. Use when you have already tried prompt-only optimization and want the next level — jointly tuning prompts and model weights for maximum quality. Common scenarios - you have maxed out prompt optimization and need the next level, combining instruction tuning with weight tuning for maximum quality, making a small model match a large model through joint optimization, or squeezing the last few percent of accuracy. Related - ai-fine-tuning, ai-improving-accuracy, ai-cutting-costs. Also used for dspy.BetterTogether, joint prompt and weight optimization, beyond prompt engineering, combine fine-tuning with prompt optimization, maximum possible quality from DSPy, hybrid optimization strategy, prompt optimization hit a ceiling, fine-tune and optimize prompts at the same time, advanced DSPy optimization, best possible accuracy, what to try after MIPROv2, next level AI quality.
 ---
 
 # BetterTogether: Joint Prompt + Weight Optimization
 
 Guide the user through using `dspy.BetterTogether` to get the best possible quality by combining prompt optimization and model fine-tuning in alternating rounds. Each round builds on the improvements from the previous one, creating compounding gains that beat either approach alone.
+
+## Step 1 — Gather context
+
+Before generating code, confirm:
+
+1. **Baselines already run?** What accuracy did MIPROv2 and BootstrapFinetune achieve individually? If neither has been tried, redirect to `/ai-improving-accuracy` first — BetterTogether is only worth it after individual optimizers plateau.
+2. **Data size?** How many labeled examples? Need 500+ (1000+ recommended). Fewer than 500 → `/ai-improving-accuracy` instead.
+3. **Fine-tunable model?** OpenAI fine-tuning API, Databricks, or local GPU? This determines whether the weight step is feasible.
+4. **Compute budget?** Each strategy round takes hours. The default `"p -> w -> p"` is hours to half a day.
 
 ## What it is
 

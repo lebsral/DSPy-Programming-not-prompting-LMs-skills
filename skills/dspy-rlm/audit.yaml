@@ -1,4 +1,14 @@
-# No formal audit has been recorded for this skill yet. Run the skill-quality
-# audit against the current DSPy version, then replace last_audit with a real
-# block: {date: YYYY-MM-DD, score: N/N, versions: {dspy: X.Y.Z}}.
-last_audit: null
+last_audit:
+  date: 2026-06-28
+  score: 53/54
+  versions:
+    dspy: 3.2.1
+  notes: >
+    First real audit. RLM is a real DSPy 3.2.1 API (dspy/predict/rlm.py exists,
+    dspy.ai/api/modules/RLM/ resolves, marked experimental in upstream docs).
+    Fixed: max_iterations -> max_iters throughout SKILL.md, reference.md, examples.md,
+    and evals/evals.json (A1/D2 FAIL). Fixed evals.json format to standard object
+    wrapper with skill_name, id, and files fields (E3 WARN). Unfixed WARN: README.md
+    describes dspy-rlm as "Reinforcement-learning-style refinement" which is wrong
+    (RLM = Recursive Language Model) -- per instructions, README edits are out of scope
+    for skill-dir-only audit; report to catalog maintainer for correction (R1 WARN).

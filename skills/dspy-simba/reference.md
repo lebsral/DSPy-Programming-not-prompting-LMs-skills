@@ -1,6 +1,6 @@
 # SIMBA API Reference
 
-> Condensed from [dspy.ai/api/optimizers/SIMBA](https://dspy.ai/api/optimizers/SIMBA). Verify against upstream for latest.
+> Condensed from [dspy.ai/api/optimizers/SIMBA](https://dspy.ai/api/optimizers/SIMBA/). Verify against upstream for latest.
 
 ## Constructor
 

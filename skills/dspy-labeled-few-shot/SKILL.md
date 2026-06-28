@@ -1,11 +1,20 @@
 ---
 name: dspy-labeled-few-shot
-description: Use when you have hand-picked high-quality examples and want to use them directly as few-shot demonstrations — no bootstrapping, just your curated demos. Common scenarios - you have expert-curated examples that you trust more than bootstrapped ones, hand-picked demonstrations for high-stakes tasks, using existing labeled data directly without bootstrapping, or when you want full control over which examples appear in the prompt. Related - dspy-bootstrap-few-shot, dspy-knn-few-shot, ai-generating-data. Also used for dspy.LabeledFewShot, hand-picked examples in prompt, curated demonstrations, use my own examples directly, manual few-shot setup, expert-labeled demonstrations, no bootstrapping just my examples, static few-shot with labeled data, gold standard examples, when you trust your examples more than auto-generated ones, controlled few-shot demos, fixed example set in prompt.
+description: Attach hand-curated labeled examples as few-shot demonstrations using dspy.LabeledFewShot — no bootstrapping, no metric, no LM calls at compile time. Use when you have hand-picked high-quality examples and want to inject them directly as prompt demos without bootstrapping. Common scenarios - expert-curated examples you trust more than bootstrapped ones, hand-picked demonstrations for high-stakes tasks, using existing labeled data directly without bootstrapping, or full control over which examples appear in the prompt. Related - dspy-bootstrap-few-shot, dspy-knn-few-shot, ai-generating-data. Also used for dspy.LabeledFewShot, hand-picked examples in prompt, curated demonstrations, use my own examples directly, manual few-shot setup, expert-labeled demonstrations, no bootstrapping just my examples, static few-shot with labeled data, gold standard examples, controlled few-shot demos, fixed example set in prompt.
 ---
 
 # Hand-Picked Demonstrations with dspy.LabeledFewShot
 
 Guide the user through using `dspy.LabeledFewShot` -- the simplest DSPy optimizer. It takes labeled examples you provide and attaches them as few-shot demonstrations to your program's predictors. No bootstrapping, no metric, no LM calls during optimization.
+
+## Step 1 — Gather context
+
+Before writing code, ask:
+
+1. **How many hand-picked examples do you have?** This sets a good `k` value — typically 25-50% of trainset size, capped at the default of 16.
+2. **Are these examples hand-curated or programmatically generated?** If generated, `dspy.BootstrapFewShot` may be better — it evaluates examples against a metric and keeps only the ones that help.
+3. **Does your program have multiple predictors with different signatures?** Every predictor gets the same demos, so all fields across all signatures must exist in the training examples.
+4. **Have you measured zero-shot accuracy yet?** Useful to know the baseline before adding demonstrations.
 
 ## What is LabeledFewShot
 
@@ -96,6 +105,8 @@ result = optimized(message="Can you send me last month's invoice?")
 print(result.intent)  # request
 ```
 
+**Verify it worked:** Run a few test inputs and inspect `dspy.inspect_history(n=1)` to confirm demos appear in the prompt. If the prompt looks identical to the zero-shot version, check that `.with_inputs()` is called on every training example.
+
 ## How example selection works
 
 When `sample=True` (the default):
@@ -183,6 +194,8 @@ Note: every predictor receives demos from the same trainset. If your predictors 
 2. **No metric evaluation** -- it cannot tell which examples actually help the LM perform better
 3. **Same demos for all predictors** -- it does not tailor demonstrations per predictor
 
+**Typical improvement:** Adding 4-8 curated demos with `LabeledFewShot` often improves task accuracy by 5-15% over zero-shot. If that is not enough, `BootstrapFewShot` commonly adds another 10-20% by filtering to only the examples that led to correct outputs.
+
 `dspy.BootstrapFewShot` addresses all three. It runs your program on each training example, evaluates with a metric, and keeps only the demonstrations that led to correct outputs. The upgrade is straightforward:
 
 ```python
@@ -217,7 +230,9 @@ optimized = optimizer.compile(program, trainset=trainset)
 
 - **Creating training examples** (dspy.Example, with_inputs, datasets) -- see `/dspy-data`
 - **Defining signatures** (inline and class-based, typed fields) -- see `/dspy-signatures`
-- **BootstrapFewShot** for metric-driven demo selection -- see `/ai-improving-accuracy`
+- **BootstrapFewShot** (metric-driven selection, filters demos by correctness) -- see `/dspy-bootstrap-few-shot`
+- **KNNFewShot** (dynamically selects demos per input via similarity) -- see `/dspy-knn-few-shot`
+- **Improving accuracy** with optimized demos -- see `/ai-improving-accuracy`
 - **Evaluating your program** to measure if LabeledFewShot is enough -- see `/dspy-evaluate`
 - **Building modules** with multiple predictors -- see `/dspy-modules`
 - For worked examples, see [examples.md](examples.md)

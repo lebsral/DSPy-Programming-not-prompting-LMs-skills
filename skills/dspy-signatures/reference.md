@@ -1,6 +1,6 @@
 # Signatures API Reference
 
-> Condensed from [dspy.ai/api/signatures](https://dspy.ai/api/signatures/Signature). Verify against upstream for latest.
+> Condensed from [dspy.ai/api/signatures/Signature/](https://dspy.ai/api/signatures/Signature/). Verify against upstream for latest.
 
 ## dspy.Signature
 
@@ -24,6 +24,9 @@ class MySignature(dspy.Signature):
 | `delete` | `(name: str) -> type[Signature]` | Remove a field (no error if absent) |
 | `with_updated_fields` | `(name: str, type_=None, **kwargs) -> type[Signature]` | Update field metadata |
 | `equals` | `(other) -> bool` | Compare JSON schemas |
+| `append_instructions` | `(instructions: str) -> type[Signature]` | Return new Signature with instructions appended (blank line separator) |
+| `dump_state` | `() -> dict` | Serialize instructions and field metadata to a dict |
+| `load_state` | `(state: dict) -> type[Signature]` | Restore instructions and field metadata from saved state |
 
 All methods are non-mutating -- they return new Signature classes.
 
@@ -36,19 +39,23 @@ dspy.InputField(desc=None, prefix=None, **kwargs)
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `desc` | `str \| None` | `None` | Natural-language description shown to LM |
-| `prefix` | `str \| None` | `None` | Override field label in prompt (DEPRECATED in 3.2 — emits a warning; use inline annotations/desc instead) |
+| `prefix` | `str \| None` | `None` | Override field label in prompt (DEPRECATED — emits a warning; use inline annotations/desc instead) |
+| `format` | | | DEPRECATED — no effect in DSPy |
+| `parser` | | | DEPRECATED — no effect in DSPy |
 | `**kwargs` | | | Passed to `pydantic.Field()` |
 
 ## dspy.OutputField
 
 ```python
-dspy.OutputField(desc=None, prefix=None, type_=None, **kwargs)
+dspy.OutputField(desc=None, type_=None, **kwargs)
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `desc` | `str \| None` | `None` | Natural-language description shown to LM |
-| `prefix` | `str \| None` | `None` | Override field label in prompt (DEPRECATED in 3.2 — emits a warning; use inline annotations/desc instead) |
+| `prefix` | `str \| None` | `None` | Override field label in prompt (DEPRECATED — emits a warning; use inline annotations/desc instead) |
+| `format` | | | DEPRECATED — no effect in DSPy |
+| `parser` | | | DEPRECATED — no effect in DSPy |
 | `type_` | `type \| None` | `None` | Alternative to Python type annotation (works, but inline annotation preferred) |
 | `**kwargs` | | | Passed to `pydantic.Field()` |
 

@@ -57,6 +57,7 @@ Both `prompt` (string) and `messages` (list of dicts with `role`/`content`) form
 |--------|-----------|-------------|
 | `copy` | `(**kwargs) -> LM` | Deep copy with updated parameters |
 | `dump_state` | `() -> dict` | Serialize config (excludes API keys) |
+| `load_state` | `(classmethod, state: dict) -> LM` | Restore LM from a saved `dump_state()` dict |
 | `inspect_history` | `(n=1, file=None) -> None` | Print last n LM interactions |
 
 ### Fine-tuning
@@ -76,8 +77,13 @@ dspy.configure(lm=lm)
 with dspy.context(lm=other_lm):
     result = module(...)
 
-# Configure caching
-dspy.configure_cache(enable=True)
+# Configure caching (disk and memory tiers controlled separately)
+dspy.configure_cache(
+    enable_disk_cache=True,
+    enable_memory_cache=True,
+    disk_size_limit_bytes=None,   # optional cap
+    memory_max_entries=None,      # optional cap
+)
 
 # View recent LM history
 dspy.inspect_history(n=1)
@@ -100,6 +106,23 @@ The model string follows LiteLLM's `"provider/model-name"` convention:
 
 ## Key behaviors
 
-- **Caching**: Enabled by default. Same prompt + same params + same model returns cached result with no API call. Use `rollout_id` parameter to bypass cache for stochastic sampling without disabling future caching.
+- **Caching**: Enabled by default. Same prompt + same params + same model returns cached result with no API call.
 - **History**: Auto-tracked unless `settings.disable_history` is set. Accessible via `inspect_history()`.
 - **API keys**: Read from environment variables automatically via LiteLLM. Never serialized in `dump_state()`.
+
+## dspy.Embedder (related — text embeddings only)
+
+> See [dspy.ai/api/models/Embedder/](https://dspy.ai/api/models/Embedder/) for full docs.
+
+For computing text embeddings (RAG, semantic search) — not a language model, cannot be passed to `dspy.configure(lm=...)`.
+
+```python
+dspy.Embedder(
+    model,           # str (e.g. "openai/text-embedding-3-small") or callable
+    batch_size=200,  # inputs per batch
+    caching=True,    # cache responses for hosted models
+    **kwargs,        # extra args passed to the embedding model
+)
+```
+
+Returns a 1D numpy array for a single string, 2D for a list of strings.

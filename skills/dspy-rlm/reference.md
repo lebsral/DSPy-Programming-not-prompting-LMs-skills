@@ -7,7 +7,7 @@
 ```python
 dspy.RLM(
     signature,                # str | Signature -- required
-    max_iterations=20,        # max REPL interaction loops
+    max_iters=20,             # max REPL interaction loops
     max_llm_calls=50,         # max sub-LM queries per execution
     max_output_chars=10_000,  # max chars from REPL output per step
     verbose=False,            # detailed execution logging
@@ -20,7 +20,7 @@ dspy.RLM(
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `signature` | `str \| type[Signature]` | required | Defines inputs/outputs |
-| `max_iterations` | `int` | `20` | Max REPL interaction cycles |
+| `max_iters` | `int` | `20` | Max REPL interaction cycles |
 | `max_llm_calls` | `int` | `50` | Max `llm_query()` calls per run |
 | `max_output_chars` | `int` | `10_000` | Char limit for REPL output per step |
 | `verbose` | `bool` | `False` | Enable detailed logging |

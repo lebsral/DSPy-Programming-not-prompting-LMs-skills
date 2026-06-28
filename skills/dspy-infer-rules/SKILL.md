@@ -7,6 +7,15 @@ description: Use when you want to extract interpretable decision logic from labe
 
 Guide the user through using `dspy.InferRules` to discover explicit, human-readable rules from labeled examples and inject them into program instructions.
 
+## Step 1 — Gather context
+
+Ask before writing code:
+
+1. **What is the task?** Classification, routing, content moderation, or triage? InferRules works best on tasks with consistent, describable patterns — not creative or open-ended generation.
+2. **How many labeled examples?** InferRules needs at least ~20 examples; 40-100 is typical. If fewer than ~20, building a larger labeled set first is more valuable than optimizing.
+3. **Do you have a separate validation set, or should we split training data?** A dedicated validation set gives better rule evaluation and leaves more examples for training. Relevant if the total dataset is under ~50 examples.
+4. **Why do you need interpretable rules?** Regulatory compliance, stakeholder sign-off, debugging, or human-in-the-loop editing? This shapes how aggressively to tune `num_rules` and `num_candidates`.
+
 ## What is dspy.InferRules
 
 `dspy.InferRules` is a DSPy optimizer that analyzes your training examples and extracts natural-language rules describing the decision patterns it finds. These rules are then appended to the instructions of each predictor in your program. The result is a compiled program whose prompts contain explicit, interpretable decision logic -- not opaque few-shot examples.
@@ -206,6 +215,25 @@ loaded.load("compiled_with_rules.json")
 result = loaded(text="New input here")
 ```
 
+## Verify and compare against baseline
+
+Always measure whether InferRules actually helps — it sometimes matches or underperforms the unoptimized baseline on complex tasks.
+
+```python
+import dspy
+
+evaluator = dspy.Evaluate(devset=testset, metric=exact_match, display_progress=True)
+
+baseline_score = evaluator(classify)          # unoptimized program
+optimized_score = evaluator(compiled)         # InferRules-compiled program
+
+print(f"Baseline:  {baseline_score:.1%}")
+print(f"InferRules: {optimized_score:.1%}")
+print(f"Delta: {optimized_score - baseline_score:+.1%}")
+```
+
+If `optimized_score` is not meaningfully higher than `baseline_score`, fall back to `dspy.BootstrapFewShot` — it is simpler and often just as accurate. Also compare against plain `dspy.MIPROv2` if you have enough budget: MIPROv2 sometimes produces better raw accuracy even when interpretability is not the priority.
+
 ## Gotchas
 
 1. **Claude skips inspecting the discovered rules.** After `optimizer.compile()`, always print the enhanced instructions with `predictor.signature.instructions`. InferRules can generate incorrect or contradictory rules. Read them, edit or remove bad ones before deploying.
@@ -229,6 +257,6 @@ result = loaded(text="New input here")
 ## Additional resources
 
 - [dspy.InferRules API docs](https://dspy.ai/api/optimizers/InferRules/)
-- [DSPy optimizer selection guide](https://dspy.ai/learn/optimization/optimizers/)
+- [DSPy optimizer selection guide](https://dspy.ai/diving-deeper/choosing-an-optimizer/)
 - For constructor signatures and method reference, see [reference.md](reference.md)
 - For worked examples (ticket classification, content moderation), see [examples.md](examples.md)
