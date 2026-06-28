@@ -2,16 +2,28 @@
 
 > Condensed from [docs.vllm.ai](https://docs.vllm.ai/en/latest/). Verify against upstream for latest.
 
-## DSPy Connection
+## dspy.LM (vLLM connection)
 
 ```python
 lm = dspy.LM(
-    "openai/<model-name>",
+    model="openai/<model-name>",
     api_base="http://localhost:8000/v1",
-    api_key="none",    # required but any value works
+    api_key="none",
+    temperature=0.7,   # optional
+    max_tokens=1000,   # optional
+    cache=True,        # optional, default True
 )
 dspy.configure(lm=lm)
 ```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `model` | str | required | `"openai/<model-name>"` — the `openai/` prefix routes through the OpenAI-compatible API |
+| `api_base` | str | — | Full vLLM base URL including `/v1`: `"http://localhost:8000/v1"` |
+| `api_key` | str | — | Any non-empty string (vLLM does not authenticate by default; required by LiteLLM) |
+| `temperature` | float | None | Sampling temperature |
+| `max_tokens` | int | None | Max output tokens per call |
+| `cache` | bool | True | Cache LM responses for identical inputs |
 
 `dspy.HFClientVLLM` is deprecated -- always use `dspy.LM("openai/...")` with `api_base`.
 
@@ -25,7 +37,9 @@ vllm serve <model> [options]
 |--------|---------|-------------|
 | `--host` | `0.0.0.0` | Bind address |
 | `--port` | `8000` | Port number |
-| `--tensor-parallel-size` / `-tp` | `1` | Number of GPUs for tensor parallelism |
+| `--tensor-parallel-size` / `-tp` | `1` | Number of GPUs for tensor parallelism (split model across GPUs) |
+| `--pipeline-parallel-size` / `-pp` | `1` | Pipeline stages across GPUs (depth partitioning) |
+| `--data-parallel-size` / `-dp` | `1` | Data parallel replicas (run N copies of the model) |
 | `--max-model-len` | auto | Max sequence length (supports "1k", "2M") |
 | `--gpu-memory-utilization` | `0.92` | Fraction of GPU memory to use (0-1) |
 | `--dtype` | `auto` | `auto`, `float16`, `bfloat16` |
@@ -34,6 +48,7 @@ vllm serve <model> [options]
 | `--max-num-seqs` | `256` | Max concurrent sequences |
 | `--speculative-model` | none | Draft model for speculative decoding |
 | `--num-speculative-tokens` | — | Tokens to speculate per step |
+| `--api-key` | none | If set, server requires this key in the Authorization header |
 
 ## GPU Sizing
 

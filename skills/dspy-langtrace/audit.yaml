@@ -1,4 +1,13 @@
-# No formal audit has been recorded for this skill yet. Run the skill-quality
-# audit against the current DSPy version, then replace last_audit with a real
-# block: {date: YYYY-MM-DD, score: N/N, versions: {dspy: X.Y.Z}}.
-last_audit: null
+last_audit:
+  date: 2026-06-28
+  score: 52/52
+  versions:
+    dspy: 3.2.1
+    langtrace-python-sdk: 3.8.21
+  fixes_applied:
+    - A1: Fixed api_host URL in SKILL.md and reference.md — added required /api/trace path suffix (http://localhost:3000/api/trace)
+    - A5: Fixed inject_additional_attributes API in SKILL.md, reference.md, examples.md — it is a standalone function wrapping a callable, not a method on langtrace
+    - F6: Added langtrace.init and with_langtrace_root_span to description for dspy- API-name requirement
+    - S2/S3: Added Before you start section with cloud-vs-self-hosted and experiment-tracking clarifying questions
+    - X7: Added verification step after cloud setup code block
+    - catalog: Updated catalog.md entry to match new description

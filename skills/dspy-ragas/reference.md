@@ -57,13 +57,17 @@ result = evaluate(
 
 ## Available Metrics
 
-| Metric | Import | Needs reference? | Evaluates |
-|--------|--------|:----------------:|-----------|
-| `Faithfulness()` | `from ragas.metrics import Faithfulness` | No | Generator -- is answer grounded in context? |
-| `AnswerRelevancy()` | `from ragas.metrics import AnswerRelevancy` | No | Generator -- does answer address the question? |
-| `ContextPrecision()` | `from ragas.metrics import ContextPrecision` | Yes | Retriever -- are relevant docs ranked higher? |
-| `ContextRecall()` | `from ragas.metrics import ContextRecall` | Yes | Retriever -- did retrieval find all relevant info? |
-| `AnswerCorrectness()` | `from ragas.metrics import AnswerCorrectness` | Yes | End-to-end -- does answer match reference? |
+Import from `ragas.metrics.collections` (Ragas 0.4+). The old `from ragas.metrics import MetricName` path triggers `DeprecationWarning` and will be removed in v1.0.
+
+| Metric (ragas 0.4+) | Import | Needs reference? | Evaluates |
+|---------------------|--------|:----------------:|-----------|
+| `Faithfulness()` | `from ragas.metrics.collections import Faithfulness` | No | Generator -- is answer grounded in context? |
+| `ResponseRelevancy()` | `from ragas.metrics.collections import ResponseRelevancy` | No | Generator -- does answer address the question? |
+| `ContextPrecision()` | `from ragas.metrics.collections import ContextPrecision` | Yes | Retriever -- are relevant docs ranked higher? |
+| `ContextRecall()` | `from ragas.metrics.collections import ContextRecall` | Yes | Retriever -- did retrieval find all relevant info? |
+| `FactualCorrectness()` | `from ragas.metrics.collections import FactualCorrectness` | Yes | End-to-end -- is the answer factually correct? |
+
+**Name changes from ragas <0.4:** `AnswerRelevancy` → `ResponseRelevancy`; `AnswerCorrectness` → `FactualCorrectness`. Old names still work via `__getattr__` with deprecation warning but will be removed in v1.0.
 
 All metrics return scores in the range 0.0 to 1.0 (higher is better).
 
@@ -71,11 +75,14 @@ All metrics return scores in the range 0.0 to 1.0 (higher is better).
 
 ```python
 from ragas.llms import llm_factory
-from anthropic import Anthropic
+from openai import OpenAI  # or from anthropic import Anthropic, etc.
 
-client = Anthropic()  # reads ANTHROPIC_API_KEY
-evaluator_llm = llm_factory("claude-sonnet-4-5-20250929", provider="anthropic", client=client)
-# or use provider="openai" with an OpenAI() client, etc.
+client = OpenAI()  # reads OPENAI_API_KEY
+evaluator_llm = llm_factory("gpt-4o-mini", client=client)
+# Anthropic: llm_factory("claude-sonnet-4-5-20250929", client=Anthropic())
+# LiteLLM:   llm_factory("bedrock/anthropic.claude-3-sonnet", provider="litellm", client=litellm.completion)
+
+from ragas.metrics.collections import Faithfulness
 result = evaluate(dataset=dataset, metrics=[Faithfulness()], llm=evaluator_llm)
 ```
 
@@ -99,4 +106,4 @@ Requires `pip install "ragas[dspy]"`. Uses MIPROv2 internally to optimize the me
 | v0.2 | Introduced `EvaluationDataset`, `SingleTurnSample` (replaced `datasets.Dataset`) |
 | v0.3.8 | Deprecated `LangchainLLMWrapper`, `LlamaIndexLLMWrapper` |
 | v0.3.9 | Deprecated `ground_truths` parameter, removed AspectCritic/SimpleCriteria |
-| v0.4.0 | Migrated metrics to BasePrompt architecture, added Instructor + LiteLLM adapters |
+| v0.4.0 | Migrated metrics to BasePrompt architecture, added Instructor + LiteLLM adapters. Renamed `AnswerRelevancy` → `ResponseRelevancy`, `AnswerCorrectness` → `FactualCorrectness`. Moved all metric imports to `ragas.metrics.collections` -- `from ragas.metrics import MetricName` is deprecated and triggers `DeprecationWarning`. |

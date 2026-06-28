@@ -1,33 +1,39 @@
-[
-  {
-    "prompt": "I want to trace my DSPy pipeline locally so I can see what prompts are being sent and how many tokens each call uses.",
-    "expected_output": "Sets up Phoenix with local mode and auto-instrumentation for DSPy tracing",
-    "assertions": [
-      "Installs arize-phoenix AND openinference-instrumentation-dspy AND openinference-instrumentation-litellm",
-      "Calls px.launch_app() to start the local UI",
-      "Uses register(auto_instrument=True) from phoenix.otel (not the legacy DSPyInstrumentor pattern)",
-      "Shows how to configure a DSPy LM and run a traced call",
-      "Mentions the UI is available at localhost:6006"
-    ]
-  },
-  {
-    "prompt": "My team wants to use Phoenix in the cloud so everyone can see DSPy traces. How do I set that up?",
-    "expected_output": "Configures Phoenix for cloud mode with Arize platform",
-    "assertions": [
-      "Sets PHOENIX_COLLECTOR_ENDPOINT to the Arize cloud URL",
-      "Sets PHOENIX_API_KEY for authentication",
-      "Uses register(auto_instrument=True) from phoenix.otel",
-      "Does not call px.launch_app() for cloud mode (or explains it is not needed)"
-    ]
-  },
-  {
-    "prompt": "I have traces in Phoenix and want to automatically score whether my DSPy outputs are helpful. How do I use Phoenix evals?",
-    "expected_output": "Uses Phoenix evals module to classify traced outputs",
-    "assertions": [
-      "Imports llm_classify and OpenAIModel from phoenix.evals",
-      "Gets spans as a DataFrame using px.Client().get_spans_dataframe()",
-      "Defines a template with column placeholders for evaluation",
-      "Uses rails parameter to constrain classification labels"
-    ]
-  }
-]
+{
+  "skill_name": "dspy-phoenix",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I want to trace my DSPy pipeline locally so I can see what prompts are being sent and how many tokens each call uses.",
+      "expected_output": "Sets up Phoenix with local mode and auto-instrumentation for DSPy tracing",
+      "assertions": [
+        {"name": "installs_all_packages", "description": "Installs arize-phoenix AND openinference-instrumentation-dspy AND openinference-instrumentation-litellm"},
+        {"name": "calls_launch_app", "description": "Calls px.launch_app() to start the local UI before register()"},
+        {"name": "uses_register_auto_instrument", "description": "Uses register(auto_instrument=True) from phoenix.otel, not the legacy DSPyInstrumentor pattern"},
+        {"name": "shows_dspy_lm_config", "description": "Shows how to configure a DSPy LM and run a traced call"},
+        {"name": "mentions_localhost", "description": "Mentions the UI is available at localhost:6006"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "My team wants to use Phoenix in the cloud so everyone can see DSPy traces. How do I set that up?",
+      "expected_output": "Configures Phoenix for cloud mode with Arize platform",
+      "assertions": [
+        {"name": "sets_collector_endpoint", "description": "Sets PHOENIX_COLLECTOR_ENDPOINT to the Arize cloud URL"},
+        {"name": "sets_api_key", "description": "Sets PHOENIX_API_KEY for authentication"},
+        {"name": "uses_register_auto_instrument", "description": "Uses register(auto_instrument=True) from phoenix.otel"},
+        {"name": "no_launch_app_for_cloud", "description": "Does not call px.launch_app() for cloud mode, or explains it is not needed"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I have traces in Phoenix and want to automatically score whether my DSPy outputs are helpful. How do I use Phoenix evals?",
+      "expected_output": "Uses Phoenix evals module to classify traced outputs",
+      "assertions": [
+        {"name": "imports_llm_classify", "description": "Imports llm_classify and OpenAIModel from phoenix.evals"},
+        {"name": "gets_spans_dataframe", "description": "Gets spans as a DataFrame using px.Client().get_spans_dataframe()"},
+        {"name": "defines_template", "description": "Defines a template with column placeholders for evaluation"},
+        {"name": "uses_rails_param", "description": "Uses rails parameter to constrain classification labels"}
+      ]
+    }
+  ]
+}

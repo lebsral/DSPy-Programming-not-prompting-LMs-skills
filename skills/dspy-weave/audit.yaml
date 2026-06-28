@@ -1,4 +1,12 @@
-# No formal audit has been recorded for this skill yet. Run the skill-quality
-# audit against the current DSPy version, then replace last_audit with a real
-# block: {date: YYYY-MM-DD, score: N/N, versions: {dspy: X.Y.Z}}.
-last_audit: null
+last_audit:
+  date: 2026-06-28
+  score: 38/38
+  versions:
+    dspy: 3.2.1
+    weave: 0.52.43
+  notes: >
+    First real audit. Major API accuracy fix - Weave now auto-instruments DSPy
+    (weave.init() only, no decorators needed). Updated SKILL.md comparison table,
+    decision guide, "Key difference" section, and gotchas to reflect dual-mode
+    instrumentation. Fixed broken link (python-sdk/weave/ -> python-sdk/).
+    Added DSPy auto-tracing section to reference.md. Added context-gathering step.

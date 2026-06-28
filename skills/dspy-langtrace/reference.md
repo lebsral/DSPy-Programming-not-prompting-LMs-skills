@@ -24,7 +24,7 @@ langtrace.init(
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `api_key` | `str \| None` | env `LANGTRACE_API_KEY` | API key for cloud or self-hosted |
-| `api_host` | `str \| None` | `https://app.langtrace.ai` | Custom endpoint URL (for self-hosted instances) |
+| `api_host` | `str \| None` | cloud endpoint | Override endpoint URL for self-hosted. Use `http://localhost:3000/api/trace` (note the `/api/trace` path suffix — omitting it silently drops all traces) |
 
 ## Auto-instrumentation
 
@@ -53,14 +53,20 @@ def my_function():
 
 ## inject_additional_attributes()
 
-Adds custom metadata to the current trace for filtering in the UI.
+Standalone function (not a method on `langtrace`) that wraps a callable and attaches attributes to its span. Import separately from `langtrace_python_sdk`.
 
 ```python
-langtrace.inject_additional_attributes({
-    "user_id": "user-123",
-    "environment": "production",
-    "experiment": "mipro-v2-run1",  # for experiment tracking
-})
+from langtrace_python_sdk import inject_additional_attributes
+
+# Wrap any DSPy call to tag its span with attributes
+result = inject_additional_attributes(
+    lambda: pipeline(question=question),
+    {
+        "user_id": "user-123",
+        "environment": "production",
+        "experiment": "mipro-v2-run1",  # for optimizer experiment tracking
+    }
+)
 ```
 
 ### Experiment tracking attributes

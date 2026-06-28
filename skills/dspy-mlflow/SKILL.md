@@ -7,6 +7,15 @@ description: Use MLflow for DSPy tracing, experiment tracking, and model registr
 
 Guide the user through using MLflow for DSPy auto-tracing, experiment tracking, model registry, and production deployment.
 
+## Step 1 — Clarify setup goals
+
+Before writing integration code, ask:
+
+1. **What is your primary goal?** Tracing only (debug prompts and latency), experiment tracking (compare optimizer runs), model registry (version and promote optimized programs), or all three?
+2. **Local or hosted?** Local MLflow server (`mlflow ui`) or a hosted instance (Databricks, AWS, GCP)?
+3. **Existing project?** Adding MLflow to an existing DSPy pipeline, or starting fresh?
+4. **Team size?** Solo (local server is fine) or collaborative (needs remote tracking server and auth)?
+
 ## What is MLflow
 
 MLflow is an open-source platform for the complete ML lifecycle. Its DSPy integration provides:
@@ -158,6 +167,8 @@ with mlflow.start_run(run_name="mipro-light"):
 4. Click "Compare" to view runs side-by-side
 5. Sort by `dev_score` to find the best run
 
+Typical score progression: Predict baseline ~55-65% → BootstrapFewShot ~68-75% → MIPROv2 light ~75-82% → MIPROv2 medium ~80-88%. Exact numbers depend on task difficulty and data quality, but the UI makes it easy to see which optimizer wins on your data.
+
 ## Model registry
 
 Version and manage optimized DSPy programs:
@@ -171,8 +182,8 @@ with mlflow.start_run(run_name="best-model"):
     optimizer = dspy.MIPROv2(metric=metric, auto="medium")
     optimized = optimizer.compile(program, trainset=trainset)
 
-    # Log as an MLflow model
-    mlflow.dspy.log_model(optimized, "qa-model")
+    # Log as an MLflow model (use name= keyword, not positional)
+    mlflow.dspy.log_model(optimized, name="qa-model")
 
     # Register in the model registry
     mlflow.register_model(
@@ -186,13 +197,15 @@ with mlflow.start_run(run_name="best-model"):
 ```python
 import mlflow
 
-# Load the latest version
+# Load the latest version — returns the native dspy.Module
 model = mlflow.dspy.load_model("models:/production-qa/latest")
 result = model(question="What is your return policy?")
 
 # Load a specific version
 model_v2 = mlflow.dspy.load_model("models:/production-qa/2")
 ```
+
+> `mlflow.dspy.load_model()` returns the native `dspy.Module`. Use `mlflow.pyfunc.load_model()` if you need the PyFunc-wrapped version for REST serving via `mlflow models serve`.
 
 ### Model aliases
 
@@ -209,16 +222,6 @@ client.set_registered_model_alias("production-qa", "champion", version=2)
 # Load by alias in production code
 model = mlflow.dspy.load_model("models:/production-qa@champion")
 ```
-
-## MLflow UI features
-
-The MLflow UI at `http://localhost:5000` provides:
-
-- **Traces tab**: waterfall view of every DSPy call with full details
-- **Experiments tab**: compare runs by parameters and metrics
-- **Models tab**: versioned models with alias management
-- **Artifacts viewer**: browse saved program files, configs, and outputs
-- **Latency breakdown**: per-step timing for identifying bottlenecks
 
 ## MLflow vs Langtrace vs W&B Weave
 

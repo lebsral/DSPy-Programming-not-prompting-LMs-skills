@@ -7,6 +7,14 @@ description: Use Arize Phoenix for DSPy tracing and evaluation. Use when you wan
 
 Guide the user through setting up Arize Phoenix for DSPy tracing, visualization, and evaluation.
 
+## Step 1 — Gather context
+
+Ask the user before generating any setup code:
+
+1. **Local or cloud?** Local mode runs the Phoenix UI at `http://localhost:6006` with no account — ideal for development. Cloud mode sends traces to the Arize platform for persistent storage and team collaboration (needs an API key).
+2. **Tracing only or also evals?** Do you need just trace visualization, or also automated quality scoring with Phoenix's `llm_classify`?
+3. **What is your DSPy pipeline doing?** (e.g., RAG with `dspy.Retrieve`, simple LM calls, multi-step agent) — RAG pipelines get the most value from Phoenix because retrieval and LM spans are shown side by side.
+
 ## What is Arize Phoenix
 
 Phoenix is an open-source LLM observability platform that runs locally or in the cloud. It provides a trace viewer, evaluation tools, and dataset management — all with DSPy auto-instrumentation via the OpenInference plugin.
@@ -193,6 +201,7 @@ Want DSPy tracing?
 2. **Using the old `DSPyInstrumentor().instrument()` pattern instead of `register(auto_instrument=True)`.** The `register` function from `phoenix.otel` is the current recommended approach — it auto-discovers and instruments all installed OpenInference packages. Manual `DSPyInstrumentor().instrument()` still works but misses LiteLLM spans.
 3. **Forgetting `px.launch_app()` before `register()` in local mode.** Without `px.launch_app()`, there is no local collector to receive traces. Call `px.launch_app()` first, then `register()`. In cloud mode, set `PHOENIX_COLLECTOR_ENDPOINT` instead.
 4. **Traces missing metadata for filtering.** Without `using_attributes`, all traces look identical in the UI. Wrap DSPy calls in `using_attributes(session_id=..., user_id=..., tags=[...])` to make traces filterable and attributable.
+5. **litellm version constraint may be needed.** Phoenix DSPy integration docs pin `litellm<1.82.7` for compatibility with `openinference-instrumentation-litellm`. If Claude installs the latest litellm and token counts are missing from traces, pin the version: `pip install 'litellm<1.82.7'`.
 
 ## Cross-references
 

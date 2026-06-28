@@ -7,8 +7,28 @@
 Enables automatic tracing for all DSPy calls. Must be called before any DSPy code executes.
 
 ```python
-mlflow.dspy.autolog()
+mlflow.dspy.autolog(
+    log_traces=True,
+    log_traces_from_compile=False,
+    log_traces_from_eval=True,
+    log_compiles=False,
+    log_evals=False,
+    disable=False,
+    silent=False,
+)
 ```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `log_traces` | `bool` | `True` | Enable trace collection during DSPy inference |
+| `log_traces_from_compile` | `bool` | `False` | Capture traces during optimizer compile() calls |
+| `log_traces_from_eval` | `bool` | `True` | Capture traces when running DSPy Evaluate |
+| `log_compiles` | `bool` | `False` | Record optimization metadata per compile run |
+| `log_evals` | `bool` | `False` | Record evaluation call information |
+| `disable` | `bool` | `False` | Turn off autologging without removing the call |
+| `silent` | `bool` | `False` | Suppress MLflow event logs and warnings |
+
+Set `log_traces_from_compile=True` to trace every LM call made during optimization — useful for debugging optimizer behavior but generates large trace volumes.
 
 Captures: LM calls (prompt, response, tokens, latency), retrievals (query, passages), module steps (input/output), cost estimates, errors.
 
@@ -18,17 +38,21 @@ Logs a DSPy module as an MLflow model artifact. Serializes using cloudpickle.
 
 ```python
 mlflow.dspy.log_model(
-    dspy_model,      # The DSPy Module instance
-    name,            # Artifact name (e.g., "qa-model")
-    input_example=None,  # Example input for signature inference
+    dspy_model,                      # The DSPy Module instance
+    name="qa-model",                 # Artifact path name (use keyword)
+    input_example=None,              # Example input for signature inference
+    registered_model_name=None,      # Register directly in the registry if set
+    use_dspy_model_save=False,       # Use dspy.Module.save() instead of cloudpickle
 )
 ```
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `dspy_model` | `dspy.Module` | The DSPy module to log |
-| `name` | `str` | Artifact path name |
-| `input_example` | `dict \| None` | Optional example input for schema inference |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `dspy_model` | `dspy.Module` | required | The DSPy module to log |
+| `name` | `str` | `None` | Artifact path name — use as keyword arg, not positional |
+| `input_example` | `dict \| None` | `None` | Example input for schema inference |
+| `registered_model_name` | `str \| None` | `None` | Register directly in the model registry if provided |
+| `use_dspy_model_save` | `bool` | `False` | Use native `dspy.Module.save()` instead of cloudpickle serialization |
 
 Returns model info with `model_uri` for retrieval.
 
@@ -37,14 +61,15 @@ Returns model info with `model_uri` for retrieval.
 Loads a logged DSPy model.
 
 ```python
-model = mlflow.dspy.load_model(model_uri)
+model = mlflow.dspy.load_model(model_uri, dst_path=None)
 ```
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `model_uri` | `str` | MLflow model URI (e.g., `"runs:/<run_id>/model"` or `"models:/name@alias"`) |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `model_uri` | `str` | required | MLflow model URI (e.g., `"runs:/<run_id>/model"` or `"models:/name@alias"`) |
+| `dst_path` | `str \| None` | `None` | Local directory for downloaded artifacts (must exist if provided) |
 
-Returns the native DSPy module (not a PyFunc wrapper).
+Returns the native `dspy.Module` (not a PyFunc wrapper). Use `mlflow.pyfunc.load_model()` for the PyFunc-wrapped version needed by `mlflow models serve`.
 
 ## mlflow.dspy.save_model()
 

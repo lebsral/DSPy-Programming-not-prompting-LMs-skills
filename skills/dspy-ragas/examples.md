@@ -5,9 +5,9 @@
 ```python
 import dspy
 from ragas import evaluate, EvaluationDataset, SingleTurnSample
-from ragas.metrics import (
+from ragas.metrics.collections import (
     Faithfulness,
-    AnswerRelevancy,
+    ResponseRelevancy,   # was AnswerRelevancy in ragas <0.4
     ContextPrecision,
     ContextRecall,
 )
@@ -61,7 +61,7 @@ dataset = EvaluationDataset(samples=samples)
 # Run Ragas evaluation
 result = evaluate(
     dataset=dataset,
-    metrics=[Faithfulness(), AnswerRelevancy(), ContextPrecision(), ContextRecall()],
+    metrics=[Faithfulness(), ResponseRelevancy(), ContextPrecision(), ContextRecall()],
 )
 
 print("Ragas Evaluation Results:")
@@ -79,7 +79,7 @@ print(f"  Context Recall:    {result['context_recall']:.2f}")
 ```python
 import pandas as pd
 from ragas import evaluate, EvaluationDataset, SingleTurnSample
-from ragas.metrics import Faithfulness, ContextRecall, ContextPrecision
+from ragas.metrics.collections import Faithfulness, ContextRecall, ContextPrecision
 
 # After collecting samples from your pipeline...
 result = evaluate(
@@ -124,7 +124,7 @@ else:
 import dspy
 from dspy.evaluate import Evaluate
 from ragas import evaluate as ragas_evaluate, EvaluationDataset, SingleTurnSample
-from ragas.metrics import Faithfulness, AnswerRelevancy, ContextRecall
+from ragas.metrics.collections import Faithfulness, ResponseRelevancy, ContextRecall
 
 dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
 
@@ -141,7 +141,7 @@ baseline_dspy_score = evaluator(baseline_rag)
 baseline_samples = collect_ragas_samples(baseline_rag, devset)
 baseline_ragas = ragas_evaluate(
     dataset=EvaluationDataset(samples=baseline_samples),
-    metrics=[Faithfulness(), AnswerRelevancy(), ContextRecall()],
+    metrics=[Faithfulness(), ResponseRelevancy(), ContextRecall()],
 )
 
 # --- Optimize ---
@@ -154,7 +154,7 @@ optimized_dspy_score = evaluator(optimized_rag)
 optimized_samples = collect_ragas_samples(optimized_rag, devset)
 optimized_ragas = ragas_evaluate(
     dataset=EvaluationDataset(samples=optimized_samples),
-    metrics=[Faithfulness(), AnswerRelevancy(), ContextRecall()],
+    metrics=[Faithfulness(), ResponseRelevancy(), ContextRecall()],
 )
 
 # --- Compare ---

@@ -1,6 +1,6 @@
 ---
 name: dspy-langfuse
-description: LLM observability for DSPy with Langfuse -- auto-trace every LM call, attach scores and evaluations, run annotation queues for human review, and track experiments across prompt versions. Use when you want to set up Langfuse, langfuse.com, openinference-instrumentation-dspy, trace DSPy calls, LLM observability with scores, annotation queues, or experiment tracking. Also used for langfuse setup, pip install langfuse, DSPy trace viewer, langfuse vs phoenix, langfuse vs langtrace, observe decorator with DSPy, self-hosted tracing with evaluation, production LLM monitoring with scoring.
+description: LLM observability for DSPy with Langfuse -- auto-trace every LM call, attach scores and evaluations, run annotation queues for human review, and track experiments across prompt versions. Use when you want to set up Langfuse, langfuse.com, openinference-instrumentation-dspy, DSPyInstrumentor, trace DSPy calls, LLM observability with scores, annotation queues, or experiment tracking. Also used for langfuse setup, pip install langfuse, DSPy trace viewer, langfuse vs phoenix, langfuse vs langtrace, observe decorator with DSPy, self-hosted tracing with evaluation, production LLM monitoring with scoring.
 ---
 
 # Langfuse -- LLM Observability and Evaluation for DSPy
@@ -254,7 +254,7 @@ Want DSPy observability?
 - **Claude calls `DSPyInstrumentor().instrument()` after `dspy.configure()` and DSPy calls.** The instrumentor must be activated before any DSPy module runs. Calls made before instrumentation are not captured. Always instrument first, then configure DSPy, then run modules.
 - **Claude hardcodes `LANGFUSE_BASE_URL` to US cloud for all users.** Langfuse has region-specific endpoints: US (`us.cloud.langfuse.com`), EU (`cloud.langfuse.com`), Japan (`jp.cloud.langfuse.com`), HIPAA (`hipaa.cloud.langfuse.com`), and self-hosted URLs. Always ask the user which region or instance they use, or read it from environment variables rather than hardcoding.
 - **Claude creates a new `get_client()` instance in every function.** `get_client()` returns a singleton -- calling it multiple times is safe but unnecessary clutter. Call it once at module level or in setup, then reuse the reference.
-- **Traces not appearing? Enable debug mode.** Set `export LANGFUSE_DEBUG="True"` to get verbose logging that shows whether traces are being sent and any API errors. This is the fastest way to diagnose missing traces.
+- **Claude skips debug-mode guidance when traces are missing.** When a user reports no traces appearing, Claude jumps straight to re-checking configuration rather than directing them to set `export LANGFUSE_DEBUG="True"` first. Debug mode prints every API call and error to stdout and is almost always the fastest diagnosis path — recommend it before asking users to re-audit credentials or instrumentation order.
 
 ## Cross-references
 

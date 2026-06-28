@@ -1,6 +1,6 @@
 ---
 name: dspy-ragas
-description: Use Ragas to evaluate DSPy RAG pipelines with decomposed metrics. Use when you want to evaluate RAG quality, measure faithfulness, context precision, context recall, answer relevancy, or diagnose retriever vs generator issues. Also used for ragas, pip install ragas, ragas evaluate, RAG evaluation, faithfulness metric, context precision, context recall, answer relevancy, answer correctness, decomposed RAG metrics, ragas dspy, DSPyOptimizer ragas, ragas[dspy], EvaluationDataset, ragas vs dspy.Evaluate, which RAG metric, retriever vs generator quality.
+description: Use Ragas to evaluate DSPy RAG pipelines with decomposed metrics. Use when you want to evaluate RAG quality, measure faithfulness, context precision, context recall, response relevancy, or diagnose retriever vs generator issues. Also used for ragas, pip install ragas, ragas evaluate, RAG evaluation, faithfulness metric, context precision, context recall, answer relevancy, answer correctness, decomposed RAG metrics, ragas dspy, DSPyOptimizer ragas, ragas dspy extras, EvaluationDataset, ragas vs dspy.Evaluate, which RAG metric, retriever vs generator quality.
 ---
 
 # Ragas — Decomposed RAG Evaluation for DSPy
@@ -12,20 +12,20 @@ Guide the user through evaluating DSPy RAG pipelines with Ragas, an evaluation f
 Before setting up Ragas, clarify:
 
 1. **Do you have a RAG pipeline already?** Ragas evaluates retriever + generator quality — you need a working pipeline first.
-2. **Do you have ground-truth answers?** Some metrics (Faithfulness, AnswerRelevancy) are reference-free; others (ContextPrecision, ContextRecall) need reference answers.
+2. **Do you have ground-truth answers?** Some metrics (Faithfulness, ResponseRelevancy) are reference-free; others (ContextPrecision, ContextRecall) need reference answers.
 3. **What are you diagnosing?** If you just need an accuracy score, use `dspy.Evaluate`. Ragas shines when you need to know *whether the retriever or generator* is the weak link.
 
 ## What is Ragas
 
 [Ragas](https://github.com/explodinggradients/ragas) is an open-source evaluation framework (12.9k+ GitHub stars, Apache 2.0) purpose-built for RAG pipelines. Instead of a single accuracy score, it breaks evaluation into decomposed metrics:
 
-| Metric | What it measures | Needs ground truth? | Evaluates |
-|--------|-----------------|--------------------:|-----------|
+| Metric (ragas 0.4+ class) | What it measures | Needs ground truth? | Evaluates |
+|--------------------------|-----------------|--------------------:|-----------|
 | **Faithfulness** | Is the answer grounded in retrieved context? | No | Generator |
-| **AnswerRelevancy** | Does the answer address the question? | No | Generator |
+| **ResponseRelevancy** | Does the answer address the question? | No | Generator |
 | **ContextPrecision** | Are relevant docs ranked higher? | Yes (reference) | Retriever |
 | **ContextRecall** | Did retrieval find all relevant info? | Yes (reference) | Retriever |
-| **AnswerCorrectness** | Does the answer match the reference? | Yes (reference) | End-to-end |
+| **FactualCorrectness** | Is the answer factually correct vs reference? | Yes (reference) | End-to-end |
 
 This decomposition tells you *where* your RAG pipeline fails — retriever or generator — so you know what to fix.
 
@@ -37,7 +37,7 @@ This decomposition tells you *where* your RAG pipeline fails — retriever or ge
 | **Measure overall pipeline accuracy** | `dspy.Evaluate` with SemanticF1 or exact match |
 | **Optimization objective** (BootstrapFewShot, MIPROv2) | `dspy.Evaluate` — Ragas metrics are too slow for inner-loop optimization |
 | **Evaluate before and after optimization** | Both — use `dspy.Evaluate` for the score that was optimized, Ragas for deeper analysis |
-| **Reference-free evaluation** | Ragas Faithfulness + AnswerRelevancy — no ground truth needed |
+| **Reference-free evaluation** | Ragas Faithfulness + ResponseRelevancy — no ground truth needed |
 
 **Best practice:** Use `dspy.Evaluate` with a fast metric (SemanticF1) as your optimization objective, then use Ragas for post-optimization analysis to understand *why* your pipeline performs the way it does.
 
@@ -108,31 +108,31 @@ dataset = EvaluationDataset(samples=samples)
 
 ```python
 from ragas import evaluate
-from ragas.metrics import (
+from ragas.metrics.collections import (
     Faithfulness,
-    AnswerRelevancy,
+    ResponseRelevancy,   # was AnswerRelevancy in ragas <0.4
     ContextPrecision,
     ContextRecall,
-    AnswerCorrectness,
+    FactualCorrectness,  # was AnswerCorrectness in ragas <0.4
 )
 
 # Pick metrics based on what you have
-# Without ground truth: Faithfulness + AnswerRelevancy
-# With ground truth: add ContextPrecision, ContextRecall, AnswerCorrectness
+# Without ground truth: Faithfulness + ResponseRelevancy
+# With ground truth: add ContextPrecision, ContextRecall, FactualCorrectness
 result = evaluate(
     dataset=dataset,
     metrics=[
         Faithfulness(),
-        AnswerRelevancy(),
+        ResponseRelevancy(),
         ContextPrecision(),
         ContextRecall(),
-        AnswerCorrectness(),
+        FactualCorrectness(),
     ],
 )
 
 print(result)
-# {'faithfulness': 0.87, 'answer_relevancy': 0.92, 'context_precision': 0.75,
-#  'context_recall': 0.68, 'answer_correctness': 0.81}
+# {'faithfulness': 0.87, 'response_relevancy': 0.92, 'context_precision': 0.75,
+#  'context_recall': 0.68, 'factual_correctness': 0.81}
 ```
 
 ### Step 4: Interpret results
@@ -150,11 +150,11 @@ ContextRecall low (< 0.7)?
   → Retriever misses relevant documents entirely
   → Fix: improve chunking, add more docs, try different embeddings (/ai-searching-docs)
 
-AnswerRelevancy low (< 0.8)?
+ResponseRelevancy low (< 0.8)?
   → Generator answers don't address the question
   → Fix: improve signatures, optimize with MIPROv2 (/dspy-miprov2)
 
-AnswerCorrectness low but Faithfulness high?
+FactualCorrectness low but Faithfulness high?
   → Generator is faithful to context but context is wrong
   → Focus on retriever improvements
 ```
@@ -165,26 +165,28 @@ By default Ragas uses OpenAI (`OPENAI_API_KEY`). Ragas v0.4+ supports multiple L
 
 ```python
 from ragas.llms import llm_factory
-from anthropic import Anthropic
+from openai import OpenAI  # or: from anthropic import Anthropic, etc.
 
-client = Anthropic()  # reads ANTHROPIC_API_KEY
-evaluator_llm = llm_factory("claude-sonnet-4-5-20250929", provider="anthropic", client=client)
-# or use provider="openai" with an OpenAI() client, etc.
+client = OpenAI()  # reads OPENAI_API_KEY
+evaluator_llm = llm_factory("gpt-4o-mini", client=client)
+# or Anthropic: llm_factory("claude-sonnet-4-5-20250929", client=Anthropic())
+# or LiteLLM:   llm_factory("bedrock/anthropic.claude-3-sonnet", provider="litellm", client=litellm.completion)
 
 result = evaluate(
     dataset=dataset,
-    metrics=[Faithfulness(), AnswerRelevancy()],
+    metrics=[Faithfulness(), ResponseRelevancy()],
     llm=evaluator_llm,
 )
 ```
 
-**Note:** `LangchainLLMWrapper` was deprecated in Ragas v0.3.8. If you see old examples using it, switch to `llm_factory()` instead.
+**Note:** `LangchainLLMWrapper` is legacy. If you see old examples using it, switch to `llm_factory()` instead.
 
 ## Per-sample scores
 
 Get scores for each sample to find problem areas:
 
 ```python
+from ragas.metrics.collections import Faithfulness, ContextRecall
 result = evaluate(dataset=dataset, metrics=[Faithfulness(), ContextRecall()])
 
 # Convert to pandas DataFrame
@@ -207,7 +209,7 @@ pip install "ragas[dspy]"
 ```
 
 ```python
-from ragas.metrics import Faithfulness
+from ragas.metrics.collections import Faithfulness
 from ragas.integrations.dspy import DSPyOptimizer
 
 # Optimize the Faithfulness metric's internal prompts
@@ -239,13 +241,15 @@ This is advanced — only needed if Ragas's default metrics don't align well wit
 
 1. **Ragas metrics call an LLM** — each metric makes multiple LLM calls per sample. A 100-sample evaluation with 5 metrics = ~500 LLM calls. Budget for the cost.
 2. **Don't use Ragas as an optimizer objective** — it's too slow for inner-loop optimization. Use DSPy's built-in metrics for `compile()`, then Ragas for analysis.
-3. **ContextPrecision and ContextRecall need ground truth** — if you don't have reference answers, use Faithfulness + AnswerRelevancy (reference-free).
-4. **Claude uses deprecated Ragas APIs from older tutorials.** Ragas has had multiple breaking changes: v0.2 introduced `EvaluationDataset`/`SingleTurnSample` (replacing `Dataset` from `datasets`), v0.3.8 deprecated `LangchainLLMWrapper`, and v0.4 migrated metrics to a new BasePrompt architecture. If Claude generates code using `Dataset`, `LangchainLLMWrapper`, or `ground_truths`, it is using deprecated APIs. Always use `EvaluationDataset`, `SingleTurnSample`, and `llm_factory()`.
+3. **ContextPrecision and ContextRecall need ground truth** — if you do not have reference answers, use Faithfulness + ResponseRelevancy (reference-free).
+4. **Claude uses deprecated Ragas APIs from older tutorials.** Ragas 0.4 made three breaking changes: (1) metric imports moved from `ragas.metrics` to `ragas.metrics.collections` — `from ragas.metrics import Faithfulness` now triggers `DeprecationWarning` and will break in v1.0; always use `from ragas.metrics.collections import Faithfulness`; (2) metric class renames — `AnswerRelevancy` → `ResponseRelevancy`, `AnswerCorrectness` → `FactualCorrectness`; (3) `EvaluationDataset`/`SingleTurnSample` replaced the `datasets.Dataset` approach. If Claude generates code using `Dataset`, `LangchainLLMWrapper`, `ground_truths`, or `from ragas.metrics import MetricName`, it is using deprecated APIs.
 5. **Claude installs `ragas` without checking the version.** Ragas v0.4+ has significant API changes from v0.2/v0.3. Pin the version in requirements (`ragas>=0.4`) to avoid mixing old and new APIs.
 
 ## Additional resources
 
-- [Ragas documentation](https://docs.ragas.io/)
+- [Ragas quickstart — RAG evaluation](https://docs.ragas.io/en/stable/getstarted/rag_eval/)
+- [Ragas available metrics](https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/)
+- [Ragas custom LLM configuration](https://docs.ragas.io/en/stable/howtos/customizations/customize_models/)
 - [Ragas GitHub](https://github.com/explodinggradients/ragas)
 - For API details, see [reference.md](reference.md)
 - For worked examples, see [examples.md](examples.md)

@@ -14,7 +14,7 @@ Before recommending VizPy, clarify:
 1. **Classification or generation?** — ContraPromptOptimizer is for classification (fixed categories), PromptGradOptimizer is for generation (open-ended text). This determines which optimizer to use.
 2. **Already tried DSPy native optimizers?** — If not, start with GEPA or MIPROv2 first. VizPy is best as a comparison or when native optimizers plateau.
 3. **Data privacy constraints?** — VizPy is SaaS — training data is sent to their servers. If data cannot leave the network, use GEPA instead.
-4. **How many optimization runs do they need?** — Free tier allows 10 runs/month. Beyond that requires Pro ($20/mo).
+4. **How many optimization runs do they need?** — Free tier allows 10 runs/month. Pro allows 200 runs/month ($20/mo). Enterprise allows 1,000 runs/month ($200/mo).
 
 ## What is VizPy
 
@@ -30,7 +30,8 @@ Both optimize the **instruction string only** — the same limitation as `dspy.G
 | Tier | Optimization runs/month | Cost |
 |------|------------------------|------|
 | Free | 10 | $0 |
-| Pro | Unlimited | $20/mo |
+| Pro | 200 | $20/mo |
+| Enterprise | 1,000 | $200/mo |
 
 ## When to use VizPy
 
@@ -87,13 +88,18 @@ trainset = [
     # ... 50+ examples recommended
 ]
 
-# 3. Define a metric
-def metric(example, prediction, trace=None):
-    return prediction.label.lower() == example.label.lower()
+# 3. Define a metric — must return vizpy.Score, not plain float or bool
+def vizpy_metric(example, prediction, trace=None):
+    correct = prediction.label.lower() == example.label.lower()
+    return vizpy.Score(
+        value=1.0 if correct else 0.0,
+        is_success=correct,
+        feedback="" if correct else f"Expected '{example.label}', got '{prediction.label}'.",
+    )
 
 # 4. Optimize with VizPy
-optimizer = vizpy.ContraPromptOptimizer(metric=metric)
-optimized = optimizer.compile(classify, trainset=trainset)
+optimizer = vizpy.ContraPromptOptimizer(metric=vizpy_metric)
+optimized = optimizer.optimize(classify, train_examples=trainset)
 
 # 5. Use the optimized program
 result = optimized(text="This exceeded my expectations!")
@@ -144,11 +150,16 @@ def metric(example, prediction, trace=None):
         gold_summary=example.summary,
         predicted_summary=prediction.summary,
     )
-    return result.score
+    correct = float(result.score) >= 0.7
+    return vizpy.Score(
+        value=float(result.score),
+        is_success=correct,
+        feedback="" if correct else f"Quality score {result.score:.2f} below threshold.",
+    )
 
 # 4. Optimize with VizPy
 optimizer = vizpy.PromptGradOptimizer(metric=metric)
-optimized = optimizer.compile(summarize, trainset=trainset)
+optimized = optimizer.optimize(summarize, train_examples=trainset)
 
 # 5. Use
 result = optimized(article="New article text...")
@@ -190,19 +201,26 @@ Want instruction-only optimization?
 
 ## Switching between VizPy and GEPA
 
-VizPy optimizers are drop-in replacements for GEPA — same `.compile()` interface:
+VizPy optimizers produce standard DSPy programs — `save()`, `load()`, and `Evaluate` all work identically after optimization. The optimizer API differs slightly from GEPA:
 
 ```python
-# With GEPA
-optimizer = dspy.GEPA(metric=metric, auto="light")
+# With GEPA — uses .compile(), standard DSPy metric (dict with score + feedback)
+def gepa_metric(gold, pred, trace=None, **kw):
+    correct = pred.label.lower() == gold.label.lower()
+    return {"score": float(correct), "feedback": "" if correct else f"Expected '{gold.label}'."}
+
+optimizer = dspy.GEPA(metric=gepa_metric, auto="light")
 optimized = optimizer.compile(program, trainset=trainset)
 
-# With VizPy ContraPrompt (swap one line)
-optimizer = vizpy.ContraPromptOptimizer(metric=metric)
-optimized = optimizer.compile(program, trainset=trainset)
+# With VizPy ContraPrompt — uses .optimize(), vizpy.Score metric
+def vizpy_metric(example, pred, trace=None):
+    correct = pred.label.lower() == example.label.lower()
+    return vizpy.Score(value=float(correct), is_success=correct,
+                       feedback="" if correct else f"Expected '{example.label}'.")
+
+optimizer = vizpy.ContraPromptOptimizer(metric=vizpy_metric)
+optimized = optimizer.optimize(program, train_examples=trainset)
 ```
-
-The optimized program is a standard DSPy program either way — `save()`, `load()`, and `Evaluate` all work identically.
 
 ## Important limitations
 
@@ -212,16 +230,19 @@ The optimized program is a standard DSPy program either way — `save()`, `load(
 
 3. **No offline mode** — requires internet access and a valid API key.
 
-4. **Free tier limits** — 10 optimization runs per month. Each `.compile()` call counts as one run.
+4. **Free tier limits** — 10 optimization runs per month. Each `.optimize()` call counts as one run.
 
 ## Verifying the optimization
 
-After running `.compile()`, compare baseline vs optimized:
+After running `.optimize()`, compare baseline vs optimized. Note: `dspy.Evaluate` expects a float metric, not a `vizpy.Score` — extract `.value`:
 
 ```python
 from dspy.evaluate import Evaluate
 
-evaluator = Evaluate(devset=devset, metric=metric, num_threads=4)
+# Wrap vizpy_metric for dspy.Evaluate (extracts the float .value)
+eval_metric = lambda ex, pred, trace=None: vizpy_metric(ex, pred).value
+
+evaluator = Evaluate(devset=devset, metric=eval_metric, num_threads=4)
 
 # Baseline
 baseline_score = evaluator(program)
@@ -237,15 +258,16 @@ If the optimized score is not higher, the instruction change may not help this t
 
 ## Gotchas
 
+- **Claude writes a plain float or bool VizPy metric.** VizPy metrics must return `vizpy.Score(value=float, is_success=bool, feedback=str)` — not a plain `float`, `bool`, or dict. Without `feedback`, ContraPrompt cannot generate contrastive improvement rules and optimization silently degrades. Standard DSPy metrics and GEPA dict metrics are not compatible. Always use `vizpy.Score`.
 - **Claude uses VizPy for few-shot demo optimization.** VizPy only tunes the instruction string, not demos. If the user needs demos, use `dspy.BootstrapFewShot` or `dspy.MIPROv2` first, then layer VizPy on top for instruction tuning.
 - **Claude picks ContraPromptOptimizer for generation tasks.** ContraPrompt is designed for classification (fixed categories). For open-ended generation (summaries, articles, Q&A), use PromptGradOptimizer instead.
 - **Claude skips the evaluation step after VizPy optimization.** Without comparing baseline vs optimized scores on a held-out devset, there is no way to know if VizPy helped. Always run `dspy.Evaluate` before and after.
-- **Claude forgets `vizpy.api_key` or `VIZPY_API_KEY`.** VizPy is SaaS and requires authentication. Without the API key set, `.compile()` fails with a confusing auth error. Set it before any optimizer calls.
+- **Claude forgets `vizpy.api_key` or `VIZPY_API_KEY`.** VizPy is SaaS and requires authentication. Without the API key set, `.optimize()` fails with a confusing auth error. Set it before any optimizer calls.
 - **Claude recommends VizPy without mentioning the data privacy implication.** Training data is sent to VizPy servers during optimization. Always ask about data sensitivity before recommending VizPy over the fully local GEPA alternative.
 
 ## Additional resources
 
-- [VizPy docs](https://vizpy.vizops.ai)
+- [VizPy docs](https://vizpy-docs.vizops.ai)
 - [VizPy dashboard](https://vizpy.vizops.ai/dashboard)
 - For API details, see [reference.md](reference.md)
 - For worked examples comparing VizPy and GEPA side-by-side, see [examples.md](examples.md)

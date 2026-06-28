@@ -1,33 +1,42 @@
-[
-  {
-    "prompt": "I want to run DSPy with a local model. I have Ollama installed with llama3.1. How do I connect DSPy to it?",
-    "expected_output": "Configures dspy.LM with ollama_chat provider and sets num_ctx",
-    "assertions": [
-      "Uses dspy.LM('ollama_chat/llama3.1', ...) not dspy.OllamaLocal",
-      "Sets api_base='http://localhost:11434'",
-      "Sets api_key='' (empty string, required by LiteLLM)",
-      "Sets num_ctx explicitly (not relying on Ollama 4096 default)",
-      "Calls dspy.configure(lm=lm) to set as default"
-    ]
-  },
-  {
-    "prompt": "My DSPy prompts are getting silently truncated when using Ollama. The outputs seem cut off and wrong. What is going on?",
-    "expected_output": "Diagnoses the Ollama 4096 default context window issue",
-    "assertions": [
-      "Identifies that Ollama defaults to 4096 token context window regardless of model capacity",
-      "Shows how to set num_ctx to a larger value (e.g., 8192 or 16384)",
-      "Mentions that DSPy prompts with few-shot demos can easily exceed 4096 tokens",
-      "Notes that larger num_ctx requires more VRAM and may cause OOM errors"
-    ]
-  },
-  {
-    "prompt": "I want to use different sized local models for different parts of my DSPy pipeline — a small fast model for classification and a bigger model for generation. How do I set this up with Ollama?",
-    "expected_output": "Sets up multi-model pipeline with set_lm() per predictor",
-    "assertions": [
-      "Creates two dspy.LM instances with different Ollama models (e.g., llama3.2:3b and llama3.1:8b)",
-      "Uses set_lm() to assign different models to different predictors",
-      "Sets appropriate num_ctx for each model size",
-      "Both LM instances point to the same Ollama api_base"
-    ]
-  }
-]
+{
+  "skill_name": "dspy-ollama",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I want to run DSPy with a local model. I have Ollama installed with llama3.1. How do I connect DSPy to it?",
+      "expected_output": "Configures dspy.LM with ollama_chat provider and sets num_ctx",
+      "files": [],
+      "assertions": [
+        {"name": "uses_ollama_chat_provider", "description": "Uses dspy.LM('ollama_chat/llama3.1', ...) not dspy.OllamaLocal"},
+        {"name": "sets_api_base", "description": "Sets api_base='http://localhost:11434'"},
+        {"name": "sets_empty_api_key", "description": "Sets api_key='' (empty string, required by LiteLLM)"},
+        {"name": "sets_num_ctx", "description": "Sets num_ctx explicitly rather than relying on Ollama 4096 default"},
+        {"name": "calls_dspy_configure", "description": "Calls dspy.configure(lm=lm) to set as default"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "My DSPy prompts are getting silently truncated when using Ollama. The outputs seem cut off and wrong. What is going on?",
+      "expected_output": "Diagnoses the Ollama 4096 default context window issue",
+      "files": [],
+      "assertions": [
+        {"name": "identifies_4096_default", "description": "Identifies that Ollama defaults to 4096 token context window regardless of model capacity"},
+        {"name": "shows_num_ctx_fix", "description": "Shows how to set num_ctx to a larger value (e.g., 8192 or 16384)"},
+        {"name": "mentions_dspy_prompt_size", "description": "Mentions that DSPy prompts with few-shot demos can easily exceed 4096 tokens"},
+        {"name": "warns_about_vram", "description": "Notes that larger num_ctx requires more VRAM and may cause OOM errors"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I want to use different sized local models for different parts of my DSPy pipeline — a small fast model for classification and a bigger model for generation. How do I set this up with Ollama?",
+      "expected_output": "Sets up multi-model pipeline with set_lm() per predictor",
+      "files": [],
+      "assertions": [
+        {"name": "creates_two_lm_instances", "description": "Creates two dspy.LM instances with different Ollama models (e.g., llama3.2:3b and llama3.1:8b)"},
+        {"name": "uses_set_lm", "description": "Uses set_lm() to assign different models to different predictors"},
+        {"name": "sets_appropriate_num_ctx", "description": "Sets appropriate num_ctx for each model size"},
+        {"name": "same_api_base", "description": "Both LM instances point to the same Ollama api_base"}
+      ]
+    }
+  ]
+}

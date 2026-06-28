@@ -36,6 +36,14 @@ Do NOT use LangWatch when:
 - Your team already uses W&B for experiment tracking — see `/dspy-weave`
 - You need a model registry and full ML lifecycle — see `/dspy-mlflow`
 
+## Step 1 — Gather context
+
+Before setting up, clarify:
+
+1. **Cloud or self-hosted?** Cloud (`app.langwatch.ai`) is quickest; self-hosted (Docker Compose or Kubernetes Helm) for data sovereignty.
+2. **What do you need?** Auto-tracing only, optimizer progress tracking only, or both?
+3. **Which optimizers?** The optimizer tracking integration supports `BootstrapFewShot`, `BootstrapFewShotWithRandomSearch`, `COPRO`, and `MIPROv2`. Other optimizers raise `ValueError`.
+
 ## Setup
 
 ### Install
@@ -74,7 +82,7 @@ export LANGWATCH_ENDPOINT="http://localhost:5560"
 
 #### Helm chart (Kubernetes)
 
-LangWatch provides a Helm chart for production Kubernetes deployments. See the [LangWatch docs](https://langwatch.ai/docs/self-hosting) for Helm values and configuration.
+LangWatch provides a Helm chart for production Kubernetes deployments. See the [LangWatch Helm docs](https://langwatch.ai/docs/self-hosting/deployment/kubernetes-helm) for Helm values and configuration.
 
 ## Integration 1: Auto-Tracing (Inference)
 
@@ -95,6 +103,7 @@ Use `@langwatch.trace()` and `autotrack_dspy()` to automatically capture all DSP
 import langwatch
 import dspy
 
+langwatch.setup()  # reads LANGWATCH_API_KEY from env; add endpoint_url= for self-hosted
 dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 @langwatch.trace()
@@ -114,6 +123,7 @@ result = answer_question("What is DSPy?")
 import langwatch
 import dspy
 
+langwatch.setup()  # call once at startup
 dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 
 class RAGPipeline(dspy.Module):
@@ -142,6 +152,8 @@ result = handle_query("How do refunds work?")
 ### Adding metadata to traces
 
 ```python
+# langwatch.setup() already called at startup
+
 @langwatch.trace()
 def handle_query(user_id, question):
     trace = langwatch.get_current_trace()
@@ -269,10 +281,11 @@ What do you need?
 
 ## Gotchas
 
-1. **Claude forgets to call `autotrack_dspy()` inside the traced function.** The `@langwatch.trace()` decorator creates the trace context, but DSPy auto-tracking only activates when you call `langwatch.get_current_trace().autotrack_dspy()` inside the function body. Without it, you get an empty trace with no DSPy spans.
-2. **Claude puts `autotrack_dspy()` outside the `@langwatch.trace()` function.** The `autotrack_dspy()` call must be inside the decorated function where a trace context exists. Calling it at module level or before the trace starts raises an error because there is no current trace.
-3. **Claude calls `langwatch.dspy.init()` after `optimizer.compile()`.** The `init()` call must come before `compile()` — it patches the optimizer to stream progress. If called after, no progress data is captured. Always: create optimizer, call `langwatch.dspy.init(experiment=..., optimizer=...)`, then call `optimizer.compile()`.
-4. **Claude reuses the same experiment name across runs.** Each `langwatch.dspy.init(experiment=...)` call should use a unique experiment name so runs appear as separate entries in the dashboard. Reusing names overwrites or merges data, making comparison impossible.
+1. **Claude skips `langwatch.setup()` entirely.** `langwatch.setup()` must be called once at startup before any `@langwatch.trace()` or `langwatch.dspy.init()` call. It initializes the SDK, reads `LANGWATCH_API_KEY` from the environment, and (for self-hosted) configures the endpoint via `endpoint_url=` or `LANGWATCH_ENDPOINT`. Without it, traces are silently dropped. To verify setup is working, run a traced function and check [app.langwatch.ai](https://app.langwatch.ai) for a new trace — if nothing appears within 30 seconds, `LANGWATCH_API_KEY` is missing or `langwatch.setup()` was skipped.
+2. **Claude forgets to call `autotrack_dspy()` inside the traced function.** The `@langwatch.trace()` decorator creates the trace context, but DSPy auto-tracking only activates when you call `langwatch.get_current_trace().autotrack_dspy()` inside the function body. Without it, you get an empty trace with no DSPy spans.
+3. **Claude puts `autotrack_dspy()` outside the `@langwatch.trace()` function.** The `autotrack_dspy()` call must be inside the decorated function where a trace context exists. Calling it at module level or before the trace starts raises an error because there is no current trace.
+4. **Claude calls `langwatch.dspy.init()` after `optimizer.compile()`.** The `init()` call must come before `compile()` — it patches the optimizer to stream progress. If called after, no progress data is captured. Always: create optimizer, call `langwatch.dspy.init(experiment=..., optimizer=...)`, then call `optimizer.compile()`.
+5. **Claude reuses the same experiment name across runs.** Each `langwatch.dspy.init(experiment=...)` call should use a unique experiment name so runs appear as separate entries in the dashboard. Reusing names overwrites or merges data, making comparison impossible.
 
 ## Additional resources
 

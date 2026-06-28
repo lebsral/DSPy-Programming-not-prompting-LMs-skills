@@ -53,7 +53,7 @@ for q in questions:
 ## Trace with custom metadata for production filtering
 
 ```python
-from langtrace_python_sdk import langtrace, with_langtrace_root_span
+from langtrace_python_sdk import langtrace, with_langtrace_root_span, inject_additional_attributes
 
 langtrace.init(api_key="your-key")
 
@@ -65,12 +65,15 @@ bot = SupportBot()
 
 @with_langtrace_root_span("support-request")
 def handle_support(user_id, plan, question):
-    langtrace.inject_additional_attributes({
-        "user_id": user_id,
-        "plan": plan,
-        "source": "api",
-    })
-    return bot(question=question)
+    # inject_additional_attributes wraps the call and tags its span
+    return inject_additional_attributes(
+        lambda: bot(question=question),
+        {
+            "user_id": user_id,
+            "plan": plan,
+            "source": "api",
+        }
+    )
 
 # In production, filter traces by plan="enterprise" to debug issues for key accounts
 result = handle_support("user-123", "enterprise", "How do I set up SSO?")

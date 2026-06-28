@@ -1,36 +1,45 @@
-[
-  {
-    "prompt": "I want to serve Llama 3.1 70B for my DSPy app in production. I have 2x A100-80GB GPUs.",
-    "expected_output": "A vLLM server command with tensor-parallel-size 2, prefix caching enabled, and DSPy connection code using dspy.LM with openai/ prefix and api_base",
-    "assertions": [
-      "uses vllm serve with --tensor-parallel-size 2",
-      "includes --enable-prefix-caching for DSPy workloads",
-      "connects DSPy with dspy.LM('openai/meta-llama/...', api_base=..., api_key='none')",
-      "does NOT use the deprecated dspy.HFClientVLLM",
-      "includes api_key parameter set to a non-empty string",
-      "suggests --gpu-memory-utilization around 0.9"
-    ]
-  },
-  {
-    "prompt": "Set up vLLM for running MIPROv2 optimization with a local Llama model on my RTX 4090",
-    "expected_output": "vLLM server config for a single GPU with high concurrency settings, DSPy optimization code connecting to vLLM",
-    "assertions": [
-      "recommends an 8B or 13B model that fits in 24GB VRAM (RTX 4090)",
-      "includes --max-num-seqs 256 or similar for optimizer parallel requests",
-      "includes --enable-prefix-caching",
-      "connects DSPy with dspy.LM and openai/ prefix, not HFClientVLLM",
-      "shows MIPROv2 compile call using the vLLM-backed LM"
-    ]
-  },
-  {
-    "prompt": "I develop with Ollama on my Mac but want to deploy with vLLM to our GPU server",
-    "expected_output": "A dual-config pattern using environment variables to switch between Ollama (dev) and vLLM (prod), showing that optimized DSPy programs transfer between backends",
-    "assertions": [
-      "does NOT recommend vLLM for macOS — uses Ollama for local dev",
-      "shows environment-based switching between ollama_chat/ and openai/ providers",
-      "explains that optimized programs (instructions + demos) transfer between backends",
-      "includes vLLM production config with api_base and api_key='none'",
-      "mentions program.save and program.load for transferring optimized programs"
-    ]
-  }
-]
+{
+  "skill_name": "dspy-vllm",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I want to serve Llama 3.1 70B for my DSPy app in production. I have 2x A100-80GB GPUs.",
+      "expected_output": "A vLLM server command with tensor-parallel-size 2, prefix caching enabled, and DSPy connection code using dspy.LM with openai/ prefix and api_base",
+      "files": [],
+      "assertions": [
+        {"name": "uses_tensor_parallel_size", "description": "Uses vllm serve with --tensor-parallel-size 2 for dual-GPU setup"},
+        {"name": "includes_prefix_caching", "description": "Includes --enable-prefix-caching for DSPy few-shot workloads"},
+        {"name": "uses_dspy_lm_openai_prefix", "description": "Connects DSPy with dspy.LM using openai/ prefix and api_base pointing to the /v1 endpoint"},
+        {"name": "no_deprecated_hfclientvllm", "description": "Does NOT use the deprecated dspy.HFClientVLLM class"},
+        {"name": "includes_api_key_param", "description": "Includes api_key parameter set to a non-empty string such as 'none'"},
+        {"name": "recommends_gpu_memory_utilization", "description": "Suggests --gpu-memory-utilization around 0.9 or 0.92"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Set up vLLM for running MIPROv2 optimization with a local Llama model on my RTX 4090",
+      "expected_output": "vLLM server config for a single GPU with high concurrency settings, DSPy optimization code connecting to vLLM",
+      "files": [],
+      "assertions": [
+        {"name": "recommends_small_model_for_rtx4090", "description": "Recommends an 8B or 13B model that fits in 24GB VRAM rather than a 70B model"},
+        {"name": "includes_max_num_seqs_for_optimizer", "description": "Includes --max-num-seqs 256 or similar to handle the optimizer parallel requests"},
+        {"name": "includes_prefix_caching_for_demos", "description": "Includes --enable-prefix-caching so shared few-shot demo tokens are cached across optimizer calls"},
+        {"name": "uses_openai_prefix_not_deprecated", "description": "Connects DSPy with dspy.LM and openai/ prefix, not the removed HFClientVLLM"},
+        {"name": "shows_miprov2_compile", "description": "Shows MIPROv2 compile call using the vLLM-backed LM"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I develop with Ollama on my Mac but want to deploy with vLLM to our GPU server",
+      "expected_output": "A dual-config pattern using environment variables to switch between Ollama (dev) and vLLM (prod), showing that optimized DSPy programs transfer between backends",
+      "files": [],
+      "assertions": [
+        {"name": "no_vllm_for_macos", "description": "Does NOT recommend installing or running vLLM on macOS — routes macOS users to Ollama"},
+        {"name": "env_based_switching", "description": "Shows environment-based switching between ollama_chat/ provider for dev and openai/ provider for prod"},
+        {"name": "explains_program_transfer", "description": "Explains that optimized DSPy programs (instructions and demos) transfer between backends without retraining"},
+        {"name": "vllm_prod_config_with_api_key", "description": "Includes vLLM production config with api_base pointing to /v1 and api_key set to a non-empty string"},
+        {"name": "shows_save_load", "description": "Mentions program.save and program.load for persisting and loading optimized programs across environments"}
+      ]
+    }
+  ]
+}

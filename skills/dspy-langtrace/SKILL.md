@@ -1,11 +1,17 @@
 ---
 name: dspy-langtrace
-description: Use Langtrace for DSPy observability and tracing. Use when you want to set up Langtrace, langtrace-python-sdk, auto-instrument DSPy, trace DSPy calls, LLM observability, app.langtrace.ai, or self-hosted tracing. Also used for langtrace setup, langtrace API key, pip install langtrace-python-sdk, DSPy tracing, auto-instrument DSPy, langtrace self-hosted, langtrace docker, trace LM calls, langtrace vs phoenix, langtrace cloud.
+description: Use Langtrace for DSPy observability and tracing with langtrace.init() auto-instrumentation. Use when you want to set up Langtrace, langtrace-python-sdk, auto-instrument DSPy, trace DSPy calls, LLM observability, app.langtrace.ai, or self-hosted tracing. Also used for langtrace.init, with_langtrace_root_span, langtrace setup, langtrace API key, pip install langtrace-python-sdk, DSPy tracing, auto-instrument DSPy, langtrace self-hosted, langtrace docker, trace LM calls, langtrace vs phoenix, langtrace cloud.
 ---
 
 # Langtrace — Open-Source LLM Observability for DSPy
 
 Guide the user through setting up Langtrace for automatic DSPy tracing and observability.
+
+## Before you start
+
+Ask the user (skip if already clear from context):
+- **Cloud or self-hosted?** Cloud (`app.langtrace.ai`) needs only an API key; self-hosted (Docker) keeps all data on your infrastructure.
+- **Inference tracing only, or experiment tracking too?** Experiment tracking during optimization runs uses `inject_additional_attributes` to tag each optimizer trial.
 
 ## What is Langtrace
 
@@ -67,6 +73,8 @@ result = program(question="What is DSPy?")
 # View traces at app.langtrace.ai
 ```
 
+**Verify it works**: Open `app.langtrace.ai` (or your self-hosted URL), go to your project, and confirm a trace appeared for the call above within ~30 seconds. If no trace shows up, the most common cause is `langtrace.init()` being called after `import dspy` — see Gotcha 1.
+
 ### Self-hosted setup (Docker)
 
 For teams that need data to stay on-premises:
@@ -83,9 +91,10 @@ Then point your SDK at your local instance:
 ```python
 from langtrace_python_sdk import langtrace
 
-langtrace.init(api_host="http://localhost:3000")
+langtrace.init(api_host="http://localhost:3000/api/trace")
 
 # All traces go to your self-hosted instance
+# Replace localhost:3000 with your own DNS/IP for non-local deployments
 ```
 
 ### Environment variable configuration
@@ -93,7 +102,7 @@ langtrace.init(api_host="http://localhost:3000")
 ```bash
 export LANGTRACE_API_KEY="your-key"           # Cloud API key
 # OR
-export LANGTRACE_API_HOST="http://localhost:3000"  # Self-hosted URL
+export LANGTRACE_API_HOST="http://localhost:3000/api/trace"  # Self-hosted URL
 ```
 
 ```python
@@ -165,19 +174,21 @@ The Langtrace dashboard shows:
 
 ### Adding custom attributes
 
-Tag traces with metadata for filtering:
+Tag traces with metadata for filtering. `inject_additional_attributes` is a **standalone function** (not a method on `langtrace`) that wraps a callable and attaches the attribute dict to the resulting span:
 
 ```python
-from langtrace_python_sdk import langtrace, with_langtrace_root_span
+from langtrace_python_sdk import langtrace, with_langtrace_root_span, inject_additional_attributes
 
 @with_langtrace_root_span("customer-query")
 def handle_query(user_id, question):
-    # Custom attributes appear in the UI for filtering
-    langtrace.inject_additional_attributes({
-        "user_id": user_id,
-        "environment": "production",
-    })
-    return pipeline(question=question)
+    # inject_additional_attributes wraps the call and tags the span
+    return inject_additional_attributes(
+        lambda: pipeline(question=question),
+        {
+            "user_id": user_id,
+            "environment": "production",
+        }
+    )
 ```
 
 ## Langtrace vs Phoenix vs Jaeger

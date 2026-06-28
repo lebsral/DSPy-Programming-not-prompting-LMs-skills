@@ -7,6 +7,17 @@ description: Use Qdrant as a vector database with DSPy, or connect any vector DB
 
 Guide the user through setting up Qdrant with DSPy using the official `dspy-qdrant` package, plus custom retriever patterns for Pinecone, ChromaDB, and Weaviate.
 
+## Step 1 — Gather context
+
+Ask before generating setup code:
+
+1. **Vector DB** — Qdrant, Pinecone, ChromaDB, Weaviate, or something else?
+2. **Qdrant deployment** (if Qdrant) — Docker locally, Qdrant Cloud, or in-memory for testing?
+3. **Index state** — indexing documents from scratch, or connecting to an existing collection?
+4. **Search mode** — standard dense search, or hybrid (keyword + semantic combined)?
+
+Then jump to the relevant section.
+
 ## What is Qdrant
 
 [Qdrant](https://qdrant.tech/) is an open-source vector search engine written in Rust. It's the **only vector database with an official DSPy integration package** (`dspy-qdrant`). Features: hybrid search (dense + sparse), payload filtering, multi-tenancy, and horizontal scaling.
@@ -181,6 +192,18 @@ result = rag(question="How do refunds work?")
 print(result.answer)
 ```
 
+## Verify retrieval is working
+
+Before wiring retrieval into a RAG pipeline, run a sanity check:
+
+```python
+result = retriever("your test query here")
+assert len(result.passages) > 0, "Empty results — check document_field matches your payload schema"
+print(result.passages[0][:300])  # Top passage should be semantically relevant to the query
+```
+
+Empty results: likely a `document_field` mismatch (gotcha #2). Irrelevant results: query vectorizer does not match the model used when indexing (gotcha #4).
+
 ## Hybrid search (dense + sparse)
 
 Qdrant supports hybrid search combining dense (semantic) and sparse (keyword) vectors in the same collection. This improves recall for queries that need both semantic understanding and exact keyword matching.
@@ -340,7 +363,7 @@ Need hybrid search (keyword + semantic)?
 
 ## Additional resources
 
-- [Qdrant documentation](https://qdrant.tech/documentation/)
+- [Qdrant DSPy integration guide](https://qdrant.tech/documentation/frameworks/dspy/)
 - [dspy-qdrant GitHub](https://github.com/qdrant/dspy-qdrant)
 - [Qdrant hybrid search guide](https://qdrant.tech/documentation/search/hybrid-queries/)
 - [dspy.Embeddings API docs](https://dspy.ai/api/tools/Embeddings/)

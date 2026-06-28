@@ -17,9 +17,11 @@ import langwatch
 
 langwatch.setup(
     api_key=None,           # defaults to LANGWATCH_API_KEY env var
+    project_id=None,        # required for service API keys; reads LANGWATCH_PROJECT_ID env var
     endpoint_url=None,      # defaults to https://app.langwatch.ai (or LANGWATCH_ENDPOINT env var)
     base_attributes=None,   # dict of attributes applied to all spans
     instrumentors=None,     # list of automatic instrumentors
+    tracer_provider=None,   # existing OpenTelemetry TracerProvider to integrate with
     debug=False,            # enable debug logging
     disable_sending=False,  # prevent trace transmission (for testing)
     flush_on_exit=True,     # auto-flush spans on program exit
@@ -29,8 +31,11 @@ langwatch.setup(
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `api_key` | `str \| None` | env `LANGWATCH_API_KEY` | LangWatch API key |
+| `project_id` | `str \| None` | env `LANGWATCH_PROJECT_ID` | Required for service API keys |
 | `endpoint_url` | `str \| None` | `https://app.langwatch.ai` | LangWatch endpoint (set for self-hosted) |
 | `base_attributes` | `dict \| None` | `None` | Attributes applied to all spans |
+| `instrumentors` | `Sequence \| None` | `None` | Automatic instrumentors (e.g., `OpenAIInstrumentor`) |
+| `tracer_provider` | `TracerProvider \| None` | `None` | Existing OpenTelemetry provider to integrate with |
 | `debug` | `bool` | `False` | Enable debug logging |
 | `disable_sending` | `bool` | `False` | Disable trace transmission |
 | `flush_on_exit` | `bool` | `True` | Auto-flush on program exit |
@@ -105,8 +110,15 @@ langwatch.dspy.init(
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `experiment` | `str` | Experiment name (appears in dashboard) |
-| `optimizer` | DSPy optimizer | The optimizer instance to track |
+| `experiment` | `str` | Experiment name (appears in dashboard; use unique names per run) |
+| `optimizer` | `Teleprompter \| None` | DSPy optimizer instance to patch for progress streaming |
+| `evaluator` | `Evaluate \| None` | DSPy `Evaluate` instance to track (alternative to `optimizer`) |
+| `run_id` | `str \| None` | Custom run ID (auto-generated if omitted) |
+| `slug` | `str \| None` | URL-friendly identifier for the experiment |
+| `workflow_id` | `str \| None` | Associate run with a LangWatch workflow |
+| `workflow_version_id` | `str \| None` | Pin run to a specific workflow version |
+
+`optimizer` and `evaluator` are mutually exclusive — pass one or the other.
 
 Must be called **before** `optimizer.compile()`. The dashboard shows live scores, predictor states, LM calls, cost, and progress.
 

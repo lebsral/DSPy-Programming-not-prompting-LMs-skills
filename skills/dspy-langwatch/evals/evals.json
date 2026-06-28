@@ -1,9 +1,11 @@
 [
   {
+    "id": 0,
     "prompt": "I want to trace my DSPy pipeline so I can see what prompts and responses are being sent. How do I set up LangWatch for auto-tracing?",
     "expected_output": "Sets up LangWatch auto-tracing with @langwatch.trace() and autotrack_dspy()",
     "assertions": [
       "Includes pip install langwatch",
+      "Calls langwatch.setup() before using @langwatch.trace()",
       "Uses @langwatch.trace() decorator on the function that calls DSPy",
       "Calls langwatch.get_current_trace().autotrack_dspy() inside the decorated function",
       "Sets LANGWATCH_API_KEY as an environment variable",
@@ -11,6 +13,7 @@
     ]
   },
   {
+    "id": 1,
     "prompt": "I am running MIPROv2 optimization and it takes 30 minutes. I want to watch the progress live instead of just waiting. How do I do that with LangWatch?",
     "expected_output": "Sets up LangWatch optimizer tracking with langwatch.dspy.init()",
     "assertions": [
@@ -21,6 +24,7 @@
     ]
   },
   {
+    "id": 2,
     "prompt": "I want to compare BootstrapFewShot vs MIPROv2 for my DSPy pipeline and see which gives better results. Can I track both in LangWatch?",
     "expected_output": "Runs multiple optimizer experiments with different names in LangWatch",
     "assertions": [

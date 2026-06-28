@@ -8,6 +8,7 @@ This example optimizes the same sentiment classifier with both GEPA and VizPy Co
 
 ```python
 import dspy
+import vizpy
 from dspy.evaluate import Evaluate
 
 dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
@@ -25,12 +26,34 @@ trainset = [
 ]
 
 devset = trainset[:20]  # hold out for evaluation (use separate data in practice)
+```
 
-# Metric
-def metric(example, prediction, trace=None):
+### Metrics (different format for each optimizer)
+
+VizPy requires `vizpy.Score`. GEPA requires a dict. Both can share an underlying correctness check:
+
+```python
+def _correct(example, prediction):
     return prediction.sentiment.strip().lower() == example.sentiment.strip().lower()
 
-evaluator = Evaluate(devset=devset, metric=metric, num_threads=4, display_table=5)
+# For VizPy optimization
+def vizpy_metric(example, prediction, trace=None):
+    correct = _correct(example, prediction)
+    return vizpy.Score(
+        value=1.0 if correct else 0.0,
+        is_success=correct,
+        feedback="" if correct else f"Expected '{example.sentiment}', got '{prediction.sentiment}'.",
+    )
+
+# For GEPA optimization
+def gepa_metric(gold, pred, trace=None, **kw):
+    correct = _correct(gold, pred)
+    return {"score": float(correct), "feedback": "" if correct else f"Expected '{gold.sentiment}'."}
+
+# For dspy.Evaluate (must return float, not vizpy.Score)
+eval_metric = lambda ex, pred, trace=None: float(_correct(ex, pred))
+
+evaluator = Evaluate(devset=devset, metric=eval_metric, num_threads=4, display_table=5)
 ```
 
 ### Baseline
@@ -43,11 +66,6 @@ print(f"Baseline: {baseline_score:.1f}%")
 ### Optimize with GEPA
 
 ```python
-def gepa_metric(gold, pred, trace=None, pred_name=None, pred_trace=None):
-    score = float(pred.sentiment.strip().lower() == gold.sentiment.strip().lower())
-    feedback = "" if score == 1.0 else f"Expected '{gold.sentiment}', got '{pred.sentiment}'."
-    return {"score": score, "feedback": feedback}
-
 gepa = dspy.GEPA(
     metric=gepa_metric,
     reflection_lm=dspy.LM("openai/gpt-4o", temperature=1.0, max_tokens=4096),
@@ -62,10 +80,8 @@ print(f"GEPA: {gepa_score:.1f}%")
 ### Optimize with VizPy
 
 ```python
-import vizpy
-
-vizpy_optimizer = vizpy.ContraPromptOptimizer(metric=metric)
-vizpy_optimized = vizpy_optimizer.compile(classify, trainset=trainset)
+vizpy_optimizer = vizpy.ContraPromptOptimizer(metric=vizpy_metric)
+vizpy_optimized = vizpy_optimizer.optimize(classify, train_examples=trainset)
 
 vizpy_score = evaluator(vizpy_optimized)
 print(f"VizPy: {vizpy_score:.1f}%")
@@ -92,7 +108,8 @@ else:
 
 | Aspect | GEPA | VizPy ContraPrompt |
 |--------|------|--------------------|
-| Metric format | Returns `{"score": float, "feedback": str}` | Returns float (standard DSPy metric) |
+| Metric format | Returns `{"score": float, "feedback": str}` | Returns `vizpy.Score(value, is_success, feedback)` |
+| Optimizer method | `.compile(program, trainset=trainset)` | `.optimize(module, train_examples=trainset)` |
 | Requires | `reflection_lm` (strong model) | VizPy API key |
 | Runs locally | Yes (LM calls only) | No (SaaS optimization) |
 | Budget control | `auto="light"/"medium"/"heavy"` | Runs count against monthly quota |

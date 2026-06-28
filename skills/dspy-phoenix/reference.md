@@ -1,4 +1,4 @@
-> Condensed from [Phoenix DSPy docs](https://arize.com/docs/phoenix/integrations/python/dspy/dspy-tracing) and [Phoenix quickstart](https://arize.com/docs/phoenix/quickstart). Verify against upstream for latest.
+> Condensed from [Phoenix DSPy integration docs](https://arize.com/docs/phoenix/integrations/python/dspy/dspy-tracing). Verify against upstream for latest.
 
 # Arize Phoenix — API Reference for DSPy
 

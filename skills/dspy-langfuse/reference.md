@@ -1,4 +1,6 @@
 > Condensed from [Langfuse DSPy integration docs](https://langfuse.com/docs/integrations/dspy) and [Langfuse Python SDK docs](https://langfuse.com/docs/sdk/python/decorators). Verify against upstream for latest.
+>
+> Verified against: langfuse 4.12.0, openinference-instrumentation-dspy 0.1.37, dspy 3.2.1. The `get_client()` / `observe` / `propagate_attributes` API requires langfuse >= 3.0 (current Python SDK is v4).
 
 # Langfuse DSPy Integration — API Reference
 
@@ -48,7 +50,7 @@ Creates a traced observation around a function.
 ```python
 from langfuse import observe
 
-@observe(name=None, capture_input=True, capture_output=True)
+@observe(name=None, as_type="span", capture_input=True, capture_output=True)
 def my_function():
     pass
 ```
@@ -56,6 +58,7 @@ def my_function():
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `name` | `str \| None` | function name | Custom observation name |
+| `as_type` | `str \| None` | `"span"` | Observation type -- `"span"`, `"generation"`, `"tool"`, etc. |
 | `capture_input` | `bool` | `True` | Capture function input arguments |
 | `capture_output` | `bool` | `True` | Capture function return value |
 
@@ -72,6 +75,8 @@ with propagate_attributes(
     tags=["production"],
     metadata={"key": "value"},
     version="1.0",
+    trace_name="my-trace",   # optional label for the root trace
+    as_baggage=False,        # set True to propagate via HTTP headers (distributed tracing)
 ):
     # DSPy calls here inherit these attributes
     result = program(question="...")
@@ -84,6 +89,8 @@ with propagate_attributes(
 | `tags` | `list[str] \| None` | `None` | Tags for filtering and organization |
 | `metadata` | `dict \| None` | `None` | Arbitrary key-value metadata |
 | `version` | `str \| None` | `None` | Version identifier |
+| `trace_name` | `str \| None` | `None` | Label for the root trace shown in the dashboard |
+| `as_baggage` | `bool` | `False` | Propagate attributes via HTTP headers for distributed tracing |
 
 ## Scoring
 

@@ -1,6 +1,6 @@
 # Qdrant + DSPy API Reference
 
-> Condensed from [github.com/qdrant/dspy-qdrant](https://github.com/qdrant/dspy-qdrant) and [dspy.ai/api/tools/Embeddings](https://dspy.ai/api/tools/Embeddings/). Verify against upstream for latest.
+> Condensed from [github.com/qdrant/dspy-qdrant](https://github.com/qdrant/dspy-qdrant), [qdrant.tech/documentation/frameworks/dspy](https://qdrant.tech/documentation/frameworks/dspy/), and [dspy.ai/api/tools/Embeddings](https://dspy.ai/api/tools/Embeddings/). Verify against upstream for latest.
 
 ## QdrantRM
 
@@ -52,11 +52,13 @@ Thin proxy that delegates to whatever retriever is configured via `dspy.configur
 
 ```python
 dspy.Embeddings(
-    corpus,                    # list[str] -- required, passages to search
-    embedder,                  # Callable -- required, embedding function
-    k=5,                       # int -- top results to return
+    corpus,                       # list[str] -- required, passages to search
+    embedder,                     # Callable -- required, embedding function
+    k=5,                          # int -- top results to return
     brute_force_threshold=20000,  # int -- FAISS activates above this
-    normalize=True,            # bool -- normalize embeddings
+    normalize=True,               # bool -- normalize embeddings
+    cache=False,                  # bool -- cache embedding calls
+    callbacks=None,               # list[Any] | None -- optional callbacks
 )
 ```
 
@@ -67,12 +69,15 @@ dspy.Embeddings(
 | `k` | `int` | `5` | Number of top results |
 | `brute_force_threshold` | `int` | `20000` | Corpus size above which FAISS indexing activates |
 | `normalize` | `bool` | `True` | Whether to normalize embeddings |
+| `cache` | `bool` | `False` | Cache embedding calls to avoid recomputing |
+| `callbacks` | `list[Any] \| None` | `None` | Optional callback functions |
 
 ### Key Methods
 
 - `forward(query)` — returns `dspy.Prediction(passages=[...], indices=[...])`
-- `save(path)` — persist embeddings and FAISS index
-- `Embeddings.from_saved(path, embedder)` — load without recomputing
+- `save(path)` — persist embeddings and FAISS index to disk
+- `load(path, embedder)` — load saved embeddings into the current instance (in-place)
+- `Embeddings.from_saved(path, embedder)` — class method; creates a new instance from saved data
 
 Use `dspy.Embeddings` for simple in-memory retrieval without a vector DB. Use QdrantRM when you need persistence, filtering, hybrid search, or scale.
 

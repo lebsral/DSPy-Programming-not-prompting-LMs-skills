@@ -7,17 +7,25 @@ description: Use W&B Weave for DSPy experiment tracking and observability. Use w
 
 Guide the user through setting up W&B Weave for tracing DSPy calls, tracking optimization experiments, and collaborating with team dashboards.
 
+## Before you start
+
+Ask yourself (or the user):
+
+1. Are you already using W&B for ML experiments or do you need to create an account?
+2. Do you need auto-tracing of all DSPy calls, selective tracing of specific functions, or both?
+3. Is this for a team with shared dashboards, or a solo project?
+
 ## What is W&B Weave
 
 Weave is Weights & Biases' LLM observability and experiment tracking product. It provides cloud-hosted dashboards for tracing function calls, comparing optimization runs, and sharing results across teams.
 
 - **Cloud-hosted**: Dashboards at [wandb.ai](https://wandb.ai)
-- **Manual instrumentation**: Uses `@weave.op()` decorator (not auto-instrument like Langtrace)
+- **Dual instrumentation**: Auto-traces all DSPy calls out of the box; also supports `@weave.op()` for custom non-DSPy functions
 - **Team collaboration**: shared projects, comments, and run comparisons
 
 ### Key difference from Langtrace/Phoenix
 
-Weave uses a **manual decorator** (`@weave.op()`) — you choose which functions to trace. Langtrace and Phoenix auto-instrument all DSPy calls. This gives Weave more control over what gets tracked but requires more setup.
+Weave auto-instruments DSPy (like Langtrace) — once you call `weave.init()`, all DSPy modules, signatures, and optimizer runs are traced automatically. Weave also supports manual `@weave.op()` decorators for tracing non-DSPy functions. The main differentiator is the W&B experiment comparison dashboard and team collaboration features.
 
 ## When to use Weave
 
@@ -26,14 +34,13 @@ Use Weave when:
 - Your team already uses W&B for ML experiments
 - You want cloud-hosted dashboards with team collaboration
 - You want to track and compare optimization runs side-by-side
-- You need fine-grained control over which functions are traced
+- You need both auto-tracing (DSPy) and selective tracing (custom functions)
 
 Do NOT use Weave when:
 
-- You want auto-instrumentation with zero code changes — see `/dspy-langtrace`
 - You want a free, local-only trace viewer — see `/dspy-phoenix`
 - You need the full ML lifecycle (model registry, deployment) — see `/dspy-mlflow`
-- You're a solo developer who doesn't need team features — Langtrace or Phoenix is simpler
+- You are a solo developer who does not need team features — Langtrace or Phoenix is simpler
 
 ## Setup
 
@@ -43,35 +50,16 @@ Do NOT use Weave when:
 pip install weave
 ```
 
-### Initialize
+### Initialize (auto-tracing for DSPy)
 
-```python
-import weave
-
-weave.init("my-dspy-project")  # Creates project at wandb.ai
-
-# You'll be prompted to log in on first run
-# Or set WANDB_API_KEY environment variable
-```
-
-### Environment variable configuration
-
-```bash
-export WANDB_API_KEY="your-key"          # From wandb.ai/settings
-export WANDB_ENTITY="your-team"          # Optional: team name
-export WANDB_PROJECT="my-dspy-project"   # Optional: project name
-```
-
-## Tracing with @weave.op()
-
-The `@weave.op()` decorator traces a function's inputs, outputs, latency, and cost:
+For DSPy projects, just call `weave.init()` — all DSPy modules, signatures, and optimizer runs are traced automatically:
 
 ```python
 import weave
 import dspy
 
-weave.init("my-dspy-project")
-dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-sonnet-4-5-20250929", etc.
+weave.init("my-dspy-project")  # Creates project at wandb.ai; auto-traces all DSPy calls
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))  # or "anthropic/claude-3-5-sonnet", etc.
 
 class QABot(dspy.Module):
     def __init__(self):
@@ -83,37 +71,49 @@ class QABot(dspy.Module):
         return self.answer(context=context, question=question)
 
 bot = QABot()
-
-@weave.op()
-def handle_question(question: str) -> str:
-    """Traced by Weave — inputs, outputs, and latency logged."""
-    result = bot(question=question)
-    return result.answer
-
-# Every call is tracked at wandb.ai
-answer = handle_question("How do refunds work?")
+# Every DSPy call is automatically traced — no decorators needed
+answer = bot(question="How do refunds work?")
 ```
 
-### Tracing multiple functions
+You will be prompted to log in on first run, or set `WANDB_API_KEY` as an environment variable.
 
-Decorate each function you want to trace:
+### Environment variable configuration
+
+```bash
+export WANDB_API_KEY="your-key"          # From wandb.ai/settings
+export WANDB_ENTITY="your-team"          # Optional: team name
+export WANDB_PROJECT="my-dspy-project"   # Optional: project name
+```
+
+## Tracing custom functions with @weave.op()
+
+For non-DSPy code (custom preprocessing, business logic, API calls), use `@weave.op()` to add manual tracing. The decorator captures inputs, outputs, latency, and cost:
 
 ```python
 @weave.op()
-def retrieve_context(question: str) -> list[str]:
-    return dspy.Retrieve(k=3)(question).passages
-
-@weave.op()
-def generate_answer(context: list[str], question: str) -> str:
-    cot = dspy.ChainOfThought("context, question -> answer")
-    return cot(context=context, question=question).answer
-
-@weave.op()
 def handle_question(question: str) -> str:
-    context = retrieve_context(question)
-    return generate_answer(context, question)
+    """Traced by Weave — includes DSPy sub-calls automatically."""
+    result = bot(question=question)
+    return result.answer
 
-# Weave shows the call tree: handle_question -> retrieve_context, generate_answer
+# Weave shows the call tree: handle_question -> QABot.forward -> ChainOfThought
+answer = handle_question("How do refunds work?")
+```
+
+### Tracing multiple custom functions
+
+```python
+@weave.op()
+def fetch_user_context(user_id: str) -> dict:
+    return db.query("SELECT * FROM users WHERE id = ?", user_id)
+
+@weave.op()
+def handle_question(user_id: str, question: str) -> str:
+    ctx = fetch_user_context(user_id)  # non-DSPy step, manually traced
+    result = bot(question=question)     # DSPy step, auto-traced
+    return result.answer
+
+# Weave shows the full call tree including both custom and DSPy steps
 ```
 
 ## Tracking optimization experiments
@@ -176,55 +176,58 @@ run_optimization("bootstrap", "openai/gpt-4o-mini", "n/a")
 
 | Feature | W&B Weave | Langtrace | Arize Phoenix |
 |---------|-----------|-----------|---------------|
-| Instrumentation | Manual (`@weave.op()`) | Auto (one line) | Auto (plugin) |
-| Setup effort | Decorator per function | One line | Two lines + launch |
+| DSPy instrumentation | Auto (`weave.init()`) | Auto (one line) | Auto (plugin) |
+| Custom function tracing | Manual (`@weave.op()`) | Auto | Auto |
 | Cloud dashboard | Yes (wandb.ai) | Yes (app.langtrace.ai) | Yes (Arize platform) |
 | Local/self-hosted | No | Yes (Docker) | Yes (`px.launch_app()`) |
 | Team collaboration | Yes (built-in) | Basic | Basic |
 | Experiment comparison | Yes (side-by-side) | No | No |
 | Built-in evals | Basic | Basic | Yes (evals module) |
 | Cost | Free tier + paid plans | Free tier + paid | Free (open source) |
-| Best for | Teams on W&B, experiment tracking | DSPy-first auto-tracing | Local trace viewer + evals |
+| Best for | Teams on W&B, experiment comparison | Lightweight auto-tracing | Local trace viewer + evals |
 
 ### Decision guide
 
 ```
 Want DSPy observability?
 |
-+- Team already uses W&B? -> Weave
-+- Want auto-instrumentation (no decorators)? -> Langtrace (/dspy-langtrace)
++- Team already uses W&B or need experiment comparison? -> Weave
++- Want the simplest setup with no W&B account? -> Langtrace (/dspy-langtrace)
 +- Want local-only + built-in evals? -> Phoenix (/dspy-phoenix)
 +- Need full ML lifecycle (registry, deploy)? -> MLflow (/dspy-mlflow)
 ```
 
 ## Verifying the setup
 
-After initializing Weave and adding `@weave.op()` decorators, run one traced call and confirm it appears in the dashboard:
+After calling `weave.init()`, run a DSPy call and confirm it appears in the dashboard:
 
 ```python
-# Quick smoke test
-@weave.op()
-def smoke_test(x: str) -> str:
-    return x.upper()
+import weave
+import dspy
 
-result = smoke_test("hello")
-print(f"Check your project at https://wandb.ai — look for the smoke_test call")
+weave.init("smoke-test")
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
+
+predict = dspy.Predict("question -> answer")
+result = predict(question="What is 2+2?")
+print(f"Check your project at https://wandb.ai — look for the Predict call in Traces")
 ```
 
-If the call does not appear: check `WANDB_API_KEY` is set, confirm `weave.init()` was called before the decorated function, and verify network access to wandb.ai.
+If the call does not appear: check `WANDB_API_KEY` is set, confirm `weave.init()` was called before any DSPy calls, and verify network access to wandb.ai.
 
 ## Gotchas
 
 - **Claude puts `@weave.op()` on the DSPy module class instead of the calling function.** Weave decorators trace regular functions, not DSPy module classes. Decorate the function that *calls* the module, not the module itself. `@weave.op()` goes on `handle_question()`, not on `QABot`.
 - **Claude calls `weave.init()` inside a function instead of at module level.** `weave.init()` must run once at startup, before any `@weave.op()` decorated functions are called. Placing it inside a request handler creates a new project per call and fragments your traces.
 - **Claude forgets to set `WANDB_API_KEY` in deployment environments.** Local development prompts for login interactively, but production (Docker, CI, serverless) needs the environment variable explicitly set. Always include `WANDB_API_KEY` in environment configuration for non-local setups.
-- **Claude auto-instruments everything instead of using selective decorators.** Unlike Langtrace/Phoenix, Weave traces only what you decorate. Claude sometimes tries to add a global "trace all DSPy calls" setup that does not exist. Each function needs its own `@weave.op()` decorator.
+- **Claude adds unnecessary `@weave.op()` to every DSPy module.** DSPy calls are auto-traced once `weave.init()` is called — no decorators needed on `dspy.Module` subclasses. Reserve `@weave.op()` for non-DSPy custom functions (preprocessing, database calls, business logic) that you also want in the trace tree.
 - **Claude nests `@weave.op()` and DSPy decorators incorrectly.** If combining with other decorators, `@weave.op()` should be the outermost decorator so it captures the full function execution including any inner decorator behavior.
 
 ## Additional resources
 
 - [W&B Weave docs](https://docs.wandb.ai/weave/)
-- [weave.op() reference](https://docs.wandb.ai/weave/reference/python-sdk/weave/)
+- [DSPy integration guide](https://docs.wandb.ai/weave/guides/integrations/dspy)
+- [Weave Python SDK reference](https://docs.wandb.ai/weave/reference/python-sdk/)
 - [W&B dashboard](https://wandb.ai)
 - For API details, see [reference.md](reference.md)
 - For worked examples, see [examples.md](examples.md)
@@ -233,7 +236,7 @@ If the call does not appear: check `WANDB_API_KEY` is set, confirm `weave.init()
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
-- **Langtrace** (auto-instrumentation, easiest setup) — `/dspy-langtrace`
+- **Langtrace** (auto-instrumentation, no W&B account needed) — `/dspy-langtrace`
 - **Arize Phoenix** (open-source with evals) — `/dspy-phoenix`
 - **MLflow** (full ML lifecycle) — `/dspy-mlflow`
 - **Aggregate monitoring** — `/ai-monitoring`

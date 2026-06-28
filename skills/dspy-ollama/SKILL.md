@@ -1,15 +1,22 @@
 ---
 name: dspy-ollama
-description: Run DSPy with local models using Ollama — no API key needed. Use when you want to run DSPy locally, use Ollama, set up a local LLM, run offline, or configure local model parameters. Also used for ollama, local model, run LLM locally, llama local, self-hosted LLM, ollama serve, ollama_chat, local inference, run DSPy offline, no API key needed, ollama pull, ollama list, ollama rm, num_ctx, ollama context window, ollama GPU, OLLAMA_NUM_GPU, OLLAMA_HOST, ollama remote, ollama embeddings, nomic-embed-text, dspy.Embedder ollama, which local model, best model for ollama, ollama too slow, ollama vs vllm, develop locally deploy remotely, ollama environment variables, ollama systemd, ollama background service.
+description: Run DSPy with local models via dspy.LM and Ollama — no API key needed. Use when you want to run DSPy locally, use Ollama, set up a local LLM, run offline, or configure local model parameters. Also used for ollama, local model, run LLM locally, llama local, self-hosted LLM, ollama serve, ollama_chat, local inference, run DSPy offline, no API key needed, ollama pull, ollama list, ollama rm, num_ctx, ollama context window, ollama GPU, OLLAMA_NUM_GPU, OLLAMA_HOST, ollama remote, ollama embeddings, nomic-embed-text, dspy.Embedder ollama, which local model, best model for ollama, ollama too slow, ollama vs vllm, develop locally deploy remotely, ollama environment variables, ollama systemd, ollama background service.
 ---
 
 # Ollama — Run DSPy with Local Models
 
 Guide the user through running DSPy with local models via Ollama. No API keys, no cloud costs, full privacy.
 
+## Step 1 — Gather context
+
+Before diving in, confirm:
+1. **Model**: Do you have a specific model in mind (e.g., `llama3.1:8b`, `qwen2.5:7b`), or do you need a recommendation based on your hardware?
+2. **Location**: Is Ollama running locally, or on a remote GPU server you want to point DSPy at?
+3. **Task**: Classification, RAG, optimization, or general pipelines? (This affects context window and model recommendations.)
+
 ## What is Ollama
 
-[Ollama](https://ollama.com/) is a local LLM runner (166k+ GitHub stars) that wraps llama.cpp. It downloads, manages, and serves models locally with a simple CLI. DSPy connects to it through LiteLLM's `ollama_chat/` provider.
+[Ollama](https://ollama.com/) is a local LLM runner that wraps llama.cpp. It downloads, manages, and serves models locally with a simple CLI. DSPy connects to it through LiteLLM's `ollama_chat/` provider.
 
 ## Setup
 

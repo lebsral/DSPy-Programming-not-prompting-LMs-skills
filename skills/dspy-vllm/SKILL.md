@@ -1,6 +1,6 @@
 ---
 name: dspy-vllm
-description: Use vLLM for high-throughput production serving of self-hosted models with DSPy. Use when you want production LLM serving, tensor parallelism, multi-GPU inference, batch processing, or high-concurrency self-hosted models. Also used for vllm, vLLM, production serving, high throughput LLM, tensor parallelism, self-hosted production, PagedAttention, local production server, GPU serving, batch inference, vllm serve, pip install vllm, multi-GPU LLM, speculative decoding, continuous batching, deploy local model, NVIDIA GPU serving, openai compatible server, AWQ quantization vllm, GPTQ vllm.
+description: Use vLLM for high-throughput production serving of self-hosted models with DSPy via dspy.LM with openai/ prefix and api_base. Use when you want production LLM serving, tensor parallelism, multi-GPU inference, batch processing, or high-concurrency self-hosted models. Also used for vllm, vLLM, production serving, high throughput LLM, tensor parallelism, self-hosted production, PagedAttention, local production server, GPU serving, batch inference, vllm serve, pip install vllm, multi-GPU LLM, speculative decoding, continuous batching, deploy local model, NVIDIA GPU serving, openai compatible server, AWQ quantization vllm, GPTQ vllm, dspy.LM api_base vllm, openai/ provider prefix vllm, connect DSPy to vLLM.
 ---
 
 # vLLM — High-Throughput Production Serving for DSPy
@@ -147,7 +147,10 @@ vllm serve <model> \
     --enable-prefix-caching \            # cache common prompt prefixes
     --quantization awq \                 # awq, gptq, or none
     --speculative-model <draft-model> \  # enable speculative decoding
-    --num-speculative-tokens 5           # tokens to speculate
+    --num-speculative-tokens 5 \         # tokens to speculate
+    --pipeline-parallel-size 1 \         # pipeline stages across GPUs (depth)
+    --data-parallel-size 1 \             # data parallel replicas
+    --api-key <secret>                   # require this key on all requests
 ```
 
 ### Prefix caching
