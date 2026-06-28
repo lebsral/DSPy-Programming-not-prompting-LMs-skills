@@ -105,7 +105,7 @@ If you already know DSPy and think in its vocabulary, use these API-first skills
 | `dspy.BestOfN` | [`/dspy-best-of-n`](skills/dspy-best-of-n/SKILL.md) | Rejection sampling with a reward function |
 | `dspy.Parallel` | [`/dspy-parallel`](skills/dspy-parallel/SKILL.md) | Concurrent LM calls, batch processing |
 | `dspy.Refine` | [`/dspy-refine`](skills/dspy-refine/SKILL.md) | Iterative self-improvement with feedback |
-| `dspy.RLM` | [`/dspy-rlm`](skills/dspy-rlm/SKILL.md) | Reinforcement-learning-style refinement |
+| `dspy.RLM` | [`/dspy-rlm`](skills/dspy-rlm/SKILL.md) | Recursive Language Model — explores huge contexts via a code REPL |
 | `dspy.BootstrapFewShot` | [`/dspy-bootstrap-few-shot`](skills/dspy-bootstrap-few-shot/SKILL.md) | Auto-generate few-shot demos, first optimizer to try |
 | `dspy.BootstrapFewShotWithRandomSearch` | [`/dspy-bootstrap-rs`](skills/dspy-bootstrap-rs/SKILL.md) | Random search over candidate demo sets |
 | `dspy.MIPROv2` | [`/dspy-miprov2`](skills/dspy-miprov2/SKILL.md) | Best prompt optimizer, instructions + demos jointly |
