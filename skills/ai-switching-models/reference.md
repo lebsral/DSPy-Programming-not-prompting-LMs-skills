@@ -24,19 +24,22 @@ DSPy uses the LiteLLM `"provider/model-name"` format. All providers are intercha
 [API docs](https://dspy.ai/api/models/LM/)
 
 ```python
-dspy.LM(model, *, temperature=None, max_tokens=None, cache=True,
-        num_retries=3, api_base=None, api_key=None, **kwargs)
+dspy.LM(model, model_type='chat', temperature=None, max_tokens=None, cache=True,
+        num_retries=3, callbacks=None, provider=None, **kwargs)
+# Pass api_base and api_key via **kwargs (forwarded to LiteLLM)
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `model` | `str` | required | `"provider/model-name"` string (LiteLLM format) |
+| `model_type` | `'chat' \| 'text' \| 'responses'` | `'chat'` | Interaction type. Use `'responses'` for OpenAI Responses API models |
 | `temperature` | `float \| None` | `None` | Randomness. `0.0` = deterministic. Reasoning models require `1.0` or `None` |
 | `max_tokens` | `int \| None` | `None` | Max output tokens. Reasoning models require `>= 16000` or `None` |
 | `cache` | `bool` | `True` | Cache responses — set `False` to disable |
 | `num_retries` | `int` | `3` | Retries with exponential backoff on transient failures |
-| `api_base` | `str` | — | Override API endpoint (local servers, Azure, vLLM) |
-| `api_key` | `str` | — | Override API key (use env vars instead when possible) |
+| `callbacks` | `list[BaseCallback] \| None` | `None` | Pre/post-request callback hooks (for tracing, logging) |
+| `api_base` | `str` (via `**kwargs`) | — | Override API endpoint (local servers, Azure, vLLM) |
+| `api_key` | `str` (via `**kwargs`) | — | Override API key (use env vars instead when possible) |
 
 ## dspy.configure
 

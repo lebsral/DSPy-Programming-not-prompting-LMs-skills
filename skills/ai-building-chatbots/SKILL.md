@@ -7,6 +7,18 @@ description: Build a conversational AI assistant with memory and state. Use when
 
 Guide the user through building a multi-turn chatbot that remembers context, follows conversation flows, and produces high-quality responses. Uses DSPy for optimizable response generation and LangGraph for conversation state, memory, and flow control.
 
+## When not to build a chatbot
+
+Skip multi-turn chatbot architecture when a single-turn LM call is sufficient. A user who submits a support ticket and gets a one-shot email reply does not need conversation state — use `/ai-writing-content`. A search box that returns a direct answer does not need LangGraph — use `/ai-searching-docs`. Chatbot infrastructure adds complexity that only pays off when the task genuinely requires multiple back-and-forth exchanges.
+
+| Signal | Better approach |
+|--------|----------------|
+| User submits once, expects one response | `/ai-writing-content` or single dspy.Module |
+| User searches a knowledge base | `/ai-searching-docs` (RAG without state) |
+| Bot takes actions autonomously | `/ai-taking-actions` (tool use, not chat) |
+| Multiple AI agents coordinating | `/ai-coordinating-agents` |
+| Conversation is always 1-2 turns | Plain `dspy.ChainOfThought`, no LangGraph |
+
 ## Step 1: Define the conversation
 
 Ask the user:
@@ -411,6 +423,25 @@ optimized_bot = optimizer.compile(chatbot, trainset=trainset)
 optimized_bot.save("chatbot_optimized.json")
 ```
 
+Typical gains from optimization: zero-shot baseline ~55-65% turn-level quality score; after BootstrapFewShot with 3-5 demos, ~70-80%; MIPROv2 on 50+ examples typically reaches 80-88%. Run `dspy.Evaluate` on a held-out devset before and after to confirm improvement.
+
+### Verify
+
+```python
+devset = [...]  # held-out conversation turns
+evaluator = dspy.Evaluate(devset=devset, metric=chatbot_metric, num_threads=4, display_progress=True)
+
+# Baseline
+baseline_score = evaluator(chatbot)
+print(f"Baseline: {baseline_score:.1%}")
+
+# After optimization
+optimized_score = evaluator(optimized_bot)
+print(f"Optimized: {optimized_score:.1%}")
+```
+
+Also spot-check that `result.response` does not start with "I am an AI", does not exceed 200 words, and does not repeat the user's question verbatim.
+
 ## Key patterns
 
 - **DSPy for response generation, LangGraph for flow control** — DSPy modules handle what the bot says; LangGraph handles conversation state and routing
@@ -432,6 +463,7 @@ optimized_bot.save("chatbot_optimized.json")
 ## Additional resources
 
 - For worked examples (support bot, FAQ assistant), see [examples.md](examples.md)
+- For API reference (dspy.History, dspy.Refine, LangGraph checkpointers), see [reference.md](reference.md)
 
 ## Cross-references
 

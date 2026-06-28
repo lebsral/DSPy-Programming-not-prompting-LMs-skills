@@ -46,7 +46,7 @@ import dspy
 from sqlalchemy import create_engine, inspect, text
 
 # Setup
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5", "ollama/llama3", etc.
 dspy.configure(lm=lm)
 
 engine = create_engine("postgresql://ai_reader:pass@localhost:5432/ecommerce")
@@ -229,4 +229,90 @@ trainset = [
 optimizer = dspy.MIPROv2(metric=answer_quality, auto="medium")
 optimized = optimizer.compile(qa, trainset=trainset)
 optimized.save("optimized_hr_qa.json")
+```
+
+## Example 3: Large-schema retrieval (50+ tables)
+
+For schemas with 50+ tables, use ChromaDB to embed table descriptions and retrieve only the relevant ones per query.
+
+```python
+import chromadb
+import dspy
+from sqlalchemy import create_engine, inspect
+
+engine = create_engine("postgresql://ai_reader:pass@localhost:5432/mydb")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5", etc.
+dspy.configure(lm=lm)
+
+def get_schema_description(engine, tables=None):
+    inspector = inspect(engine)
+    tables = tables or inspector.get_table_names()
+    descriptions = []
+    for table in tables:
+        columns = inspector.get_columns(table)
+        col_descs = [f"  - {c['name']} ({c['type']})" for c in columns]
+        descriptions.append(f"Table: {table}\n  Columns:\n" + "\n".join(col_descs))
+    return "\n\n".join(descriptions)
+
+def build_schema_index(engine, table_descriptions=None):
+    """Embed table descriptions into ChromaDB for semantic retrieval."""
+    client = chromadb.PersistentClient(path="./schema_index")
+    collection = client.get_or_create_collection("table_schemas")
+    inspector = inspect(engine)
+    table_descriptions = table_descriptions or {}
+
+    for table in inspector.get_table_names():
+        columns = inspector.get_columns(table)
+        col_names = [c["name"] for c in columns]
+        desc = table_descriptions.get(table, table)
+        searchable = f"{table}: {desc}. Columns: {', '.join(col_names)}"
+        collection.upsert(
+            documents=[searchable],
+            ids=[table],
+            metadatas=[{"table": table}],
+        )
+    return collection
+
+class GenerateSQL(dspy.Signature):
+    """Write a SQL SELECT query. Only use tables and columns in the schema."""
+    schema: str = dspy.InputField(desc="Database schema for relevant tables")
+    question: str = dspy.InputField(desc="User's question in plain English")
+    sql: str = dspy.OutputField(desc="SQL SELECT query (read-only, no mutations)")
+
+class InterpretResults(dspy.Signature):
+    """Convert SQL results into a clear, natural language answer."""
+    question: str = dspy.InputField(desc="The user's original question")
+    sql: str = dspy.InputField(desc="The SQL query that was run")
+    results: str = dspy.InputField(desc="Query results as a string")
+    answer: str = dspy.OutputField(desc="Natural language answer to the question")
+
+class LargeSchemaQA(dspy.Module):
+    def __init__(self, engine, schema_collection, k=5):
+        self.engine = engine
+        self.collection = schema_collection
+        self.k = k
+        self.generate_sql = dspy.ChainOfThought(GenerateSQL)
+        self.interpret = dspy.ChainOfThought(InterpretResults)
+
+    def forward(self, question):
+        # Retrieve top-k relevant table schemas via embedding similarity
+        results = self.collection.query(query_texts=[question], n_results=self.k)
+        tables = [m["table"] for m in results["metadatas"][0]]
+        schema = get_schema_description(self.engine, tables=tables)
+
+        result = self.generate_sql(schema=schema, question=question)
+        sql = result.sql.strip().rstrip(";")
+        rows = execute_query(self.engine, sql)
+        interpretation = self.interpret(
+            question=question, sql=sql, results=str(rows[:20])
+        )
+        return dspy.Prediction(sql=sql, rows=rows, answer=interpretation.answer)
+
+# Build index once
+schema_collection = build_schema_index(engine)
+
+# Query
+qa = LargeSchemaQA(engine, schema_collection, k=5)
+result = qa(question="How many active subscriptions do we have by region?")
+print(result.answer)
 ```

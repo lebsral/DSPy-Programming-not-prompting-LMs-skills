@@ -8,7 +8,7 @@ The pattern that took error rates from 40% to near-zero: identify panels first, 
 import dspy
 from pydantic import BaseModel, Field
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-haiku-4-5-20251001", etc.
 dspy.configure(lm=lm)
 
 # Step 1: Identify all panels

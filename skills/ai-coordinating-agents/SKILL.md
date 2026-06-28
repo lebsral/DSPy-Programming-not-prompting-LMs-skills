@@ -411,6 +411,21 @@ optimizer = dspy.MIPROv2(metric=team_metric, auto="medium")
 optimized_team = optimizer.compile(TeamModule(), trainset=team_trainset)
 ```
 
+### Verify improvement
+
+Run a small held-out test set through both graphs to confirm the optimization helped before deploying:
+
+```python
+from dspy.evaluate import Evaluate
+evaluator = Evaluate(devset=test_examples, metric=team_metric, num_threads=2)
+baseline_score = evaluator(TeamModule())
+optimized_score = evaluator(optimized_team)
+print(f"Baseline: {baseline_score:.1%}  →  Optimized: {optimized_score:.1%}")
+# Per-agent optimization alone typically lifts team output quality 15-30%.
+# Team-level optimization on top adds another 5-15%.
+# If the gap is under 5%, the team metric may not be discriminating enough.
+```
+
 ## When NOT to use multi-agent
 
 Multi-agent adds orchestration complexity. Consider simpler alternatives first:
@@ -443,5 +458,6 @@ Use multi-agent when you genuinely need dynamic routing (supervisor decides who 
 ## Additional resources
 
 - For worked examples (research team, support escalation), see [examples.md](examples.md)
+- For API signatures (dspy.ReAct, dspy.Refine, LangGraph StateGraph, Send), see [reference.md](reference.md)
 - [LangGraph documentation](https://docs.langchain.com/oss/python/langgraph/overview)
 - [LangGraph GitHub](https://github.com/langchain-ai/langgraph)

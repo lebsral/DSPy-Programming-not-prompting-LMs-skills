@@ -1,4 +1,4 @@
-> Condensed from [dspy.ai/api](https://dspy.ai/api/). Verify against upstream for latest.
+> Condensed from [dspy.ai/api/primitives/Image](https://dspy.ai/api/primitives/Image/). Verify against upstream for latest.
 
 # DSPy API Reference for Image Understanding
 

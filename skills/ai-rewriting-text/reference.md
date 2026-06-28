@@ -7,12 +7,13 @@
 [API docs](https://dspy.ai/api/modules/Predict/)
 
 ```python
-dspy.Predict(signature, **config)
+dspy.Predict(signature, callbacks=None, **config)
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `signature` | `str \| type[Signature]` | required | Defines inputs and outputs |
+| `callbacks` | `list[BaseCallback] \| None` | `None` | Optional instrumentation callbacks |
 
 No reasoning step. Use for rewriter and judge modules — both are direct input-to-output mappings that do not benefit from added reasoning overhead.
 
@@ -111,17 +112,20 @@ dspy.Example(
 [API docs](https://dspy.ai/api/evaluation/Evaluate/)
 
 ```python
-dspy.Evaluate(devset, metric=None, num_threads=None, display_progress=False,
-              display_table=False, max_errors=None)
+dspy.Evaluate(*, devset, metric=None, num_threads=None, display_progress=False,
+              display_table=False, max_errors=None, failure_score=0.0)
 ```
+
+All parameters are keyword-only (note the `*`). Call as `dspy.Evaluate(devset=devset, metric=...)`.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `devset` | `list[Example]` | required | Evaluation examples |
+| `devset` | `list[Example]` | required | Evaluation examples (keyword-only) |
 | `metric` | `Callable \| None` | `None` | Scoring function |
 | `num_threads` | `int \| None` | `None` | Parallel threads |
 | `display_progress` | `bool` | `False` | Show progress bar |
 | `display_table` | `bool \| int` | `False` | Show results table (`int` = row count) |
+| `failure_score` | `float` | `0.0` | Score assigned when evaluation raises an exception |
 
 Call the instance to run: `score = evaluator(module)`
 

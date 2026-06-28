@@ -11,10 +11,9 @@ Guide the user through building AI that writes articles, reports, and marketing 
 
 Ask the user:
 1. **What type of content?** (blog post, product description, report, newsletter, docs?)
-2. **What tone and voice?** (professional, casual, technical, marketing, brand-specific?)
+2. **What tone, voice, and brand rules?** (professional, casual, technical? forbidden words, required sections?)
 3. **How long?** (tweet, paragraph, 500-word post, 2000-word article?)
 4. **Does it need research?** (factual claims grounded in sources, or creative/opinion?)
-5. **Any brand guidelines?** (words to avoid, style rules, required sections?)
 
 ## Step 2: Build an outline generator
 
@@ -301,6 +300,8 @@ optimizer = dspy.BootstrapFewShot(metric=content_quality_metric, max_bootstrappe
 optimized = optimizer.compile(QualityWriter(), trainset=trainset)
 ```
 
+> Indicative benchmarks: single-call generation passes quality metric ~40% of the time. With section-by-section + critique loop: ~70–80%. After `BootstrapFewShot` with 50+ examples: ~85–90%.
+
 ## Key patterns
 
 - **Outline first, then write** — structure prevents rambling and missed points
@@ -310,6 +311,18 @@ optimized = optimizer.compile(QualityWriter(), trainset=trainset)
 - **Refine for brand rules** — `dspy.Refine` with a reward function scores output and retries when quality is low
 - **AI-as-judge for quality** — use a judge signature to score relevance, coherence, engagement
 
+## Approach selection
+
+Skip the pipeline for short content — a single `dspy.Predict` call beats a 5-step pipeline for taglines, headlines, or anything under 200 words. The outline + section-by-section overhead only pays off above that length.
+
+| Content need | Approach | Skip |
+|--------------|----------|------|
+| Short copy (< 200 words) | Single `dspy.Predict` | Entire pipeline |
+| Blog posts, reports (300+ words) | `ContentWriter` (outline + sections) | Research, critique |
+| Fact-heavy articles | `ResearchedWriter` (outline + retrieval + sections) | Critique loop if one pass is enough |
+| Brand voice enforcement | Any approach + `dspy.Refine` | Nothing |
+| Publishing quality | Full `QualityWriter` + optimize | Nothing |
+
 ## Gotchas
 
 - **Claude generates the entire article in one LM call.** Single-call generation produces rambling, repetitive content that loses focus after ~500 words. Always use section-by-section generation with an outline — write one section at a time, passing previous sections for continuity.
@@ -317,10 +330,12 @@ optimized = optimizer.compile(QualityWriter(), trainset=trainset)
 - **Claude uses `dspy.Assert`/`dspy.Suggest` for style enforcement.** These are deprecated. Use `dspy.Refine` with a reward function instead — it scores the full output and retries automatically, which works better for holistic quality checks like brand voice.
 - **Claude uses `dspy.Retrieve` for research grounding.** `dspy.Retrieve` is no longer in the DSPy API. Pass a retriever function (any `query -> list[str]` callable) to your module instead, so it works with any retrieval backend (vector DB, search API, local embeddings).
 - **Claude generates content without a quality loop.** A single generation pass rarely produces publishable content. Add a critique-improve loop (`CritiqueContent` → `ImproveContent`) with 1-2 revision rounds to catch issues a single pass misses.
+- **Claude uses this pipeline for all content tasks, even short ones.** For content under 200 words — taglines, product headlines, tweet copy — a section-by-section pipeline adds latency and complexity with no quality benefit. Recommend a single `dspy.Predict` or `dspy.ChainOfThought` call for short content. Only use the full pipeline for long-form output (300+ words).
 
 ## Additional resources
 
 - For worked examples (blog posts, product descriptions, newsletters), see [examples.md](examples.md)
+- For DSPy API quick reference (Refine, signatures, BootstrapFewShot), see [reference.md](reference.md)
 
 ## Cross-references
 

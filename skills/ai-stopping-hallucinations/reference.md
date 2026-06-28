@@ -7,7 +7,7 @@
 [API docs](https://dspy.ai/api/modules/Refine/)
 
 ```python
-dspy.Refine(module, N, reward_fn, threshold=None, **config)
+dspy.Refine(module, N, reward_fn, threshold, fail_count=None)
 ```
 
 | Parameter | Type | Default | Description |
@@ -15,7 +15,8 @@ dspy.Refine(module, N, reward_fn, threshold=None, **config)
 | `module` | `dspy.Module` | required | The module to wrap and retry |
 | `N` | `int` | required | Max number of attempts |
 | `reward_fn` | `Callable[[dict, dspy.Prediction], float]` | required | Scores each attempt 0.0 to 1.0 |
-| `threshold` | `float \| None` | `None` | Short-circuit score — stops early if reached |
+| `threshold` | `float` | required | Short-circuit score — stops early when reached |
+| `fail_count` | `int \| None` | `None` | Max allowed failures before raising an error; defaults to N |
 
 Calls the wrapped module up to `N` times. On each attempt, passes the reward score as feedback so the model can improve. Returns the highest-scoring prediction seen. If `threshold` is set, stops early when the score meets or exceeds it.
 
@@ -35,7 +36,7 @@ Use `getattr(pred, "field_name", default)` inside reward functions — if the mo
 [API docs](https://dspy.ai/api/modules/BestOfN/)
 
 ```python
-dspy.BestOfN(module, N, reward_fn, threshold=None, **config)
+dspy.BestOfN(module, N, reward_fn, threshold, fail_count=None)
 ```
 
 | Parameter | Type | Default | Description |
@@ -43,7 +44,8 @@ dspy.BestOfN(module, N, reward_fn, threshold=None, **config)
 | `module` | `dspy.Module` | required | The module to sample from |
 | `N` | `int` | required | Number of candidates to generate |
 | `reward_fn` | `Callable[[dict, dspy.Prediction], float]` | required | Scores each candidate |
-| `threshold` | `float \| None` | `None` | Minimum score to accept any candidate |
+| `threshold` | `float` | required | Minimum acceptable reward score |
+| `fail_count` | `int \| None` | `None` | Max allowed failures before raising an error; defaults to N |
 
 Always generates all `N` candidates independently (no early exit), then returns the highest-scoring one. Use when you want sampling diversity over iterative correction.
 

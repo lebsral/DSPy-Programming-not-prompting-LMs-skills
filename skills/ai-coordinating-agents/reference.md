@@ -11,7 +11,7 @@ pip install -U dspy langgraph langchain-community
 | Package | Role |
 |---------|------|
 | `dspy` 3.2.1 | Agent reasoning, signatures, optimization |
-| `langgraph` 0.2.x | Graph orchestration, routing, state |
+| `langgraph` ≥1.1.10 | Graph orchestration, routing, state |
 | `langchain-community` | Pre-built tools (search, etc.) — optional |
 
 ```python
@@ -72,7 +72,7 @@ agent = dspy.ReAct("question -> findings", tools=[search_tool], max_iters=5)
 [API docs](https://dspy.ai/api/modules/Refine/)
 
 ```python
-dspy.Refine(module, N, reward_fn, threshold=0.8)
+dspy.Refine(module, N, reward_fn, threshold, fail_count=None)
 ```
 
 | Parameter | Type | Default | Description |
@@ -80,7 +80,8 @@ dspy.Refine(module, N, reward_fn, threshold=0.8)
 | `module` | `dspy.Module` | required | Agent module to wrap |
 | `N` | `int` | required | Max retries with feedback |
 | `reward_fn` | `Callable[[args, pred], float]` | required | Scores output; 1.0 = pass |
-| `threshold` | `float` | `0.8` | Stop retrying when reward meets threshold |
+| `threshold` | `float` | required | Stop retrying when reward meets threshold |
+| `fail_count` | `int \| None` | `None` | Times module can fail before raising an error; defaults to N |
 
 ## LangGraph StateGraph — Orchestration
 

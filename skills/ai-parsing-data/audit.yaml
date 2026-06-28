@@ -1,4 +1,9 @@
-# No formal audit has been recorded for this skill yet. Run the skill-quality
-# audit against the current DSPy version, then replace last_audit with a real
-# block: {date: YYYY-MM-DD, score: N/N, versions: {dspy: X.Y.Z}}.
-last_audit: null
+last_audit:
+  date: 2026-06-28
+  score: 50/51
+  versions:
+    dspy: 3.2.1
+  notes: >
+    R3 WARN - catalog.md description not updated (out of scope per audit instructions;
+    contains the old .,  artifact from the F3 fix). Update the /ai-parsing-data entry
+    in skills/ai-do/catalog.md to match the fixed SKILL.md description.

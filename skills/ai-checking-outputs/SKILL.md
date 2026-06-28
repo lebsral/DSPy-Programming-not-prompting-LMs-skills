@@ -335,7 +335,6 @@ Exact numbers depend on task difficulty and model capability. Measure your basel
 
 - **Reward functions must return float, not bool.** `dspy.Refine` and `dspy.BestOfN` expect a float from `reward_fn(args, pred)`. Returning `True`/`False` or raising an exception will cause unexpected behavior. Always return `0.0` for failure and `1.0` (or a partial score) for success.
 - **args contains the module's input kwargs.** The `args` dict passed to `reward_fn` holds the keyword arguments the module was called with. Access them by name: `args["question"]`, `args["context"]`. Don't assume positional order.
-- **Refine vs BestOfN — pick the right one.** Use `dspy.Refine` when the model can improve given feedback from prior attempts (iterative self-correction). Use `dspy.BestOfN` when you want independent samples with no cross-contamination — e.g., creative generation where you want diverse outputs.
 - **AI-as-judge inside reward_fn multiplies LM calls.** If your reward function calls another LM to verify, each Refine/BestOfN attempt costs two LM calls. For low-stakes outputs (summaries, suggestions), regex or Pydantic checks are sufficient. Reserve AI-as-judge for high-stakes outputs.
 - **threshold=1.0 causes frequent failures on partial scores.** If your reward function returns partial scores (0.3, 0.7, etc.), a threshold of 1.0 means only perfect scores pass — Refine will retry every time. Set threshold to a realistic pass mark for your scoring scale, e.g. 0.8 for a 0–1 quality score.
 - **Don't instantiate LM modules inside reward_fn.** Creating a `dspy.Predict` or `dspy.ChainOfThought` inside the reward function creates a new module object on every call. Instantiate verification modules once at the module or class level and reference them in the closure.
@@ -357,4 +356,5 @@ Exact numbers depend on task difficulty and model capability. Measure your basel
 
 ## Additional resources
 
+- For worked examples, see [examples.md](examples.md)
 - For Refine/BestOfN API details, see [reference.md](reference.md)

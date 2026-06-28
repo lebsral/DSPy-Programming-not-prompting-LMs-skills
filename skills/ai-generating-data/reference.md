@@ -49,17 +49,18 @@ Use for the generation loop. Cheaper than `ChainOfThought` when the docstring co
 ## dspy.Refine
 
 ```python
-dspy.Refine(module, N, reward_fn, threshold)
+dspy.Refine(module, N, reward_fn, threshold, fail_count=None)
 ```
 
 Runs `module` up to `N` times, scores each output with `reward_fn`, returns the first output meeting `threshold`. Returns the best attempt if none qualify. Use as an in-loop quality gate.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `module` | `dspy.Module` | The generator module to wrap |
-| `N` | `int` | Max generation attempts per call |
-| `reward_fn` | `Callable[[dict, Prediction], float]` | Returns 0.0–1.0; receives `(args, pred)` |
-| `threshold` | `float` | Minimum score to accept (0.0–1.0) |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `module` | `dspy.Module` | — | The generator module to wrap |
+| `N` | `int` | — | Max generation attempts per call |
+| `reward_fn` | `Callable[[dict, Prediction], float]` | — | Returns 0.0–1.0; receives `(args, pred)` |
+| `threshold` | `float` | — | Minimum score to accept (0.0–1.0) |
+| `fail_count` | `int \| None` | `None` | Max failures before raising an error. Defaults to N if None. |
 
 `args` is the input dict passed to the module; `pred` is the Prediction object.
 

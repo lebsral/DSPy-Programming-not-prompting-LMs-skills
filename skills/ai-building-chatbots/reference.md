@@ -25,7 +25,7 @@ Adds a `reasoning` field automatically before the output. Do not add `reasoning`
 [API docs](https://dspy.ai/api/modules/Refine/)
 
 ```python
-dspy.Refine(module, N, reward_fn, threshold=None)
+dspy.Refine(module, N, reward_fn, threshold, fail_count=None)
 ```
 
 | Parameter | Type | Default | Description |
@@ -33,7 +33,8 @@ dspy.Refine(module, N, reward_fn, threshold=None)
 | `module` | `dspy.Module` | required | Module to run and refine |
 | `N` | `int` | required | Max attempts |
 | `reward_fn` | `Callable[[args, pred], float]` | required | Returns 0.0–1.0; higher is better |
-| `threshold` | `float \| None` | `None` | Stop early when score >= threshold |
+| `threshold` | `float` | required | Stop early when score >= threshold |
+| `fail_count` | `int \| None` | `None` (defaults to N) | Raise an error after this many failures |
 
 The reward function receives `(args, pred)` — `args` is the dict of module inputs, `pred` is the prediction. Return `0.0` for hard failures (breaks character, prohibited content) and fractional penalties for soft constraints (verbosity, condescending phrasing).
 
@@ -43,25 +44,27 @@ The reward function receives `(args, pred)` — `args` is the dict of module inp
 
 Typed conversation history for multi-turn chatbots. Works with any LM — DSPy formats it as prior conversation turns.
 
-```python
-history = dspy.History(messages=[
-    {"role": "user", "content": "What is your return policy?"},
-    {"role": "assistant", "content": "30 days, no questions asked."},
-])
-```
-
-History objects are **immutable** — create a new instance each turn to append prior turns.
-
-Use `dspy.History` as a typed input field in your signature:
+History messages must use **signature field names as keys** — not `role`/`content`. Each dict should mirror the input/output fields of the associated signature:
 
 ```python
 class Chat(dspy.Signature):
     history: dspy.History = dspy.InputField(desc="Prior conversation turns")
     question: str = dspy.InputField()
     answer: str = dspy.OutputField()
+
+# Message keys match the signature fields ("question", "answer")
+history = dspy.History(messages=[
+    {"question": "What is your return policy?", "answer": "30 days, no questions asked."},
+    {"question": "Can I exchange instead of refund?", "answer": "Yes, exchanges are always available."},
+])
+
+predict = dspy.Predict(Chat)
+result = predict(history=history, question="How long does a refund take?")
 ```
 
-**`dspy.History` vs. formatted string**: Use `dspy.History` when you want DSPy to handle turn encoding automatically. Use a formatted `str` (via `format_history(messages[-10:])`) when you need explicit truncation control.
+History objects are **immutable** — create a new instance each turn to append prior turns.
+
+**`dspy.History` vs. formatted string**: Use `dspy.History` when you want DSPy to handle turn encoding automatically and your signature has clear input/output field names. Use a formatted `str` (via `format_history(messages[-10:])`) when you need explicit truncation control or when the conversation has many fields per turn that do not map cleanly to a single signature.
 
 ## dspy.MIPROv2
 

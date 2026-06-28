@@ -1,4 +1,4 @@
-> Condensed from [dspy.ai/api](https://dspy.ai/api/). Verify against upstream for latest.
+> Condensed from [dspy.ai/api/modules/ChainOfThought](https://dspy.ai/api/modules/ChainOfThought/), [dspy.ai/api/optimizers/BootstrapFewShot](https://dspy.ai/api/optimizers/BootstrapFewShot/), [dspy.ai/api/optimizers/MIPROv2](https://dspy.ai/api/optimizers/MIPROv2/), and [dspy.ai/api/evaluation/Evaluate](https://dspy.ai/api/evaluation/Evaluate/). Verify against upstream for latest.
 
 # DSPy API Reference for Record Matching
 
@@ -55,7 +55,7 @@ Use `Predict` (no reasoning) only for high-volume pre-filters where latency matt
 
 ## Batch Processing
 
-[API docs](https://dspy.ai/api/primitives/)
+[API docs](https://dspy.ai/api/modules/ChainOfThought/)
 
 All DSPy modules expose `batch()` for parallel execution across candidate pairs:
 
@@ -96,9 +96,12 @@ Start here when you have 20–50 labeled pairs. Weight the metric to penalize fa
 [API docs](https://dspy.ai/api/optimizers/MIPROv2/)
 
 ```python
-dspy.MIPROv2(metric, auto='light', prompt_model=None, task_model=None,
+dspy.MIPROv2(metric, prompt_model=None, task_model=None, teacher_settings=None,
              max_bootstrapped_demos=4, max_labeled_demos=4,
-             num_candidates=None, num_threads=None, seed=9, verbose=False)
+             auto='light', num_candidates=None, num_threads=None,
+             max_errors=None, seed=9, init_temperature=1.0,
+             verbose=False, track_stats=True, log_dir=None,
+             metric_threshold=None)
 ```
 
 | Parameter | Type | Default | Description |
@@ -107,6 +110,12 @@ dspy.MIPROv2(metric, auto='light', prompt_model=None, task_model=None,
 | `auto` | `'light' \| 'medium' \| 'heavy' \| None` | `'light'` | Optimization intensity |
 | `max_bootstrapped_demos` | `int` | `4` | Max generated demos |
 | `max_labeled_demos` | `int` | `4` | Max labeled demos |
+| `teacher_settings` | `dict \| None` | `None` | Config for the teacher model |
+| `max_errors` | `int \| None` | `None` | Error limit before termination |
+| `init_temperature` | `float` | `1.0` | Initial sampling temperature |
+| `track_stats` | `bool` | `True` | Track optimization statistics |
+| `log_dir` | `str \| None` | `None` | Directory to write logs |
+| `metric_threshold` | `float \| None` | `None` | Score threshold for accepting demos |
 
 Key method: `.compile(module, trainset=...)` — returns optimized module.
 
@@ -117,8 +126,9 @@ Upgrade from `BootstrapFewShot` to `MIPROv2` when accuracy plateaus and you have
 [API docs](https://dspy.ai/api/evaluation/Evaluate/)
 
 ```python
-dspy.Evaluate(devset, metric=None, num_threads=None, display_progress=False,
-              display_table=False, max_errors=None, failure_score=0.0)
+dspy.Evaluate(*, devset, metric=None, num_threads=None, display_progress=False,
+              display_table=False, max_errors=None, provide_traceback=None,
+              failure_score=0.0, save_as_csv=None, save_as_json=None)
 ```
 
 | Parameter | Type | Default | Description |
@@ -127,7 +137,12 @@ dspy.Evaluate(devset, metric=None, num_threads=None, display_progress=False,
 | `metric` | `Callable \| None` | `None` | Scoring function |
 | `num_threads` | `int \| None` | `None` | Parallel threads |
 | `display_progress` | `bool` | `False` | Show progress bar |
-| `display_table` | `bool \| int` | `False` | Show results table |
+| `display_table` | `bool \| int` | `False` | Show full table (`True`), suppress (`False`), or limit rows (int) |
+| `max_errors` | `int \| None` | `None` | Abort threshold for errors |
+| `provide_traceback` | `bool \| None` | `None` | Include tracebacks in error output |
+| `failure_score` | `float` | `0.0` | Score assigned to failed examples |
+| `save_as_csv` | `str \| None` | `None` | Path to save results as CSV |
+| `save_as_json` | `str \| None` | `None` | Path to save results as JSON |
 
 Call the evaluator as a callable: `score = evaluator(module)`.
 

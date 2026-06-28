@@ -83,7 +83,7 @@ Stick to `str`, `int`, `float`, `bool`, `list`, `dict`, and nested Pydantic mode
 [API docs](https://dspy.ai/api/modules/Refine/)
 
 ```python
-dspy.Refine(module, N, reward_fn, threshold=None, fail_count=None)
+dspy.Refine(module, N, reward_fn, threshold, fail_count=None)
 ```
 
 | Parameter | Type | Default | Description |
@@ -91,7 +91,8 @@ dspy.Refine(module, N, reward_fn, threshold=None, fail_count=None)
 | `module` | `dspy.Module` | required | Module to wrap |
 | `N` | `int` | required | Max retry attempts |
 | `reward_fn` | `Callable[[args, pred], float]` | required | Returns 0.0-1.0 quality score |
-| `threshold` | `float \| None` | `None` | Stop early when score reaches this value |
+| `threshold` | `float` | required | Stop early when score reaches this value |
+| `fail_count` | `int \| None` | `None` | Times module can fail before raising; defaults to N |
 
 Retries up to N times and returns the highest-scoring attempt. Use to enforce format constraints (email contains `@`, phone has 10+ digits).
 

@@ -34,7 +34,7 @@ This skill helps you pick the right monitoring approach and interpret what you s
 2. **Using MIPROv2, BFS, BRS, or COPRO?**
    - Want a cloud dashboard with live scores? -> LangWatch (Option 3)
    - Want a local dashboard? -> MLflow (Option 4)
-   - Just want console output? -> BaseCallback (Option 1)
+   - Just want console output? -> `MIPROv2(verbose=True)` or BaseCallback (Option 1)
 3. **Any optimizer, post-hoc?**
    - `inspect_history()` always works (Option 1)
 
@@ -42,7 +42,8 @@ This skill helps you pick the right monitoring approach and interpret what you s
 
 | Tool | Optimizers | Setup | Dashboard | Local/Cloud |
 |------|-----------|-------|-----------|-------------|
-| Built-in (`track_stats`) | GEPA only | One flag | No (dict) | Local |
+| `MIPROv2(verbose=True)` | MIPROv2 only | One flag | No (console) | Local |
+| Built-in (`track_stats`) | GEPA only | One flag | No (dict after compile) | Local |
 | Built-in (`BaseCallback`) | All | ~20 lines | No (console) | Local |
 | `inspect_history(n)` | All (post-hoc) | Zero setup | No (console) | Local |
 | dspy-gepa-logger | GEPA only | `pip install` | Yes (web) | Local |
@@ -78,17 +79,17 @@ print(f"Improvement: {optimized_score - baseline_score:+.1f}")
 GEPA supports a built-in stats flag that records detailed results per iteration.
 
 ```python
+# GEPA has no task_lm constructor param -- set the task LM via dspy.configure(lm=task_lm) before this
 optimizer = dspy.GEPA(
     metric=your_metric,
-    task_lm=task_lm,
     reflection_lm=reflection_lm,
-    track_stats=True,  # Enable tracking
+    track_stats=True,  # Enable tracking (defaults to False in GEPA)
 )
 
 optimized = optimizer.compile(program, trainset=trainset)
 
-# Inspect results after compilation
-stats = optimizer.detailed_results
+# Inspect results after compilation -- detailed_results is on the compiled program
+stats = optimized.detailed_results
 for iteration, result in enumerate(stats):
     print(f"Iteration {iteration}: score={result['score']:.3f}")
 ```
@@ -145,9 +146,9 @@ from dspy_gepa_logger import GEPALogger
 # Create the logger (starts web dashboard on port 3000)
 logger = GEPALogger()
 
+# GEPA has no task_lm constructor param -- set it via dspy.configure(lm=task_lm) before this
 optimizer = dspy.GEPA(
     metric=your_metric,
-    task_lm=task_lm,
     reflection_lm=reflection_lm,
 )
 
@@ -313,11 +314,16 @@ dspy.inspect_history(n=1)
 
 ## Gotchas
 
-1. **`track_stats=True` is GEPA-specific.** It does not work with MIPROv2 or other optimizers. Use BaseCallback or an external tool for those.
+1. **`track_stats` means different things in GEPA vs MIPROv2.** In GEPA, `track_stats` defaults to `False` -- setting it to `True` populates `optimized.detailed_results` on the compiled program (not the optimizer) with per-iteration data. In MIPROv2, `track_stats=True` is already the default and controls internal bookkeeping -- it does not produce a `detailed_results` attribute you can inspect. For live MIPROv2 progress, use `verbose=True`, BaseCallback, or LangWatch.
 2. **LangWatch does not support GEPA.** LangWatch patches BFS/BRS/COPRO/MIPROv2 internals. For GEPA monitoring, use dspy-gepa-logger.
 3. **Always run baseline evaluation.** Without a before score, you cannot tell if optimization helped. This is the most common mistake.
 4. **Flat score does not mean the optimizer is broken.** It could mean your metric is saturated, your metric is broken (always returns the same value), or the task does not benefit from optimization.
 5. **`inspect_history()` is post-hoc, not live.** It shows recent LM calls from memory. It does not stream progress during optimization.
+
+## Additional resources
+
+- For API signatures and parameter tables, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md)
 
 ## Cross-references
 
@@ -331,5 +337,4 @@ dspy.inspect_history(n=1)
 - **Experiment tracking** for comparing completed runs -- see `/ai-tracking-experiments`
 - **Improving accuracy** for the full measure-improve-verify loop -- see `/ai-improving-accuracy`
 - **Cutting costs** when optimization is too expensive -- see `/ai-cutting-costs`
-- For worked examples, see [examples.md](examples.md)
 - **Install `/ai-do` if you do not have it** -- it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`

@@ -279,4 +279,7 @@ cleaner = dspy.Refine(dspy.Predict(CleanField), N=3, reward_fn=format_reward, th
 - `/ai-generating-data` - generate synthetic dirty data to build eval sets
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
 
-See `examples.md` for full worked examples - address normalizer, company name standardizer, and CSV batch cleaner.
+## Additional resources
+
+- For worked examples (address normalizer, company name standardizer, CSV batch cleaner), see [examples.md](examples.md)
+- For API signatures and parameter tables (dspy.Predict, dspy.Refine, dspy.BootstrapFewShot, module.batch), see [reference.md](reference.md)

@@ -157,11 +157,14 @@ print(results)
 
 ### Enable verbose tracing
 
+DSPy records all LM calls automatically. Run your program, then inspect:
+
 ```python
-dspy.configure(lm=lm, trace=[])
-# Now run your program — trace will be populated
 result = my_program(question="test")
+dspy.inspect_history(n=5)  # shows every prompt + response in order
 ```
+
+For structured logging or production-level tracing, see `/ai-tracing-requests`.
 
 ### Inspect module structure
 
@@ -243,4 +246,5 @@ dspy.inspect_history(n=1)
 
 ## Additional resources
 
+- For worked examples and debugging walkthroughs, see [examples.md](examples.md)
 - For complete error index, see [reference.md](reference.md)

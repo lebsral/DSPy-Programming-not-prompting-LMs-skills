@@ -1,6 +1,6 @@
 ---
 name: ai-tracking-experiments
-description: Track which optimization experiment was best. Use when you have run multiple optimization passes, need to compare experiments, want to reproduce past results, need to pick the best prompt configuration, track experiment costs, manage optimization artifacts, decide which optimized program to deploy, or justify your choice to stakeholders. Covers experiment logging, comparison, and promotion to production., MLflow for prompt experiments, Weights and Biases for LLM, track prompt versions, experiment management for AI, which optimization run was best, A/B testing AI prompts, compare model performance across runs, version control for prompts, prompt experiment tracking, reproduce my best AI configuration, optimization history, rollback to previous prompt version, AI experiment dashboard.
+description: Track which optimization experiment was best. Use when you have run multiple optimization passes, need to compare experiments, want to reproduce past results, need to pick the best prompt configuration, track experiment costs, manage optimization artifacts, decide which optimized program to deploy, or justify your choice to stakeholders. Also used for MLflow prompt experiment tracking, Weights and Biases for LLM experiments, A/B testing AI prompts, compare model performance across runs, version control for prompts, prompt experiment tracking, track prompt versions, reproduce my best AI configuration, optimization history, rollback to previous prompt version, AI experiment dashboard, which optimization run was best.
 ---
 
 # Track Which Optimization Experiment Was Best
@@ -380,3 +380,4 @@ For the full LangWatch guide (auto-tracing, optimizer dashboard, self-hosted), s
 ## Additional resources
 
 - For worked examples, see [examples.md](examples.md)
+- For API signatures (Evaluate, BootstrapFewShot, MIPROv2, save/load), see [reference.md](reference.md)

@@ -1,0 +1,73 @@
+{
+  "skill_name": "ai-planning",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I want to build an AI feature for our SaaS product where users can ask questions and get answers from our help center docs. We have 800 help articles but no labeled data and no existing code. Where do I start and in what order should I build this?",
+      "expected_output": "A phased plan starting with /ai-searching-docs as Phase 1 (build search and RAG pipeline), identifying the absence of labeled Q&A pairs as a data gap to address, followed by /ai-stopping-hallucinations or /ai-improving-accuracy in Phase 2, and /ai-serving-apis in a later phase. The plan uses the Goal/Skill/Deliverable template and limits the core path to 3-4 skills.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "plan_starts_with_ai_searching_docs",
+          "description": "Phase 1 references /ai-searching-docs as the skill for the search and RAG capability, not a generic description"
+        },
+        {
+          "name": "identifies_data_gap",
+          "description": "Plan explicitly flags the lack of labeled Q&A examples as something to address — does not skip the data question"
+        },
+        {
+          "name": "uses_phased_template",
+          "description": "Output is structured as named phases each with a Goal, Skill, and Deliverable — not a flat task list"
+        },
+        {
+          "name": "limits_to_core_path",
+          "description": "Plan recommends no more than 5 skills and defers non-critical capabilities to a skip-for-now section"
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "We have a support ticket classifier that we built last month. It works okay — maybe 70% accuracy — but we need to get it to production and improve it. What order should we tackle the remaining work?",
+      "expected_output": "A plan that starts with measuring current quality before optimizing (not jumping straight to optimization), uses /ai-improving-accuracy for evaluation and optimizer runs, then /ai-serving-apis for production deployment. The plan warns against running a DSPy optimizer before a baseline metric and eval set exist.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "starts_with_measuring_not_optimizing",
+          "description": "Phase 1 is establishing a metric and eval set, not immediately running an optimizer — skill matches the 'working prototype' starting point"
+        },
+        {
+          "name": "references_ai_improving_accuracy",
+          "description": "Plan uses /ai-improving-accuracy for the evaluate-and-optimize phase, not a generic suggestion to improve the prompt"
+        },
+        {
+          "name": "mentions_eval_data_need",
+          "description": "Plan surfaces the need for labeled evaluation examples before optimization can begin"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I need to build an invoice processing system. It should read PDF invoices, extract vendor name, invoice number, date, line items, and total, validate that the math checks out, and submit clean invoices to our ERP via REST API. What skills do I need and in what order?",
+      "expected_output": "A multi-phase plan mapping: /ai-parsing-data for PDF extraction (Phase 1), /ai-checking-outputs for math validation (Phase 2), /ai-building-pipelines to chain extract + validate + submit (Phase 3), and /ai-improving-accuracy for quality optimization (later). Dependencies are stated explicitly: validation requires extraction to work first; ERP submission comes only after validation is in place.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "maps_to_ai_parsing_data",
+          "description": "Plan uses /ai-parsing-data for PDF field extraction — not a generic code suggestion"
+        },
+        {
+          "name": "maps_to_ai_checking_outputs",
+          "description": "Plan uses /ai-checking-outputs for the math validation and business rule checking step"
+        },
+        {
+          "name": "correct_dependency_order",
+          "description": "Phase ordering puts extraction before validation, and validation before ERP submission — not all in parallel"
+        },
+        {
+          "name": "states_phase_dependencies",
+          "description": "Plan includes a Dependencies section that explains why each phase requires the previous phase output"
+        }
+      ]
+    }
+  ]
+}

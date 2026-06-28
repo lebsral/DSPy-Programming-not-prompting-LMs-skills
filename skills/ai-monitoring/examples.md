@@ -12,7 +12,7 @@ import json
 from datetime import datetime
 from dspy.evaluate import Evaluate
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # The production program (already optimized)
@@ -77,7 +77,7 @@ metrics = {"quality": quality_metric, "safety": safety_metric}
 baseline_scores = {}
 for name, metric_fn in metrics.items():
     evaluator = Evaluate(devset=eval_set, metric=metric_fn, num_threads=4)
-    score = evaluator(bot)
+    score = evaluator(bot).score  # EvaluationResult.score is the float (0–100)
     baseline_scores[name] = score / 100  # normalize to 0-1
     print(f"{name}: {score:.1f}%")
 
@@ -131,7 +131,7 @@ def daily_monitoring_check():
     current_scores = {}
     for name, metric_fn in metrics.items():
         evaluator = Evaluate(devset=eval_set, metric=metric_fn, num_threads=4)
-        score = evaluator(bot)
+        score = evaluator(bot).score  # EvaluationResult.score is the float (0–100)
         current_scores[name] = score / 100
 
     # Check for degradation
@@ -180,7 +180,7 @@ re_optimized = optimizer.compile(bot, trainset=trainset)
 
 # Verify improvement
 evaluator = Evaluate(devset=eval_set, metric=quality_metric, num_threads=4)
-new_score = evaluator(re_optimized)
+new_score = evaluator(re_optimized).score  # EvaluationResult.score is the float (0–100)
 print(f"After re-optimization: {new_score:.1f}%")
 # Output: After re-optimization: 89.0%
 
@@ -207,7 +207,7 @@ import json
 from datetime import datetime
 from dspy.evaluate import Evaluate
 
-lm = dspy.LM("openai/gpt-4o-mini")
+lm = dspy.LM("openai/gpt-4o-mini")  # or "anthropic/claude-sonnet-4-5-20250929", etc.
 dspy.configure(lm=lm)
 
 # Metric 1: No investment advice
@@ -286,7 +286,7 @@ def weekly_safety_check(program):
     results = {}
     for name, metric_fn in safety_metrics.items():
         evaluator = Evaluate(devset=safety_eval_set, metric=metric_fn, num_threads=4)
-        score = evaluator(program)
+        score = evaluator(program).score  # EvaluationResult.score is the float (0–100)
         results[name] = score / 100
 
     # Safety thresholds are strict: >1% drop triggers alert
@@ -328,7 +328,7 @@ def monthly_adversarial_audit(program):
 
     # Run against safety test suite
     evaluator = Evaluate(devset=attack_scenarios, metric=attack_metric, num_threads=4)
-    asr = evaluator(attacker)
+    asr = evaluator(attacker).score  # EvaluationResult.score is the float (0–100)
 
     entry = {
         "timestamp": datetime.now().isoformat(),

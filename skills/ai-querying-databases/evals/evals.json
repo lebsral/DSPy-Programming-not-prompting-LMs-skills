@@ -1,0 +1,69 @@
+{
+  "skill_name": "ai-querying-databases",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I need to let our sales team ask questions about our Postgres database in plain English. The main tables are: deals (id, name, amount, stage, closed_at, owner_id), contacts (id, name, email, company_id), companies (id, name, industry, arr). Build a DSPy pipeline that takes a question and returns a SQL query and a plain English answer.",
+      "expected_output": "A DSPy module with three signatures (schema understanding, SQL generation, result interpretation), using dspy.ChainOfThought for each stage, validate_sql safety check before execution, and dspy.Prediction returning sql, rows, and answer fields.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "uses_separate_signatures",
+          "description": "Defines at least one dspy.Signature subclass for SQL generation (GenerateSQL or similar) with schema and question as InputFields and sql as an OutputField"
+        },
+        {
+          "name": "no_reasoning_in_signature",
+          "description": "Signatures that are wrapped with dspy.ChainOfThought do NOT declare a reasoning output field — ChainOfThought injects it automatically"
+        },
+        {
+          "name": "validate_before_execute",
+          "description": "SQL validation (SELECT-only check, dangerous keyword rejection) is called before execute_query, not after"
+        },
+        {
+          "name": "provider_agnostic_lm",
+          "description": "LM configuration uses a generic provider string with a comment showing alternatives (e.g., '# or anthropic/...')"
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "My text-to-SQL pipeline keeps generating unsafe queries — sometimes the model outputs UPDATE or DELETE statements. How do I use dspy.Refine to enforce that only SELECT queries are returned, retrying until the query passes safety checks?",
+      "expected_output": "A reward function returning 0.0 for non-SELECT or dangerous keyword queries and 1.0 for safe queries, then dspy.Refine(module=dspy.ChainOfThought(GenerateSQL), N=3, reward_fn=sql_safety_reward, threshold=0.9) wrapping the generation step.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "uses_dspy_refine",
+          "description": "Uses dspy.Refine (not dspy.Assert or dspy.Suggest — those were removed in DSPy 3.x)"
+        },
+        {
+          "name": "reward_fn_returns_zero_for_unsafe",
+          "description": "The reward_fn returns 0.0 (not raises, not None) when the SQL contains dangerous keywords or is not a SELECT statement"
+        },
+        {
+          "name": "refine_threshold_required",
+          "description": "dspy.Refine is called with threshold as a required positional or keyword argument (not left at default None — it has no default)"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I have a database with 80 tables. Sending the full schema to the LM is too expensive and the AI gets confused. What is the DSPy approach for selecting only the relevant tables before generating SQL?",
+      "expected_output": "Either the two-stage approach (SelectTables signature with dspy.ChainOfThought picking relevant tables, then GenerateSQL using only those tables) for 10-50 tables, or ChromaDB embedding-based schema retrieval for 50+ tables, with filter_schema() to extract only the matched table sections from the full schema string.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "two_stage_or_embedding_retrieval",
+          "description": "Provides either a SelectTables signature approach or a ChromaDB/vector embedding schema retrieval approach — not just 'truncate the schema'"
+        },
+        {
+          "name": "schema_filtering_step",
+          "description": "Includes a schema filtering step (filter_schema or equivalent) that reduces the schema to only relevant tables before SQL generation"
+        },
+        {
+          "name": "select_tables_no_reasoning_field",
+          "description": "If a SelectTables signature is defined and used with dspy.ChainOfThought, it does not declare a reasoning output field"
+        }
+      ]
+    }
+  ]
+}

@@ -60,15 +60,16 @@ Use for retrieval stages in RAG pipelines. Requires a retriever backend (e.g., C
 [API docs](https://dspy.ai/api/modules/Refine/)
 
 ```python
-dspy.Refine(module, N=3, reward_fn=None, threshold=None, fail_count=1)
+dspy.Refine(module, N, reward_fn, threshold, fail_count=None)
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `module` | `dspy.Module` | required | Module to wrap |
-| `N` | `int` | `3` | Max refinement attempts |
-| `reward_fn` | `Callable(args, pred) -> float` | `None` | Scores output; higher is better |
-| `threshold` | `float \| None` | `None` | Stop when reward exceeds this value |
+| `N` | `int` | required | Max refinement attempts |
+| `reward_fn` | `Callable[[dict, Prediction], float]` | required | Scores output; returns float; higher is better |
+| `threshold` | `float` | required | Stop when reward exceeds this value |
+| `fail_count` | `int \| None` | `None` | Max failures before raising an error; defaults to N if None |
 
 Wraps a module to retry when output quality is low. Replaces `dspy.Assert` / `dspy.Suggest`, which were removed in DSPy 3.x.
 
@@ -77,8 +78,16 @@ Wraps a module to retry when output quality is low. Replaces `dspy.Assert` / `ds
 [API docs](https://dspy.ai/api/modules/BestOfN/)
 
 ```python
-dspy.BestOfN(module, N=5, reward_fn=None, threshold=None)
+dspy.BestOfN(module, N, reward_fn, threshold, fail_count=None)
 ```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `module` | `dspy.Module` | required | Module to run N times |
+| `N` | `int` | required | Number of independent runs |
+| `reward_fn` | `Callable[[dict, Prediction], float]` | required | Scores each candidate; higher is better |
+| `threshold` | `float` | required | Return early if any candidate exceeds this score |
+| `fail_count` | `int \| None` | `None` | Max failures before raising an error; defaults to N if None |
 
 Runs the module `N` times independently (no feedback between runs) and returns the candidate with the highest `reward_fn` score. Use when output diversity matters more than iterative improvement (e.g., code generation, creative writing).
 
@@ -114,14 +123,14 @@ Generates few-shot examples for all pipeline stages together. Start here with ~5
 [API docs](https://dspy.ai/api/optimizers/MIPROv2/)
 
 ```python
-dspy.MIPROv2(metric, auto="medium", max_bootstrapped_demos=4, max_labeled_demos=4)
+dspy.MIPROv2(metric, auto="light", max_bootstrapped_demos=4, max_labeled_demos=4)
 ```
 
-| `auto` value | Intensity | Examples needed |
-|-------------|-----------|-----------------|
-| `"light"` | Fastest, fewest candidates | ~50 |
-| `"medium"` | Balanced (recommended) | ~100–200 |
-| `"heavy"` | Most thorough | ~200+ |
+| `auto` value | Intensity | Examples needed | Note |
+|-------------|-----------|-----------------|------|
+| `"light"` | Fastest, fewest candidates | ~50 | Default |
+| `"medium"` | Balanced | ~100–200 | Good starting point for most cases |
+| `"heavy"` | Most thorough | ~200+ | |
 
 Optimizes instructions AND few-shot examples across all pipeline stages end-to-end. Key method: `.compile(module, trainset=...)`.
 

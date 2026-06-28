@@ -283,6 +283,11 @@ After generating the project, tell the user:
 - **The metric function returns a boolean but the user needs a float.** Claude often writes `return prediction.answer == example.answer` which returns True/False. DSPy handles booleans fine, but for weighted or partial-credit metrics, return a float between 0.0 and 1.0.
 - **Claude generates all files at once without checking the directory.** Before scaffolding, verify the target directory does not already contain files. Overwriting existing code is destructive and hard to undo.
 
+## Additional resources
+
+- For worked examples and complete project patterns, see [examples.md](examples.md)
+- For API signatures, module selection tables, and quick-reference checklists, see [reference.md](reference.md)
+
 ## Cross-references
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`

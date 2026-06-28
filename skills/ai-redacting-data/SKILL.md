@@ -45,7 +45,17 @@ dspy.configure(lm=lm)
 
 ---
 
-## Step 4 - Regex First for Structured Patterns
+## Step 4 - Choose Your Approach
+
+| Approach | When to use | Tradeoff |
+|---|---|---|
+| Regex only | Emails, SSNs, credit cards, phones — fixed-format PII | Fast, deterministic, zero LM cost; misses names and free-form data |
+| LM only | Unstructured text, multilingual names, complex context | High recall on contextual PII; slow, costly, and sends raw PII to the LM |
+| Two-pass (recommended) | Mixed text with both structured and contextual PII | Regex first masks structured PII so the LM never sees raw values; best recall + lowest exposure |
+
+The examples below use the two-pass pattern. Use regex-only when all PII is structured and you cannot afford any LM calls.
+
+## Step 5 - Regex First for Structured Patterns
 
 Regex is fast, deterministic, and never sends PII to an external API. Always run it before the LM pass.
 
@@ -78,7 +88,7 @@ def regex_detect(text: str) -> list[PIIMatch]:
 
 ---
 
-## Step 5 - LM Signature for Contextual PII
+## Step 6 - LM Signature for Contextual PII
 
 Use the LM only for PII that requires reading context — names, addresses, and other free-form entities.
 
@@ -99,7 +109,7 @@ detect_pii = dspy.Predict(DetectContextualPII)
 
 ---
 
-## Step 6 - Full Redaction Module
+## Step 7 - Full Redaction Module
 
 ```python
 class PIIRedactor(dspy.Module):
@@ -163,7 +173,7 @@ class PIIRedactor(dspy.Module):
 
 ---
 
-## Step 7 - Validate Redaction Quality
+## Step 8 - Validate Redaction Quality
 
 Do not use `dspy.Assert` or `dspy.Suggest` here — they are deprecated. Use `dspy.Refine` with a reward function.
 
@@ -187,7 +197,7 @@ def redaction_reward(example, prediction, trace=None) -> float:
 
 ---
 
-## Step 8 - GDPR and HIPAA Compliance Patterns
+## Step 9 - GDPR and HIPAA Compliance Patterns
 
 **GDPR - Right to erasure**
 ```python
@@ -215,7 +225,7 @@ PATTERNS.update(HIPAA_PATTERNS)
 
 ---
 
-## Step 9 - When NOT to Use AI Redaction
+## Step 10 - When NOT to Use AI Redaction
 
 - **Structured fields with known formats** - regex alone is sufficient and faster (emails, SSNs, credit cards).
 - **Already-tokenized data** - if PII was never collected as free text, there is nothing to redact.
@@ -264,7 +274,8 @@ print(result.entities_found)
 
 ## Additional Resources
 
-See `examples.md` for worked examples:
-1. Customer support email redactor
-2. Medical record de-identifier (HIPAA Safe Harbor)
-3. Pre-LLM sanitizer for third-party API calls
+- For DSPy API signatures and parameter tables, see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md):
+  1. Customer support email redactor
+  2. Medical record de-identifier (HIPAA Safe Harbor)
+  3. Pre-LLM sanitizer for third-party API calls

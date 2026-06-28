@@ -83,8 +83,8 @@ class MyPipeline(dspy.Module):
 
 ```python
 # Set LM on specific modules permanently
-my_program.classify.lm = cheap_lm
-my_program.generate.lm = expensive_lm
+my_program.classify.set_lm(cheap_lm)
+my_program.generate.set_lm(expensive_lm)
 ```
 
 ## Step 4: Smart routing — cheap model for easy inputs, expensive for hard ones
@@ -227,6 +227,17 @@ Test with `/ai-improving-accuracy` to make sure quality doesn't drop.
 
 When running prompt optimization (especially with GEPA or MIPROv2), monitor for score plateaus. Stopping early when the optimizer saturates can save 30-40% of optimization compute. See `/dspy-gepa` for saturation diagnosis details.
 
+## Strategy comparison
+
+| Strategy | Savings potential | Complexity | Key requirement |
+|----------|------------------|------------|-----------------|
+| Switch to cheaper model | 10–30x lower per-call cost | Low | Re-run optimizer after switch |
+| Enable/verify caching | 50–90% on repeated traffic | Trivial | Deterministic inputs (`temperature=0`) |
+| Per-module LM assignment | 50–80% | Low | Identify which steps are simple vs complex |
+| Smart routing / cascading | 50–90% | Medium | A classifier or confidence check step |
+| Reduce prompt length | 20–50% | Low | Fewer demos, smaller `k`, concise signatures |
+| Fine-tune a cheap model | 10–50x | High | 500+ labeled examples, fine-tunable model |
+
 ## Cost reduction checklist
 
 1. Switch to a cheaper model (measure quality first)
@@ -265,3 +276,8 @@ Do not fine-tune to save money if your use case changes frequently. Fine-tuned m
 - **DSPy modules** (Predict vs ChainOfThought tradeoffs) — see `/dspy-modules`
 - **Fine-tuning** workflow and decision framework — see `/ai-fine-tuning`
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+
+## Additional resources
+
+- For worked examples (model switching, cascading, end-to-end ticket triage), see [examples.md](examples.md)
+- For DSPy API quick reference (dspy.LM, BootstrapFewShot, set_lm, configure_cache), see [reference.md](reference.md)

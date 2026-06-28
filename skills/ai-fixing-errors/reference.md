@@ -1,5 +1,7 @@
 # Error Fixing Reference
 
+> Verified against [dspy.ai/api/](https://dspy.ai/api/) for DSPy 3.2.1. Check upstream for the latest.
+
 ## Error Index
 
 ### Setup Errors

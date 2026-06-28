@@ -293,7 +293,5 @@ DSPy shines when you need glossary enforcement, tone control, quality estimation
 
 ## Additional resources
 
-See `examples.md` for worked examples:
-- Marketing copy translator (English to Spanish with brand glossary)
-- i18n JSON batch translator
-- Support ticket translator with confidence scoring
+- For worked examples, see [examples.md](examples.md) — marketing copy translator, i18n JSON batch, support ticket with confidence scoring
+- For full API signatures and parameter tables, see [reference.md](reference.md)

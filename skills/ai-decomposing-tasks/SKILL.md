@@ -326,6 +326,7 @@ See `/ai-cutting-costs` for more cost strategies.
 ## Additional resources
 
 - For worked examples (medical reports, invoices, resumes), see [examples.md](examples.md)
+- For condensed API signatures (dspy.Module, ChainOfThought, MIPROv2, Evaluate), see [reference.md](reference.md)
 
 ## Cross-references
 

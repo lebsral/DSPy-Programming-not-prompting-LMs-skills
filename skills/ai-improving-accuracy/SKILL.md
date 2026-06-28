@@ -230,4 +230,5 @@ my_program.load("optimized_program.json")
 
 ## Additional resources
 
+- For worked examples and end-to-end workflows, see [examples.md](examples.md)
 - For optimizer details and metric patterns, see [reference.md](reference.md)

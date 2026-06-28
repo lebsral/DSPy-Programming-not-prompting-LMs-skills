@@ -319,4 +319,5 @@ def block_by_embedding(records, embeddings, top_k=5, threshold=0.8):
 
 ## Additional resources
 
+- For API reference (DSPy signatures, optimizers, blocking libraries), see [reference.md](reference.md)
 - For worked examples (CRM deduplication, company name matching, ticket deduplication), see [examples.md](examples.md)

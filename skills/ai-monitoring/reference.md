@@ -1,4 +1,4 @@
-> Condensed from [dspy.ai/api](https://dspy.ai/api/). Verify against upstream for latest.
+> Condensed from [dspy.ai/api/evaluation/Evaluate/](https://dspy.ai/api/evaluation/Evaluate/) and related pages. Verify against upstream for latest.
 
 # DSPy API Reference for Production Monitoring
 
@@ -9,10 +9,20 @@
 ```python
 from dspy.evaluate import Evaluate
 
-evaluator = Evaluate(devset, metric=None, num_threads=None,
-                     display_progress=False, display_table=False,
-                     max_errors=None, failure_score=0.0)
-score = evaluator(program)  # returns float (0–100)
+evaluator = Evaluate(
+    devset=eval_set,
+    metric=None,
+    num_threads=None,
+    display_progress=False,
+    display_table=False,
+    max_errors=None,
+    provide_traceback=None,
+    failure_score=0.0,
+    save_as_csv=None,
+    save_as_json=None,
+)
+result = evaluator(program)   # returns EvaluationResult
+score = result.score          # float in range 0–100
 ```
 
 | Parameter | Type | Default | Description |
@@ -21,11 +31,18 @@ score = evaluator(program)  # returns float (0–100)
 | `metric` | `Callable \| None` | `None` | Scoring function — see metric signature below |
 | `num_threads` | `int \| None` | `None` | Parallel threads; `4` is a practical default |
 | `display_progress` | `bool` | `False` | Show tqdm progress bar |
+| `display_table` | `bool \| int` | `False` | Show results table; int truncates to N rows |
+| `max_errors` | `int \| None` | `None` | Stop after this many metric errors |
+| `provide_traceback` | `bool \| None` | `None` | Include traceback in error output |
 | `failure_score` | `float` | `0.0` | Score assigned when metric raises |
+| `save_as_csv` | `str \| None` | `None` | Write results to this CSV path |
+| `save_as_json` | `str \| None` | `None` | Write results to this JSON path |
 
-**Returns:** `float` in range 0–100 (percentage of examples that passed the metric).
+**Returns:** `EvaluationResult` with `.score` (float 0–100) and `.results` (list of `(example, prediction, score)` tuples).
 
-Normalize to 0–1 for comparison: `score / 100`.
+Normalize to 0–1 for comparison: `evaluator(program).score / 100`.
+
+**IMPORTANT (DSPy 3.2+):** `evaluator(program)` returns `EvaluationResult`, not a bare float. Code that does arithmetic directly on the return value (e.g. `score / 100`) will raise a `TypeError`. Always use `.score`.
 
 ## Metric function signature
 
@@ -100,6 +117,16 @@ class MonitoredProgram(dspy.Module):
         # write JSON entry to log_path
         return result
 ```
+
+### Key methods
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `save` | `save(path: str, save_field_meta: bool = False) -> None` | Serialize the module (prompts, weights) to a JSON file |
+| `load` | `load(path: str) -> None` | Restore from a previously saved JSON file |
+| `batch` | `batch(inputs: list[dict], num_threads: int = 8) -> list[Prediction]` | Run the module on a list of inputs in parallel |
+
+Use `.save()` after optimization and `.load()` at startup in production. Use `.batch()` when running eval manually outside of `Evaluate`.
 
 ## dspy.MIPROv2 (re-optimization after degradation)
 

@@ -1,25 +1,28 @@
 [
   {
+    "id": 0,
     "prompt": "I'm running dspy.GEPA optimization and it's been going for 20 minutes. I have no idea if it's actually improving anything. How do I watch what it's doing?",
-    "expected_output": "Guidance to run a baseline dspy.Evaluate first, then use GEPA's track_stats=True for built-in stats or the dspy-gepa-logger web dashboard for live progress. Should NOT recommend LangWatch, since LangWatch does not support GEPA.",
+    "expected_output": "Guidance to run a baseline dspy.Evaluate first, then use GEPA's track_stats=True for built-in stats or the dspy-gepa-logger web dashboard for live progress. Should NOT recommend LangWatch, since LangWatch does not support GEPA. Should note that detailed_results is on the compiled program (optimized.detailed_results), not the optimizer.",
     "assertions": [
       "Recommends running dspy.Evaluate as a baseline before and after optimization",
       "Recommends track_stats=True or dspy-gepa-logger for GEPA",
       "Does NOT recommend LangWatch for GEPA monitoring",
-      "Mentions inspecting optimizer.detailed_results or a dashboard for per-iteration scores"
+      "Accesses detailed_results on the compiled program (optimized.detailed_results) not the optimizer"
     ]
   },
   {
+    "id": 1,
     "prompt": "I want a live dashboard showing scores as my MIPROv2 optimizer evaluates each candidate, including how much it's spending. What should I use?",
-    "expected_output": "Recommends LangWatch via langwatch.dspy.init() as the tool that streams live scores and cost for MIPROv2, or MLflow autolog for a local dashboard. Notes track_stats is GEPA-only and will not work here.",
+    "expected_output": "Recommends LangWatch via langwatch.dspy.init() as the tool that streams live scores and cost for MIPROv2, or MLflow autolog for a local dashboard. Notes that MIPROv2 track_stats does not expose a detailed_results attribute. Mentions verbose=True for basic console output with zero extra setup.",
     "assertions": [
       "Recommends LangWatch (langwatch.dspy.init) for live MIPROv2 progress and cost",
-      "Notes track_stats=True does not work for MIPROv2 (GEPA-only)",
+      "Notes track_stats=True in MIPROv2 does not expose detailed_results (unlike GEPA)",
       "Mentions LangWatch supports BootstrapFewShot, BootstrapFewShotWithRandomSearch, COPRO, MIPROv2",
       "Provider-agnostic metric and program setup, no hardcoded provider"
     ]
   },
   {
+    "id": 2,
     "prompt": "My optimizer's score is completely flat across every iteration. It's broken, right?",
     "expected_output": "Explains a flat score does not mean the optimizer is broken — it commonly means the metric is saturated, the metric is broken (returns the same value), or the task does not benefit from optimization. Gives diagnostic steps and a held-out evaluation to check.",
     "assertions": [

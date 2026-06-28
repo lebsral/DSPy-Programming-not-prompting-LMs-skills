@@ -152,6 +152,15 @@ The re-optimized score should recover most or all of the quality. If it doesn't,
 - Try a heavier optimization (`auto="heavy"`)
 - Try BootstrapFewShot first for a quick sanity check
 
+### Choosing the right optimizer for re-optimization
+
+| Optimizer | Speed | Quality ceiling | When to use |
+|-----------|-------|-----------------|-------------|
+| `BootstrapFewShot` | Fast (minutes) | Good | Quick sanity check, tight budgets, early iteration |
+| `MIPROv2(auto="light")` | Medium | Better | Default re-optimization for most switches |
+| `MIPROv2(auto="medium")` | Slow (30-60 min) | Best | Local/small models, quality is critical |
+| `MIPROv2(auto="heavy")` | Very slow | Best | Last resort when medium still underperforms |
+
 ### Quick re-optimization (fast test)
 
 For a quick check before committing to a full MIPROv2 run:
@@ -324,3 +333,4 @@ When a provider updates their model (e.g., GPT-4o version bump):
 ## Additional resources
 
 - For worked examples (cost migration, vendor switch, model shootout), see [examples.md](examples.md)
+- For API reference (dspy.LM constructor, dspy.configure, dspy.context, optimizer params), see [reference.md](reference.md)

@@ -1,6 +1,6 @@
 ---
 name: ai-querying-databases
-description: Build AI that answers questions about your database. Use when you need text-to-SQL, natural language database queries, a data assistant for non-technical users, AI-powered analytics, plain English database search, or a chatbot that talks to your database. Covers DSPy pipelines for schema understanding, SQL generation, validation, and result interpretation., text-to-SQL that actually works, AI SQL generation is unreliable, let non-technical users query data, build a data analyst chatbot, business intelligence with AI, self-service analytics, AI dashboard queries, ask questions about my database in English, SQL copilot, AI-powered data exploration, Metabase alternative with AI, chat with your Postgres, natural language analytics, data chatbot for stakeholders.
+description: Build AI that answers questions about your database. Use when you need text-to-SQL, natural language database queries, a data assistant for non-technical users, AI-powered analytics, plain English database search, or a chatbot that talks to your database. Also used for text-to-SQL that actually works, AI SQL generation is unreliable, let non-technical users query data, build a data analyst chatbot, business intelligence with AI, self-service analytics, AI dashboard queries, ask questions about my database in English, SQL copilot, AI-powered data exploration, Metabase alternative with AI, chat with your Postgres, natural language analytics, data chatbot for stakeholders, DSPy pipelines for schema understanding and SQL generation.
 ---
 
 # Build AI That Answers Questions About Your Database
@@ -164,7 +164,6 @@ class SelectTables(dspy.Signature):
     schema: str = dspy.InputField(desc="Database schema description")
     question: str = dspy.InputField(desc="User's question in plain English")
     tables: list[str] = dspy.OutputField(desc="List of table names needed")
-    reasoning: str = dspy.OutputField(desc="Why these tables are needed")
 ```
 
 ### Stage 2: SQL generation
@@ -318,73 +317,15 @@ class InterpretResults(dspy.Signature):
 
 ## Step 6: Handle large schemas
 
-For databases with 50+ tables, sending the full schema to the AI is expensive and confusing. Use embedding-based schema retrieval:
+For databases with 50+ tables, sending the full schema to the AI is expensive and confusing. Use embedding-based schema retrieval instead:
 
-```python
-import chromadb
+1. Build a ChromaDB index of table descriptions at startup (`pip install chromadb`)
+2. At query time, embed the user's question and retrieve the top-k most relevant table schemas
+3. Pass only those table schemas to `GenerateSQL`
 
-def build_schema_index(engine, table_descriptions=None):
-    """Build a searchable index of table schemas."""
-    client = chromadb.PersistentClient(path="./schema_index")
-    collection = client.get_or_create_collection("table_schemas")
+The two-stage `SelectTables` module (Step 3) is a lighter alternative when you have 10–50 tables — it uses the LM itself to pick relevant tables rather than embeddings. For schemas over 50 tables, use the ChromaDB approach to avoid token overload.
 
-    inspector = inspect(engine)
-    table_descriptions = table_descriptions or {}
-
-    for table in inspector.get_table_names():
-        columns = inspector.get_columns(table)
-        col_names = [c["name"] for c in columns]
-
-        # Searchable description
-        desc = table_descriptions.get(table, table)
-        searchable = f"{table}: {desc}. Columns: {', '.join(col_names)}"
-
-        collection.upsert(
-            documents=[searchable],
-            ids=[table],
-            metadatas=[{"table": table}],
-        )
-
-    return collection
-
-class SchemaRetriever(dspy.Retrieve):
-    """Retrieve relevant table schemas based on the question."""
-    def __init__(self, collection, engine, k=5):
-        super().__init__(k=k)
-        self.collection = collection
-        self.engine = engine
-
-    def forward(self, query, k=None):
-        k = k or self.k
-        results = self.collection.query(query_texts=[query], n_results=k)
-
-        # Get full schema for matched tables
-        tables = [m["table"] for m in results["metadatas"][0]]
-        schema = get_schema_description(self.engine, tables=tables)
-        return dspy.Prediction(passages=[schema])
-```
-
-Then use it in your pipeline:
-
-```python
-class LargeSchemaQA(dspy.Module):
-    def __init__(self, engine, schema_collection):
-        self.engine = engine
-        self.schema_retriever = SchemaRetriever(schema_collection, engine, k=5)
-        self.generate_sql = dspy.ChainOfThought(GenerateSQL)
-        self.interpret = dspy.ChainOfThought(InterpretResults)
-
-    def forward(self, question):
-        schema = self.schema_retriever(question).passages[0]
-        result = self.generate_sql(schema=schema, question=question)
-        sql = result.sql.strip().rstrip(";")
-        validate_sql(sql)
-        rows = execute_query(self.engine, sql)
-        interpretation = self.interpret(
-            question=question, sql=sql, results=str(rows[:20])
-        )
-        return dspy.Prediction(sql=sql, rows=rows, answer=interpretation.answer)
-```
+See [examples.md](examples.md) for the full `SchemaRetriever` and `LargeSchemaQA` implementations with ChromaDB.
 
 ## Step 7: Test and optimize
 
@@ -467,15 +408,16 @@ def log_query(question, sql, row_count, user_id=None):
 
 ### Table allowlist
 
-```python
-ALLOWED_TABLES = {"orders", "products", "customers", "categories"}
+Pass only the permitted table names to `get_schema_description(engine, tables=list(ALLOWED_TABLES))`. Never include PII tables (e.g., raw payment info, SSNs) in the schema fed to the AI.
 
-def get_safe_schema(engine, allowed=ALLOWED_TABLES):
-    inspector = inspect(engine)
-    all_tables = set(inspector.get_table_names())
-    tables = list(all_tables & allowed)
-    return get_schema_description(engine, tables=tables)
-```
+## When NOT to use text-to-SQL
+
+Text-to-SQL is not the right tool in every case:
+
+- **Schema changes frequently** — if tables or column names change more than weekly, the AI's understanding drifts fast. Invest in a schema refresh pipeline before adding AI queries.
+- **Users need complex joins across 10+ tables** — current LMs struggle with JOINs that span many foreign keys. A better approach is pre-built semantic views the AI can query.
+- **Sub-second latency required** — the generate-SQL-validate-execute-interpret chain adds 2–5 seconds per query. Cache common queries or use a hybrid (SQL templates + AI parameter filling) for latency-sensitive paths.
+- **High-stakes writes needed** — if business logic requires INSERT/UPDATE based on AI reasoning, text-to-SQL is dangerous. Use a structured form or workflow instead; AI generates queries only for reads.
 
 ## Key patterns
 
@@ -486,13 +428,34 @@ def get_safe_schema(engine, allowed=ALLOWED_TABLES):
 - **Start with a small table allowlist**: expand as you build confidence
 - **Read-only, always**: the AI database user should never have write permissions
 
+## Gotchas
+
+- **Do not declare `reasoning` in signatures wrapped with `dspy.ChainOfThought`** — ChainOfThought automatically prepends a `reasoning` field to your signature. If you also declare `reasoning: str = dspy.OutputField()` in the signature class, ChainOfThought injects a second one. The result is unpredictable output. Omit `reasoning` from your signature and let ChainOfThought handle it. Use `dspy.Predict` if you want a signature without an injected reasoning field.
+
+- **LMs return SQL in markdown code fences** — models often wrap output in triple-backtick blocks (`\`\`\`sql ... \`\`\``). The `validate_sql` function above handles semicolons but not markdown fences. Strip them before passing to validate: `re.sub(r'^```\w*\n?|```$', '', sql.strip()).strip()`. Add this to your `forward()` before `validate_sql()`.
+
+- **Schema descriptions built at init go stale** — if you call `get_schema_description(engine)` once at startup and store it, newly added columns or tables are invisible to the AI until restart. Build schema descriptions per request (cheap for small schemas) or use a short-TTL cache.
+
+- **Compare result rows, not SQL text** — training data built around `expected_sql` is fragile: `SELECT COUNT(*) FROM orders WHERE ...` and `SELECT COUNT(id) FROM orders WHERE ...` return the same answer but fail string comparison. The `sql_accuracy` metric above compares result sets — use that pattern for all evals and metric functions.
+
+- **Appending `LIMIT` after subqueries breaks SQL** — the `execute_query` helper appends `LIMIT 100` if no LIMIT exists. This corrupts queries like `SELECT * FROM (SELECT ... ORDER BY ...) AS sub` where the limit belongs inside the subquery. Check for a subquery before blindly appending: only append LIMIT to flat `SELECT ... FROM table` patterns.
+
+## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
+- `/dspy-refine` for the retry-with-feedback pattern used in SQL validation
+- `/dspy-signatures` for defining input/output contracts for SelectTables, GenerateSQL, InterpretResults
+- `/dspy-chain-of-thought` for the ChainOfThought reasoning injection pattern
+- `/ai-serving-apis` to put your database assistant behind a REST API
+- `/ai-building-pipelines` for complex multi-step query workflows
+- `/ai-checking-outputs` for additional SQL validation patterns
+- `/ai-following-rules` to enforce query policies (e.g., no queries on PII columns)
+- `/ai-improving-accuracy` to measure and optimize query quality
+- `/ai-tracing-requests` to debug individual query failures
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+
 ## Additional resources
 
-- For worked examples, see [examples.md](examples.md)
-- Use `/ai-serving-apis` to put your database assistant behind a REST API
-- Use `/ai-building-pipelines` for complex multi-step query workflows
-- Use `/ai-checking-outputs` for additional SQL validation patterns
-- Use `/ai-following-rules` to enforce query policies (e.g., no queries on PII columns)
-- Use `/ai-improving-accuracy` to measure and optimize query quality
-- Use `/ai-tracing-requests` to debug individual query failures
-- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+- For worked examples and the full large-schema ChromaDB implementation, see [examples.md](examples.md)
+- For DSPy API signatures and parameter tables, see [reference.md](reference.md)

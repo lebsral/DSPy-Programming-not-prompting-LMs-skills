@@ -1,6 +1,6 @@
 ---
 name: ai-testing-safety
-description: Find every way users can break your AI before they do. Use when you need to red-team your AI, test for jailbreaks, find prompt injection vulnerabilities, run adversarial testing, do a safety audit before launch, prove your AI is safe for compliance, stress-test guardrails, or verify your AI holds up against adversarial users. Covers automated attack generation, iterative red-teaming with DSPy, and MIPROv2-optimized adversarial testing., red team my AI before launch, find AI vulnerabilities, adversarial testing for LLM, prompt injection attacks, jailbreak testing, AI safety compliance, SOC2 AI audit, OWASP LLM top 10, penetration testing for AI, stress test AI guardrails, can users break my AI, AI safety for regulated industries, test AI before shipping, adversarial prompt dataset.
+description: Find every way users can break your AI before they do. Use when you need to red-team your AI, test for jailbreaks, find prompt injection vulnerabilities, run adversarial testing, do a safety audit before launch, prove your AI is safe for compliance, stress-test guardrails, or verify your AI holds up against adversarial users. Also used for automated attack generation with DSPy, MIPROv2-optimized adversarial testing, red team before launch, AI vulnerability discovery, adversarial testing for LLM, prompt injection attacks, jailbreak testing, AI safety compliance, SOC2 AI audit, OWASP LLM top 10, penetration testing for AI, stress test AI guardrails, can users break my AI, AI safety for regulated industries, test AI before shipping, adversarial prompt dataset.
 ---
 
 # Find Every Way Users Can Break Your AI
@@ -247,14 +247,18 @@ report = {
 
 5. **Running safety tests once and never again.** Claude treats safety testing as a one-time pre-launch event. Save the optimized attacker with `attacker.save(...)` and re-run it on every deployment, after model changes, and after prompt modifications. Safety is a regression test, not a checkbox.
 
-## Additional resources
+## Cross-references
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
-- For complete worked examples (chatbot audit, model switch regression), see [examples.md](examples.md)
 - Use `/ai-checking-outputs` to build the defenses your audit reveals you need
 - Use `/ai-following-rules` to enforce policies that attackers try to bypass
 - Use `/ai-monitoring` to track safety metrics in production after launch
 - Use `/ai-moderating-content` to moderate user-generated content
 - Use `/ai-switching-models` when re-testing safety after a model change
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+
+## Additional resources
+
+- For complete worked examples (chatbot audit, model switch regression), see [examples.md](examples.md)
+- For DSPy API signatures (attack signatures, MIPROv2, Evaluate, Refine), see [reference.md](reference.md)

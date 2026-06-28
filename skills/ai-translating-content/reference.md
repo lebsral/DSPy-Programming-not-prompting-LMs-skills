@@ -7,12 +7,13 @@
 [API docs](https://dspy.ai/api/modules/Predict/)
 
 ```python
-dspy.Predict(signature, **config)
+dspy.Predict(signature, callbacks=None, **config)
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `signature` | `str \| type[Signature]` | required | Defines inputs and outputs |
+| `callbacks` | `list[BaseCallback] \| None` | `None` | Optional instrumentation callbacks |
 
 Direct input-to-output mapping — no reasoning step. Use for straightforward translation signatures and judge modules.
 
@@ -101,9 +102,12 @@ Access fields via `pred.result.translated_text`, not `pred.translated_text`.
 [API docs](https://dspy.ai/api/optimizers/MIPROv2/)
 
 ```python
-dspy.MIPROv2(metric, auto='light', prompt_model=None, task_model=None,
+dspy.MIPROv2(metric, prompt_model=None, task_model=None, teacher_settings=None,
              max_bootstrapped_demos=4, max_labeled_demos=4,
-             num_candidates=None, num_threads=None, seed=9, verbose=False)
+             auto='light', num_candidates=None, num_threads=None,
+             max_errors=None, seed=9, init_temperature=1.0,
+             verbose=False, track_stats=True, log_dir=None,
+             metric_threshold=None)
 ```
 
 | Parameter | Type | Default | Description |
@@ -112,6 +116,10 @@ dspy.MIPROv2(metric, auto='light', prompt_model=None, task_model=None,
 | `auto` | `'light' \| 'medium' \| 'heavy' \| None` | `'light'` | Optimization intensity |
 | `max_bootstrapped_demos` | `int` | `4` | Max auto-generated few-shot demos |
 | `max_labeled_demos` | `int` | `4` | Max labeled demos pulled from trainset |
+| `teacher_settings` | `dict \| None` | `None` | Settings for the teacher model |
+| `init_temperature` | `float` | `1.0` | Initial sampling temperature |
+| `metric_threshold` | `float \| None` | `None` | Min metric score to accept a candidate |
+| `max_errors` | `int \| None` | `None` | Max errors before aborting optimization |
 
 Key method: `.compile(module, trainset=list[dspy.Example])` — returns an optimized module.
 

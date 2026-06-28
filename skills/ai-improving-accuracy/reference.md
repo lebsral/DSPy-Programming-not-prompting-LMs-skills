@@ -67,7 +67,7 @@ dspy.MIPROv2(
     # Or manual control:
     # num_candidates=10,
     # init_temperature=0.7,
-    # num_trials=30,
+    # num_threads=8,
 )
 ```
 

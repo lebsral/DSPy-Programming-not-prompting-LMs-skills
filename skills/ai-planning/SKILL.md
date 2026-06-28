@@ -1,6 +1,6 @@
 ---
 name: ai-planning
-description: Plan a multi-phase AI feature before building it. Use when you have a PRD or project idea and need to figure out the execution order, which skills to use in what sequence, or how to break an ambitious AI project into phases. Also use when you want to scope an AI feature, create a phased rollout plan, or figure out dependencies between AI components., help me figure out how to execute this, plan my AI feature, what order should I build this in, AI project roadmap, break this into phases, scope an AI feature, phased AI rollout, AI feature planning, multi-phase AI project, AI project dependencies, which skills do I need, AI execution plan
+description: Plan a multi-phase AI feature before building it. Use when you have a PRD or project idea and need to figure out the execution order, which skills to use in what sequence, or how to break an ambitious AI project into phases. Also used for scoping an AI feature, creating a phased rollout plan, figuring out dependencies between AI components, help me figure out how to execute this, plan my AI feature, what order should I build this in, AI project roadmap, break this into phases, phased AI rollout, AI feature planning, multi-phase AI project, AI project dependencies, which skills do I need, AI execution plan
 ---
 
 # Plan Your AI Feature
@@ -148,7 +148,7 @@ Phase 1: `/ai-writing-content` (generate drafts at scale) -> Phase 2: `/ai-scori
 **AI agent**
 Phase 1: `/ai-choosing-architecture` (pick the right pattern) + `/ai-taking-actions` (wire up tools) -> Phase 2: `/ai-building-pipelines` (multi-step coordination) -> Phase 3: `/ai-testing-safety` + `/ai-monitoring`
 
-See `examples.md` for fully worked plans for each of these archetypes.
+See [examples.md](examples.md) for fully worked plans for each of these archetypes.
 
 ---
 
@@ -166,7 +166,16 @@ See `examples.md` for fully worked plans for each of these archetypes.
 
 ---
 
+## Additional resources
+
+- For the full phase model, skill catalog by phase, and phase gate checklists, see [reference.md](reference.md)
+- For fully worked plans for each project archetype, see [examples.md](examples.md)
+
+---
+
 ## Cross-References
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
 
 - For a specific skill recommendation on a single task, use `/ai-do`
 - To scaffold a project once you know what to build, use `/ai-kickoff`

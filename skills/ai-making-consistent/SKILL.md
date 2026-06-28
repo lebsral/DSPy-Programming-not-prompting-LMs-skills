@@ -205,5 +205,7 @@ def measure_consistency(program, input_data, n_runs=10):
 
 ## Additional resources
 
+- For worked examples, see [examples.md](examples.md)
+- For full API reference, see [reference.md](reference.md)
 - [dspy.LM API docs](https://dspy.ai/api/models/LM/) for temperature and caching configuration
 - [DSPy caching tutorial](https://dspy.ai/tutorials/cache/) for cache configuration details

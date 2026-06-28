@@ -295,6 +295,16 @@ print(result.tweet)
 
 When rules conflict (e.g., "include all key facts" vs "stay under 280 chars"), make the **harder constraint return 0.0** so the model prioritizes it.
 
+**Verify reward functions in isolation** before wrapping with Refine — create a `dspy.Prediction` directly to unit-test edge cases:
+
+```python
+# Test each rule path before you wrap with Refine
+test_pass = dspy.Prediction(tweet="Solar costs fell 90% — a decade of progress.")
+test_fail = dspy.Prediction(tweet="Solar costs fell 90% #renewable http://link.com — too long text here exceeding limits for this platform, really long")
+assert tweet_reward({"key_facts": ["Solar costs fell 90%"]}, test_pass) == 1.0
+assert tweet_reward({"key_facts": ["Solar costs fell 90%"]}, test_fail) < 1.0
+```
+
 ## Step 8: Optimizing with rules
 
 DSPy optimizers work alongside Refine and BestOfN. Combine the rule reward function with a quality metric so the optimizer learns prompts that naturally comply with constraints — reducing how often Refine needs to retry in production.
@@ -358,3 +368,4 @@ production = dspy.Refine(
 ## Additional resources
 
 - For complete worked examples, see [examples.md](examples.md)
+- For API signatures, parameter tables, and threshold guidance, see [reference.md](reference.md)

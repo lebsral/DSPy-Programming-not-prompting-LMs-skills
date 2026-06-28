@@ -1,4 +1,15 @@
-# No formal audit has been recorded for this skill yet. Run the skill-quality
-# audit against the current DSPy version, then replace last_audit with a real
-# block: {date: YYYY-MM-DD, score: N/N, versions: {dspy: X.Y.Z}}.
-last_audit: null
+last_audit:
+  date: 2026-06-28
+  score: 52/52
+  versions:
+    dspy: 3.2.1
+  notes: >
+    First real audit. Fixed 3 FAILs and 6 WARNs. Key fixes:
+    (1) GEPA constructor had no task_lm param -- removed from SKILL.md, reference.md, examples.md;
+    (2) detailed_results is on optimized (compiled program), not optimizer -- fixed everywhere;
+    (3) Gotcha 1 was misleading -- MIPROv2 also has track_stats but with different semantics;
+    (4) Added MIPROv2 verbose/log_dir to reference.md and comparison table;
+    (5) Updated dspy.Evaluate signature with provide_traceback, save_as_csv, save_as_json;
+    (6) Added Additional resources section linking reference.md;
+    (7) Added id fields to evals.json;
+    (8) Updated reference.md header links to specific optimizer pages.

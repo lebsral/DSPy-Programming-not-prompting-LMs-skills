@@ -353,6 +353,8 @@ optimizer = dspy.BootstrapFewShot(metric=summary_metric, max_bootstrapped_demos=
 optimized = optimizer.compile(summarizer, trainset=trainset)
 ```
 
+Typical improvement: zero-shot `ChainOfThought` alone scores ~65-75% on a combined faithfulness+coverage metric. After `BootstrapFewShot` with 4 demos expect ~80-88%, depending on content type and LM. If the metric plateaus below 80%, upgrade to `dspy.MIPROv2` (instruction tuning on top of few-shot).
+
 ## When NOT to build a summarizer
 
 - **You need specific fields, not a summary** — extracting names, dates, amounts from text is parsing, not summarizing. Use `/ai-parsing-data` instead.
@@ -393,3 +395,4 @@ optimized = optimizer.compile(summarizer, trainset=trainset)
 ## Additional resources
 
 - For worked examples (meetings, support threads, long docs), see [examples.md](examples.md)
+- For DSPy API signatures, parameter tables, and reward function patterns, see [reference.md](reference.md)

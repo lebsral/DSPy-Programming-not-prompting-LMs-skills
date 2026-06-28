@@ -167,7 +167,7 @@ def faithfulness_reward(args: dict, pred: dspy.Prediction) -> float:
 
 # BestOfN samples N candidates and returns the one with the highest reward
 cross_checked = dspy.BestOfN(
-    GroundedAnswerer(), N=3, reward_fn=faithfulness_reward
+    GroundedAnswerer(), N=3, reward_fn=faithfulness_reward, threshold=0.5
 )
 
 # Usage — returns the most faithful of the 3 sampled answers
@@ -468,3 +468,4 @@ Good reward functions make Refine work better — specific scores tied to measur
 ## Additional resources
 
 - For complete worked examples, see [examples.md](examples.md)
+- For API signatures and parameter tables, see [reference.md](reference.md)

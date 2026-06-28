@@ -1,38 +1,43 @@
-[
-  {
-    "id": "redact-email-phone-name",
-    "description": "Redact name, email, and phone from a customer support message",
-    "input": {
-      "text": "Hi, I'm Alex Turner and I need help with my order. Please call me at 212-555-0147 or email me at alex.turner@example.com."
+{
+  "skill_name": "ai-redacting-data",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I need to redact PII from customer support messages before logging them. Here is an example message: 'Hi, I'm Alex Turner and I need help with my order. Please call me at 212-555-0147 or email me at alex.turner@example.com.' Build me a DSPy module that strips names, phone numbers, and email addresses.",
+      "expected_output": "A DSPy module using a two-pass approach: regex patterns for structured PII (email, phone) followed by a dspy.Predict call for contextual PII (names). The module's forward() method should return a redacted string with placeholders like [PERSON_NAME_1], [PHONE_1], [EMAIL]. Uses a seen-map dict to ensure consistent placeholders for repeated entities.",
+      "files": [],
+      "assertions": [
+        {"name": "two_pass_pipeline", "description": "Implements regex pass first, then LM pass — not LM-only"},
+        {"name": "regex_before_lm", "description": "Sends pre-masked text (not raw PII) to the LM call"},
+        {"name": "uses_dspy_predict", "description": "Wraps a dspy.Signature with dspy.Predict for name detection"},
+        {"name": "uses_seen_map", "description": "Uses a deduplication dict so the same entity always maps to the same placeholder"},
+        {"name": "provider_agnostic", "description": "LM config uses dspy.LM with a generic provider and alternative comment"}
+      ]
     },
-    "expected": {
-      "redacted_text_must_not_contain": ["Alex Turner", "212-555-0147", "alex.turner@example.com"],
-      "redacted_text_must_contain": ["[PERSON_NAME", "[PHONE", "[EMAIL"]
+    {
+      "id": 1,
+      "prompt": "I need to de-identify clinical notes for HIPAA Safe Harbor compliance. The notes contain patient names, DOBs, MRNs, provider names, phone numbers, and email addresses. Example: 'Patient Maria Flores, DOB: 07/22/1978, MRN: 4491203, was seen by Dr. Kevin Holt on March 10, 2025. Contact: mflores@gmail.com, (505) 555-3389.' Build a pipeline that removes all 18 PHI categories.",
+      "expected_output": "A DSPy module with HIPAA-specific regex patterns (MRN, NPI, DOB, dates, phone, email, SSN, URL, account numbers) plus a dspy.Predict call for contextual PHI (patient and provider names). Should handle at least the common HIPAA Safe Harbor identifiers and return a de-identified string where all PHI is replaced with category placeholders.",
+      "files": [],
+      "assertions": [
+        {"name": "hipaa_regex_patterns", "description": "Includes regex for MRN, DOB, phone, email, and date patterns beyond the basic set"},
+        {"name": "lm_for_names", "description": "Uses dspy.Predict to detect patient and provider names that regex cannot catch"},
+        {"name": "pre_masks_before_lm", "description": "Structured PHI is regex-masked before the text is sent to the LM"},
+        {"name": "category_placeholders", "description": "Replacements clearly indicate the PHI category removed (e.g. [PATIENT_NAME], [MRN], [DOB])"},
+        {"name": "no_assert_suggest", "description": "Does not use removed dspy.Assert or dspy.Suggest APIs"}
+      ]
     },
-    "evaluation_notes": "All three PII types must be replaced. Original sentence structure must be preserved. Same entity should map to the same placeholder if it appears more than once."
-  },
-  {
-    "id": "redact-hipaa-clinical-note",
-    "description": "De-identify a clinical note containing HIPAA PHI",
-    "input": {
-      "text": "Patient Maria Flores, DOB: 07/22/1978, MRN: 4491203, was seen by Dr. Kevin Holt on March 10, 2025. Contact: mflores@gmail.com, (505) 555-3389."
-    },
-    "expected": {
-      "phi_removed_min": 5,
-      "redacted_text_must_not_contain": ["Maria Flores", "07/22/1978", "4491203", "Kevin Holt", "mflores@gmail.com", "555-3389"]
-    },
-    "evaluation_notes": "Must redact patient name, DOB, MRN, provider name, email, and phone. PHI count should be at least 5. Placeholders should clearly indicate the category of PHI removed."
-  },
-  {
-    "id": "consistent-entity-references",
-    "description": "Same entity appearing multiple times must get the same placeholder throughout",
-    "input": {
-      "text": "Sarah Kim called at 9am. Sarah Kim said her account was locked. Please follow up with Sarah Kim by EOD."
-    },
-    "expected": {
-      "all_occurrences_same_placeholder": true,
-      "placeholder_pattern": "[PERSON_NAME_1]"
-    },
-    "evaluation_notes": "All three occurrences of 'Sarah Kim' must be replaced with the same placeholder token, not three different ones. This tests the deduplication / seen-map logic."
-  }
-]
+    {
+      "id": 2,
+      "prompt": "I have a document where the same person is mentioned several times: 'Sarah Kim called at 9am. Sarah Kim said her account was locked. Please follow up with Sarah Kim by EOD.' The redacted output keeps giving each mention a different placeholder. How do I make the same entity always get the same replacement token?",
+      "expected_output": "An explanation and code fix showing that a seen-map dict (value to replacement) must be built before applying replacements. The same entity value should map to the same placeholder across all occurrences. The fix uses sorted replacement by descending length to prevent partial-match corruption, then applies all replacements from the seen dict in a single final pass.",
+      "files": [],
+      "assertions": [
+        {"name": "seen_map_deduplication", "description": "Uses a dict mapping each entity value to its placeholder to ensure consistency"},
+        {"name": "single_final_pass", "description": "Applies all replacements in one final pass on the original text, not incrementally"},
+        {"name": "length_sorted_replacements", "description": "Sorts replacements by descending length to avoid partial-match corruption"},
+        {"name": "identifies_root_cause", "description": "Explains that the bug is missing deduplication, not an LM accuracy issue"}
+      ]
+    }
+  ]
+}

@@ -302,3 +302,4 @@ optimized = optimizer.compile(moderator, trainset=trainset)
 ## Additional resources
 
 - For complete worked examples, see [examples.md](examples.md)
+- For API signatures and quick reference, see [reference.md](reference.md)

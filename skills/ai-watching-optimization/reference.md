@@ -1,4 +1,4 @@
-> Condensed from [dspy.ai/api/evaluation/Evaluate/](https://dspy.ai/api/evaluation/Evaluate/) and [dspy.ai/api/optimizers/](https://dspy.ai/api/optimizers/). Verify against upstream for latest.
+> Condensed from [dspy.ai/api/evaluation/Evaluate/](https://dspy.ai/api/evaluation/Evaluate/), [dspy.ai/api/optimizers/MIPROv2/](https://dspy.ai/api/optimizers/MIPROv2/), [dspy.ai/api/optimizers/BootstrapFewShot/](https://dspy.ai/api/optimizers/BootstrapFewShot/), and [dspy.ai/api/optimizers/GEPA/](https://dspy.ai/api/optimizers/GEPA/overview/). Verify against upstream for latest.
 
 # DSPy API Reference for Watching Optimization
 
@@ -16,19 +16,23 @@
 ## dspy.Evaluate
 
 ```python
-dspy.Evaluate(devset, metric=None, num_threads=None, display_progress=False,
-              display_table=False, max_errors=None, failure_score=0.0)
+dspy.Evaluate(*, devset, metric=None, num_threads=None, display_progress=False,
+              display_table=False, max_errors=None, provide_traceback=None,
+              failure_score=0.0, save_as_csv=None, save_as_json=None)
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `devset` | `list[Example]` | required | Evaluation dataset |
+| `devset` | `list[Example]` | required | Evaluation dataset (keyword-only) |
 | `metric` | `Callable \| None` | `None` | `(example, pred, trace=None) -> float\|bool` |
 | `num_threads` | `int \| None` | `None` | Parallel evaluation threads |
 | `display_progress` | `bool` | `False` | Show tqdm progress bar |
 | `display_table` | `bool \| int` | `False` | Show per-example table (int = row count) |
 | `max_errors` | `int \| None` | `None` | Errors before stopping |
+| `provide_traceback` | `bool \| None` | `None` | Include traceback on failures |
 | `failure_score` | `float` | `0.0` | Score assigned to failed examples |
+| `save_as_csv` | `str \| None` | `None` | Save results to this CSV path |
+| `save_as_json` | `str \| None` | `None` | Save results to this JSON path |
 
 Call: `score = evaluator(module)` — returns a float on the 0–100 scale.
 
@@ -61,20 +65,46 @@ Prints raw prompt + completion for the last `n` LM calls to stdout. Post-hoc onl
 
 ## GEPA — track_stats
 
+GEPA has no `task_lm` constructor parameter. Set the task LM via `dspy.configure(lm=task_lm)` before constructing the optimizer. `track_stats` defaults to `False` in GEPA (unlike MIPROv2 where it defaults to `True`).
+
 ```python
+dspy.configure(lm=task_lm)  # task LM is global, not a GEPA constructor param
+
 optimizer = dspy.GEPA(
     metric=metric,
-    task_lm=task_lm,
     reflection_lm=reflection_lm,
-    track_stats=True,          # GEPA-only parameter
+    track_stats=True,          # GEPA-specific behavior: populates detailed_results
+    # use_mlflow=True,         # alternatively: native MLflow integration
+    # use_wandb=True,          # alternatively: native W&B integration
 )
 optimized = optimizer.compile(program, trainset=trainset)
-stats = optimizer.detailed_results  # list[dict], one entry per iteration
-for i, r in enumerate(stats):
-    print(f"Iteration {i}: score={r['score']:.3f}")
+stats = optimized.detailed_results  # DspyGEPAResult on the compiled program (not the optimizer)
 ```
 
-`track_stats` has no effect on MIPROv2 or BootstrapFewShot. `optimizer.detailed_results` is populated after `compile()` returns.
+`optimized.detailed_results` is a `DspyGEPAResult` object containing candidates, validation scores, Pareto frontiers, and lineage. It is available after `compile()` returns. GEPA also has built-in `use_mlflow=True` and `use_wandb=True` flags as alternatives to dspy-gepa-logger.
+
+## MIPROv2 — verbose and logging params
+
+MIPROv2 has built-in verbosity and logging parameters relevant to watching optimization progress.
+
+```python
+optimizer = dspy.MIPROv2(
+    metric=metric,
+    auto="light",              # "light" | "medium" | "heavy" | None
+    verbose=False,             # True = print detailed progress to console (zero extra setup)
+    track_stats=True,          # default True; controls internal stats tracking (not user-accessible)
+    log_dir=None,              # str path to write optimizer logs to disk
+)
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `verbose` | `bool` | `False` | Print detailed optimizer progress to console |
+| `track_stats` | `bool` | `True` | Track internal stats (default on; does not expose `detailed_results`) |
+| `log_dir` | `str \| None` | `None` | Directory to write optimizer run logs |
+| `auto` | `Literal \| None` | `"light"` | Preset budget: light / medium / heavy / None (manual) |
+
+For live per-candidate scores, use `verbose=True` (console) or LangWatch (cloud dashboard). `track_stats` in MIPROv2 is not the same as in GEPA — it does not produce a `detailed_results` attribute.
 
 ## dspy-gepa-logger (GEPALogger)
 

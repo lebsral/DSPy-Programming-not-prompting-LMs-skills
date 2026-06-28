@@ -1,33 +1,41 @@
-[
-  {
-    "prompt": "I need to build an AI that can search the web for information and answer questions based on what it finds.",
-    "expected_output": "A DSPy ReAct agent with a search tool that retrieves web results and reasons over them to produce answers.",
-    "assertions": [
-      "uses dspy.ReAct",
-      "defines a search tool function with type hints and docstring",
-      "configures dspy.LM before creating the agent",
-      "shows how to call the agent and access the answer"
-    ]
-  },
-  {
-    "prompt": "Build me an AI agent that can call our internal REST API to look up customer records and also do math calculations on the results.",
-    "expected_output": "A DSPy ReAct agent with two tools: one for API calls and one for calculations, with proper type hints and docstrings.",
-    "assertions": [
-      "uses dspy.ReAct with multiple tools",
-      "defines tools with type hints and docstrings",
-      "tools return strings or string-convertible values",
-      "sets max_iters explicitly",
-      "does not hardcode a single LM provider"
-    ]
-  },
-  {
-    "prompt": "I want an AI that writes and runs Python code to solve data analysis problems.",
-    "expected_output": "A DSPy CodeAct agent configured with pure function tools for code execution tasks.",
-    "assertions": [
-      "uses dspy.CodeAct (not ReAct)",
-      "explains that CodeAct only accepts pure functions",
-      "shows how to define tools as pure functions",
-      "configures dspy.LM before creating the agent"
-    ]
-  }
-]
+{
+  "skill_name": "ai-taking-actions",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I need to build an AI that can search the web for information and answer questions based on what it finds.",
+      "expected_output": "A DSPy ReAct agent with a search tool that retrieves web results and reasons over them to produce answers.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_react", "description": "Uses dspy.ReAct, not dspy.Predict or dspy.ChainOfThought"},
+        {"name": "tool_has_type_hints_and_docstring", "description": "Search tool function has type hints on all parameters and a docstring describing what it does"},
+        {"name": "configures_lm_before_agent", "description": "Calls dspy.configure(lm=lm) before instantiating dspy.ReAct"},
+        {"name": "accesses_output_field", "description": "Shows how to call the agent and access the answer field from the result"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Build me an AI agent that can call our internal REST API to look up customer records and also do math calculations on the results.",
+      "expected_output": "A DSPy ReAct agent with two tools: one for API calls and one for calculations, with proper type hints and docstrings.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_react_with_multiple_tools", "description": "Uses dspy.ReAct with a tools list containing both an API tool and a math tool"},
+        {"name": "tools_return_strings", "description": "Tools return strings or string-convertible values, not dicts or custom objects"},
+        {"name": "sets_max_iters_explicitly", "description": "Sets max_iters explicitly on the agent (does not rely on the default of 20)"},
+        {"name": "provider_agnostic", "description": "LM config uses a generic provider example with an alternative comment, not a single hardcoded provider"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I want an AI that writes and runs Python code to solve data analysis problems.",
+      "expected_output": "A DSPy CodeAct agent configured with pure function tools for code execution tasks.",
+      "files": [],
+      "assertions": [
+        {"name": "uses_codeact_not_react", "description": "Uses dspy.CodeAct instead of dspy.ReAct for the code-execution use case"},
+        {"name": "explains_pure_functions_constraint", "description": "Explains that CodeAct only accepts pure functions as tools, not callable objects or class instances"},
+        {"name": "tool_defined_as_pure_function", "description": "Tool functions have no undeclared external dependencies"},
+        {"name": "configures_lm_before_agent", "description": "Calls dspy.configure(lm=lm) before instantiating dspy.CodeAct"}
+      ]
+    }
+  ]
+}

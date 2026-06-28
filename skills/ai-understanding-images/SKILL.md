@@ -288,7 +288,7 @@ refiner = dspy.Refine(dspy.Predict(AnalyzeImage), N=3, reward_fn=my_reward)
 
 ## Gotchas
 
-- **Wrap image inputs in `dspy.Image`** - Claude writes raw URL strings as image inputs instead of wrapping them. Always wrap the URL or local path directly: `dspy.Image(url="https://...")` or `dspy.Image(url="local/path.jpg")`. Raw strings are treated as text, not images. (The old `dspy.Image(url=)` / `from_file()` classmethods are deprecated in favor of `dspy.Image(url=...)`.)
+- **Wrap image inputs in `dspy.Image`** - Claude writes raw URL strings as image inputs instead of wrapping them. Always wrap the URL or local path directly: `dspy.Image(url="https://...")` or `dspy.Image(url="local/path.jpg")`. Raw strings are treated as text, not images. (The old classmethods `from_url()`, `from_file()`, and `from_PIL()` are deprecated — use `dspy.Image(url=...)` for all forms.)
 
 - **Verify the model supports vision** - Claude picks a model that does not support image inputs. Not all LLMs handle images. Confirm vision support for your chosen model before deploying (GPT-4o, Claude 3.5+, Gemini 2.x all work).
 
@@ -313,7 +313,8 @@ refiner = dspy.Refine(dspy.Predict(AnalyzeImage), N=3, reward_fn=my_reward)
 
 ## Additional resources
 
-See `examples.md` for worked examples:
-- Product photo categorizer
-- Alt text generator
-- Receipt/invoice OCR pipeline
+- For API details (dspy.Image constructor, field parameters, module selection table), see [reference.md](reference.md)
+- For worked examples, see [examples.md](examples.md):
+  - Product photo categorizer
+  - Alt text generator
+  - Receipt/invoice OCR pipeline

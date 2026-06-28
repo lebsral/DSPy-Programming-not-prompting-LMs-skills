@@ -12,7 +12,6 @@ class SelectTables(dspy.Signature):
     schema: str = dspy.InputField(desc="Database schema description")
     question: str = dspy.InputField(desc="User's question in plain English")
     tables: list[str] = dspy.OutputField(desc="List of table names needed")
-    reasoning: str = dspy.OutputField(desc="Why these tables are needed")
 
 class GenerateSQL(dspy.Signature):
     """Write a SQL SELECT query. Only use tables and columns in the schema."""
@@ -55,15 +54,16 @@ Injects a `reasoning` field before outputs automatically — do not declare it i
 [API docs](https://dspy.ai/api/modules/Refine/)
 
 ```python
-dspy.Refine(module, N, reward_fn, threshold=None, **config)
+dspy.Refine(module, N, reward_fn, threshold, fail_count=None)
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `module` | `dspy.Module` | required | Module to wrap |
 | `N` | `int` | required | Max retry attempts |
-| `reward_fn` | `Callable[[args, pred], float]` | required | Returns 0.0–1.0 |
-| `threshold` | `float \| None` | `None` | Stop early if score exceeds this |
+| `reward_fn` | `Callable[[dict, Prediction], float]` | required | Returns 0.0–1.0 |
+| `threshold` | `float` | required | Stop early if score meets or exceeds this |
+| `fail_count` | `int \| None` | `None` (defaults to N) | Max failures before raising an error |
 
 Wrap SQL generation so unsafe queries are retried before execution:
 

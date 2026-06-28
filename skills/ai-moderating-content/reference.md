@@ -62,7 +62,7 @@ Always clamp `confidence` before routing: `confidence = max(0.0, min(1.0, result
 [API docs](https://dspy.ai/api/modules/Refine/)
 
 ```python
-dspy.Refine(module, N, reward_fn, threshold=1.0)
+dspy.Refine(module, N, reward_fn, threshold, fail_count=None)
 ```
 
 | Parameter | Type | Default | Description |
@@ -70,7 +70,8 @@ dspy.Refine(module, N, reward_fn, threshold=1.0)
 | `module` | `dspy.Module` | required | Module to refine |
 | `N` | `int` | required | Max retry attempts |
 | `reward_fn` | `Callable[[args, pred], float]` | required | Scores output quality; higher is better |
-| `threshold` | `float` | `1.0` | Stop early if reward meets or exceeds this |
+| `threshold` | `float` | required | Stop early if reward meets or exceeds this |
+| `fail_count` | `int \| None` | `None` | Max failures before raising an error |
 
 Use to constrain multi-label outputs to the known violation set:
 

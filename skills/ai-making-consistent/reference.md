@@ -7,13 +7,13 @@
 [API docs](https://dspy.ai/api/models/LM/)
 
 ```python
-dspy.LM(model, temperature=0.0, **kwargs)
+dspy.LM(model, temperature=None, **kwargs)
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `model` | `str` | required | LiteLLM model string — `"openai/gpt-4o-mini"`, `"anthropic/claude-sonnet-4-5-20250929"`, etc. |
-| `temperature` | `float` | `0.0` | Sampling temperature. Set to `0` for maximum determinism. |
+| `temperature` | `float \| None` | `None` | Sampling temperature. Set to `0` for maximum determinism. |
 
 ```python
 lm = dspy.LM("openai/gpt-4o-mini", temperature=0)
@@ -84,7 +84,7 @@ Use Refine for strict rules where feedback helps the model self-correct. Use `ds
 Runs the module N times independently and returns the highest-scoring result.
 
 ```python
-dspy.BestOfN(module, N, reward_fn, threshold=None)
+dspy.BestOfN(module, N, reward_fn, threshold, fail_count=None)
 ```
 
 | Parameter | Type | Default | Description |
@@ -92,7 +92,8 @@ dspy.BestOfN(module, N, reward_fn, threshold=None)
 | `module` | `dspy.Module` | required | The DSPy module to sample from. |
 | `N` | `int` | required | Number of independent samples. |
 | `reward_fn` | `Callable` | required | Same signature as Refine — `(args, pred) -> float`. |
-| `threshold` | `float \| None` | `None` | Early-stop if any sample clears this score. |
+| `threshold` | `float` | required | Accept the output when any sample clears this score. |
+| `fail_count` | `int \| None` | `None` | Raise an error after this many failures (defaults to N). |
 
 ## dspy.BootstrapFewShot
 

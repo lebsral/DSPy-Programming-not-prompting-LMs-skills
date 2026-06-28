@@ -49,15 +49,16 @@ class MySignature(dspy.Signature):
 [API docs](https://dspy.ai/api/modules/Refine/)
 
 ```python
-dspy.Refine(module, N, reward_fn, threshold=None)
+dspy.Refine(module, N, reward_fn, threshold, fail_count=None)
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `module` | `dspy.Module` | required | Module to wrap with retry logic |
 | `N` | `int` | required | Max attempts before returning best result |
-| `reward_fn` | `Callable[[args, pred], float]` | required | Returns 0.0–1.0; called after each attempt |
-| `threshold` | `float \| None` | `None` | Stop early when reward meets or exceeds this value |
+| `reward_fn` | `Callable[[dict, Prediction], float]` | required | Returns 0.0–1.0; called after each attempt. Receives inputs dict and Prediction object |
+| `threshold` | `float` | required | Stop early when reward meets or exceeds this value |
+| `fail_count` | `int \| None` | `None` | Allowed failures before raising error (defaults to N if None) |
 
 Use for format-validation loops — retry until the cleaned value matches your target regex. `dspy.Assert` and `dspy.Suggest` were removed in DSPy 3.x; `dspy.Refine` is the replacement.
 

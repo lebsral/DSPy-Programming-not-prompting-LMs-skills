@@ -65,15 +65,16 @@ class PIIRedactor(dspy.Module):
 [API docs](https://dspy.ai/api/modules/Refine/)
 
 ```python
-dspy.Refine(module, N, reward_fn, threshold=None)
+dspy.Refine(module, N, reward_fn, threshold, fail_count=None)
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `module` | `dspy.Module` | required | Module to wrap with retry logic |
 | `N` | `int` | required | Max attempts before returning best result |
-| `reward_fn` | `Callable[[args, pred], float]` | required | Returns 0.0–1.0; higher = better |
-| `threshold` | `float \| None` | `None` | Stop early when reward meets or exceeds this value |
+| `reward_fn` | `Callable[[dict, Prediction], float]` | required | Returns 0.0–1.0; higher = better |
+| `threshold` | `float` | required | Stop early when reward meets or exceeds this value |
+| `fail_count` | `int \| None` | `None` | Abort after this many failures; defaults to N internally if None |
 
 Use to validate that no PII survived redaction. `dspy.Assert` and `dspy.Suggest` were removed in DSPy 3.x; `dspy.Refine` is the replacement.
 
@@ -132,7 +133,7 @@ HIPAA Safe Harbor adds: `MRN`, `NPI`, `DEVICE_ID`, `URL`, `ACCOUNT`, `DATE` (mon
 |---|---|---|
 | Contextual PII detection | `dspy.Predict(DetectContextualPII)` | Returns `list[dict]` with `pii_type`, `value` |
 | Full pipeline | `dspy.Module` with `forward()` | Regex pass then LM pass then replacement pass |
-| Validate redaction | `dspy.Refine(module, N, reward_fn)` | LM judge checks `is_clean`; replaces `dspy.Assert` |
+| Validate redaction | `dspy.Refine(module, N, reward_fn, threshold)` | `threshold` required; LM judge checks `is_clean`; replaces `dspy.Assert` |
 | Per-request LM switching | `with dspy.context(lm=other_lm)` | Trusted LM for detection, external LM for task |
 | Batch processing | `module.batch(num_threads=N)` | All DSPy modules support `.batch()` |
 | Strategy - category | `f"[{pii_type}]"` | Readable; best for compliance audits |

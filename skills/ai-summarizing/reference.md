@@ -72,7 +72,7 @@ Default choice for summarization. Adds a `reasoning` field before the output.
 [API docs](https://dspy.ai/api/modules/Refine/)
 
 ```python
-dspy.Refine(module, N, reward_fn, threshold=0.8, fail_count=None)
+dspy.Refine(module, N, reward_fn, threshold, fail_count=None)
 ```
 
 | Parameter | Type | Default | Description |
@@ -80,7 +80,7 @@ dspy.Refine(module, N, reward_fn, threshold=0.8, fail_count=None)
 | `module` | `dspy.Module` | required | Module to refine |
 | `N` | `int` | required | Max retry attempts |
 | `reward_fn` | `Callable[[dict, Prediction], float]` | required | Scores output; 1.0 = perfect |
-| `threshold` | `float` | `0.8` | Stop retrying once score >= threshold |
+| `threshold` | `float` | required | Stop retrying once score >= threshold (0.8-0.9 is a typical starting value) |
 
 Reward function signature - `reward_fn(args: dict, pred: Prediction) -> float`. `args` holds the module's input keyword arguments. Use `dspy.Refine` (not `dspy.Assert`/`dspy.Suggest`, removed in DSPy 3.x) for all length enforcement.
 

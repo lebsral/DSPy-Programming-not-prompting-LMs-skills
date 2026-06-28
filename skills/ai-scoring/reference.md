@@ -64,20 +64,20 @@ No reasoning step. Use for high-volume, low-stakes screening where cost matters 
 [API docs](https://dspy.ai/api/modules/Refine/)
 
 ```python
-dspy.Refine(module, N=3, reward_fn=None, threshold=None, fail_count=1)
+dspy.Refine(module, N, reward_fn, threshold, fail_count=None)
 ```
 
-`reward_fn` signature: `(args, pred) -> float` (higher = better). Use to enforce justification quality — retry when justification is vague or score is out-of-range. Attempts see feedback from prior failures; unlike `BestOfN`, which samples independently.
+`N`, `reward_fn`, and `threshold` are all required. `reward_fn` signature: `(args, pred) -> float` (higher = better). Use to enforce justification quality — retry when justification is vague or score is out-of-range. Attempts see feedback from prior failures; unlike `BestOfN`, which samples independently.
 
 ## dspy.BestOfN
 
 [API docs](https://dspy.ai/api/modules/BestOfN/)
 
 ```python
-dspy.BestOfN(module, N=5, reward_fn=None, threshold=None)
+dspy.BestOfN(module, N, reward_fn, threshold, fail_count=None)
 ```
 
-Runs the module N times independently, returns the prediction with the highest reward. Use when you want sampling diversity without feedback across attempts.
+`N`, `reward_fn`, and `threshold` are all required. Runs the module N times independently, returns the prediction with the highest reward. Use when you want sampling diversity without feedback across attempts.
 
 ## dspy.Evaluate
 

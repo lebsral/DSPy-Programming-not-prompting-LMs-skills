@@ -303,6 +303,11 @@ This gives you LangGraph's state management and routing with DSPy's optimizable 
 - **Pipeline order affects optimization** — DSPy optimizers trace through your `forward()` method. If module A's output feeds module B, the optimizer sees this dependency. Reordering modules or adding conditional logic changes what the optimizer can learn.
 - **Test intermediate outputs, not just final output** — add metrics that check each stage's output independently. A pipeline can produce correct final output for wrong reasons, which breaks when inputs change.
 
+## Additional resources
+
+- For worked examples (minimal pipeline, routing, Refine, production content moderation), see [examples.md](examples.md)
+- For DSPy API quick-reference (Module, Predict, ChainOfThought, Refine, BestOfN, MIPROv2, save/load), see [reference.md](reference.md)
+
 ## Cross-references
 
 > Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`

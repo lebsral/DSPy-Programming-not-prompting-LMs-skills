@@ -36,7 +36,7 @@ Common cheap model strings:
 
 ```python
 dspy.configure(lm=lm)                  # Set global default LM
-dspy.configure_cache(enable=True)       # Toggle caching globally
+dspy.configure_cache(enable_disk_cache=True, enable_memory_cache=True)  # Toggle caching globally
 
 with dspy.context(lm=other_lm):        # Temporary override for a block
     result = module(input=...)

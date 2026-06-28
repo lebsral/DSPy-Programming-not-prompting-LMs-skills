@@ -40,17 +40,17 @@ baseline_score = evaluator(program)
 print(f"Baseline: {baseline_score}")
 
 # Step 2: Optimize with tracking enabled
+# task_lm is already set via dspy.configure(lm=task_lm) above -- GEPA has no task_lm param
 optimizer = dspy.GEPA(
     metric=routing_accuracy,
-    task_lm=task_lm,
     reflection_lm=reflection_lm,
     track_stats=True,
 )
 
 optimized = optimizer.compile(program, trainset=trainset)
 
-# Step 3: Inspect iteration-by-iteration progress
-stats = optimizer.detailed_results
+# Step 3: Inspect iteration-by-iteration progress -- detailed_results is on the compiled program
+stats = optimized.detailed_results
 for i, result in enumerate(stats):
     print(f"Iteration {i}: score={result['score']:.3f}")
 

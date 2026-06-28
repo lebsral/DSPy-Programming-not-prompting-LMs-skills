@@ -13,8 +13,7 @@ Ask the user:
 1. **What events are you analyzing?** (transactions, logins, API calls, server logs, user actions, etc.)
 2. **What does "normal" look like?** (Do you have historical baselines? Average values? Known-good patterns?)
 3. **What counts as suspicious?** (Frequency spikes, unusual amounts, geographic outliers, time-of-day mismatches, etc.)
-4. **What action should fire on detection?** (Alert, block, escalate to human, log for review, etc.)
-5. **What false-positive tolerance do you have?** (Low tolerance = only flag high-confidence anomalies; high tolerance = cast wide net)
+4. **What action fires on detection, and how strict is your false-positive tolerance?** (Actions: alert, block, escalate, log for review. Tolerance: low = only flag high-confidence anomalies; high = cast a wide net and filter later.)
 
 The answers determine severity thresholds, routing logic, and how much baseline context to include.
 
@@ -282,6 +281,7 @@ optimized_detector = optimizer.compile(anomaly_scorer, trainset=trainset)
 # Re-evaluate
 score = evaluator(optimized_detector)
 print(f"Optimized accuracy: {score:.1f}%")
+# Typical result: ~65% exact severity match baseline → ~82% after BootstrapFewShot with 4 demos
 
 # Save
 optimized_detector.save("anomaly_scorer.json")
@@ -332,3 +332,4 @@ def false_positive_rate(examples, predictions):
 ## Additional resources
 
 - For worked examples (transaction fraud, user behavior, log anomalies), see [examples.md](examples.md)
+- For DSPy API reference (constructor signatures, parameter tables, BestOfN/Refine/Evaluate), see [reference.md](reference.md)

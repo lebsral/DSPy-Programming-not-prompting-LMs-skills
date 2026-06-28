@@ -292,3 +292,4 @@ If you have even a small number of real examples, use them as the dev set instea
 ## Additional resources
 
 - For end-to-end worked examples (cold start, edge cases, privacy), see [examples.md](examples.md)
+- For API signatures, parameter tables, and quick-reference, see [reference.md](reference.md)

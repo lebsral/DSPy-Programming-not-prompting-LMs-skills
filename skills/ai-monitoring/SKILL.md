@@ -25,9 +25,15 @@ Guide the user through monitoring AI quality, safety, and cost in production. Th
 | Cost creep | Longer inputs, more retries, price increases | Budget overrun |
 | Safety gaps | New attack vectors, new harmful content patterns | Compliance and reputation risk |
 
-## Step 1: Define what to monitor
+## Step 1: Gather context
 
-Ask the user what matters most:
+Before building monitoring, ask:
+1. What is this AI feature doing — support bot, classification, generation, or something else?
+2. Are there safety or compliance requirements, or is this quality/cost monitoring only?
+3. Do you have ground-truth labels for evaluations, or do you need LM-as-judge?
+4. What infrastructure do you have for alerting — Slack, PagerDuty, email, cron jobs?
+
+Then define what to monitor based on the answers:
 
 | Category | What to measure | How |
 |----------|----------------|-----|
@@ -97,7 +103,7 @@ def run_evaluation(program, eval_set, metrics):
     results = {}
     for name, metric_fn in metrics.items():
         evaluator = Evaluate(devset=eval_set, metric=metric_fn, num_threads=4)
-        score = evaluator(program)
+        score = evaluator(program).score  # EvaluationResult.score is the float (0–100)
         results[name] = score
 
     # Log results with timestamp
@@ -219,7 +225,7 @@ def sample_and_evaluate(log_path, metric_fns, sample_size=100):
     for name, metric_fn in metric_fns.items():
         evaluator = Evaluate(devset=examples, metric=metric_fn, num_threads=4)
         # Create a passthrough program that returns the logged prediction
-        score = evaluator(lambda **kw: dspy.Prediction(answer=kw.get("answer", "")))
+        score = evaluator(lambda **kw: dspy.Prediction(answer=kw.get("answer", ""))).score
         results[name] = score
 
     return results
@@ -268,6 +274,13 @@ if __name__ == "__main__":
 
     monitoring_check(production_program, eval_set, metrics, baseline)
 ```
+
+### When DIY monitoring is not the right fit
+
+- **Low traffic (<100 req/day) with no compliance requirement:** Full JSONL logging and scheduled eval is overhead that does not pay off. Inspect production logs manually after incidents instead.
+- **No reference eval set yet:** Degradation detection requires a baseline. If you cannot assemble 20-50 labeled examples, use `/ai-improving-accuracy` to build the eval set first.
+- **Pre-launch product:** Monitoring catches degradation — there is nothing to degrade before users generate real traffic. Add monitoring at launch.
+- **Needing per-request debugging:** `Evaluate` measures aggregate trends. To inspect why a single request went wrong, use `/ai-tracing-requests` instead.
 
 ## Step 5b: Connect an observability platform
 
@@ -364,17 +377,31 @@ Quick decision tree for common monitoring alerts:
 - **Keep your reference eval set fresh.** Add examples from real production failures. Remove examples that no longer represent your users.
 - **Baseline after every optimization.** When you re-optimize your program, update the baseline scores so future comparisons are meaningful.
 
+## Gotchas
+
+- **`Evaluate.__call__` returns `EvaluationResult`, not a bare float.** In DSPy 3.2+, `score = evaluator(program)` gives an `EvaluationResult` object. Use `score = evaluator(program).score` to get the numeric value (0–100). Code that does `score / 100` directly on the return value will raise a `TypeError`.
+- **Instantiate judge modules inside the metric function, not at module level.** `Evaluate` runs metrics in parallel threads. A `dspy.Predict` judge instantiated outside the metric has shared state that is not thread-safe — parallel calls can corrupt each other. Create a fresh judge instance on every metric call.
+- **`dspy.Example.with_inputs()` is required on eval set entries.** Without it, `Evaluate` passes all fields — including ground-truth labels — into the program as inputs. The program receives the answer as an input and trivially returns it, producing inflated scores. Always call `.with_inputs("question")` (or your actual input field names).
+- **Use `dspy.Predict` not `dspy.ChainOfThought` for LM-as-judge calls inside metrics.** ChainOfThought adds a reasoning step that costs tokens without improving binary (yes/no) verdicts. For judge metrics that output a bool, Predict gives the same accuracy at lower cost.
+- **Separate the judge LM from the production LM.** If you use the same LM for both production and judging, a provider update that degrades production quality may also affect judge quality — hiding the very degradation you are trying to detect. Consider using a different model or a pinned version as the judge.
+
+## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
+- `/ai-improving-accuracy` — metrics and evaluation patterns this skill builds on
+- `/ai-testing-safety` — periodic adversarial safety audits
+- `/ai-checking-outputs` — add guardrails when monitoring reveals gaps
+- `/ai-serving-apis` — wrap your program in FastAPI endpoints before monitoring
+- `/ai-cutting-costs` — when cost monitoring shows spending increasing
+- `/ai-switching-models` — when you need to evaluate a model change
+- `/ai-tracing-requests` — debug individual requests end-to-end
+- `/dspy-langtrace` — in-depth Langtrace setup (auto-instrumentation, self-hosted)
+- `/dspy-phoenix` — in-depth Phoenix setup (local UI, evals)
+- `/dspy-weave` — in-depth W&B Weave setup (team dashboards)
+- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+
 ## Additional resources
 
-- Use `/ai-serving-apis` to wrap your program in FastAPI endpoints before setting up monitoring
-- Use `/ai-improving-accuracy` for the metrics and evaluation patterns this skill builds on
-- Use `/ai-testing-safety` for periodic adversarial safety audits
-- Use `/ai-checking-outputs` to add guardrails when monitoring reveals gaps
-- Use `/ai-cutting-costs` when cost monitoring shows spending increasing
-- Use `/ai-switching-models` when you need to evaluate a model change
-- Use `/ai-tracing-requests` to debug individual requests end-to-end
-- Use `/dspy-langtrace` for in-depth Langtrace setup (auto-instrumentation, self-hosted)
-- Use `/dspy-phoenix` for in-depth Phoenix setup (local UI, evals)
-- Use `/dspy-weave` for in-depth W&B Weave setup (team dashboards)
-- See `examples.md` for complete worked examples
-- **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+- For complete worked examples, see [examples.md](examples.md)
+- For DSPy API details (Evaluate, metrics, MIPROv2), see [reference.md](reference.md)

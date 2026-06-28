@@ -1,5 +1,7 @@
 # DSPy Project Setup Reference
 
+> Condensed from [dspy.ai/api/](https://dspy.ai/api/) and [dspy.ai/learn/](https://dspy.ai/learn/). Verify against upstream for latest. DSPy 3.2.1+.
+
 ## Installation
 
 ```bash
@@ -48,6 +50,17 @@ dspy.configure(lm=lm)
 | Ollama (local) | `"ollama/llama3"` |
 
 The LM reads its API key from the provider's standard environment variable (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.). Use a `.env` file or your platform's secret manager — never hardcode keys.
+
+### `dspy.LM` parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `model` | str | (required) | LiteLLM model string, e.g. `"openai/gpt-4o-mini"` |
+| `model_type` | str | `'chat'` | API call type: `'chat'`, `'text'`, or `'responses'` |
+| `temperature` | float | None | Generation temperature; None uses the LM default |
+| `max_tokens` | int | None | Max output tokens; None uses the LM default |
+| `cache` | bool | `True` | Cache responses for reuse |
+| `num_retries` | int | `3` | Retries on transient failure |
 
 ## Module selection
 
@@ -114,6 +127,25 @@ Always run `evaluate.py` to get a baseline score before running `optimize.py`.
 optimizer = dspy.BootstrapFewShot(metric=metric, max_bootstrapped_demos=4)
 optimized = optimizer.compile(program, trainset=trainset)
 ```
+
+### `dspy.BootstrapFewShot` parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `metric` | Callable | None | Scoring function — compares expected vs predicted |
+| `max_bootstrapped_demos` | int | `4` | Max bootstrapped demonstrations per predictor |
+| `max_labeled_demos` | int | `16` | Max labeled demonstrations per predictor |
+| `max_rounds` | int | `1` | Bootstrap attempts per training example |
+| `metric_threshold` | float | None | Threshold for numerical metric results |
+
+### `dspy.Evaluate` parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `devset` | list[Example] | (required) | Evaluation dataset |
+| `metric` | Callable | (required) | Scoring function |
+| `num_threads` | int | `1` | Parallel evaluation threads |
+| `display_progress` | bool | `False` | Show progress bar |
 
 ## Save and load
 

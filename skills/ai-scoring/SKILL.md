@@ -348,4 +348,5 @@ print(f"Optimized agreement: {optimized_score:.1f}%")
 
 ## Additional resources
 
+- For API reference (signatures, Evaluate, MIPROv2, Refine, BestOfN), see [reference.md](reference.md)
 - For worked examples (essay grading, code review, support QA), see [examples.md](examples.md)

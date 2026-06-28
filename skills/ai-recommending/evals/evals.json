@@ -2,6 +2,7 @@
   {
     "id": "product-recommender-basic",
     "prompt": "I have an e-commerce site. Users have purchase history and I want to show them 5 product recommendations with explanations. I already have product embeddings. How do I build this with DSPy?",
+    "expected_output": "A DSPy two-stage pipeline: (1) cosine similarity retrieval of 15-30 candidate items by embedding similarity, then (2) a dspy.Predict or dspy.ChainOfThought module with a ReRankRecommendations signature. The signature takes user_profile, candidate_items, and num_results as InputFields and outputs ranked_items and explanations as OutputFields. User profile is built from anonymized purchase history (not raw PII). The signature docstring instructs the LM to reorder items placing most relevant first, and to not reveal internal scoring.",
     "assertions": [
       "uses two-stage pipeline - embedding retrieval for candidates then LM re-ranking",
       "defines a DSPy Signature with user_profile and candidate_items as InputFields",
@@ -15,6 +16,7 @@
   {
     "id": "cold-start-handling",
     "prompt": "My recommendation system works great for returning users but new users have no history. What should I do for cold-start users in DSPy?",
+    "expected_output": "Code that detects empty user history and branches to a fallback strategy. Popularity-based fallback returns most popular items when the user has no history. Content-based fallback matches new users to items by item metadata when some preference signals exist (e.g., onboarding answers). The LM is not asked to invent user preferences from nothing - the fallback is deterministic or content-based, not LM-generated.",
     "assertions": [
       "provides a fallback strategy for users with no history",
       "mentions popularity-based fallback as an option for cold-start",
@@ -26,6 +28,7 @@
   {
     "id": "optimize-with-labels",
     "prompt": "I have labeled data - for 200 users I know which products they clicked after seeing recommendations. How do I use this to improve my DSPy recommender?",
+    "expected_output": "A dspy.BootstrapFewShot or dspy.MIPROv2 call that compiles the recommendation pipeline. Includes a metric function measuring precision@k (fraction of top-k recommended items the user actually engaged with). dspy.Example objects are constructed with user_profile and relevant_item_ids and marked with .with_inputs(). optimizer.compile() is called with the pipeline and trainset. The optimized pipeline is saved with pipeline.save(). No manually hardcoded few-shot examples that bypass the optimizer.",
     "assertions": [
       "uses dspy.BootstrapFewShot or dspy.MIPROv2 (top-level dspy namespace)",
       "defines a metric function that measures precision@k or similar ranking quality",

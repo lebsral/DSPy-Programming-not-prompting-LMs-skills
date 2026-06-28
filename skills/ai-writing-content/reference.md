@@ -79,15 +79,16 @@ Pass `previous_sections=running_text[-2000:]` (last 2000 chars) to each section 
 [API docs](https://dspy.ai/api/modules/Refine/)
 
 ```python
-dspy.Refine(module, N, reward_fn, threshold=None, **config)
+dspy.Refine(module, N, reward_fn, threshold, fail_count=None)
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `module` | `dspy.Module` | required | The module to wrap |
 | `N` | `int` | required | Max attempts |
-| `reward_fn` | `Callable[[args, prediction], float]` | required | Returns 0.0–1.0; stops when score >= threshold |
-| `threshold` | `float \| None` | `None` | Early-stop threshold |
+| `reward_fn` | `Callable[[dict, Prediction], float]` | required | Returns 0.0–1.0; stops when score >= threshold |
+| `threshold` | `float` | required | Early-stop threshold; returns first prediction that meets it or best overall |
+| `fail_count` | `int \| None` | `None` | Failures allowed before raising error; defaults to N if not set |
 
 Use `dspy.Refine` (not `dspy.Assert`/`dspy.Suggest`, which were removed in DSPy 3.x) to enforce brand voice, length constraints, or forbidden words. The reward function receives the original call args and the prediction:
 

@@ -1,6 +1,6 @@
 ---
 name: ai-parsing-data
-description: Pull structured data from messy text using AI. Use when parsing invoices, extracting fields from emails, scraping entities from articles, converting unstructured text to JSON, extracting contact info, parsing resumes, reading forms, pulling data from transcripts (VTT, LiveKit, Recall), extracting fields from Langfuse traces, or any task where messy text goes in and clean structured data comes out. Also use when emails are messy and lack structure, or structured data extraction from unstructured content is unreliable., extract entities from text, parse PDF with AI, structured extraction from unstructured text, OCR plus AI extraction, convert email to structured data, pull fields from documents automatically, AI data entry automation, invoice parsing, resume parsing with AI, medical record extraction.
+description: Pull structured data from messy text using AI. Use when parsing invoices, extracting fields from emails, scraping entities from articles, converting unstructured text to JSON, extracting contact info, parsing resumes, reading forms, pulling data from transcripts (VTT, LiveKit, Recall), extracting fields from Langfuse traces, or any task where messy text goes in and clean structured data comes out. Also use when emails are messy and lack structure, structured data extraction from unstructured content is unreliable, extract entities from text, parse PDF with AI, structured extraction from unstructured text, OCR plus AI extraction, convert email to structured data, pull fields from documents automatically, AI data entry automation, invoice parsing, resume parsing with AI, or medical record extraction.
 ---
 
 # Build an AI Data Parser
@@ -40,6 +40,11 @@ parser = dspy.ChainOfThought(ParseContact)
 ```
 
 `ChainOfThought` adds reasoning before extraction, which helps the model think through which text maps to which field — typically 5-15% more accurate than bare `Predict` on ambiguous inputs.
+
+| Module | Latency | Cost | Use when |
+|--------|---------|------|----------|
+| `dspy.Predict` | Low | Low | Fields are unambiguous — clear labels, no overlap, no inference needed |
+| `dspy.ChainOfThought` | Medium | Medium | Ambiguous text, overlapping fields, or context-dependent mapping |
 
 ### Structured output with Pydantic
 
@@ -371,13 +376,11 @@ if errors:
     print(f"{len(errors)} documents failed to parse — check errors list")
 ```
 
-## Additional resources
+## When not to use AI parsing
 
-- For worked examples (invoices, resumes, entities, relations, forms), see [examples.md](examples.md)
-- Need summaries instead of structured data? Use `/ai-summarizing`
-- AI missing items on complex inputs? Use `/ai-decomposing-tasks`
-- Want to measure and improve further? Use `/ai-improving-accuracy`
-- Need to generate training data? Use `/ai-generating-data`
+- **Regex or SQL is sufficient** — if the input is already semi-structured (CSV, TSV, fixed-width) or the fields follow strict patterns (email addresses, phone numbers, dates in ISO format), skip AI and use regex or a parsing library. AI adds cost and latency for no accuracy gain.
+- **The input is already JSON or XML** — parse it directly. AI extraction is for *unstructured* text.
+- **You need 100% recall on critical fields** — AI parsers miss fields on adversarial or unusual inputs. Combine with regex backstop (see hybrid extraction above) or manual review for high-stakes extractions.
 
 ## Gotchas
 
@@ -386,4 +389,21 @@ if errors:
 - **List extraction undercounts by default** — when extracting lists of items (e.g., "all people mentioned"), the LM tends to stop early. Set `max_tokens` higher and add a "be exhaustive" instruction in the signature docstring.
 - **Long inputs get truncated silently** — if your input text exceeds the model's context window, DSPy doesn't warn you. Chunk long documents before parsing, or use a model with a larger context window.
 - **Nested Pydantic models increase failure rate** — each level of nesting adds extraction difficulty. Flatten where possible, or break into multiple extraction steps (extract outer structure first, then fill in nested fields).
+
+## Cross-references
+
+> Install any skill: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill <name>`
+
+- **Signatures** for defining input/output contracts and Pydantic output types — see `/dspy-signatures`
+- **ChainOfThought** for the reasoning module used in most parsers — see `/dspy-chain-of-thought`
+- **Refine / BestOfN** for iterative retry with reward functions — see `/dspy-refine` and `/dspy-best-of-n`
+- Need summaries instead of structured data? Use `/ai-summarizing`
+- AI missing items on complex inputs? Use `/ai-decomposing-tasks`
+- Want to measure and improve further? Use `/ai-improving-accuracy`
+- Need to generate training data? Use `/ai-generating-data`
 - **Install `/ai-do` if you do not have it** — it routes any AI problem to the right skill and is the fastest way to work: `npx skills add lebsral/DSPy-Programming-not-prompting-LMs-skills --skill ai-do`
+
+## Additional resources
+
+- For worked examples (invoices, resumes, entities, relations, forms), see [examples.md](examples.md)
+- For API signatures and parameter tables, see [reference.md](reference.md)

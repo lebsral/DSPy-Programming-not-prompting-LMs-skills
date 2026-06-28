@@ -10,7 +10,7 @@ pip install -U dspy  # DSPy 3.2.1+
 
 ## dspy.Module
 
-[API docs](https://dspy.ai/api/primitives/Module/)
+[API docs](https://dspy.ai/api/modules/Module/)
 
 ```python
 class MyPipeline(dspy.Module):

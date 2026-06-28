@@ -81,10 +81,10 @@ def severity_reward(args, pred):
         return 0.5  # penalize vague explanations
     return 1.0
 
-# BestOfN - independent samples, pick best
-scorer = dspy.BestOfN(module=dspy.ChainOfThought(ScoreAnomaly), N=3, reward_fn=severity_reward)
+# BestOfN - independent samples, pick best (threshold is required)
+scorer = dspy.BestOfN(module=dspy.ChainOfThought(ScoreAnomaly), N=3, reward_fn=severity_reward, threshold=0.5)
 
-# Refine - iterative with feedback
+# Refine - iterative with feedback (threshold is required)
 scorer = dspy.Refine(module=dspy.ChainOfThought(ScoreAnomaly), N=3, reward_fn=severity_reward, threshold=0.8)
 ```
 
@@ -93,7 +93,8 @@ scorer = dspy.Refine(module=dspy.ChainOfThought(ScoreAnomaly), N=3, reward_fn=se
 | `module`     | `dspy.Module` | required | Wrapped module to sample              |
 | `N`          | `int`      | required | Number of samples                        |
 | `reward_fn`  | `Callable` | required | `(args, pred) -> float` — higher is better |
-| `threshold`  | `float`    | `None`  | Stop early if a sample exceeds this score |
+| `threshold`  | `float`    | required | Min reward score to accept a sample — no default, must be set explicitly |
+| `fail_count` | `int \| None` | `None` | Max failures before raising an error (defaults to N if not set) |
 
 ## dspy.Module (custom pipeline)
 

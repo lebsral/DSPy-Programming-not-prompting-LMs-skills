@@ -1,0 +1,73 @@
+{
+  "skill_name": "ai-monitoring",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I launched a support chatbot last week and I want to make sure it stays good over time. How do I set up monitoring so I get alerted if the quality drops?",
+      "expected_output": "A monitoring setup using dspy.Evaluate with a metric function (LM-as-judge or exact match), a degradation check comparing current scores against a baseline, and a scheduled evaluation loop. Code uses evaluator(program).score to get the numeric score from EvaluationResult.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "uses_evaluate_correctly",
+          "description": "Uses dspy.Evaluate (or from dspy.evaluate import Evaluate) and calls evaluator(program).score — not the bare return value — to extract the numeric score"
+        },
+        {
+          "name": "has_baseline_comparison",
+          "description": "Defines a baseline score dict and compares current scores against it to detect degradation, rather than just logging scores without comparison"
+        },
+        {
+          "name": "uses_lm_as_judge_or_ground_truth_metric",
+          "description": "Provides a metric function using either dspy.Predict with a judge Signature (for LM-as-judge) or exact/semantic match — metric instantiates the judge inside the function, not at module level"
+        },
+        {
+          "name": "provider_agnostic",
+          "description": "LM configuration shows at least one provider with a comment indicating alternatives (e.g., # or 'anthropic/...')"
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "We have a financial AI feature and regulators want ongoing proof it never gives investment advice or leaks PII. How do I build a safety monitoring system with DSPy?",
+      "expected_output": "A safety monitoring setup with multiple specialized metric functions (each checking a distinct policy violation), strict alert thresholds (e.g., >1% drop triggers alert), compliance logging to JSONL with pass/fail status, and a scheduled weekly check. Metrics use dspy.Predict with Signature classes for LM-based checks and regex for PII pattern matching.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "separate_safety_metrics",
+          "description": "Defines distinct metric functions for different safety concerns (e.g., no investment advice, no PII, no bias) rather than a single catch-all metric"
+        },
+        {
+          "name": "strict_safety_threshold",
+          "description": "Uses a stricter alert threshold for safety metrics (1% or lower) compared to quality metrics, reflecting zero-tolerance for safety regressions"
+        },
+        {
+          "name": "compliance_logging",
+          "description": "Logs evaluation results to persistent storage (JSONL, database, etc.) with timestamp and pass/fail status for audit trail purposes"
+        },
+        {
+          "name": "judge_instantiated_in_metric",
+          "description": "Any dspy.Predict judge used inside a metric function is instantiated inside that function (not at module level), to avoid thread-safety issues in parallel Evaluate runs"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "My AI quality suddenly dropped — what does a DSPy monitoring setup look like that would have caught this earlier and also helps me recover?",
+      "expected_output": "A complete monitoring-to-recovery workflow: (1) periodic evaluation with dspy.Evaluate against a reference set, (2) degradation detection comparing against saved baseline, (3) alerting when threshold exceeded, (4) re-optimization with dspy.MIPROv2 using the same metric, (5) updating the baseline after successful re-optimization. Includes before/after score comparison.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "end_to_end_recovery_flow",
+          "description": "Shows the full loop: detect degradation -> re-optimize with MIPROv2 (or similar) using the same metric function -> re-evaluate -> update baseline"
+        },
+        {
+          "name": "score_attribute_usage",
+          "description": "All evaluator() calls use .score to extract the float from EvaluationResult (e.g., evaluator(program).score), not the raw return value"
+        },
+        {
+          "name": "with_inputs_on_examples",
+          "description": "eval set examples use .with_inputs() to mark input fields, preventing label leakage into the program during evaluation"
+        }
+      ]
+    }
+  ]
+}
